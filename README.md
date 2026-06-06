@@ -1,5 +1,7 @@
 # The 𝔽₁ Square with an Intersection Theory
 
+[![DOI](https://zenodo.org/badge/1261199945.svg)](https://zenodo.org/badge/latestdoi/1261199945)
+
 **An active research program toward `Spec ℤ ×_{𝔽₁} Spec ℤ` — the missing surface whose
 intersection-positivity is the Riemann Hypothesis.**
 
