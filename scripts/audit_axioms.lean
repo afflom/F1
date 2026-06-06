@@ -414,6 +414,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.RaltReal
 #print axioms Analysis.Rcos
 #print axioms Analysis.Rsin
+#print axioms Analysis.geoSum_den_pos
+#print axioms Analysis.geoU_eq
 
 -- v0.10.0 — the λₙ / RH proof boundary (analytic face), locked faithfully.
 #print axioms Li.Pos_one
