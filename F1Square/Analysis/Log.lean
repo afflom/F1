@@ -789,4 +789,87 @@ theorem tmap_lipschitz {a b L : Q} (had : 0 < a.den) (hbd : 0 < b.den)
   -- (2|a−b|)·(1/(L+1)²) ≈ (2·(1/(L+1)²))·|a−b|
   exact Qmul_swap_right ⟨2, 1⟩ (Qabs (Qsub a b)) (Qinv (mul (add L ⟨1, 1⟩) (add L ⟨1, 1⟩)))
 
+/-- `(q−1)(M+1) ≤ (M−1)(q+1)` when `q ≤ M`. -/
+theorem tmap_cross_le {q M : Q} (h : Qle q M) :
+    Qle (mul (Qsub q ⟨1, 1⟩) (add M ⟨1, 1⟩)) (mul (Qsub M ⟨1, 1⟩) (add q ⟨1, 1⟩)) := by
+  have h' : q.num * (M.den : Int) ≤ M.num * (q.den : Int) := h
+  simp only [Qle, mul, Qsub, add, neg]
+  push_cast
+  have hd : (M.num * 1 + -1 * (M.den : Int)) * (q.num * 1 + 1 * (q.den : Int))
+        * ((q.den : Int) * 1 * ((M.den : Int) * 1))
+      - (q.num * 1 + -1 * (q.den : Int)) * (M.num * 1 + 1 * (M.den : Int))
+        * ((M.den : Int) * 1 * ((q.den : Int) * 1))
+      = 2 * (M.num * (q.den : Int) - q.num * (M.den : Int)) * ((q.den : Int) * (M.den : Int)) := by
+    ring_uor
+  have hnn : 0 ≤ 2 * (M.num * (q.den : Int) - q.num * (M.den : Int)) * ((q.den : Int) * (M.den : Int)) :=
+    Int.mul_nonneg (Int.mul_nonneg (by decide) (by omega))
+      (Int.mul_nonneg (Int.ofNat_nonneg _) (Int.ofNat_nonneg _))
+  omega
+
+/-- `−(q−1)(M+1) ≤ (M−1)(q+1)` when `1 ≤ q·M`. -/
+theorem tmap_cross_ge {q M : Q} (h : Qle ⟨1, 1⟩ (mul q M)) :
+    Qle (neg (mul (Qsub q ⟨1, 1⟩) (add M ⟨1, 1⟩))) (mul (Qsub M ⟨1, 1⟩) (add q ⟨1, 1⟩)) := by
+  have h' : (1 : Int) * (q.den * M.den : Nat) ≤ q.num * M.num * 1 := h
+  simp only [Qle, mul, Qsub, add, neg]
+  push_cast
+  push_cast at h'
+  have hd : (M.num * 1 + -1 * (M.den : Int)) * (q.num * 1 + 1 * (q.den : Int))
+        * ((q.den : Int) * 1 * ((M.den : Int) * 1))
+      - -((q.num * 1 + -1 * (q.den : Int)) * (M.num * 1 + 1 * (M.den : Int)))
+        * ((M.den : Int) * 1 * ((q.den : Int) * 1))
+      = 2 * (q.num * M.num - (q.den : Int) * (M.den : Int)) * ((q.den : Int) * (M.den : Int)) := by
+    ring_uor
+  have hnn : 0 ≤ 2 * (q.num * M.num - (q.den : Int) * (M.den : Int)) * ((q.den : Int) * (M.den : Int)) :=
+    Int.mul_nonneg (Int.mul_nonneg (by decide) (by omega))
+      (Int.mul_nonneg (Int.ofNat_nonneg _) (Int.ofNat_nonneg _))
+  omega
+
+/-- `(−a)·b ≈ −(a·b)`. -/
+theorem Qmul_neg_left (a b : Q) : Qeq (mul (neg a) b) (neg (mul a b)) := by
+  simp only [Qeq, mul, neg]; push_cast; ring_uor
+
+/-- **The t-map range bound**: `|tmap q| ≤ tmap M` for `q ≤ M` and `1 ≤ q·M`
+    (i.e. `q ∈ [1/M, M]`), with `q+1, M+1 > 0`. -/
+theorem tmap_abs_le {q M : Q} (hqd : 0 < q.den) (hMd : 0 < M.den)
+    (hq1 : 0 < (add q ⟨1, 1⟩).num) (hM1 : 0 < (add M ⟨1, 1⟩).num)
+    (hqM : Qle q M) (hqMge : Qle ⟨1, 1⟩ (mul q M)) : Qle (Qabs (tmap q)) (tmap M) := by
+  have hsqd : 0 < (Qsub q ⟨1, 1⟩).den := Qsub_den_pos hqd Nat.one_pos
+  have hsMd : 0 < (Qsub M ⟨1, 1⟩).den := Qsub_den_pos hMd Nat.one_pos
+  have hcqd : 0 < (add q ⟨1, 1⟩).den := add_den_pos hqd Nat.one_pos
+  have hcMd : 0 < (add M ⟨1, 1⟩).den := add_den_pos hMd Nat.one_pos
+  have hDn : 0 < (mul (add q ⟨1, 1⟩) (add M ⟨1, 1⟩)).num := Int.mul_pos hq1 hM1
+  have hDd : 0 < (mul (add q ⟨1, 1⟩) (add M ⟨1, 1⟩)).den := Qmul_den_pos hcqd hcMd
+  have hL_qM : 0 < (mul (Qsub q ⟨1, 1⟩) (add M ⟨1, 1⟩)).den := Qmul_den_pos hsqd hcMd
+  have hL_Mq : 0 < (mul (Qsub M ⟨1, 1⟩) (add q ⟨1, 1⟩)).den := Qmul_den_pos hsMd hcqd
+  -- tmap q · (q+1)(M+1) ≈ (q−1)(M+1)
+  have hrq : Qeq (mul (tmap q) (mul (add q ⟨1, 1⟩) (add M ⟨1, 1⟩)))
+      (mul (Qsub q ⟨1, 1⟩) (add M ⟨1, 1⟩)) := by
+    show Qeq (mul (mul (Qsub q ⟨1, 1⟩) (Qinv (add q ⟨1, 1⟩))) (mul (add q ⟨1, 1⟩) (add M ⟨1, 1⟩)))
+      (mul (Qsub q ⟨1, 1⟩) (add M ⟨1, 1⟩))
+    exact Qeq_trans (Qmul_den_pos hL_qM (Qmul_den_pos (Qinv_den_pos hq1) hcqd))
+      (Qmul_rearrange4 _ _ _ _)
+      (Qeq_trans (Qmul_den_pos hL_qM Nat.one_pos)
+        (Qmul_congr (Qeq_refl _) (Qinv_mul hcqd hq1)) (mul_one _))
+  -- tmap M · (q+1)(M+1) ≈ (M−1)(q+1)
+  have hrM : Qeq (mul (tmap M) (mul (add q ⟨1, 1⟩) (add M ⟨1, 1⟩)))
+      (mul (Qsub M ⟨1, 1⟩) (add q ⟨1, 1⟩)) := by
+    show Qeq (mul (mul (Qsub M ⟨1, 1⟩) (Qinv (add M ⟨1, 1⟩))) (mul (add q ⟨1, 1⟩) (add M ⟨1, 1⟩)))
+      (mul (Qsub M ⟨1, 1⟩) (add q ⟨1, 1⟩))
+    exact Qeq_trans (Qmul_den_pos hL_Mq (Qmul_den_pos (Qinv_den_pos hM1) hcMd))
+      (Qmul_rearrange4b _ _ _ _)
+      (Qeq_trans (Qmul_den_pos hL_Mq Nat.one_pos)
+        (Qmul_congr (Qeq_refl _) (Qinv_mul hcMd hM1)) (mul_one _))
+  refine Qabs_le_of_both ?_ ?_
+  · exact Qmul_le_cancel_right hDn hDd (Qle_trans hL_qM (Qeq_le hrq)
+      (Qle_trans hL_Mq (tmap_cross_le hqM) (Qeq_le (Qeq_symm hrM))))
+  · have hrnq : Qeq (mul (neg (tmap q)) (mul (add q ⟨1, 1⟩) (add M ⟨1, 1⟩)))
+        (neg (mul (Qsub q ⟨1, 1⟩) (add M ⟨1, 1⟩))) :=
+      Qeq_trans (show 0 < (neg (mul (tmap q) (mul (add q ⟨1, 1⟩) (add M ⟨1, 1⟩)))).den from
+          Qmul_den_pos (Qmul_den_pos hsqd (Qinv_den_pos hq1)) hDd)
+        (Qmul_neg_left (tmap q) (mul (add q ⟨1, 1⟩) (add M ⟨1, 1⟩))) (Qneg_congr hrq)
+    exact Qmul_le_cancel_right hDn hDd
+      (Qle_trans (show 0 < (neg (mul (Qsub q ⟨1, 1⟩) (add M ⟨1, 1⟩))).den from hL_qM)
+        (Qeq_le hrnq)
+        (Qle_trans hL_Mq (tmap_cross_ge hqMge) (Qeq_le (Qeq_symm hrM))))
+
 end UOR.Bridge.F1Square.Analysis
