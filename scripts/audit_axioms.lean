@@ -424,6 +424,10 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.artTerm_abs_le
 #print axioms Analysis.artSum_abs_diff_le
 #print axioms Analysis.artSum_trunc
+#print axioms Analysis.qpow_abs_le_rat
+#print axioms Analysis.Pcoef_den_pos
+#print axioms Analysis.Pcoef_num_nonneg
+#print axioms Analysis.qpow_diff_bound_rat
 
 -- v0.10.0 — the λₙ / RH proof boundary (analytic face), locked faithfully.
 #print axioms Li.Pos_one

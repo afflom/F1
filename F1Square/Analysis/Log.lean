@@ -190,4 +190,81 @@ theorem artSum_trunc {t ρ : Q} (htd : 0 < t.den) (hρ0 : 0 ≤ ρ.num) (hρd : 
     (Qmul_le_mul_right hW (artSum_abs_diff_le htd hρ0 hρd htρ hab))
     (geo_diff_bound hρ0 hρd hab)
 
+-- ===========================================================================
+-- The rational-base per-power difference bound (the ρ^{2n} decay the artanh Lipschitz needs).
+-- ===========================================================================
+
+/-- `|tⁱ| ≤ ρⁱ` when `|t| ≤ ρ` (rational base). -/
+theorem qpow_abs_le_rat {t ρ : Q} (htd : 0 < t.den) (hρd : 0 < ρ.den) (htρ : Qle (Qabs t) ρ)
+    (i : Nat) : Qle (Qabs (qpow t i)) (qpow ρ i) :=
+  Qle_trans (qpow_den_pos (Qabs_den_pos htd) i) (Qeq_le (qpow_abs t i))
+    (qpow_base_mono (Qabs_den_pos htd) hρd (Qabs_num_nonneg t) htρ i)
+
+/-- The rational Lipschitz coefficient `i·ρ^{i-1}` (recursively, `P(0)=0`, `P(i+1)=ρ·P(i)+ρⁱ`). -/
+def Pcoef (ρ : Q) : Nat → Q
+  | 0 => ⟨0, 1⟩
+  | (i + 1) => add (mul ρ (Pcoef ρ i)) (qpow ρ i)
+
+theorem Pcoef_den_pos {ρ : Q} (hρd : 0 < ρ.den) : ∀ i, 0 < (Pcoef ρ i).den
+  | 0 => Nat.one_pos
+  | (i + 1) => add_den_pos (Qmul_den_pos hρd (Pcoef_den_pos hρd i)) (qpow_den_pos hρd i)
+
+theorem Pcoef_num_nonneg {ρ : Q} (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den) : ∀ i, 0 ≤ (Pcoef ρ i).num
+  | 0 => by show (0 : Int) ≤ 0; decide
+  | (i + 1) => by
+      show 0 ≤ (add (mul ρ (Pcoef ρ i)) (qpow ρ i)).num
+      show (0 : Int) ≤ ρ.num * (Pcoef ρ i).num * ((qpow ρ i).den : Int)
+        + (qpow ρ i).num * ((ρ.den : Int) * (Pcoef ρ i).den)
+      exact Int.add_nonneg
+        (Int.mul_nonneg (Int.mul_nonneg hρ0 (Pcoef_num_nonneg hρ0 hρd i)) (Int.ofNat_nonneg _))
+        (Int.mul_nonneg (qpow_nonneg hρ0 i) (Int.mul_nonneg (Int.ofNat_nonneg _) (Int.ofNat_nonneg _)))
+
+-- `ρ·(C·D) + D·P ≈ (ρ·C + P)·D` (abstract).
+private theorem pcoef_factor (R C D P : Q) :
+    Qeq (add (mul R (mul C D)) (mul D P)) (mul (add (mul R C) P) D) := by
+  simp only [Qeq, add, mul]; push_cast; ring_uor
+
+/-- **Rational per-power difference bound**: `|tⁱ − t'ⁱ| ≤ (i·ρ^{i-1})·|t − t'|` for `|t|,|t'| ≤ ρ`. -/
+theorem qpow_diff_bound_rat {t t' ρ : Q} (htd : 0 < t.den) (ht'd : 0 < t'.den) (hρd : 0 < ρ.den)
+    (htρ : Qle (Qabs t) ρ) (ht'ρ : Qle (Qabs t') ρ) :
+    ∀ i, Qle (Qabs (Qsub (qpow t i) (qpow t' i))) (mul (Pcoef ρ i) (Qabs (Qsub t t')))
+  | 0 => by
+      show Qle (Qabs (Qsub (qpow t 0) (qpow t' 0))) (mul (⟨0, 1⟩ : Q) (Qabs (Qsub t t')))
+      have h0 : (Qsub (qpow t 0) (qpow t' 0)).num = 0 := rfl
+      unfold Qle Qabs mul
+      rw [h0]; simp
+  | (i + 1) => by
+      have ihh := qpow_diff_bound_rat htd ht'd hρd htρ ht'ρ i
+      have hqpid : 0 < (qpow t i).den := qpow_den_pos htd i
+      have hqp'id : 0 < (qpow t' i).den := qpow_den_pos ht'd i
+      have hid : Qeq (Qsub (qpow t (i + 1)) (qpow t' (i + 1)))
+          (add (mul t (Qsub (qpow t i) (qpow t' i))) (mul (Qsub t t') (qpow t' i))) := by
+        show Qeq (Qsub (mul t (qpow t i)) (mul t' (qpow t' i)))
+          (add (mul t (Qsub (qpow t i) (qpow t' i))) (mul (Qsub t t') (qpow t' i)))
+        simp only [Qeq, Qsub, mul, add, neg]; push_cast; ring_uor
+      have htri : Qle (Qabs (Qsub (qpow t (i + 1)) (qpow t' (i + 1))))
+          (add (Qabs (mul t (Qsub (qpow t i) (qpow t' i)))) (Qabs (mul (Qsub t t') (qpow t' i)))) :=
+        Qle_congr_left (Qabs_den_pos (add_den_pos (Qmul_den_pos htd (Qsub_den_pos hqpid hqp'id))
+          (Qmul_den_pos (Qsub_den_pos htd ht'd) hqp'id))) (Qeq_symm (Qabs_Qeq hid)) (Qabs_add_le _ _)
+      have hP1 : Qle (Qabs (mul t (Qsub (qpow t i) (qpow t' i))))
+          (mul ρ (mul (Pcoef ρ i) (Qabs (Qsub t t')))) := by
+        rw [Qabs_mul]
+        exact Qmul_le_mul (Qabs_den_pos htd) hρd (Qabs_den_pos (Qsub_den_pos hqpid hqp'id))
+          (Qabs_num_nonneg t) (Qabs_num_nonneg _) htρ ihh
+      have hP2 : Qle (Qabs (mul (Qsub t t') (qpow t' i)))
+          (mul (Qabs (Qsub t t')) (qpow ρ i)) := by
+        rw [Qabs_mul]
+        exact Qmul_le_mul_left (Qabs_num_nonneg _) (qpow_abs_le_rat ht'd hρd ht'ρ i)
+      have hsum := Qadd_le_add hP1 hP2
+      have hfactor : Qeq (add (mul ρ (mul (Pcoef ρ i) (Qabs (Qsub t t'))))
+            (mul (Qabs (Qsub t t')) (qpow ρ i)))
+          (mul (Pcoef ρ (i + 1)) (Qabs (Qsub t t'))) :=
+        pcoef_factor ρ (Pcoef ρ i) (Qabs (Qsub t t')) (qpow ρ i)
+      refine Qle_trans ?_ htri (Qle_trans ?_ hsum (Qeq_le hfactor))
+      · exact add_den_pos (Qabs_den_pos (Qmul_den_pos htd (Qsub_den_pos hqpid hqp'id)))
+          (Qabs_den_pos (Qmul_den_pos (Qsub_den_pos htd ht'd) hqp'id))
+      · exact add_den_pos (Qmul_den_pos hρd (Qmul_den_pos (Pcoef_den_pos hρd i)
+          (Qabs_den_pos (Qsub_den_pos htd ht'd))))
+          (Qmul_den_pos (Qabs_den_pos (Qsub_den_pos htd ht'd)) (qpow_den_pos hρd i))
+
 end UOR.Bridge.F1Square.Analysis
