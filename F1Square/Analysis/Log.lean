@@ -116,4 +116,78 @@ theorem geo_diff_bound {ρ : Q} (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den) {a b :
     (Qeq_le (geo_diff_eq hρd a hab))
     (Qsub_le_self (qpow_nonneg hρ0 _))
 
+-- ===========================================================================
+-- The artanh series Σ t^{2n+1}/(2n+1), dominated by the geometric series.
+-- ===========================================================================
+
+/-- The `n`-th artanh term `t^{2n+1}/(2n+1)`. -/
+def artTerm (t : Q) (n : Nat) : Q := mul (qpow t (2 * n + 1)) ⟨1, 2 * n + 1⟩
+
+theorem artTerm_den_pos {t : Q} (htd : 0 < t.den) (n : Nat) : 0 < (artTerm t n).den :=
+  Qmul_den_pos (qpow_den_pos htd _) (Nat.succ_pos _)
+
+/-- The artanh partial sum `Σ_{n=0}^N t^{2n+1}/(2n+1)`. -/
+def artSum (t : Q) : Nat → Q
+  | 0 => artTerm t 0
+  | (n + 1) => add (artSum t n) (artTerm t (n + 1))
+
+theorem artSum_den_pos {t : Q} (htd : 0 < t.den) : ∀ N, 0 < (artSum t N).den
+  | 0 => artTerm_den_pos htd 0
+  | (n + 1) => add_den_pos (artSum_den_pos htd n) (artTerm_den_pos htd (n + 1))
+
+/-- **Per-term domination**: `|t^{2n+1}/(2n+1)| ≤ ρ^{2n+1}` when `|t| ≤ ρ`. -/
+theorem artTerm_abs_le {t ρ : Q} (htd : 0 < t.den) (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den)
+    (htρ : Qle (Qabs t) ρ) (n : Nat) : Qle (Qabs (artTerm t n)) (geoTerm ρ n) := by
+  have hpw : Qle (Qabs (qpow t (2 * n + 1))) (qpow ρ (2 * n + 1)) :=
+    Qle_trans (qpow_den_pos (Qabs_den_pos htd) _) (Qeq_le (qpow_abs t (2 * n + 1)))
+      (qpow_base_mono (Qabs_den_pos htd) hρd (Qabs_num_nonneg t) htρ (2 * n + 1))
+  have h1 : Qabs (artTerm t n) = mul (Qabs (qpow t (2 * n + 1))) ⟨1, 2 * n + 1⟩ := by
+    unfold artTerm; rw [Qabs_mul]; rfl
+  rw [h1]
+  refine Qle_trans (Qmul_den_pos (qpow_den_pos hρd _) (Nat.succ_pos _))
+    (Qmul_le_mul_right (by show (0 : Int) ≤ 1; decide) hpw) ?_
+  -- mul (qpow ρ (2n+1)) ⟨1,2n+1⟩ ≤ qpow ρ (2n+1) = geoTerm ρ n
+  refine Qle_trans (Qmul_den_pos (qpow_den_pos hρd _) (Nat.succ_pos _))
+    (Qmul_le_mul_left (qpow_nonneg hρ0 _) (show Qle (⟨1, 2 * n + 1⟩ : Q) ⟨1, 1⟩ by
+      show (1 : Int) * 1 ≤ 1 * ((2 * n + 1 : Nat) : Int); push_cast; omega))
+    (Qeq_le (mul_one (qpow ρ (2 * n + 1))))
+
+/-- **Truncation domination**: `|artSum gap| ≤ S_b − S_a` (geometric). -/
+theorem artSum_abs_diff_le {t ρ : Q} (htd : 0 < t.den) (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den)
+    (htρ : Qle (Qabs t) ρ) {a b : Nat} (hab : a ≤ b) :
+    Qle (Qabs (Qsub (artSum t b) (artSum t a))) (Qsub (geoSum ρ b) (geoSum ρ a)) := by
+  induction hab with
+  | refl =>
+      have h := Qsub_self_num (artSum t a)
+      have h' := Qsub_self_num (geoSum ρ a)
+      unfold Qle Qabs; rw [h, h']; simp
+  | @step k _ ih =>
+      have hstep : Qle (Qabs (Qsub (artSum t (k + 1)) (artSum t a)))
+          (add (Qabs (Qsub (artSum t k) (artSum t a))) (Qabs (artTerm t (k + 1)))) := by
+        have heqabs := Qabs_Qeq (Qsub_add_right (artSum t k) (artTerm t (k + 1)) (artSum t a))
+        refine Qle_congr_left (Qabs_den_pos (add_den_pos (Qsub_den_pos (artSum_den_pos htd k)
+          (artSum_den_pos htd a)) (artTerm_den_pos htd (k + 1)))) (Qeq_symm heqabs) (Qabs_add_le _ _)
+      have hbound : Qle (add (Qabs (Qsub (artSum t k) (artSum t a))) (Qabs (artTerm t (k + 1))))
+          (add (Qsub (geoSum ρ k) (geoSum ρ a)) (geoTerm ρ (k + 1))) :=
+        Qadd_le_add ih (artTerm_abs_le htd hρ0 hρd htρ (k + 1))
+      have hregroup : Qeq (add (Qsub (geoSum ρ k) (geoSum ρ a)) (geoTerm ρ (k + 1)))
+          (Qsub (geoSum ρ (k + 1)) (geoSum ρ a)) :=
+        Qeq_symm (Qsub_add_right (geoSum ρ k) (geoTerm ρ (k + 1)) (geoSum ρ a))
+      refine Qle_trans
+        (add_den_pos (Qabs_den_pos (Qsub_den_pos (artSum_den_pos htd k) (artSum_den_pos htd a)))
+          (Qabs_den_pos (artTerm_den_pos htd (k + 1))))
+        hstep
+        (Qle_trans (add_den_pos (Qsub_den_pos (geoSum_den_pos hρd k) (geoSum_den_pos hρd a))
+          (qpow_den_pos hρd _)) hbound (Qeq_le hregroup))
+
+/-- **The artanh truncation tail**: `|artSum gap|·(1−ρ²) ≤ ρ^{2a+3}` for `|t| ≤ ρ`, `a ≤ b`. -/
+theorem artSum_trunc {t ρ : Q} (htd : 0 < t.den) (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den)
+    (htρ : Qle (Qabs t) ρ) (hW : 0 ≤ (Qsub (⟨1, 1⟩ : Q) (mul ρ ρ)).num) {a b : Nat} (hab : a ≤ b) :
+    Qle (mul (Qabs (Qsub (artSum t b) (artSum t a))) (Qsub ⟨1, 1⟩ (mul ρ ρ)))
+      (qpow ρ (2 * a + 3)) :=
+  Qle_trans (Qmul_den_pos (Qsub_den_pos (geoSum_den_pos hρd b) (geoSum_den_pos hρd a))
+      (Qsub_den_pos Nat.one_pos (Nat.mul_pos hρd hρd)))
+    (Qmul_le_mul_right hW (artSum_abs_diff_le htd hρ0 hρd htρ hab))
+    (geo_diff_bound hρ0 hρd hab)
+
 end UOR.Bridge.F1Square.Analysis
