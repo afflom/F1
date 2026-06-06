@@ -398,6 +398,22 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.RexpReal_diag_le
 #print axioms Analysis.RexpReal_regular
 #print axioms Analysis.RexpReal
+#print axioms Analysis.Qabs_neg
+#print axioms Analysis.fct_mono
+#print axioms Analysis.qsq_abs_le
+#print axioms Analysis.altTerm_den_pos
+#print axioms Analysis.altSum_den_pos
+#print axioms Analysis.altTerm_abs_le
+#print axioms Analysis.altSum_abs_diff_le
+#print axioms Analysis.altSum_trunc_bound
+#print axioms Analysis.altTerm_diff_bound
+#print axioms Analysis.altSum_Lip_le
+#print axioms Analysis.qsq_diff_le
+#print axioms Analysis.RaltReal_diag_le
+#print axioms Analysis.RaltReal_regular
+#print axioms Analysis.RaltReal
+#print axioms Analysis.Rcos
+#print axioms Analysis.Rsin
 
 -- v0.10.0 — the λₙ / RH proof boundary (analytic face), locked faithfully.
 #print axioms Li.Pos_one
