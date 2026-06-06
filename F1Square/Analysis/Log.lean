@@ -387,4 +387,25 @@ theorem artSum_Lip_le {t t' ρ : Q} (htd : 0 < t.den) (ht'd : 0 < t'.den) (hρd 
           (Qeq_le (Qeq_symm (Qmul_add_right (geoEvenSum ρ N) (qpow ρ (2 * (N + 1)))
             (Qabs (Qsub t t'))))))
 
+-- ===========================================================================
+-- The geometric reindex for ρ ≤ 1/2:  ρᵐ ≤ 1/(m+1).
+-- ===========================================================================
+
+/-- `(1/2)ᵐ = 1/2ᵐ`. -/
+theorem qpow_half_value : ∀ m, qpow (⟨1, 2⟩ : Q) m = ⟨1, npow 2 m⟩
+  | 0 => rfl
+  | (m + 1) => by
+      show mul (⟨1, 2⟩ : Q) (qpow (⟨1, 2⟩ : Q) m) = ⟨1, npow 2 (m + 1)⟩
+      rw [qpow_half_value m]; rfl
+
+/-- For `0 ≤ ρ ≤ 1/2`: `ρᵐ ≤ 1/(m+1)`. -/
+theorem qpow_half_le {ρ : Q} (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den) (hρ12 : Qle ρ ⟨1, 2⟩) (m : Nat) :
+    Qle (qpow ρ m) ⟨1, m + 1⟩ := by
+  have h1 : Qle (qpow ρ m) (qpow (⟨1, 2⟩ : Q) m) :=
+    qpow_base_mono hρd (by decide) hρ0 hρ12 m
+  rw [qpow_half_value m] at h1
+  refine Qle_trans (npow_pos (by decide) m) h1 ?_
+  show (1 : Int) * ((m + 1 : Nat) : Int) ≤ 1 * ((npow 2 m : Nat) : Int)
+  rw [Int.one_mul, Int.one_mul]; exact_mod_cast two_pow_ge m
+
 end UOR.Bridge.F1Square.Analysis
