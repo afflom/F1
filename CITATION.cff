@@ -19,7 +19,7 @@ authors:
 version: 0.0.1
 date-released: "2026-06-06"
 license: MIT
-repository-code: "https://github.com/UOR-Foundation/F1"
+repository-code: "https://github.com/afflom/F1"
 keywords:
   - Riemann Hypothesis
   - F1 geometry

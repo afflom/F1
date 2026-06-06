@@ -35,4 +35,4 @@ Initial research base for the 𝔽₁-square / Riemann Hypothesis program.
   solution: the formalization compiles and states the construction problem precisely; it
   does not assert the crux.
 
-[0.0.1]: https://github.com/UOR-Foundation/F1/releases/tag/v0.0.1
+[0.0.1]: https://github.com/afflom/F1/releases/tag/v0.0.1
