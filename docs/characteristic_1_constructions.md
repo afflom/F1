@@ -475,3 +475,30 @@ UOR way and lays the next analysis brick:
 All v0.3.0 additions are kernel-checked, pure Lean 4 (no Mathlib, no `sorry`), and axiom-audited
 (`scripts/honesty_audit.sh`). RH remains open: the substrate makes the analytic half statable and
 checkable, never proven.
+
+---
+
+## 12. v0.4.0 — a from-scratch `ring`, ℚ as an ordered field, ℝ as an ordered additive group
+
+v0.3.0 left the normalizer as *data* (one had to hand-reify each identity). **v0.4.0** completes it
+into a tactic and uses it to give ℝ its arithmetic:
+
+- **`ring_uor` — a from-scratch `ring` tactic** (`F1Square/Analysis/RingTac.lean`). A genuine Lean
+  tactic written in core metaprogramming (`Lean.Elab.Tactic`, *not* Mathlib): it reifies an integer
+  equality goal into the `PExpr` syntax, applies the soundness lemma `nf_eq`, and discharges the
+  residual `norm lhs = norm rhs` by `decide`. Reification is fuel-bounded (no `partial def`), and the
+  tactic only *builds* an `nf_eq` proof term — so every goal it closes is as axiom-clean as `nf_eq`.
+  (For the record: `ring` is confirmed absent from Lean 4 core; `push_cast` and `omega`, which we use
+  for the cast/linear steps, *are* core — they compile with zero imports, no Mathlib.)
+- **ℚ as a verified ordered field** (`F1Square/Analysis/QOrder.lean`). Reflexivity and transitivity of
+  `≤`, `Qeq → Qle`, additive monotonicity, the absolute-value triangle inequality, `|·|` respecting
+  value-equality, order transport along `≈`, and the telescoping triangle `|(a+b)−(c+d)| ≤
+  |a−c|+|b−d|` — all from the core ℤ order/`natAbs` lemmas plus `ring_uor`.
+- **ℝ as an ordered additive group** (`F1Square/Analysis/Real.lean`). Negation `Rneg` (an isometry)
+  and the reindexed **Bishop addition** `Radd` (`(x⊕y)ₙ = x₍₂ₙ₊₁₎+y₍₂ₙ₊₁₎`), each with its
+  regularity proof — the addition's bound is exactly the `2·1/(2k+2) = 1/(k+1)` identity, discharged
+  by `ring_uor`. The `Real` structure now carries `den_pos`.
+
+ℝ multiplication, `≈`-transitivity (an Archimedean argument), completeness, ℂ = ℝ×ℝ, and the
+transcendentals are the v0.5.0 continuation. All v0.4.0 additions are kernel-checked, pure Lean 4
+(no Mathlib, no `sorry`), and axiom-audited. RH remains open.

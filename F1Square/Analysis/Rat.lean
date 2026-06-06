@@ -48,6 +48,26 @@ def mul (a b : Q) : Q := ⟨a.num * b.num, a.den * b.den⟩
 /-- Negation. -/
 def neg (a : Q) : Q := ⟨-a.num, a.den⟩
 
+/-- Subtraction on ℚ: `a − b := a + (−b)`. -/
+def Qsub (a b : Q) : Q := add a (neg b)
+
+/-- Absolute value on ℚ: keep the denominator, take `|numerator|`. -/
+def Qabs (a : Q) : Q := ⟨(a.num.natAbs : Int), a.den⟩
+
+/-- Addition keeps the denominator positive. -/
+theorem add_den_pos {a b : Q} (ha : 0 < a.den) (hb : 0 < b.den) : 0 < (add a b).den :=
+  Nat.mul_pos ha hb
+
+/-- Negation preserves the denominator. -/
+theorem neg_den_pos {a : Q} (ha : 0 < a.den) : 0 < (neg a).den := ha
+
+/-- Subtraction keeps the denominator positive. -/
+theorem Qsub_den_pos {a b : Q} (ha : 0 < a.den) (hb : 0 < b.den) : 0 < (Qsub a b).den :=
+  add_den_pos ha (neg_den_pos hb)
+
+/-- Absolute value preserves the denominator. -/
+theorem Qabs_den_pos {a : Q} (ha : 0 < a.den) : 0 < (Qabs a).den := ha
+
 /-- The canonical form: reduce to lowest terms via `gcd` — ℚ's content-address. -/
 def reduce (a : Q) : Q :=
   let g : Nat := Nat.gcd a.num.natAbs a.den

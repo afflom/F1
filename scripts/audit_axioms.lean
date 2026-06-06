@@ -139,3 +139,31 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Req_symm
 #print axioms Analysis.ofQ_respects
 #print axioms Analysis.Pos_half
+
+-- v0.4.0 — the from-scratch `ring_uor` tactic (sample theorems it discharges, axiom-clean).
+#print axioms Analysis.RingNF.ring_uor_sq
+#print axioms Analysis.RingNF.ring_uor_cube
+#print axioms Analysis.RingNF.ring_uor_telescope
+
+-- v0.4.0 — ℚ as a verified ordered field.
+#print axioms Analysis.Qle_refl
+#print axioms Analysis.Qeq_le
+#print axioms Analysis.Qle_trans
+#print axioms Analysis.Qabs_Qeq
+#print axioms Analysis.Qle_congr_left
+#print axioms Analysis.Qle_congr_right
+#print axioms Analysis.Qadd_le_add
+#print axioms Analysis.Qabs_add_le
+#print axioms Analysis.Qabs_sub_add4
+
+-- v0.4.0 — denominator-positivity helpers.
+#print axioms Analysis.add_den_pos
+#print axioms Analysis.Qsub_den_pos
+#print axioms Analysis.Qabs_den_pos
+
+-- v0.4.0 — ℝ arithmetic (negation + Bishop addition, regularity proved).
+#print axioms Analysis.Qbound_den_pos
+#print axioms Analysis.Qabs_Qsub_neg
+#print axioms Analysis.Rneg
+#print axioms Analysis.Radd
+#print axioms Analysis.Rneg_Rneg_seq

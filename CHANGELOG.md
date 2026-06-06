@@ -4,6 +4,41 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html), starting at `v0.0.1`.
 
+## [0.4.0] - 2026-06-06
+
+### Added — a from-scratch `ring` tactic; ℚ as an ordered field; ℝ as an ordered additive group (pure Lean 4, no Mathlib, no `sorry`)
+- `F1Square/Analysis/RingTac.lean` — **`ring_uor`, a from-scratch commutative-ring decision
+  procedure**, the capstone of the v0.3.0 normalizer. A real Lean tactic (core metaprogramming,
+  `Lean.Elab.Tactic` — *not* Mathlib): it reifies an integer equality goal into the `PExpr` syntax,
+  applies the soundness lemma `nf_eq`, and discharges the residual `norm lhs = norm rhs` by `decide`.
+  Reification is fuel-bounded (no `partial def`); the tactic only *builds* a `nf_eq` proof, so every
+  goal it closes is as axiom-clean as `nf_eq`. (`ring` is confirmed absent from core; `push_cast` and
+  `omega` are core and are used for cast/linear steps.)
+- `F1Square/Analysis/QOrder.lean` — **ℚ as a verified ordered field**: reflexivity, transitivity
+  (`Qle_trans`), `Qeq → Qle`, additive monotonicity (`Qadd_le_add`), the absolute-value triangle
+  inequality (`Qabs_add_le`), `|·|` respects value-equality (`Qabs_Qeq`), order transport along `≈`
+  (`Qle_congr_left/right`), and the telescoping triangle `|(a+b)−(c+d)| ≤ |a−c|+|b−d|`
+  (`Qabs_sub_add4`) — the exact bound real addition consumes. Built from the core ℤ order/`natAbs`
+  lemmas and `ring_uor`.
+- `F1Square/Analysis/Real.lean` — **ℝ arithmetic with full regularity proofs**: negation `Rneg`
+  (an isometry) and the reindexed **Bishop addition** `Radd` (`(x⊕y)ₙ = x₍₂ₙ₊₁₎+y₍₂ₙ₊₁₎`, regular
+  because `2·1/(2k+2) = 1/(k+1)`, proved via the telescoping triangle + monotonicity + `ring_uor`).
+  The `Real` structure now carries `den_pos` (every term has a positive denominator). With
+  denominator-positivity helpers added to `Analysis/Rat.lean`.
+- `scripts/audit_axioms.lean` extended to all new theorems; the honesty gate stays green.
+
+### Changed
+- `Real` gains the `den_pos` field; `ofQ` now takes a positivity proof (`zero`/`one`/`half` supply it
+  by `decide`). `Qsub`/`Qabs` moved from `Real.lean` to `Analysis/Rat.lean` (basic ℚ operations).
+- `docs/`: the analysis-substrate roadmap advances (ℝ is now an ordered additive group with a
+  from-scratch `ring`); ℝ multiplication, `≈`-transitivity (an Archimedean argument), ℂ = ℝ×ℝ, and
+  the transcendentals are the v0.5.0 continuation. `F1Square.lean` gains a v0.4.0 `example`.
+
+### Note
+- RH remains **open**. v0.4.0 makes ℝ an ordered additive group and gives the project a genuine
+  `ring`; it does not resolve λₙ / Weil-positivity / the crux. The substrate makes the analytic half
+  *statable and checkable*, never proven — proving `λₙ ≥ 0 ∀n` / the Hodge index on 𝕊 is RH.
+
 ## [0.3.0] - 2026-06-06
 
 ### Added — the analysis substrate, brick two: a ℤ ring normalizer + constructive ℝ (pure Lean 4, no Mathlib, no `sorry`)
@@ -132,6 +167,7 @@ Initial research base for the 𝔽₁-square / Riemann Hypothesis program.
   solution: the formalization compiles and states the construction problem precisely; it
   does not assert the crux.
 
+[0.4.0]: https://github.com/afflom/F1/releases/tag/v0.4.0
 [0.3.0]: https://github.com/afflom/F1/releases/tag/v0.3.0
 [0.2.0]: https://github.com/afflom/F1/releases/tag/v0.2.0
 [0.1.0]: https://github.com/afflom/F1/releases/tag/v0.1.0

@@ -32,6 +32,8 @@ import F1Square.Tropical.Spectrum
 import F1Square.Tropical.Siblings
 import F1Square.Analysis.Rat
 import F1Square.Analysis.RingNF
+import F1Square.Analysis.RingTac
+import F1Square.Analysis.QOrder
 import F1Square.Analysis.Real
 
 open UOR.Primitives
@@ -192,6 +194,11 @@ def f1SquareStatus : F1SquareStatus := {
 --   general ℚ field laws       ← Analysis.{add_comm, mul_comm, mul_assoc, add_assoc, mul_add, add_neg}
 --                                (now for ALL rationals, via the normalizer — not just v0.2.0 numerals)
 --   constructive ℝ (Bishop)    ← Analysis.{const_regular, Req_refl, Req_symm, ofQ_respects, Pos_half}
+-- v0.4.0 (a from-scratch `ring` tactic; ℚ ordered field; ℝ as an ordered additive group):
+--   ring_uor (the no-Mathlib    ← Analysis.RingNF.{ring_uor_sq, ring_uor_cube, ring_uor_telescope} —
+--     `ring`, built on nf_eq)     a reflective decision procedure: reify → nf_eq → decide
+--   ℚ ordered field            ← Analysis.{Qle_trans, Qadd_le_add, Qabs_add_le, Qabs_sub_add4, Qeq_le}
+--   ℝ arithmetic (regular)     ← Analysis.{Rneg, Radd} (negation + Bishop addition, regularity proved)
 -- The crux is NOT backed and stays `none`:
 --   hodgeIndexHolds (= RH)    ← Crux.CruxFor 𝕊 — OPEN. Crux.template_hodgeIndex proves the
 --                               property only on the product-of-curves TEMPLATE, never on 𝕊.
@@ -231,5 +238,16 @@ example :
     ∧ Analysis.Qeq (Analysis.mul ⟨2, 3⟩ ⟨4, 5⟩) (Analysis.mul ⟨4, 5⟩ ⟨2, 3⟩)
     ∧ Analysis.Pos Analysis.half :=
   ⟨Analysis.RingNF.sq_add 3 5, Analysis.mul_comm ⟨2, 3⟩ ⟨4, 5⟩, Analysis.Pos_half⟩
+
+/-- Elaboration-checked witness binding the v0.4.0 layer: the from-scratch `ring_uor` proves a general
+    integer identity, ℚ addition is monotone (ordered field), and ℝ negation is a pointwise
+    involution (ℝ arithmetic). -/
+example :
+    ((2 : Int) + 3) * (2 + 3) = 2 * 2 + 2 * (2 * 3) + 3 * 3
+    ∧ (∀ a b c d : Analysis.Q, Analysis.Qle a b → Analysis.Qle c d →
+        Analysis.Qle (Analysis.add a c) (Analysis.add b d))
+    ∧ ((Analysis.Rneg (Analysis.Rneg Analysis.half)).seq 0).num = (Analysis.half.seq 0).num :=
+  ⟨Analysis.RingNF.ring_uor_sq 2 3, fun _ _ _ _ hab hcd => Analysis.Qadd_le_add hab hcd,
+   Analysis.Rneg_Rneg_seq Analysis.half 0⟩
 
 end UOR.Bridge.F1Square

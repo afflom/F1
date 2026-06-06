@@ -478,10 +478,13 @@ canonical forms, realizations, no Mathlib — one brick per release:
   general algebraic proofs without Mathlib (it retroactively made the ℚ field laws *general*); and
   **constructive ℝ** as Bishop regular sequences over ℚ (`Analysis/Real.lean`) — the `Real` type, the
   regularity/positivity predicates, the ℚ↪ℝ embedding, and the equality setoid (refl/symm).
-- **v0.4.0:** ℝ field arithmetic (`+`, `·` with their regularity proofs), `≈`-transitivity and
-  completeness; then ℂ = ℝ×ℝ and transcendentals (exp/log/cos via convergent series with rigorous
-  error bounds, built on the ring normalizer).
-- **v0.5.0+:** ζ and `λₙ` as exact-bounded objects; the explicit formula as an exact-arithmetic trace.
+- **v0.4.0 (done):** a from-scratch **`ring` tactic** (`ring_uor`, core metaprogramming on the v0.3.0
+  normalizer — no Mathlib); **ℚ as a verified ordered field** (`Analysis/QOrder.lean`: transitivity,
+  monotonicity, triangle inequality, order transport); and **ℝ as an ordered additive group**
+  (`Analysis/Real.lean`: negation `Rneg` and Bishop addition `Radd`, both with regularity proved).
+- **v0.5.0:** ℝ multiplication, `≈`-transitivity (an Archimedean argument) and completeness; then
+  ℂ = ℝ×ℝ and transcendentals (exp/log/cos via convergent series with rigorous error bounds).
+- **v0.6.0+:** ζ and `λₙ` as exact-bounded objects; the explicit formula as an exact-arithmetic trace.
 
 Each brick makes more of the analytic half *statable and finitely checkable* — never a proof of the
 crux. Proving `λₙ ≥ 0 ∀ n` / Weil positivity / the Hodge index on `𝕊` IS RH, and remains open.
