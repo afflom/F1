@@ -59,45 +59,17 @@ Pure Lean 4, no Mathlib, no `sorry`.
 -/
 
 import F1Square.Analysis.ExactBounded
+import F1Square.Analysis.ROrder
 
 namespace UOR.Bridge.F1Square.Li
 
 open UOR.Bridge.F1Square.Analysis
 
-/-- **Bishop non-negativity** `x ≥ 0`: every approximant is at least `−1/(n+1)`. The non-strict
-    companion of `Pos` (the witnessed strict `> 0` already in `Analysis.Real`). -/
-def Rnonneg (x : Real) : Prop := ∀ n : Nat, Qle (neg (Qbound n)) (x.seq n)
-
-/-- `0 ≥ 0`. -/
-theorem Rnonneg_zero : Rnonneg zero := by
-  intro n
-  show Qle (neg (Qbound n)) ⟨0, 1⟩
-  unfold Qle neg Qbound; push_cast; omega
-
-/-- `1 ≥ 0`. -/
-theorem Rnonneg_one : Rnonneg one := by
-  intro n
-  show Qle (neg (Qbound n)) ⟨1, 1⟩
-  unfold Qle neg Qbound; push_cast; omega
-
 /-- `1 > 0` (witnessed at index 1: `1/2 < 1`). -/
 theorem Pos_one : Pos one := ⟨1, by decide⟩
 
-/-- A **generic** `ℝ≥0` fact: the sum of two non-negative reals is non-negative. (The Bishop addition
-    reindexes to `2n+1`, where `−1/(2n+2) − 1/(2n+2) = −1/(n+1)` exactly, so the bound lands on the
-    nose.) **Honesty note:** this is *not* the mechanism behind Li-positivity. In the Bombieri–Lagarias
-    decomposition `λₙ = λₙ^{arith} + λₙ^{∞}` the arithmetic part `λₙ^{arith} = −Σ_m Λ(m)·wₙ(m)` has the
-    *opposite* sign, so the two pieces do **not** have a common sign; `λₙ > 0` is a delicate
-    *cancellation* between them — that cancellation is the open difficulty, which no termwise lemma
-    like this one supplies. -/
-theorem Rnonneg_Radd {x y : Real} (hx : Rnonneg x) (hy : Rnonneg y) : Rnonneg (Radd x y) := by
-  intro n
-  show Qle (neg (Qbound n)) (add (x.seq (2 * n + 1)) (y.seq (2 * n + 1)))
-  have hsum := Qadd_le_add (hx (2 * n + 1)) (hy (2 * n + 1))
-  refine Qle_trans
-    (add_den_pos (neg_den_pos (Qbound_den_pos _)) (neg_den_pos (Qbound_den_pos _))) ?_ hsum
-  apply Qeq_le
-  simp only [Qeq, neg, Qbound, add]; push_cast; ring_uor
+-- `Rnonneg` (Bishop `x ≥ 0`) and `Rnonneg_zero`/`Rnonneg_one`/`Rnonneg_Radd` are the canonical
+-- real-order definitions, now in `Analysis.ROrder` (the v0.11.0 order layer) and used here via `open`.
 
 -- ===========================================================================
 -- The Li coefficients as a property, and THE CRUX (analytic face of RH).

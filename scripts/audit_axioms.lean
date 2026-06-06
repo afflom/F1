@@ -328,11 +328,22 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Qle_Qabs_Qsub_of_Qeq
 #print axioms Analysis.Rexp_seq
 
+-- v0.11.0 — the order ≤ on ℝ (foundation for the transcendentals).
+#print axioms Analysis.Qle_self_Qabs
+#print axioms Analysis.Qabs_le_of_both
+#print axioms Analysis.Qle_add_of_Qabs_sub
+#print axioms Analysis.Qsub_le_of_le_add
+#print axioms Analysis.Rnonneg_zero
+#print axioms Analysis.Rnonneg_one
+#print axioms Analysis.Rnonneg_Radd
+#print axioms Analysis.Rle_refl
+#print axioms Analysis.Rle_of_Req
+#print axioms Analysis.Rle_antisymm
+#print axioms Analysis.Rle_trans
+#print axioms Analysis.Rle_zero_of_Rnonneg
+
 -- v0.10.0 — the λₙ / RH proof boundary (analytic face), locked faithfully.
-#print axioms Li.Rnonneg_zero
-#print axioms Li.Rnonneg_one
 #print axioms Li.Pos_one
-#print axioms Li.Rnonneg_Radd
 #print axioms Li.template_liPositive
 #print axioms Li.template_liNonneg
 #print axioms Li.template_liPositiveUpTo

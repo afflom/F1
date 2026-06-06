@@ -368,4 +368,26 @@ theorem Qabs_le_add {a b : Q} (ha : 0 < a.den) (hb : 0 < b.den) :
     Qabs_den_pos (add_den_pos ha (Qsub_den_pos hb ha))
   exact Qle_congr_left hpos (Qeq_symm (Qabs_Qeq htel)) h2
 
+/-- Adding a non-negative rational increases (`≤`) the value. -/
+theorem Qle_self_add {x p : Q} (hp : 0 ≤ p.num) : Qle x (add x p) := by
+  unfold Qle add
+  push_cast
+  have key : (x.num * (p.den : Int) + p.num * (x.den : Int)) * (x.den : Int)
+      = x.num * ((x.den : Int) * (p.den : Int)) + p.num * ((x.den : Int) * (x.den : Int)) := by ring_uor
+  rw [key]
+  have hnn : 0 ≤ p.num * ((x.den : Int) * (x.den : Int)) :=
+    Int.mul_nonneg hp (Int.mul_nonneg (Int.ofNat_nonneg _) (Int.ofNat_nonneg _))
+  omega
+
+/-- Adding a non-negative rational on the left increases (`≤`) the value. -/
+theorem Qle_add_self {x p : Q} (hp : 0 ≤ p.num) : Qle x (add p x) := by
+  unfold Qle add
+  push_cast
+  have key : (p.num * (x.den : Int) + x.num * (p.den : Int)) * (x.den : Int)
+      = x.num * ((p.den : Int) * (x.den : Int)) + p.num * ((x.den : Int) * (x.den : Int)) := by ring_uor
+  rw [key]
+  have hnn : 0 ≤ p.num * ((x.den : Int) * (x.den : Int)) :=
+    Int.mul_nonneg hp (Int.mul_nonneg (Int.ofNat_nonneg _) (Int.ofNat_nonneg _))
+  omega
+
 end UOR.Bridge.F1Square.Analysis

@@ -54,17 +54,6 @@ theorem eSum_den_pos : ∀ N, 0 < (eSum N).den
   | 0 => by decide
   | (n + 1) => add_den_pos (eSum_den_pos n) (fct_pos (n + 1))
 
-/-- Adding a non-negative rational increases (`≤`) the value. -/
-theorem Qle_self_add {x p : Q} (hp : 0 ≤ p.num) : Qle x (add x p) := by
-  unfold Qle add
-  push_cast
-  have key : (x.num * (p.den : Int) + p.num * (x.den : Int)) * (x.den : Int)
-      = x.num * ((x.den : Int) * (p.den : Int)) + p.num * ((x.den : Int) * (x.den : Int)) := by ring_uor
-  rw [key]
-  have hnn : 0 ≤ p.num * ((x.den : Int) * (x.den : Int)) :=
-    Int.mul_nonneg hp (Int.mul_nonneg (Int.ofNat_nonneg _) (Int.ofNat_nonneg _))
-  omega
-
 /-- The partial sums are monotone (one step). -/
 theorem eSum_step (n : Nat) : Qle (eSum n) (eSum (n + 1)) :=
   Qle_self_add (Int.ofNat_nonneg _)
@@ -153,17 +142,6 @@ theorem efct_reindex (n : Nat) : Qle (⟨2, fct (n + 1 + 1)⟩ : Q) ⟨1, n + 1�
   have hnat : 2 * (n + 1) ≤ fct (n + 1 + 1) := Nat.le_trans h1 h2
   have : ((2 * (n + 1) : Nat) : Int) ≤ ((fct (n + 1 + 1) : Nat) : Int) := by exact_mod_cast hnat
   push_cast at this; omega
-
-/-- Adding a non-negative rational on the left increases (`≤`) the value. -/
-theorem Qle_add_self {x p : Q} (hp : 0 ≤ p.num) : Qle x (add p x) := by
-  unfold Qle add
-  push_cast
-  have key : (p.num * (x.den : Int) + x.num * (p.den : Int)) * (x.den : Int)
-      = x.num * ((p.den : Int) * (x.den : Int)) + p.num * ((x.den : Int) * (x.den : Int)) := by ring_uor
-  rw [key]
-  have hnn : 0 ≤ p.num * ((x.den : Int) * (x.den : Int)) :=
-    Int.mul_nonneg hp (Int.mul_nonneg (Int.ofNat_nonneg _) (Int.ofNat_nonneg _))
-  omega
 
 /-- The reindexed partial-sum sequence `n ↦ S(n+1)` — the regular ℚ-sequence whose value is `e`. -/
 def eSeq (n : Nat) : Q := eSum (n + 1)

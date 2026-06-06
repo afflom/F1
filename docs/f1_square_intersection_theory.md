@@ -534,12 +534,18 @@ canonical forms, realizations, no Mathlib — one brick per release:
   the rigorous tail bound `zetadiff_bound`, `ζ(s) > 0`). *Honest scope:* this ζ is the convergent regime
   `Re(s) > 1` (no zeros, not the critical strip); the analytic continuation and the genuine `λₙ` *values*
   (which need it and `log`) are deferred — only the exact-bounded type and the boundary are shipped now.
-- **v0.11.0+ (transcendentals arc, continued):** the everywhere-defined `exp` on ℝ (via the
-  halving/squaring identity `exp x = exp(x/2ᵏ)^{2ᵏ}`, reusing the `[0,1]` brick and ℝ multiplication),
-  `cos`/`sin` (alternating series with the even/odd sandwich remainder — genuinely new machinery), and
-  `log` (positivity-as-data + the artanh series); then the analytic continuation of ζ into the critical
-  strip and the genuine `λₙ` realizing the v0.10.0 interfaces, and the explicit formula as an
-  exact-arithmetic trace.
+- **v0.11.0 (done):** the **order `≤` on ℝ** (`ROrder.lean`) — the foundation the transcendentals need.
+  `Rle` (Bishop `xₙ ≤ yₙ + 2/(n+1)`) with reflexivity, `≈`-compatibility, antisymmetry up to `≈`, and
+  **transitivity via the Archimedean lemma** (`Qarch_gen` kills the `6/(m+1)` tail of the four-step
+  chain); `Rnonneg` canonicalized, with `Rnonneg → 0 ≤ x`.
+- **The transcendentals (concrete release sequence, no open `+`):** **v0.12.0** the reciprocal `Rinv`
+  and the everywhere-defined `exp` on ℝ (real powers, real `exp` on `[0,1]` via completeness, then the
+  halving/squaring identity `exp x = exp(x/2ᵏ)^{2ᵏ}`); **v0.13.0** `cos`/`sin` (alternating series with
+  the even/odd sandwich remainder) and `log` (positivity-as-data + the artanh series).
+- **The next phase (the analytic→arithmetic bridge):** the analytic continuation of ζ into the critical
+  strip (needs *complex* exp/log, built on the real transcendentals), the genuine `λₙ` realizing the
+  v0.10.0 interfaces, and the explicit formula as an exact-arithmetic trace. This phase ends at
+  `λₙ > 0 ∀ n` = RH — the open frontier itself, not a brick to be "completed."
 
 Each brick makes more of the analytic half *statable and finitely checkable* — never a proof of the
 crux. Proving `λₙ > 0 ∀ n` (Li's criterion) / Weil positivity / the Hodge index on `𝕊` IS RH, and

@@ -41,6 +41,7 @@ import F1Square.Analysis.Exp
 import F1Square.Analysis.ExpGen
 import F1Square.Analysis.ExactBounded
 import F1Square.Analysis.Zeta
+import F1Square.Analysis.ROrder
 import F1Square.Li
 
 open UOR.Primitives
@@ -248,6 +249,11 @@ def f1SquareStatus : F1SquareStatus := {
 --                                Nat → ExactBoundedReal (Analysis.ExactBounded). HONEST SCOPE: ζ here
 --                                is the convergent regime Re(s)>1 (no zeros, not the critical strip);
 --                                the genuine λₙ values need analytic continuation + log (deferred).
+-- v0.11.0 (the order ≤ on ℝ — the foundation for the transcendentals):
+--   Bishop order ≤            ← Analysis.{Rle (xₙ ≤ yₙ + 2/(n+1)), Rle_refl, Rle_of_Req, Rle_antisymm,
+--                               Rle_trans (Archimedean), Rle_zero_of_Rnonneg}; Rnonneg canonicalized here
+--   ℚ signed-bound helpers    ← Analysis.{Qle_self_Qabs, Qabs_le_of_both, Qle_add_of_Qabs_sub,
+--                               Qsub_le_of_le_add}
 -- The crux is NOT backed and stays `none` (BOTH faces, same RH):
 --   hodgeIndexHolds (= RH, geometric) ← Crux.CruxFor 𝕊 — OPEN. Crux.template_hodgeIndex proves the
 --                               property only on the product-of-curves TEMPLATE, never on 𝕊.
@@ -383,5 +389,17 @@ example :
     ∧ (∀ (x : Analysis.ExactBoundedReal) (n : Nat),
         Analysis.Qeq (Analysis.Qsub (Analysis.upperB x n) (Analysis.lowerB x n)) ⟨2, n + 1⟩) :=
   ⟨Analysis.zeta_pos, fun s hs _ _ h => Analysis.zetadiff_bound s hs h, Analysis.enclosure_width⟩
+
+/-- Elaboration-checked witness binding the v0.11.0 layer: the order `≤` on ℝ is a genuine order —
+    reflexive, antisymmetric up to `≈` (`x ≤ y` and `y ≤ x` give `x ≈ y`), transitive (the genuine
+    Archimedean limiting step), and refined by `≈`; and Bishop non-negativity `x ≥ 0` entails `0 ≤ x`.
+    This is the foundation the transcendentals (`exp`, `cos`/`sin`, `log`) build on. -/
+example :
+    (∀ x : Analysis.Real, Analysis.Rle x x)
+    ∧ (∀ x y : Analysis.Real, Analysis.Rle x y → Analysis.Rle y x → Analysis.Req x y)
+    ∧ (∀ x y z : Analysis.Real, Analysis.Rle x y → Analysis.Rle y z → Analysis.Rle x z)
+    ∧ (∀ x : Analysis.Real, Analysis.Rnonneg x → Analysis.Rle Analysis.zero x) :=
+  ⟨Analysis.Rle_refl, fun _ _ => Analysis.Rle_antisymm, fun _ _ _ => Analysis.Rle_trans,
+   fun _ => Analysis.Rle_zero_of_Rnonneg⟩
 
 end UOR.Bridge.F1Square

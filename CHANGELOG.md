@@ -4,6 +4,29 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html), starting at `v0.0.1`.
 
+## [0.11.0] - 2026-06-06
+
+### Added — the order `≤` on constructive ℝ (pure Lean 4, no Mathlib, no `sorry`): the foundation for the transcendentals
+- `F1Square/Analysis/ROrder.lean` — **`Rle`**, the Bishop order `x ≤ y ⟺ ∀ n, xₙ ≤ yₙ + 2/(n+1)`,
+  with the genuine order laws: `Rle_refl`, `Rle_of_Req` (`≈ ⟹ ≤`), `Rle_antisymm` (`x ≤ y` and
+  `y ≤ x` ⟹ `x ≈ y`), and **`Rle_trans`** — the one genuine limiting step: chaining `x ≤ y ≤ z`
+  through an auxiliary index `m` gives `xₙ ≤ zₙ + 2/(n+1) + 6/(m+1)` for every `m`, and the generalized
+  Archimedean lemma `Qarch_gen` kills the `6/(m+1)` tail (the argument behind `Req_trans`).
+- **`Rnonneg` canonicalized** here (moved from `Li`): Bishop `x ≥ 0` (`−1/(n+1) ≤ xₙ`), with
+  `Rnonneg_zero`/`Rnonneg_one`/`Rnonneg_Radd`, and `Rle_zero_of_Rnonneg` (`x ≥ 0 ⟹ 0 ≤ x`).
+- ℚ signed-bound helpers (`Qle_self_Qabs`, `Qabs_le_of_both`, `Qle_add_of_Qabs_sub`,
+  `Qsub_le_of_le_add`); `Qle_self_add`/`Qle_add_self` moved to `QOrder` (their natural home).
+- `F1Square.lean` gains a v0.11.0 `example`; `scripts/audit_axioms.lean` extended (coverage 288/288,
+  enforced); the honesty gate is hardened to also fail on **duplicate proof-layer theorem short-names**;
+  honesty audit PASS, axiom-clean and choice-free.
+
+### Note
+- This is the foundation the transcendentals build on. The roadmap for the rest, concretely (no open
+  `+`): **v0.12.0** reciprocal `Rinv` + `exp` on ℝ; **v0.13.0** `cos`/`sin` + `log`; then the next
+  phase — ζ's continuation into the critical strip (needs complex exp/log), the genuine `λₙ` realizing
+  the v0.10.0 interfaces, and the explicit-formula trace, which ends at `λₙ > 0 ∀n` = RH (the open
+  frontier). RH remains open (June 2026); no 𝔽₁-square construction exists.
+
 ## [0.10.0] - 2026-06-06
 
 ### Added — the λₙ / Riemann-Hypothesis proof boundary, locked faithfully (pure Lean 4, no Mathlib, no `sorry`)
@@ -396,6 +419,7 @@ Initial research base for the 𝔽₁-square / Riemann Hypothesis program.
   solution: the formalization compiles and states the construction problem precisely; it
   does not assert the crux.
 
+[0.11.0]: https://github.com/afflom/F1/releases/tag/v0.11.0
 [0.10.0]: https://github.com/afflom/F1/releases/tag/v0.10.0
 [0.9.0]: https://github.com/afflom/F1/releases/tag/v0.9.0
 [0.8.0]: https://github.com/afflom/F1/releases/tag/v0.8.0

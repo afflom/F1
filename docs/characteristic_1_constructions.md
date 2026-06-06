@@ -674,3 +674,26 @@ are kernel-checked, pure Lean 4 (no Mathlib, no `sorry`), axiom-audited and choi
 open (June 2026); no 𝔽₁-square construction exists — the Feb-2026 Connes–Consani *On the Jacobian of
 Spec ℤ̄* (arXiv:2602.15941) is a Jacobian/adele-class-space construction, not the square nor an
 intrinsic intersection theory.
+
+## 19. v0.11.0 — the order `≤` on ℝ (foundation for the transcendentals)
+
+**v0.11.0** builds the **order `≤` on constructive ℝ** (`ROrder.lean`) — the prerequisite every
+transcendental (`exp`, `cos`/`sin`, `log`) rests on. The Bishop order is
+
+  `x ≤ y  :⟺  ∀ n, xₙ ≤ yₙ + 2/(n+1)`.
+
+With this pointwise form, reflexivity (`Rle_refl`), the bridge from `≈` (`Rle_of_Req`), and
+antisymmetry up to `≈` (`Rle_antisymm`: `x ≤ y` and `y ≤ x` give `x ≈ y`) are immediate — the
+`2/(n+1)` slack absorbs the modulus at the *same* index. **Transitivity** (`Rle_trans`) is the one
+genuine limiting step: chaining `x ≤ y ≤ z` through an auxiliary index `m` yields
+`xₙ ≤ zₙ + 2/(n+1) + 6/(m+1)` for *every* `m` (four steps — regularity of `x` at `n,m`; `x ≤ y` at
+`m`; `y ≤ z` at `m`; regularity of `z` at `m,n`), and the generalized Archimedean lemma `Qarch_gen`
+kills the `6/(m+1)` tail — exactly the argument behind `Req_trans`. `Rnonneg` (Bishop `x ≥ 0`) gets its
+canonical home here (moved from `Li`), with `Rle_zero_of_Rnonneg` (`x ≥ 0 ⟹ 0 ≤ x`).
+
+The remaining transcendentals follow as concrete releases (no open `+`): **v0.12.0** reciprocal `Rinv`
++ `exp` on ℝ (real powers, real `exp` on `[0,1]` via completeness, then halving/squaring); **v0.13.0**
+`cos`/`sin` + `log`. Then the next phase — ζ's continuation into the critical strip (needs complex
+exp/log), the genuine `λₙ`, and the explicit-formula trace — which ends at `λₙ > 0 ∀n` = RH, the open
+frontier. All v0.11.0 additions are kernel-checked, pure Lean 4 (no Mathlib, no `sorry`), axiom-audited
+and choice-free. RH remains open (June 2026); no 𝔽₁-square construction exists.
