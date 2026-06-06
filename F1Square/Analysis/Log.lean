@@ -267,4 +267,124 @@ theorem qpow_diff_bound_rat {t t' ρ : Q} (htd : 0 < t.den) (ht'd : 0 < t'.den) 
           (Qabs_den_pos (Qsub_den_pos htd ht'd))))
           (Qmul_den_pos (Qabs_den_pos (Qsub_den_pos htd ht'd)) (qpow_den_pos hρd i))
 
+-- ===========================================================================
+-- The artanh Lipschitz bound (geometric, with the 1/(2n+1) weight cancelled).
+-- ===========================================================================
+
+/-- `Σ_{n=0}^N ρ^{2n}` (even powers). -/
+def geoEvenSum (ρ : Q) : Nat → Q
+  | 0 => qpow ρ 0
+  | (n + 1) => add (geoEvenSum ρ n) (qpow ρ (2 * (n + 1)))
+
+theorem geoEvenSum_den_pos {ρ : Q} (hρd : 0 < ρ.den) : ∀ N, 0 < (geoEvenSum ρ N).den
+  | 0 => qpow_den_pos hρd 0
+  | (n + 1) => add_den_pos (geoEvenSum_den_pos hρd n) (qpow_den_pos hρd _)
+
+/-- Even telescoping invariant: `E_N·(1−ρ²) + ρ^{2N+2} = 1`. -/
+theorem geoEven_eq {ρ : Q} (hρd : 0 < ρ.den) : ∀ N,
+    Qeq (add (mul (geoEvenSum ρ N) (Qsub ⟨1, 1⟩ (mul ρ ρ))) (qpow ρ (2 * N + 2))) ⟨1, 1⟩
+  | 0 => by
+      show Qeq (add (mul (qpow ρ 0) (Qsub ⟨1, 1⟩ (mul ρ ρ))) (qpow ρ 2)) ⟨1, 1⟩
+      simp only [qpow, Qeq, add, mul, Qsub, neg]; push_cast; ring_uor
+  | (N + 1) => by
+      refine Qeq_trans (add_den_pos (Qmul_den_pos (geoEvenSum_den_pos hρd N)
+          (Qsub_den_pos Nat.one_pos (Nat.mul_pos hρd hρd))) (qpow_den_pos hρd (2 * N + 2)))
+        ?_ (geoEven_eq hρd N)
+      have hgs : geoEvenSum ρ (N + 1) = add (geoEvenSum ρ N) (qpow ρ (2 * N + 2)) := by
+        show add (geoEvenSum ρ N) (qpow ρ (2 * (N + 1))) = add (geoEvenSum ρ N) (qpow ρ (2 * N + 2))
+        rw [show 2 * (N + 1) = 2 * N + 2 from by omega]
+      have hpw : qpow ρ (2 * (N + 1) + 2) = mul ρ (mul ρ (qpow ρ (2 * N + 2))) := by
+        rw [show 2 * (N + 1) + 2 = (2 * N + 2) + 1 + 1 from by omega, qpow_succ, qpow_succ]
+      rw [hgs, hpw]
+      exact geo_step_eq (geoEvenSum ρ N) (qpow ρ (2 * N + 2)) ρ
+
+/-- `E_N·(1−ρ²) ≤ 1`. -/
+theorem geoEven_bound {ρ : Q} (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den) (N : Nat) :
+    Qle (mul (geoEvenSum ρ N) (Qsub ⟨1, 1⟩ (mul ρ ρ))) ⟨1, 1⟩ :=
+  Qle_trans (add_den_pos (Qmul_den_pos (geoEvenSum_den_pos hρd N)
+      (Qsub_den_pos Nat.one_pos (Nat.mul_pos hρd hρd))) (qpow_den_pos hρd _))
+    (Qle_self_add (qpow_nonneg hρ0 _)) (Qeq_le (geoEven_eq hρd N))
+
+-- `(k·P)·... ` cancellation:  `((k·P)·D)·(1/k) ≈ P·D`.
+private theorem cancel_k (k : Nat) (P D : Q) :
+    Qeq (mul (mul (mul ⟨(k : Int), 1⟩ P) D) ⟨1, k⟩) (mul P D) := by
+  simp only [Qeq, mul]; push_cast; ring_uor
+
+-- `ρ·(k·Pi) + ρ·Pi ≈ (k+1)·(ρ·Pi)` (abstract).
+private theorem pcoef_step_eq (R Pi : Q) (k : Nat) :
+    Qeq (add (mul R (mul ⟨(k : Int), 1⟩ Pi)) (mul R Pi))
+      (mul ⟨((k + 1 : Nat) : Int), 1⟩ (mul R Pi)) := by
+  simp only [Qeq, add, mul]; push_cast; ring_uor
+
+/-- Closed form `Pcoef ρ (i+1) = (i+1)·ρⁱ`. -/
+theorem Pcoef_closed {ρ : Q} (hρd : 0 < ρ.den) : ∀ i,
+    Qeq (Pcoef ρ (i + 1)) (mul ⟨((i + 1 : Nat) : Int), 1⟩ (qpow ρ i))
+  | 0 => by
+      show Qeq (add (mul ρ ⟨0, 1⟩) (qpow ρ 0)) (mul ⟨1, 1⟩ (qpow ρ 0))
+      simp only [qpow, Qeq, add, mul]; push_cast; ring_uor
+  | (i + 1) => by
+      show Qeq (add (mul ρ (Pcoef ρ (i + 1))) (qpow ρ (i + 1)))
+        (mul ⟨((i + 1 + 1 : Nat) : Int), 1⟩ (qpow ρ (i + 1)))
+      have ih := Pcoef_closed hρd i
+      rw [qpow_succ ρ i]
+      refine Qeq_trans
+        (add_den_pos (Qmul_den_pos hρd (Qmul_den_pos Nat.one_pos (qpow_den_pos hρd i)))
+          (Qmul_den_pos hρd (qpow_den_pos hρd i)))
+        (Qadd_congr (Qmul_congr (Qeq_refl ρ) ih) (Qeq_refl (mul ρ (qpow ρ i))))
+        (pcoef_step_eq ρ (qpow ρ i) (i + 1))
+
+/-- **Per-term artanh Lipschitz**: `|t^{2n+1}/(2n+1) − t'^{2n+1}/(2n+1)| ≤ ρ^{2n}·|t − t'|`
+    (the `(2n+1)` coefficient cancels the `1/(2n+1)` weight). -/
+theorem artTerm_diff_bound {t t' ρ : Q} (htd : 0 < t.den) (ht'd : 0 < t'.den) (hρd : 0 < ρ.den)
+    (htρ : Qle (Qabs t) ρ) (ht'ρ : Qle (Qabs t') ρ) (n : Nat) :
+    Qle (Qabs (Qsub (artTerm t n) (artTerm t' n))) (mul (qpow ρ (2 * n)) (Qabs (Qsub t t'))) := by
+  have hfac : Qeq (Qsub (artTerm t n) (artTerm t' n))
+      (mul (Qsub (qpow t (2 * n + 1)) (qpow t' (2 * n + 1))) ⟨1, 2 * n + 1⟩) := by
+    show Qeq (Qsub (mul (qpow t (2 * n + 1)) ⟨1, 2 * n + 1⟩)
+        (mul (qpow t' (2 * n + 1)) ⟨1, 2 * n + 1⟩))
+      (mul (Qsub (qpow t (2 * n + 1)) (qpow t' (2 * n + 1))) ⟨1, 2 * n + 1⟩)
+    simp only [Qeq, Qsub, mul, add, neg]; push_cast; ring_uor
+  have heq1 : Qeq (Qabs (Qsub (artTerm t n) (artTerm t' n)))
+      (mul (Qabs (Qsub (qpow t (2 * n + 1)) (qpow t' (2 * n + 1)))) ⟨1, 2 * n + 1⟩) := by
+    have h := Qabs_Qeq hfac
+    rw [Qabs_mul, show Qabs (⟨1, 2 * n + 1⟩ : Q) = ⟨1, 2 * n + 1⟩ from rfl] at h; exact h
+  have hb1 := Qmul_le_mul_right (a := Qabs (Qsub (qpow t (2 * n + 1)) (qpow t' (2 * n + 1))))
+    (b := mul (Pcoef ρ (2 * n + 1)) (Qabs (Qsub t t'))) (c := ⟨1, 2 * n + 1⟩)
+    (by show (0 : Int) ≤ 1; decide) (qpow_diff_bound_rat htd ht'd hρd htρ ht'ρ (2 * n + 1))
+  have hmid : Qeq (mul (mul (Pcoef ρ (2 * n + 1)) (Qabs (Qsub t t'))) ⟨1, 2 * n + 1⟩)
+      (mul (mul (mul ⟨((2 * n + 1 : Nat) : Int), 1⟩ (qpow ρ (2 * n))) (Qabs (Qsub t t')))
+        ⟨1, 2 * n + 1⟩) :=
+    Qmul_congr (Qmul_congr (Pcoef_closed hρd (2 * n)) (Qeq_refl _)) (Qeq_refl _)
+  exact Qle_trans
+    (Qmul_den_pos (Qabs_den_pos (Qsub_den_pos (qpow_den_pos htd _) (qpow_den_pos ht'd _)))
+      (Nat.succ_pos _))
+    (Qeq_le heq1)
+    (Qle_trans (Qmul_den_pos (Qmul_den_pos (Pcoef_den_pos hρd _)
+        (Qabs_den_pos (Qsub_den_pos htd ht'd))) (Nat.succ_pos _)) hb1
+      (Qle_trans (Qmul_den_pos (Qmul_den_pos (Qmul_den_pos Nat.one_pos (qpow_den_pos hρd _))
+          (Qabs_den_pos (Qsub_den_pos htd ht'd))) (Nat.succ_pos _))
+        (Qeq_le hmid) (Qeq_le (cancel_k (2 * n + 1) (qpow ρ (2 * n)) (Qabs (Qsub t t'))))))
+
+/-- **The artanh Lipschitz sum bound**: `|artSum_t(N) − artSum_{t'}(N)| ≤ E_N·|t − t'|`. -/
+theorem artSum_Lip_le {t t' ρ : Q} (htd : 0 < t.den) (ht'd : 0 < t'.den) (hρd : 0 < ρ.den)
+    (htρ : Qle (Qabs t) ρ) (ht'ρ : Qle (Qabs t') ρ) :
+    ∀ N, Qle (Qabs (Qsub (artSum t N) (artSum t' N))) (mul (geoEvenSum ρ N) (Qabs (Qsub t t')))
+  | 0 => artTerm_diff_bound htd ht'd hρd htρ ht'ρ 0
+  | (N + 1) => by
+      have ih := artSum_Lip_le htd ht'd hρd htρ ht'ρ N
+      have hAd : 0 < (artSum t N).den := artSum_den_pos htd N
+      have hCd : 0 < (artSum t' N).den := artSum_den_pos ht'd N
+      have hBd : 0 < (artTerm t (N + 1)).den := artTerm_den_pos htd (N + 1)
+      have hDd : 0 < (artTerm t' (N + 1)).den := artTerm_den_pos ht'd (N + 1)
+      refine Qle_trans
+        (add_den_pos (Qabs_den_pos (Qsub_den_pos hAd hCd)) (Qabs_den_pos (Qsub_den_pos hBd hDd)))
+        (Qabs_sub_add4 hAd hBd hCd hDd)
+        (Qle_trans
+          (add_den_pos (Qmul_den_pos (geoEvenSum_den_pos hρd N)
+            (Qabs_den_pos (Qsub_den_pos htd ht'd)))
+            (Qmul_den_pos (qpow_den_pos hρd _) (Qabs_den_pos (Qsub_den_pos htd ht'd))))
+          (Qadd_le_add ih (artTerm_diff_bound htd ht'd hρd htρ ht'ρ (N + 1)))
+          (Qeq_le (Qeq_symm (Qmul_add_right (geoEvenSum ρ N) (qpow ρ (2 * (N + 1)))
+            (Qabs (Qsub t t'))))))
+
 end UOR.Bridge.F1Square.Analysis

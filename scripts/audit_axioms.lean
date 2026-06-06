@@ -428,6 +428,12 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Pcoef_den_pos
 #print axioms Analysis.Pcoef_num_nonneg
 #print axioms Analysis.qpow_diff_bound_rat
+#print axioms Analysis.geoEvenSum_den_pos
+#print axioms Analysis.geoEven_eq
+#print axioms Analysis.geoEven_bound
+#print axioms Analysis.Pcoef_closed
+#print axioms Analysis.artTerm_diff_bound
+#print axioms Analysis.artSum_Lip_le
 
 -- v0.10.0 — the λₙ / RH proof boundary (analytic face), locked faithfully.
 #print axioms Li.Pos_one
