@@ -416,6 +416,9 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rsin
 #print axioms Analysis.geoSum_den_pos
 #print axioms Analysis.geoU_eq
+#print axioms Analysis.geo_diff_eq
+#print axioms Analysis.Qsub_le_self
+#print axioms Analysis.geo_diff_bound
 
 -- v0.10.0 — the λₙ / RH proof boundary (analytic face), locked faithfully.
 #print axioms Li.Pos_one
