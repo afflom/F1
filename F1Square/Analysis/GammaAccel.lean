@@ -684,4 +684,17 @@ theorem Rlog2c_le :
     (by show 0 < (Qsub (⟨1, 1⟩ : Q) (mul ⟨1, 3⟩ ⟨1, 3⟩)).num; decide) 8 (log_tail_eq 8)
     (Rartanh_R ⟨1, 3⟩ m)
 
+/-- Each artanh term is monotone in the base. -/
+theorem artTerm_base_mono {a b : Q} (ha0 : 0 ≤ a.num) (had : 0 < a.den) (hbd : 0 < b.den)
+    (hab : Qle a b) (n : Nat) : Qle (artTerm a n) (artTerm b n) := by
+  show Qle (mul (qpow a (2 * n + 1)) ⟨1, 2 * n + 1⟩) (mul (qpow b (2 * n + 1)) ⟨1, 2 * n + 1⟩)
+  exact Qmul_le_mul_right (by show (0 : Int) ≤ 1; decide) (qpow_base_mono had hbd ha0 hab (2 * n + 1))
+
+/-- The artanh partial sums are monotone in the base (for non-negative bases). -/
+theorem artSum_base_mono {a b : Q} (ha0 : 0 ≤ a.num) (had : 0 < a.den) (hbd : 0 < b.den)
+    (hab : Qle a b) : ∀ N, Qle (artSum a N) (artSum b N)
+  | 0 => artTerm_base_mono ha0 had hbd hab 0
+  | (N + 1) =>
+      Qadd_le_add (artSum_base_mono ha0 had hbd hab N) (artTerm_base_mono ha0 had hbd hab (N + 1))
+
 end UOR.Bridge.F1Square.Analysis
