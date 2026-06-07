@@ -680,6 +680,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.altSum_eq_Fsum
 #print axioms Analysis.expSumM_eq_Fsum
 #print axioms Analysis.altAbsSum_le_U
+#print axioms Analysis.altAbsTail_le
 
 -- v0.10.0 — the λₙ / RH proof boundary (analytic face), locked faithfully.
 #print axioms Li.Pos_one

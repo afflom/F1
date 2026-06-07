@@ -447,4 +447,28 @@ theorem altAbsSum_le_U {q : Q} {M : Nat} (hqd : 0 < q.den) (hq : Qle (Qabs q) �
   rw [← expSumM_eq_Fsum]
   exact expSumM_le_U (M * M) N
 
+/-- **Absolute-sum tail bound**: `Σ_{i'≤d} |altTerm_{K+1+i'}| ≤ 2(M²)^{K+1}/(K+1)!` (for `2M² ≤ K+2`).
+    Each term is `≤ (M²)^{K+1+i'}/(K+1+i')!`; summed (via `Fsum_split_add` + `expSumM_eq_Fsum`) it is the
+    high block of `expSumM(M²)`, bounded by `expM_diff_bound`. -/
+theorem altAbsTail_le {q : Q} {M : Nat} (hqd : 0 < q.den) (hq : Qle (Qabs q) ⟨(M : Int), 1⟩)
+    (off K d : Nat) (hK : 2 * (M * M) ≤ K + 2) :
+    Qle (Fsum (fun i' => Qabs (altTerm q off (K + 1 + i'))) d)
+      ⟨(2 * npow (M * M) (K + 1) : Int), fct (K + 1)⟩ := by
+  have hf : ∀ i, 0 < ((⟨(npow (M * M) i : Int), fct i⟩ : Q)).den := fun i => fct_pos i
+  refine Qle_trans (Fsum_den_pos (fun i' => hf (K + 1 + i')) d)
+    (Fsum_le_congr (fun i' _ => altTerm_abs_le hqd hq off (K + 1 + i'))) ?_
+  have hsplit := Fsum_split_add (fun i => (⟨(npow (M * M) i : Int), fct i⟩ : Q)) hf K d
+  have hconv : Qeq (Fsum (fun i' => (⟨(npow (M * M) (K + 1 + i') : Int), fct (K + 1 + i')⟩ : Q)) d)
+      (Qsub (expSumM (M * M) (K + 1 + d)) (expSumM (M * M) K)) := by
+    rw [expSumM_eq_Fsum (M * M) (K + 1 + d), expSumM_eq_Fsum (M * M) K]
+    exact Qeq_symm (Qeq_trans
+      (Qsub_den_pos (add_den_pos (Fsum_den_pos hf K)
+        (Fsum_den_pos (fun i' => hf (K + 1 + i')) d)) (Fsum_den_pos hf K))
+      (QsubCongr hsplit (Qeq_refl _))
+      (Qsub_add_left_cancel (Fsum (fun i => (⟨(npow (M * M) i : Int), fct i⟩ : Q)) K)
+        (Fsum (fun i' => (⟨(npow (M * M) (K + 1 + i') : Int), fct (K + 1 + i')⟩ : Q)) d)))
+  exact Qle_congr_left
+    (Qsub_den_pos (expSumM_den_pos (M * M) (K + 1 + d)) (expSumM_den_pos (M * M) K))
+    (Qeq_symm hconv) (expM_diff_bound (M * M) hK (by omega))
+
 end UOR.Bridge.F1Square.Analysis
