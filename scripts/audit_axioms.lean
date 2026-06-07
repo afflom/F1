@@ -558,6 +558,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rgamma_h_lower
 #print axioms Analysis.Qle_add_of_Qsub_le
 #print axioms Analysis.artSum_upper_cleared
+#print axioms Analysis.Rmul_ofQ_le
+#print axioms Analysis.artSum_le_value
 
 -- v0.10.0 — the λₙ / RH proof boundary (analytic face), locked faithfully.
 #print axioms Li.Pos_one

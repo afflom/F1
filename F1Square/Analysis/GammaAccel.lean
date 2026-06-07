@@ -619,4 +619,32 @@ theorem artSum_upper_cleared {t : Q} (ht0 : 0 ≤ t.num) (htd : 0 < t.den)
   · exact Qle_trans (Qmul_den_pos (artSum_den_pos htd T) hWd)
       (Qmul_le_mul_right hWnn (artSum_mono ht0 htd h)) (Qle_self_add (qpow_nonneg ht0 _))
 
+/-- Upper bound for a constant-scaled real: if every approximant of `y` is `≤ c`, then
+    `k·y ≤ k·c` (for `k ≥ 0`). -/
+theorem Rmul_ofQ_le {k c : Q} (hk : 0 ≤ k.num) (hkd : 0 < k.den) (hcd : 0 < c.den)
+    {y : Real} (hc : ∀ m, Qle (y.seq m) c) :
+    Rle (Rmul (ofQ k hkd) y) (ofQ (mul k c) (Qmul_den_pos hkd hcd)) := by
+  intro n
+  show Qle (mul ((ofQ k hkd).seq (Ridx (ofQ k hkd) y n)) (y.seq (Ridx (ofQ k hkd) y n)))
+    (add (mul k c) ⟨2, n + 1⟩)
+  exact Qle_trans (Qmul_den_pos hkd hcd)
+    (Qmul_le_mul_left hk (hc (Ridx (ofQ k hkd) y n)))
+    (Qle_self_add (by show (0 : Int) ≤ 2; decide))
+
+/-- **Uniform upper bound on the artanh partial sums**: `artSum t M ≤ artSum t T + tail` for all `M`,
+    given a `tail` with `tail·(1−t²) = t^{2T+3}` (the geometric tail in cleared form). -/
+theorem artSum_le_value {t tail : Q} (ht0 : 0 ≤ t.num) (htd : 0 < t.den) (htaild : 0 < tail.den)
+    (hWn : 0 < (Qsub (⟨1, 1⟩ : Q) (mul t t)).num) (T : Nat)
+    (htail : Qeq (mul tail (Qsub ⟨1, 1⟩ (mul t t))) (qpow t (2 * T + 3))) (M : Nat) :
+    Qle (artSum t M) (add (artSum t T) tail) := by
+  have hWd : 0 < (Qsub (⟨1, 1⟩ : Q) (mul t t)).den :=
+    Qsub_den_pos Nat.one_pos (Qmul_den_pos htd htd)
+  refine Qmul_le_cancel_right hWn hWd ?_
+  refine Qle_trans (add_den_pos (Qmul_den_pos (artSum_den_pos htd T) hWd) (qpow_den_pos htd _))
+    (artSum_upper_cleared ht0 htd (Int.le_of_lt hWn) T M) ?_
+  refine Qeq_le (Qeq_symm (Qeq_trans
+    (add_den_pos (Qmul_den_pos (artSum_den_pos htd T) hWd) (Qmul_den_pos htaild hWd))
+    (Qmul_add_right (artSum t T) tail (Qsub ⟨1, 1⟩ (mul t t)))
+    (Qadd_congr (Qeq_refl _) htail)))
+
 end UOR.Bridge.F1Square.Analysis
