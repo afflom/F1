@@ -158,6 +158,71 @@ theorem zetaSum_le_two (s : Nat) (hs : 2 ≤ s) (N : Nat) : Qle (zetaSum s N) (�
   exact Qle_trans (zetaU_den_pos s N) h1
     (Qle_congr_right (zetaU_den_pos s 0) h3 h2)
 
+/-- **Term-wise difference of two alternating sums** (same length, possibly different summands): if
+    each term differs by at most `1/e`, the partial sums differ by at most `L/e`. -/
+theorem altSum_diff_le (b c : Nat → Q) (e : Nat) (he : 0 < e) (hbd : ∀ i, 0 < (b i).den)
+    (hcd : ∀ i, 0 < (c i).den) (hdiff : ∀ i, Qle (Qabs (Qsub (b i) (c i))) (⟨1, e⟩ : Q)) :
+    ∀ L, Qle (Qabs (Qsub (AltSum b L) (AltSum c L))) (⟨(L : Int), e⟩ : Q) := by
+  intro L
+  induction L generalizing b c with
+  | zero =>
+    show Qle (Qabs (Qsub (⟨0, 1⟩ : Q) ⟨0, 1⟩)) (⟨(0 : Int), e⟩ : Q)
+    have hx : (Qabs (Qsub (⟨0, 1⟩ : Q) ⟨0, 1⟩)).num = 0 := by decide
+    unfold Qle; rw [hx]; simp
+  | succ L ih =>
+    have ihbc := ih (fun i => b (i + 1)) (fun i => c (i + 1)) (fun i => hbd (i + 1))
+      (fun i => hcd (i + 1)) (fun i => hdiff (i + 1))
+    rw [AltSum_succ, AltSum_succ]
+    have hBpd : 0 < (AltSum (fun i => b (i + 1)) L).den :=
+      AltSum_den_pos (fun i => b (i + 1)) (fun i => hbd (i + 1)) L
+    have hCpd : 0 < (AltSum (fun i => c (i + 1)) L).den :=
+      AltSum_den_pos (fun i => c (i + 1)) (fun i => hcd (i + 1)) L
+    have htri := Qabs_sub_triangle
+      (a := Qsub (b 0) (AltSum (fun i => b (i + 1)) L))
+      (b := Qsub (c 0) (AltSum (fun i => b (i + 1)) L))
+      (c := Qsub (c 0) (AltSum (fun i => c (i + 1)) L))
+      (Qsub_den_pos (hbd 0) hBpd) (Qsub_den_pos (hcd 0) hBpd) (Qsub_den_pos (hcd 0) hCpd)
+    -- term1 ≈ |b0 − c0| ≤ 1/e ;  term2 ≈ |Bp − Cp| ≤ L/e
+    have hc1 : Qeq (Qsub (Qsub (b 0) (AltSum (fun i => b (i + 1)) L))
+        (Qsub (c 0) (AltSum (fun i => b (i + 1)) L))) (Qsub (b 0) (c 0)) := by
+      simp only [Qeq, Qsub, add, neg]; push_cast
+      generalize (b 0).num = B; generalize (AltSum (fun i => b (i + 1)) L).num = P
+      generalize (c 0).num = C; generalize ((b 0).den : Int) = bd
+      generalize ((AltSum (fun i => b (i + 1)) L).den : Int) = pd
+      generalize ((c 0).den : Int) = cd
+      ring_uor
+    have hc2 : Qeq (Qsub (Qsub (c 0) (AltSum (fun i => b (i + 1)) L))
+        (Qsub (c 0) (AltSum (fun i => c (i + 1)) L)))
+        (Qsub (AltSum (fun i => c (i + 1)) L) (AltSum (fun i => b (i + 1)) L)) := by
+      simp only [Qeq, Qsub, add, neg]; push_cast
+      generalize (c 0).num = C; generalize (AltSum (fun i => b (i + 1)) L).num = P
+      generalize (AltSum (fun i => c (i + 1)) L).num = Qn; generalize ((c 0).den : Int) = cd
+      generalize ((AltSum (fun i => b (i + 1)) L).den : Int) = pd
+      generalize ((AltSum (fun i => c (i + 1)) L).den : Int) = qd
+      ring_uor
+    have ht1 : Qle (Qabs (Qsub (Qsub (b 0) (AltSum (fun i => b (i + 1)) L))
+        (Qsub (c 0) (AltSum (fun i => b (i + 1)) L)))) (⟨1, e⟩ : Q) :=
+      Qle_congr_left (Qabs_den_pos (Qsub_den_pos (hbd 0) (hcd 0)))
+        (Qeq_symm (Qabs_Qeq hc1)) (hdiff 0)
+    have ht2 : Qle (Qabs (Qsub (Qsub (c 0) (AltSum (fun i => b (i + 1)) L))
+        (Qsub (c 0) (AltSum (fun i => c (i + 1)) L)))) (⟨(L : Int), e⟩ : Q) := by
+      have key : Qeq (Qabs (Qsub (Qsub (c 0) (AltSum (fun i => b (i + 1)) L))
+          (Qsub (c 0) (AltSum (fun i => c (i + 1)) L))))
+          (Qabs (Qsub (AltSum (fun i => b (i + 1)) L) (AltSum (fun i => c (i + 1)) L))) := by
+        rw [← Qabs_Qsub_comm (AltSum (fun i => c (i + 1)) L) (AltSum (fun i => b (i + 1)) L)]
+        exact Qabs_Qeq hc2
+      exact Qle_congr_left (Qabs_den_pos (Qsub_den_pos hBpd hCpd)) (Qeq_symm key) ihbc
+    have hsum : Qeq (add (⟨1, e⟩ : Q) ⟨(L : Int), e⟩) (⟨((L + 1 : Nat) : Int), e⟩ : Q) := by
+      simp only [Qeq, add]; push_cast
+      generalize ((e : Nat) : Int) = E; generalize ((L : Nat) : Int) = Lc
+      ring_uor
+    refine Qle_trans (add_den_pos (Qabs_den_pos (Qsub_den_pos (Qsub_den_pos (hbd 0) hBpd)
+        (Qsub_den_pos (hcd 0) hBpd))) (Qabs_den_pos (Qsub_den_pos (Qsub_den_pos (hcd 0) hBpd)
+        (Qsub_den_pos (hcd 0) hCpd)))) htri ?_
+    exact Qle_trans (add_den_pos (show 0 < (⟨1, e⟩ : Q).den from he)
+        (show 0 < (⟨(L : Int), e⟩ : Q).den from he))
+      (Qadd_le_add ht1 ht2) (Qeq_le hsum)
+
 /-! ### The γ-term `b(i) = ζ(i+2)/(i+2)` at ζ-approximation depth `D` -/
 
 /-- The `i`-th alternating-series magnitude, `ζ(i+2)/(i+2)`, using the depth-`D` ζ-approximant. -/
