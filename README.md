@@ -73,7 +73,9 @@ CI runs `lake build` on every push and pull request.
 ## Versioning
 
 This project uses [Semantic Versioning](https://semver.org), starting at **v0.0.1**. See
-[`CHANGELOG.md`](CHANGELOG.md).
+[`CHANGELOG.md`](CHANGELOG.md) for the release history and [`ROADMAP.md`](ROADMAP.md) for the remaining
+construction of the F1 square, scoped into releases v0.15.0–v0.19.0 (the crux stays `none` until RH is
+genuinely proven).
 
 ## Publishing (Zenodo)
 
