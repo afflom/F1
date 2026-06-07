@@ -783,4 +783,85 @@ theorem Rpi_seq_ub_tight (n : Nat) : Qle (Rpi_seq n) (⟨3142, 1000⟩ : Q) := b
     (Qsub_le_2 (Qmul_le_mul_left (by decide) h5) (Qmul_le_mul_left (by decide) h239))
     (by decide)
 
+/-! ### Step 5d: `log π` as `Rlog Rpi`, with a tight upper bound -/
+
+/-- `6/5 ≤ Rpi.seq n` (the Machin lower bracket in clean `⟨6,5⟩` form). -/
+theorem Rpi_seq_ge (n : Nat) : Qle (⟨6, 5⟩ : Q) (Rpi_seq n) :=
+  Qle_trans (Qsub_den_pos (Qmul_den_pos (by decide) (by decide)) (Qmul_den_pos (by decide) (by decide)))
+    (by decide : Qle (⟨6, 5⟩ : Q) (Qsub (mul ⟨16, 1⟩ ⟨1, 8⟩) (mul ⟨4, 1⟩ ⟨1, 5⟩)))
+    (Rpi_seq_lb n)
+
+/-- Every π approximant has positive numerator. -/
+theorem Rpi_seq_num_pos (n : Nat) : 0 < (Rpi_seq n).num := by
+  have hge' : (6 : Int) * ((Rpi_seq n).den : Int) ≤ (Rpi_seq n).num * 5 := Rpi_seq_ge n
+  have hd' : (0 : Int) < ((Rpi_seq n).den : Int) := by exact_mod_cast Rpi_seq_den_pos n
+  omega
+
+/-- The t-map of a rational `≥ 1` has non-negative numerator. -/
+theorem tmap_num_nonneg {q : Q} (hq : Qle (⟨1, 1⟩ : Q) q) : 0 ≤ (tmap q).num := by
+  have hq' : (1 : Int) * (q.den : Int) ≤ q.num * 1 := hq
+  have hd : (0 : Int) ≤ (q.den : Int) := Int.ofNat_nonneg _
+  have heq : (tmap q).num = (q.num - (q.den : Int)) * (q.den : Int) := by
+    simp only [tmap, mul, Qsub, add, neg, Qinv]; push_cast; ring_uor
+  rw [heq]; exact Int.mul_nonneg (by omega) hd
+
+/-- The reindexed `(π−1)/(π+1)` diagonal has positive denominators. -/
+theorem RpiTmap_den (n : Nat) : 0 < (Rlog_seq Rpi n).den := by
+  refine Qmul_den_pos (Qsub_den_pos (Rpi.den_pos _) Nat.one_pos) (Qinv_den_pos ?_)
+  have h : 0 < (Rpi.seq (Rlog_R n)).num := Rpi_seq_num_pos (Rlog_R n)
+  have h2 : (0 : Int) ≤ ((Rpi.seq (Rlog_R n)).den : Int) := Int.ofNat_nonneg _
+  show 0 < (Rpi.seq (Rlog_R n)).num * 1 + 1 * ((Rpi.seq (Rlog_R n)).den : Int)
+  omega
+
+/-- **`(π−1)/(π+1)` as a constructive real** — the argument of `log π = 2·artanh((π−1)/(π+1))`. -/
+def RpiTmap : Real := ⟨Rlog_seq Rpi, Rlog_regular Rpi Rpi_seq_num_pos, RpiTmap_den⟩
+
+/-- Every approximant of `(π−1)/(π+1)` is `≤ 15/29 = tmap(22/7)` in absolute value (since `π ≤ 22/7`). -/
+theorem RpiTmap_abs_le (n : Nat) : Qle (Qabs (RpiTmap.seq n)) (⟨15, 29⟩ : Q) := by
+  have hqM : Qle (Rpi.seq (Rlog_R n)) (⟨22, 7⟩ : Q) :=
+    Qle_trans (by decide) (Rpi_seq_ub_tight (Rlog_R n)) (by decide : Qle (⟨3142, 1000⟩ : Q) ⟨22, 7⟩)
+  have hq1 : 0 < (add (Rpi.seq (Rlog_R n)) ⟨1, 1⟩).num := by
+    have h : 0 < (Rpi.seq (Rlog_R n)).num := Rpi_seq_num_pos (Rlog_R n)
+    have h2 : (0 : Int) ≤ ((Rpi.seq (Rlog_R n)).den : Int) := Int.ofNat_nonneg _
+    show 0 < (Rpi.seq (Rlog_R n)).num * 1 + 1 * ((Rpi.seq (Rlog_R n)).den : Int); omega
+  have hqMge : Qle (⟨1, 1⟩ : Q) (mul (Rpi.seq (Rlog_R n)) ⟨22, 7⟩) :=
+    Qle_trans (Qmul_den_pos (by decide) (by decide))
+      (by decide : Qle (⟨1, 1⟩ : Q) (mul ⟨6, 5⟩ ⟨22, 7⟩))
+      (Qmul_le_mul_right (by decide) (Rpi_seq_ge (Rlog_R n)))
+  exact Qle_trans (by decide : 0 < (tmap (⟨22, 7⟩ : Q)).den)
+    (tmap_abs_le (Rpi.den_pos (Rlog_R n)) (by decide) hq1 (by decide) hqM hqMge)
+    (by decide : Qle (tmap (⟨22, 7⟩ : Q)) ⟨15, 29⟩)
+
+/-- Every approximant of `(π−1)/(π+1)` is non-negative (since `π ≥ 1`). -/
+theorem RpiTmap_nonneg (n : Nat) : 0 ≤ (RpiTmap.seq n).num :=
+  tmap_num_nonneg (Qle_trans (by decide) (by decide : Qle (⟨1, 1⟩ : Q) ⟨6, 5⟩) (Rpi_seq_ge (Rlog_R n)))
+
+/-- **`log π`** = `2·artanh((π−1)/(π+1))`, with radius `15/29`. -/
+def Rlogπc : Real :=
+  Rmul (ofQ ⟨2, 1⟩ (by decide))
+    (Rartanh RpiTmap ⟨15, 29⟩ (by decide) (by decide) (by decide) RpiTmap_abs_le)
+
+/-- The artanh truncation tail for base `15/29`, depth `T = 6`: `tail·(1−(15/29)²) = (15/29)^15`. -/
+theorem tailπ_eq :
+    Qeq (mul (⟨npow 15 15, npow 29 13 * 616⟩ : Q) (Qsub ⟨1, 1⟩ (mul ⟨15, 29⟩ ⟨15, 29⟩)))
+      (qpow ⟨15, 29⟩ 15) := by decide
+
+/-- **`log π ≤ 2·(artSum(15/29,6) + tail) ≈ 1.1453`** — kernel-certified upper bound. The varying
+    artanh argument `(π−1)/(π+1)` is dominated by the constant `15/29` (base-monotonicity), then the
+    constant series is truncated at depth 6 with an explicit geometric tail. -/
+theorem Rlogπc_le :
+    Rle Rlogπc (ofQ (mul ⟨2, 1⟩ (add (artSum ⟨15, 29⟩ 6) ⟨npow 15 15, npow 29 13 * 616⟩))
+      (Qmul_den_pos (by decide) (add_den_pos (artSum_den_pos (by decide) 6) (by decide)))) := by
+  unfold Rlogπc
+  apply Rmul_ofQ_le (by decide) (by decide)
+    (add_den_pos (artSum_den_pos (by decide) 6) (by decide))
+  intro m
+  show Qle (artSum (RpiTmap.seq (Rartanh_R ⟨15, 29⟩ m)) (Rartanh_R ⟨15, 29⟩ m))
+    (add (artSum ⟨15, 29⟩ 6) ⟨npow 15 15, npow 29 13 * 616⟩)
+  exact Qle_trans (artSum_den_pos (by decide) (Rartanh_R ⟨15, 29⟩ m))
+    (artSum_base_mono (RpiTmap_nonneg _) (RpiTmap.den_pos _) (by decide)
+      (Qle_trans (Qabs_den_pos (RpiTmap.den_pos _)) (Qle_self_Qabs _) (RpiTmap_abs_le _))
+      (Rartanh_R ⟨15, 29⟩ m))
+    (artSum_le_value (by decide) (by decide) (by decide) (by decide) 6 tailπ_eq (Rartanh_R ⟨15, 29⟩ m))
+
 end UOR.Bridge.F1Square.Analysis

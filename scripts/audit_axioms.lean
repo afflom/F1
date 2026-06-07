@@ -569,6 +569,14 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.arctanSum_deep_le
 #print axioms Analysis.arctanSum_deep_ge
 #print axioms Analysis.Rpi_seq_ub_tight
+#print axioms Analysis.Rpi_seq_ge
+#print axioms Analysis.Rpi_seq_num_pos
+#print axioms Analysis.tmap_num_nonneg
+#print axioms Analysis.RpiTmap_den
+#print axioms Analysis.RpiTmap_abs_le
+#print axioms Analysis.RpiTmap_nonneg
+#print axioms Analysis.tailπ_eq
+#print axioms Analysis.Rlogπc_le
 
 -- v0.10.0 — the λₙ / RH proof boundary (analytic face), locked faithfully.
 #print axioms Li.Pos_one
