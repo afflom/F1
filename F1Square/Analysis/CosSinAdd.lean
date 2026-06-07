@@ -187,4 +187,51 @@ theorem binom_even_odd_eq (m : Nat) :
     have h := hSeq; unfold Qeq at h; simpa using h
   rw [NFsum_neg] at hS; omega
 
+/-- A `cos²` factorial term equals `C(2m+2,2i)/(2m+2)!`. -/
+theorem cosFct_term (m i : Nat) (hi : i ≤ m + 1) :
+    Qeq (⟨1, fct (2 * i) * fct (2 * ((m + 1) - i))⟩ : Q)
+      ⟨(choose (2 * m + 2) (2 * i) : Int), fct (2 * m + 2)⟩ := by
+  have hfac := choose_mul_fct_mul_fct (n := 2 * m + 2) (k := 2 * i) (by omega)
+  rw [show (2 * m + 2) - (2 * i) = 2 * ((m + 1) - i) from by omega] at hfac
+  have hN : fct (2 * m + 2) = choose (2 * m + 2) (2 * i) * (fct (2 * i) * fct (2 * ((m + 1) - i))) := by
+    rw [← hfac, Nat.mul_assoc]
+  show (1 : Int) * ((fct (2 * m + 2) : Nat) : Int)
+     = ((choose (2 * m + 2) (2 * i) : Nat) : Int) * ((fct (2 * i) * fct (2 * ((m + 1) - i)) : Nat) : Int)
+  rw [hN]; push_cast; ring_uor
+
+/-- A `sin²` factorial term equals `C(2m+2,2i+1)/(2m+2)!`. -/
+theorem sinFct_term (m i : Nat) (hi : i ≤ m) :
+    Qeq (⟨1, fct (2 * i + 1) * fct (2 * (m - i) + 1)⟩ : Q)
+      ⟨(choose (2 * m + 2) (2 * i + 1) : Int), fct (2 * m + 2)⟩ := by
+  have hfac := choose_mul_fct_mul_fct (n := 2 * m + 2) (k := 2 * i + 1) (by omega)
+  rw [show (2 * m + 2) - (2 * i + 1) = 2 * (m - i) + 1 from by omega] at hfac
+  have hN : fct (2 * m + 2) = choose (2 * m + 2) (2 * i + 1) * (fct (2 * i + 1) * fct (2 * (m - i) + 1)) := by
+    rw [← hfac, Nat.mul_assoc]
+  show (1 : Int) * ((fct (2 * m + 2) : Nat) : Int)
+     = ((choose (2 * m + 2) (2 * i + 1) : Nat) : Int) * ((fct (2 * i + 1) * fct (2 * (m - i) + 1) : Nat) : Int)
+  rw [hN]; push_cast; ring_uor
+
+/-- **`CosFct(m+1) ≈ SinFct(m)`**: the degree-`(m+1)` `cos²` factorial sum equals the degree-`m` `sin²`
+    factorial sum. Both collapse (via `cosFct_term`/`sinFct_term` + `Fsum_const_den`) to a single
+    fraction over `(2m+2)!` whose numerators are the even/odd binomial sums, equal by `binom_even_odd_eq`. -/
+theorem cosFct_eq_sinFct (m : Nat) :
+    Qeq (Fsum (fun i => (⟨1, fct (2 * i) * fct (2 * ((m + 1) - i))⟩ : Q)) (m + 1))
+      (Fsum (fun i => (⟨1, fct (2 * i + 1) * fct (2 * (m - i) + 1)⟩ : Q)) m) := by
+  have hcos : Qeq (Fsum (fun i => (⟨1, fct (2 * i) * fct (2 * ((m + 1) - i))⟩ : Q)) (m + 1))
+      ⟨NFsum (fun i => (choose (2 * m + 2) (2 * i) : Int)) (m + 1), fct (2 * m + 2)⟩ :=
+    Qeq_trans (Fsum_den_pos (f := fun i => (⟨(choose (2 * m + 2) (2 * i) : Int), fct (2 * m + 2)⟩ : Q))
+        (fun _ => fct_pos _) (m + 1))
+      (Fsum_congr_le (fun i hi => cosFct_term m i hi))
+      (Fsum_const_den (fun i => (choose (2 * m + 2) (2 * i) : Int)) (fct (2 * m + 2)) (fct_pos _) (m + 1))
+  have hsin : Qeq (Fsum (fun i => (⟨1, fct (2 * i + 1) * fct (2 * (m - i) + 1)⟩ : Q)) m)
+      ⟨NFsum (fun i => (choose (2 * m + 2) (2 * i + 1) : Int)) m, fct (2 * m + 2)⟩ :=
+    Qeq_trans (Fsum_den_pos (f := fun i => (⟨(choose (2 * m + 2) (2 * i + 1) : Int), fct (2 * m + 2)⟩ : Q))
+        (fun _ => fct_pos _) m)
+      (Fsum_congr_le (fun i hi => sinFct_term m i hi))
+      (Fsum_const_den (fun i => (choose (2 * m + 2) (2 * i + 1) : Int)) (fct (2 * m + 2)) (fct_pos _) m)
+  have heq : Qeq (⟨NFsum (fun i => (choose (2 * m + 2) (2 * i) : Int)) (m + 1), fct (2 * m + 2)⟩ : Q)
+      ⟨NFsum (fun i => (choose (2 * m + 2) (2 * i + 1) : Int)) m, fct (2 * m + 2)⟩ := by
+    rw [binom_even_odd_eq m]; exact Qeq_refl _
+  exact Qeq_trans (fct_pos _) hcos (Qeq_trans (fct_pos _) heq (Qeq_symm hsin))
+
 end UOR.Bridge.F1Square.Analysis

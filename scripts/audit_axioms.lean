@@ -664,6 +664,9 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.binTerm_even
 #print axioms Analysis.binTerm_odd
 #print axioms Analysis.binom_even_odd_eq
+#print axioms Analysis.cosFct_term
+#print axioms Analysis.sinFct_term
+#print axioms Analysis.cosFct_eq_sinFct
 
 -- v0.10.0 — the λₙ / RH proof boundary (analytic face), locked faithfully.
 #print axioms Li.Pos_one
