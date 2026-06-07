@@ -673,6 +673,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.altPyth_conv_vanish
 #print axioms Analysis.Qadd_cancel_mid
 #print axioms Analysis.altPyth_telescope
+#print axioms Analysis.altPyth_partial
 
 -- v0.10.0 — the λₙ / RH proof boundary (analytic face), locked faithfully.
 #print axioms Li.Pos_one

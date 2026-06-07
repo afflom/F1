@@ -327,4 +327,71 @@ theorem altPyth_telescope {q : Q} (hqd : 0 < q.den) :
           (Qadd_congr (altPyth_telescope hqd N) (Qeq_refl _))
           (Qadd_cancel_mid Nat.one_pos (hqsc N) (hcc (N + 1)) (hqsc (N + 1)) (altPyth_conv_vanish hqd N)))
 
+/-- **The partial-sum Pythagorean identity**: `(cosSum N)² + q²·(sinauxSum N)² ≈ 1 + ERR`, where the error
+    `ERR = q²·sinConv(N) + cornerCos + q²·cornerSin` collects the final convolution tail and the two
+    Cauchy corners. Assembled from `Fsum_sq_cauchy` (cos² and sin² decompositions) and `altPyth_telescope`
+    (the antidiagonal telescope to `1`). -/
+theorem altPyth_partial {q : Q} (hqd : 0 < q.den) (N : Nat) :
+    Qeq (add (mul (Fsum (altTerm q 0) N) (Fsum (altTerm q 0) N))
+        (mul (mul q q) (mul (Fsum (altTerm q 1) N) (Fsum (altTerm q 1) N))))
+      (add ⟨1, 1⟩ (add (mul (mul q q) (Fsum (fun i => mul (altTerm q 1 i) (altTerm q 1 (N - i))) N))
+        (add (Fsum (fun i => Qsub (Fsum (fun j => mul (altTerm q 0 i) (altTerm q 0 j)) N)
+              (Fsum (fun j => mul (altTerm q 0 i) (altTerm q 0 j)) (N - i))) N)
+          (mul (mul q q) (Fsum (fun i => Qsub (Fsum (fun j => mul (altTerm q 1 i) (altTerm q 1 j)) N)
+              (Fsum (fun j => mul (altTerm q 1 i) (altTerm q 1 j)) (N - i))) N))))) := by
+  have ha0 : ∀ i, 0 < (altTerm q 0 i).den := altTerm_den_pos hqd 0
+  have ha1 : ∀ i, 0 < (altTerm q 1 i).den := altTerm_den_pos hqd 1
+  have hsqd : 0 < (mul q q).den := Qmul_den_pos hqd hqd
+  -- the convolution sums and corners
+  have hScosd : 0 < (Fsum (fun m => Fsum (fun i => mul (altTerm q 0 i) (altTerm q 0 (m - i))) m) N).den :=
+    Fsum_den_pos (fun m => Fsum_den_pos (fun i => Qmul_den_pos (ha0 i) (ha0 (m - i))) m) N
+  have hcorCosd : 0 < (Fsum (fun i => Qsub (Fsum (fun j => mul (altTerm q 0 i) (altTerm q 0 j)) N)
+      (Fsum (fun j => mul (altTerm q 0 i) (altTerm q 0 j)) (N - i))) N).den :=
+    Fsum_den_pos (fun i => Qsub_den_pos (Fsum_den_pos (fun j => Qmul_den_pos (ha0 i) (ha0 j)) N)
+      (Fsum_den_pos (fun j => Qmul_den_pos (ha0 i) (ha0 j)) (N - i))) N
+  have hsinConvd : ∀ m, 0 < (Fsum (fun i => mul (altTerm q 1 i) (altTerm q 1 (m - i))) m).den :=
+    fun m => Fsum_den_pos (fun i => Qmul_den_pos (ha1 i) (ha1 (m - i))) m
+  have hSsind : 0 < (Fsum (fun m => Fsum (fun i => mul (altTerm q 1 i) (altTerm q 1 (m - i))) m) N).den :=
+    Fsum_den_pos hsinConvd N
+  have hcorSind : 0 < (Fsum (fun i => Qsub (Fsum (fun j => mul (altTerm q 1 i) (altTerm q 1 j)) N)
+      (Fsum (fun j => mul (altTerm q 1 i) (altTerm q 1 j)) (N - i))) N).den :=
+    Fsum_den_pos (fun i => Qsub_den_pos (Fsum_den_pos (fun j => Qmul_den_pos (ha1 i) (ha1 j)) N)
+      (Fsum_den_pos (fun j => Qmul_den_pos (ha1 i) (ha1 j)) (N - i))) N
+  have hSqsind : 0 < (Fsum (fun m => mul (mul q q)
+      (Fsum (fun i => mul (altTerm q 1 i) (altTerm q 1 (m - i))) m)) N).den :=
+    Fsum_den_pos (fun m => Qmul_den_pos hsqd (hsinConvd m)) N
+  -- q²·sin² ≈ Σqsin + q²·cornerSin
+  have hqsin : Qeq (mul (mul q q) (mul (Fsum (altTerm q 1) N) (Fsum (altTerm q 1) N)))
+      (add (Fsum (fun m => mul (mul q q) (Fsum (fun i => mul (altTerm q 1 i) (altTerm q 1 (m - i))) m)) N)
+        (mul (mul q q) (Fsum (fun i => Qsub (Fsum (fun j => mul (altTerm q 1 i) (altTerm q 1 j)) N)
+            (Fsum (fun j => mul (altTerm q 1 i) (altTerm q 1 j)) (N - i))) N))) :=
+    Qeq_trans (Qmul_den_pos hsqd (add_den_pos hSsind hcorSind))
+      (Qmul_congr (Qeq_refl (mul q q)) (Fsum_sq_cauchy ha1 N))
+      (Qeq_trans (add_den_pos (Qmul_den_pos hsqd hSsind) (Qmul_den_pos hsqd hcorSind))
+        (Qmul_add_left (mul q q)
+          (Fsum (fun m => Fsum (fun i => mul (altTerm q 1 i) (altTerm q 1 (m - i))) m) N)
+          (Fsum (fun i => Qsub (Fsum (fun j => mul (altTerm q 1 i) (altTerm q 1 j)) N)
+            (Fsum (fun j => mul (altTerm q 1 i) (altTerm q 1 j)) (N - i))) N))
+        (Qadd_congr (Qeq_symm (Fsum_mul_left hsqd hsinConvd N)) (Qeq_refl _)))
+  -- combine cos² and q²·sin²
+  refine Qeq_trans (add_den_pos (add_den_pos hScosd hcorCosd) (add_den_pos hSqsind (Qmul_den_pos hsqd hcorSind)))
+    (Qadd_congr (Fsum_sq_cauchy ha0 N) hqsin) ?_
+  refine Qeq_trans (add_den_pos (add_den_pos hScosd hSqsind) (add_den_pos hcorCosd (Qmul_den_pos hsqd hcorSind)))
+    (Qadd_rearrange
+      (Fsum (fun m => Fsum (fun i => mul (altTerm q 0 i) (altTerm q 0 (m - i))) m) N)
+      (Fsum (fun i => Qsub (Fsum (fun j => mul (altTerm q 0 i) (altTerm q 0 j)) N)
+        (Fsum (fun j => mul (altTerm q 0 i) (altTerm q 0 j)) (N - i))) N)
+      (Fsum (fun m => mul (mul q q) (Fsum (fun i => mul (altTerm q 1 i) (altTerm q 1 (m - i))) m)) N)
+      (mul (mul q q) (Fsum (fun i => Qsub (Fsum (fun j => mul (altTerm q 1 i) (altTerm q 1 j)) N)
+        (Fsum (fun j => mul (altTerm q 1 i) (altTerm q 1 j)) (N - i))) N))) ?_
+  refine Qeq_trans (add_den_pos (add_den_pos Nat.one_pos (Qmul_den_pos hsqd (hsinConvd N)))
+      (add_den_pos hcorCosd (Qmul_den_pos hsqd hcorSind)))
+    (Qadd_congr (altPyth_telescope hqd N) (Qeq_refl _)) ?_
+  exact Qadd_assoc3 ⟨1, 1⟩
+    (mul (mul q q) (Fsum (fun i => mul (altTerm q 1 i) (altTerm q 1 (N - i))) N))
+    (add (Fsum (fun i => Qsub (Fsum (fun j => mul (altTerm q 0 i) (altTerm q 0 j)) N)
+        (Fsum (fun j => mul (altTerm q 0 i) (altTerm q 0 j)) (N - i))) N)
+      (mul (mul q q) (Fsum (fun i => Qsub (Fsum (fun j => mul (altTerm q 1 i) (altTerm q 1 j)) N)
+        (Fsum (fun j => mul (altTerm q 1 i) (altTerm q 1 j)) (N - i))) N)))
+
 end UOR.Bridge.F1Square.Analysis
