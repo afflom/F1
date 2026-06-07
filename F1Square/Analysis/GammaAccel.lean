@@ -330,6 +330,37 @@ theorem cApprox_depth_diff (n : Nat) {Tj Tk : Nat} (hT : Tj ≤ Tk) :
 
 /-! ### Step 3c: the γ diagonal and its regularity -/
 
+/-- The plain partial sums are monotone (non-negative terms). -/
+theorem Ssum_le {f : Nat → Q} (hf0 : ∀ i, 0 ≤ (f i).num) (hfd : ∀ i, 0 < (f i).den)
+    {a b : Nat} (hab : a ≤ b) : Qle (Ssum f a) (Ssum f b) := by
+  induction hab with
+  | refl => exact Qle_refl _
+  | step _ ih => exact Qle_trans (Ssum_den_pos hfd _) ih (Qle_self_add (hf0 _))
+
+/-- Exponential dominates the polynomial: `8(j+1)² ≤ 3^{2j+3}`. -/
+theorem pow_dom : ∀ j, 8 * ((j + 1) * (j + 1)) ≤ npow 3 (2 * j + 3)
+  | 0 => by decide
+  | (j + 1) => by
+      have ih := pow_dom j
+      have hpow : npow 3 (2 * (j + 1) + 3) = npow 3 (2 * j + 3) * 9 := by
+        rw [show 2 * (j + 1) + 3 = (2 * j + 3) + 2 from by omega, npow_add,
+          show npow 3 2 = 9 from by decide]
+      have hsqe : (3 * (j + 1)) * (3 * (j + 1)) = 9 * ((j + 1) * (j + 1)) := by
+        have h : (((3 * (j + 1)) * (3 * (j + 1)) : Nat) : Int) = ((9 * ((j + 1) * (j + 1)) : Nat) : Int) := by
+          push_cast; ring_uor
+        exact_mod_cast h
+      have hsq : (j + 1 + 1) * (j + 1 + 1) ≤ 9 * ((j + 1) * (j + 1)) := by
+        have h3 : j + 1 + 1 ≤ 3 * (j + 1) := by omega
+        calc (j + 1 + 1) * (j + 1 + 1) ≤ (3 * (j + 1)) * (3 * (j + 1)) := Nat.mul_le_mul h3 h3
+          _ = 9 * ((j + 1) * (j + 1)) := hsqe
+      rw [hpow]
+      calc 8 * ((j + 1 + 1) * (j + 1 + 1)) ≤ 8 * (9 * ((j + 1) * (j + 1))) :=
+            Nat.mul_le_mul (Nat.le_refl 8) hsq
+        _ = 9 * (8 * ((j + 1) * (j + 1))) := by omega
+        _ ≤ 9 * npow 3 (2 * j + 3) := Nat.mul_le_mul (Nat.le_refl 9) ih
+        _ = npow 3 (2 * j + 3) * 9 := Nat.mul_comm _ _
+
+
 /-- **Term-wise difference of two plain sums**: if each term differs by `≤ 1/e`, the length-`M` sums
     differ by `≤ M/e`. -/
 theorem Ssum_depth_diff {f g : Nat → Q} (e : Nat) (he : 0 < e) (hfd : ∀ i, 0 < (f i).den)
@@ -365,5 +396,80 @@ theorem Ssum_depth_diff {f g : Nat → Q} (e : Nat) (he : 0 < e) (hfd : ∀ i, 0
       exact Qle_trans (add_den_pos (show 0 < (⟨(M : Int), e⟩ : Q).den from he)
           (show 0 < (⟨1, e⟩ : Q).den from he))
         (Qadd_le_add (Ssum_depth_diff e he hfd hgd hdiff M) (hdiff M)) (Qeq_le hsum)
+
+/-- Number of telescoping terms at diagonal depth `j`. -/
+def gammaHN (j : Nat) : Nat := 2 * (j + 1)
+
+/-- The `j`-th rational approximant of γ: the `2(j+1)`-term sum of the depth-`(j+1)`
+    artanh-telescoping terms `cApprox`. -/
+def gammaHseq (j : Nat) : Q := Ssum (fun i => cApprox i (j + 1)) (gammaHN j)
+
+theorem gammaHseq_den_pos (j : Nat) : 0 < (gammaHseq j).den :=
+  Ssum_den_pos (fun i => cApprox_den_pos i (j + 1)) (gammaHN j)
+
+theorem gammaHseq_reg_le {j k : Nat} (hjk : j ≤ k) :
+    Qle (Qabs (Qsub (gammaHseq j) (gammaHseq k))) (Qbound j) := by
+  have hNmono : gammaHN j ≤ gammaHN k := by unfold gammaHN; omega
+  have htri := Qabs_sub_triangle
+    (a := Ssum (fun i => cApprox i (j + 1)) (gammaHN j))
+    (b := Ssum (fun i => cApprox i (k + 1)) (gammaHN j))
+    (c := Ssum (fun i => cApprox i (k + 1)) (gammaHN k))
+    (Ssum_den_pos (fun i => cApprox_den_pos i (j + 1)) _)
+    (Ssum_den_pos (fun i => cApprox_den_pos i (k + 1)) _)
+    (Ssum_den_pos (fun i => cApprox_den_pos i (k + 1)) _)
+  have hA : Qle (Qabs (Qsub (Ssum (fun i => cApprox i (j + 1)) (gammaHN j))
+      (Ssum (fun i => cApprox i (k + 1)) (gammaHN j)))) (⟨(gammaHN j : Int), npow 3 (2 * j + 3)⟩ : Q) :=
+    Ssum_depth_diff (npow 3 (2 * j + 3)) (npow_pos (by omega) _)
+      (fun i => cApprox_den_pos i (j + 1)) (fun i => cApprox_den_pos i (k + 1))
+      (fun i => cApprox_depth_diff i (show j + 1 ≤ k + 1 by omega)) (gammaHN j)
+  have hAbnd : Qle (⟨(gammaHN j : Int), npow 3 (2 * j + 3)⟩ : Q) (⟨1, 2 * j + 2⟩ : Q) := by
+    refine Qfrac_le (a := 2 * j + 1) ?_
+    show gammaHN j * (2 * j + 1 + 1) ≤ npow 3 (2 * j + 3)
+    have hpd := pow_dom j
+    have h4 : gammaHN j * (2 * j + 1 + 1) = 4 * ((j + 1) * (j + 1)) := by
+      have h : ((gammaHN j * (2 * j + 1 + 1) : Nat) : Int) = ((4 * ((j + 1) * (j + 1)) : Nat) : Int) := by
+        unfold gammaHN; push_cast; ring_uor
+      exact_mod_cast h
+    rw [h4]; omega
+  have hBnn : 0 ≤ (Qsub (Ssum (fun i => cApprox i (k + 1)) (gammaHN k))
+      (Ssum (fun i => cApprox i (k + 1)) (gammaHN j))).num :=
+    num_nonneg_of_Qzero_le (Qsub_nonneg_of_le (Ssum_le (fun i => cApprox_num_nonneg i (k + 1))
+      (fun i => cApprox_den_pos i (k + 1)) hNmono))
+  have hB : Qle (Qabs (Qsub (Ssum (fun i => cApprox i (k + 1)) (gammaHN j))
+      (Ssum (fun i => cApprox i (k + 1)) (gammaHN k))))
+      (Qsub (⟨1, gammaHN j + 1⟩ : Q) ⟨1, gammaHN k + 1⟩) := by
+    rw [Qabs_Qsub_comm]
+    exact Qabs_le_of_nonneg hBnn (Ssum_tail_le (fun i => cApprox_den_pos i (k + 1))
+      (fun i => cApprox_ub i (k + 1)) (gammaHN j) hNmono)
+  have hBbnd : Qle (Qsub (⟨1, gammaHN j + 1⟩ : Q) ⟨1, gammaHN k + 1⟩) (⟨1, 2 * j + 2⟩ : Q) := by
+    refine Qle_trans (show 0 < (⟨1, gammaHN j + 1⟩ : Q).den by show 0 < gammaHN j + 1; omega)
+      (Qsub_le_self (by show (0 : Int) ≤ 1; decide)) ?_
+    show (1 : Int) * ((2 * j + 2 : Nat) : Int) ≤ 1 * ((gammaHN j + 1 : Nat) : Int)
+    unfold gammaHN; push_cast; omega
+  have hsum : Qeq (add (⟨1, 2 * j + 2⟩ : Q) ⟨1, 2 * j + 2⟩) (Qbound j) := by
+    simp only [Qeq, add, Qbound]; push_cast; ring_uor
+  refine Qle_trans (add_den_pos
+      (Qabs_den_pos (Qsub_den_pos (Ssum_den_pos (fun i => cApprox_den_pos i (j + 1)) _)
+        (Ssum_den_pos (fun i => cApprox_den_pos i (k + 1)) _)))
+      (Qabs_den_pos (Qsub_den_pos (Ssum_den_pos (fun i => cApprox_den_pos i (k + 1)) _)
+        (Ssum_den_pos (fun i => cApprox_den_pos i (k + 1)) _)))) htri ?_
+  refine Qle_trans (add_den_pos (by show 0 < 2 * j + 2; omega) (by show 0 < 2 * j + 2; omega))
+    (Qadd_le_add (Qle_trans (by show 0 < npow 3 (2 * j + 3); exact npow_pos (by omega) _) hA hAbnd)
+      (Qle_trans (Qsub_den_pos (by show 0 < gammaHN j + 1; omega) (by show 0 < gammaHN k + 1; omega))
+        hB hBbnd))
+    (Qeq_le hsum)
+
+theorem gammaHseq_regular : IsRegular gammaHseq := by
+  intro m n
+  rcases Nat.le_total m n with h | h
+  · exact Qle_trans (Qbound_den_pos m) (gammaHseq_reg_le h)
+      (Qle_self_add (by show (0 : Int) ≤ 1; decide))
+  · rw [Qabs_Qsub_comm]
+    exact Qle_trans (Qbound_den_pos n) (gammaHseq_reg_le h)
+      (Qle_add_self (by show (0 : Int) ≤ 1; decide))
+
+/-- **The Euler–Mascheroni constant γ**, accelerated route: `γ = Σ (1/i − log((i+1)/i))`, a
+    constructive real with small-denominator approximants (so `Pos λ₁` is kernel-certifiable). -/
+def Rgamma_h : Real := ⟨gammaHseq, gammaHseq_regular, gammaHseq_den_pos⟩
 
 end UOR.Bridge.F1Square.Analysis

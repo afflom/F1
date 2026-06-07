@@ -544,6 +544,11 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.qpow_one_den
 #print axioms Analysis.cApprox_depth_diff
 #print axioms Analysis.Ssum_depth_diff
+#print axioms Analysis.Ssum_le
+#print axioms Analysis.pow_dom
+#print axioms Analysis.gammaHseq_den_pos
+#print axioms Analysis.gammaHseq_reg_le
+#print axioms Analysis.gammaHseq_regular
 
 -- v0.10.0 — the λₙ / RH proof boundary (analytic face), locked faithfully.
 #print axioms Li.Pos_one
