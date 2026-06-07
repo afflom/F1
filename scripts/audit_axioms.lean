@@ -621,6 +621,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.binomial
 #print axioms Analysis.expTerm_conv_term
 #print axioms Analysis.expTerm_conv
+#print axioms Analysis.alternating_binomial
 
 -- v0.10.0 — the λₙ / RH proof boundary (analytic face), locked faithfully.
 #print axioms Li.Pos_one

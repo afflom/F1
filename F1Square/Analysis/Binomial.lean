@@ -310,4 +310,14 @@ theorem expTerm_conv {x y : Q} (hxd : 0 < x.den) (hyd : 0 < y.den) (k : Nat) :
     (Qmul_swap ⟨1, fct k⟩ (Fsum (binTerm x y k) k)) ?_
   exact Qmul_congr (Qeq_symm (binomial hxd hyd k)) (Qeq_refl (⟨1, fct k⟩ : Q))
 
+/-- **The alternating binomial identity** `Σ_{i=0}^{n+1} C(n+1,i)·1ⁱ·(−1)ⁿ⁺¹⁻ⁱ ≈ 0` — i.e. `(1+(−1))ⁿ⁺¹ = 0`.
+    (The coefficient-vanishing behind `cos² + sin² = 1`.) -/
+theorem alternating_binomial (m : Nat) :
+    Qeq (Fsum (binTerm ⟨1, 1⟩ ⟨-1, 1⟩ (m + 1)) (m + 1)) ⟨0, 1⟩ := by
+  have hb := binomial (x := (⟨1, 1⟩ : Q)) (y := (⟨-1, 1⟩ : Q)) (by decide) (by decide) (m + 1)
+  have hz : Qeq (qpow (add (⟨1, 1⟩ : Q) ⟨-1, 1⟩) (m + 1)) ⟨0, 1⟩ := by
+    have hnum : (qpow (add (⟨1, 1⟩ : Q) ⟨-1, 1⟩) (m + 1)).num = 0 := qpow_zero_succ_num m
+    simp only [Qeq]; rw [hnum]; simp
+  exact Qeq_trans (qpow_den_pos (by decide) (m + 1)) (Qeq_symm hb) hz
+
 end UOR.Bridge.F1Square.Analysis
