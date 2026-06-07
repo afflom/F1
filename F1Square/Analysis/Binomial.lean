@@ -117,6 +117,22 @@ theorem Fsum_front {f : Nat → Q} (hf : ∀ i, 0 < (f i).den) (k : Nat) :
 theorem Qmul_swap (a b : Q) : Qeq (mul a b) (mul b a) := by
   simp only [Qeq, mul]; push_cast; ring_uor
 
+/-- Distribution `c·(a−b) ≈ c·a − c·b`. -/
+theorem Qmul_sub_distrib (c a b : Q) : Qeq (mul c (Qsub a b)) (Qsub (mul c a) (mul c b)) := by
+  simp only [Qeq, Qsub, mul, add, neg]; push_cast; ring_uor
+
+/-- Congruence for `Q` negation. -/
+theorem Qneg_congr {a b : Q} (h : Qeq a b) : Qeq (neg a) (neg b) := by
+  have h' : a.num * (b.den : Int) = b.num * (a.den : Int) := h
+  show (-a.num) * (b.den : Int) = (-b.num) * (a.den : Int)
+  calc (-a.num) * (b.den : Int) = -(a.num * (b.den : Int)) := by ring_uor
+    _ = -(b.num * (a.den : Int)) := by rw [h']
+    _ = (-b.num) * (a.den : Int) := by ring_uor
+
+/-- Congruence for `Q` subtraction. -/
+theorem Qsub_congr {a b c d : Q} (hac : Qeq a c) (hbd : Qeq b d) : Qeq (Qsub a b) (Qsub c d) :=
+  Qadd_congr hac (Qneg_congr hbd)
+
 /-- The general binomial summand `C(n,i)·xⁱ·yⁿ⁻ⁱ`. -/
 def binTerm (x y : Q) (n i : Nat) : Q :=
   mul ⟨(choose n i : Int), 1⟩ (mul (qpow x i) (qpow y (n - i)))
@@ -462,5 +478,19 @@ theorem expSum_mul_eq {x y : Q} (hxd : 0 < x.den) (hyd : 0 < y.den) (M : Nat) :
   refine Qeq_trans (add_den_pos (Fsum_den_pos (fun m => Fsum_den_pos (fun i => hab i (m - i)) m) M) hcorner)
     (Qadd_congr (Fsum_triangle_reindex hab M) (Qeq_refl _)) ?_
   exact Qadd_congr (Fsum_conv_expSum hxd hyd M) (Qeq_refl _)
+
+/-- The Cauchy-product corner factored per row: `Σᵢ (xⁱ/i!)·(Σ_{M−i<j≤M} yʲ/j!)`. -/
+theorem expSum_corner_factored {x y : Q} (hxd : 0 < x.den) (hyd : 0 < y.den) (M : Nat) :
+    Qeq (Fsum (fun i => Qsub (Fsum (fun j => mul (expTerm x i) (expTerm y j)) M)
+          (Fsum (fun j => mul (expTerm x i) (expTerm y j)) (M - i))) M)
+      (Fsum (fun i => mul (expTerm x i)
+          (Qsub (Fsum (expTerm y) M) (Fsum (expTerm y) (M - i)))) M) := by
+  have ha : ∀ i, 0 < (expTerm x i).den := fun i => expTerm_den_pos hxd i
+  have hb : ∀ j, 0 < (expTerm y j).den := fun j => expTerm_den_pos hyd j
+  refine Fsum_congr (fun i => ?_) M
+  exact Qeq_trans
+    (Qsub_den_pos (Qmul_den_pos (ha i) (Fsum_den_pos hb M)) (Qmul_den_pos (ha i) (Fsum_den_pos hb (M - i))))
+    (Qsub_congr (Fsum_mul_left (ha i) hb M) (Fsum_mul_left (ha i) hb (M - i)))
+    (Qeq_symm (Qmul_sub_distrib (expTerm x i) (Fsum (expTerm y) M) (Fsum (expTerm y) (M - i))))
 
 end UOR.Bridge.F1Square.Analysis

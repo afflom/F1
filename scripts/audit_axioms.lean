@@ -632,7 +632,11 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Fsum_mul_square
 #print axioms Analysis.expSum_eq_Fsum
 #print axioms Analysis.Fsum_conv_expSum
+#print axioms Analysis.Qmul_sub_distrib
+#print axioms Analysis.Qneg_congr
+#print axioms Analysis.Qsub_congr
 #print axioms Analysis.expSum_mul_eq
+#print axioms Analysis.expSum_corner_factored
 
 -- v0.10.0 — the λₙ / RH proof boundary (analytic face), locked faithfully.
 #print axioms Li.Pos_one
