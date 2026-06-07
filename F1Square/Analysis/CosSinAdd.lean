@@ -68,4 +68,29 @@ theorem altConv_factor {q : Q} (hqd : 0 < q.den) (off d : Nat) :
   exact Qeq_trans (Fsum_den_pos (fun i => Qmul_den_pos (qpow_den_pos hN d) (hfd i)) d) hstep
     (Fsum_mul_left (qpow_den_pos hN d) hfd d)
 
+/-- `(x+y)+z ≈ (x+z)+y`. -/
+theorem Qadd_perm (x y z : Q) : Qeq (add (add x y) z) (add (add x z) y) := by
+  simp only [Qeq, add]; push_cast; ring_uor
+
+/-- `((e+o)+x)+y ≈ (e+y)+(o+x)`. -/
+theorem Qadd_perm4 (e o x y : Q) : Qeq (add (add (add e o) x) y) (add (add e y) (add o x)) := by
+  simp only [Qeq, add]; push_cast; ring_uor
+
+/-- **Parity split**: `Σ_{i=0}^{2m+2} aᵢ ≈ (Σ_{j=0}^{m+1} a_{2j}) + (Σ_{j=0}^{m} a_{2j+1})`. -/
+theorem Fsum_parity_split (a : Nat → Q) (ha : ∀ i, 0 < (a i).den) :
+    ∀ m, Qeq (Fsum a (2 * m + 2))
+      (add (Fsum (fun j => a (2 * j)) (m + 1)) (Fsum (fun j => a (2 * j + 1)) m))
+  | 0 => Qadd_perm (a 0) (a 1) (a 2)
+  | (m + 1) => by
+      show Qeq (add (add (Fsum a (2 * m + 2)) (a (2 * m + 2 + 1))) (a (2 * m + 2 + 2)))
+        (add (add (Fsum (fun j => a (2 * j)) (m + 1)) (a (2 * m + 2 + 2)))
+          (add (Fsum (fun j => a (2 * j + 1)) m) (a (2 * m + 2 + 1))))
+      exact Qeq_trans
+        (add_den_pos (add_den_pos (add_den_pos (Fsum_den_pos (fun j => ha (2 * j)) (m + 1))
+          (Fsum_den_pos (fun j => ha (2 * j + 1)) m)) (ha (2 * m + 2 + 1))) (ha (2 * m + 2 + 2)))
+        (Qadd_congr (Qadd_congr (Fsum_parity_split a ha m) (Qeq_refl (a (2 * m + 2 + 1))))
+          (Qeq_refl (a (2 * m + 2 + 2))))
+        (Qadd_perm4 (Fsum (fun j => a (2 * j)) (m + 1)) (Fsum (fun j => a (2 * j + 1)) m)
+          (a (2 * m + 2 + 1)) (a (2 * m + 2 + 2)))
+
 end UOR.Bridge.F1Square.Analysis

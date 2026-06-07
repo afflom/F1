@@ -653,6 +653,9 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.qpow_add
 #print axioms Analysis.altTerm_mul
 #print axioms Analysis.altConv_factor
+#print axioms Analysis.Qadd_perm
+#print axioms Analysis.Qadd_perm4
+#print axioms Analysis.Fsum_parity_split
 
 -- v0.10.0 — the λₙ / RH proof boundary (analytic face), locked faithfully.
 #print axioms Li.Pos_one
