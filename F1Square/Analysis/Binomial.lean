@@ -320,6 +320,23 @@ theorem alternating_binomial (m : Nat) :
     simp only [Qeq]; rw [hnum]; simp
   exact Qeq_trans (qpow_den_pos (by decide) (m + 1)) (Qeq_symm hb) hz
 
+/-- A constant factor pulls out of a sum (on the right). -/
+theorem Fsum_mul_const_right {a : Nat → Q} {c : Q} (hcd : 0 < c.den) (ha : ∀ i, 0 < (a i).den) :
+    ∀ M, Qeq (mul (Fsum a M) c) (Fsum (fun i => mul (a i) c) M)
+  | 0 => Qeq_refl _
+  | (M + 1) =>
+      Qeq_trans
+        (add_den_pos (Qmul_den_pos (Fsum_den_pos ha M) hcd) (Qmul_den_pos (ha (M + 1)) hcd))
+        (Qmul_add_right (Fsum a M) (a (M + 1)) c)
+        (Qadd_congr (Fsum_mul_const_right hcd ha M) (Qeq_refl (mul (a (M + 1)) c)))
+
+/-- **Product of two sums as a square double sum**: `(Σ_{i≤M} aᵢ)·(Σ_{j≤M} bⱼ) ≈ Σ_{i≤M} Σ_{j≤M} aᵢ·bⱼ`. -/
+theorem Fsum_mul_square {a b : Nat → Q} (ha : ∀ i, 0 < (a i).den) (hb : ∀ j, 0 < (b j).den) (M : Nat) :
+    Qeq (mul (Fsum a M) (Fsum b M)) (Fsum (fun i => Fsum (fun j => mul (a i) (b j)) M) M) :=
+  Qeq_trans (Fsum_den_pos (fun i => Qmul_den_pos (ha i) (Fsum_den_pos hb M)) M)
+    (Fsum_mul_const_right (Fsum_den_pos hb M) ha M)
+    (Fsum_congr (fun i => Qeq_symm (Fsum_mul_left (ha i) hb M)) M)
+
 /-- The exponential partial sum as an `Fsum` of its terms (bridge to the finite-sum library). -/
 theorem expSum_eq_Fsum (q : Q) : ∀ N, Qeq (expSum q N) (Fsum (expTerm q) N)
   | 0 => by show Qeq (⟨1, 1⟩ : Q) (mul ⟨1, 1⟩ ⟨1, 1⟩); decide
