@@ -43,8 +43,9 @@ instance instDecidableHodgeType (q a : Int) : Decidable (hodgeType q a) := by
 
 /-- The signature flips *exactly* at the Hasse bound: Hodge type `⟺ a² ≤ 4q` — the
     square-root-free form of `|a| ≤ 2√q`, with no real square root needed. -/
-theorem hodgeType_iff (q a : Int) : hodgeType q a ↔ a * a ≤ 4 * q := by
-  unfold hodgeType governor; omega
+theorem hodgeType_iff (q a : Int) : hodgeType q a ↔ a * a ≤ 4 * q :=
+  Iff.intro (fun h => by unfold hodgeType governor at h; omega)
+    (fun h => by unfold hodgeType governor; omega)
 
 /-- Verified case (companion §9.1), `q = 25`, `a = 10 = 2√25`: Hodge type HOLDS. -/
 theorem hasse_q25_a10 : hodgeType 25 10 := by decide

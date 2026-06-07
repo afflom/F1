@@ -49,13 +49,15 @@ if echo "$out" | grep -qE 'sorryAx|ofReduceBool|trustCompiler'; then
   exit 1
 fi
 
-# 4. Every theorem that uses axioms must use only the standard trio
-#    {propext, Classical.choice, Quot.sound}. Any other named axiom fails.
+# 4. Every theorem that uses axioms must use only the minimal pair {propext, Quot.sound}.
+#    These two are foundational (forced by `omega`/`simp`/`Int` core internals) and constructively
+#    uncontroversial. `Classical.choice` is deliberately EXCLUDED: the entire proof layer is
+#    choice-free, so any re-introduction of choice (or any other named axiom) fails the gate.
 if echo "$out" | grep -E 'depends on axioms' \
-   | grep -vqE '\[(propext|Classical\.choice|Quot\.sound)(, (propext|Classical\.choice|Quot\.sound))*\]'; then
-  echo "FAIL: a theorem depends on an axiom outside {propext, Classical.choice, Quot.sound}." >&2
+   | grep -vqE '\[(propext|Quot\.sound)(, (propext|Quot\.sound))*\]'; then
+  echo "FAIL: a theorem depends on an axiom outside {propext, Quot.sound} (choice-free required)." >&2
   echo "$out" | grep -E 'depends on axioms' \
-    | grep -vE '\[(propext|Classical\.choice|Quot\.sound)(, (propext|Classical\.choice|Quot\.sound))*\]' >&2
+    | grep -vE '\[(propext|Quot\.sound)(, (propext|Quot\.sound))*\]' >&2
   exit 1
 fi
 
