@@ -160,4 +160,14 @@ theorem expSum_abs_le_Un {q : Q} {M : Nat} (hqd : 0 < q.den) (hq : Qle (Qabs q) 
     (Qle_congr_left (LipS_den_pos M (N + 1)) (LipS_shift M N) (LipS_le_U M (N + 1)))
     (Qle_toNat (expM_U_num_nonneg _ _) (expM_U_den_pos _ _))
 
+/-- **The exp functional-equation corner decays to `1/(n+1)` at a deep depth `D`**: combining the rational
+    FE `expSum_add_le` with the truncation `truncCoef_QE`, once `D` exceeds the explicit threshold. -/
+theorem expSum_add_decay {a b : Q} {Mx My : Nat} (ha0 : 0 ≤ a.num) (had : 0 < a.den)
+    (hb0 : 0 ≤ b.num) (hbd : 0 < b.den) (hqa : Qle (Qabs a) ⟨(Mx : Int), 1⟩) (hqb : Qle (Qabs b) ⟨(My : Int), 1⟩)
+    (hMxy : 0 < Mx + My) (n D : Nat)
+    (hD : 2 * (n + 1) * npow (Mx + My) (2 * (Mx + My) + 1) + 2 * (Mx + My) ≤ D) :
+    Qle (Qabs (Qsub (expSum (add a b) D) (mul (expSum a D) (expSum b D)))) ⟨1, n + 1⟩ :=
+  Qle_trans (fct_pos _) (expSum_add_le ha0 had hb0 hbd hqa hqb D (by omega))
+    (truncCoef_QE (Mx + My) 2 (n + 1) (D + 1) hMxy (by omega) (by omega))
+
 end UOR.Bridge.F1Square.Analysis

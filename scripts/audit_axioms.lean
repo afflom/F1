@@ -781,3 +781,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.RexpReal_trunc_decay
 #print axioms Analysis.RexpReal_trunc_le
 #print axioms Analysis.expSum_abs_le_Un
+#print axioms Analysis.expSum_add_decay

@@ -738,45 +738,6 @@ theorem RaltReal_trunc_le (x : Real) (j : Nat) :
       ≤ ((fct (RaltReal_R x j + 1) : Nat) : Int) := by exact_mod_cast h
   push_cast at hI ⊢; omega
 
-/-- **General factorial decay** (coefficient form of `trunc_reindex`): if `c·Bⁱ ≤ d+1` at the base
-    exponent `2B+1`, then `c·B^{2B+1+d} ≤ (2B+1+d)!`. Factorial beats the geometric `2^d` slack. -/
-theorem npow_fct_decay (B c d : Nat) (hB : 0 < B) (h : c * npow B (2 * B + 1) ≤ d + 1) :
-    c * npow B (2 * B + 1 + d) ≤ fct (2 * B + 1 + d) := by
-  have hcP : c * npow B (2 * B + 1) ≤ fct (2 * B + 1) * npow 2 d :=
-    Nat.le_trans (Nat.le_trans h (two_pow_ge d)) (Nat.le_mul_of_pos_left _ (fct_pos (2 * B + 1)))
-  have step1 : c * npow B (2 * B + 1 + d) * npow B (2 * B + 1)
-      ≤ npow B (2 * B + 1 + d) * fct (2 * B + 1) * npow 2 d := by
-    have hrw1 : c * npow B (2 * B + 1 + d) * npow B (2 * B + 1)
-        = npow B (2 * B + 1 + d) * (c * npow B (2 * B + 1)) := by
-      simp only [Nat.mul_assoc, Nat.mul_comm, Nat.mul_left_comm]
-    have hrw2 : npow B (2 * B + 1 + d) * (fct (2 * B + 1) * npow 2 d)
-        = npow B (2 * B + 1 + d) * fct (2 * B + 1) * npow 2 d := by
-      simp only [Nat.mul_assoc, Nat.mul_comm, Nat.mul_left_comm]
-    rw [hrw1, ← hrw2]
-    exact Nat.mul_le_mul (Nat.le_refl _) hcP
-  have chain : npow B (2 * B + 1) * (c * npow B (2 * B + 1 + d))
-      ≤ npow B (2 * B + 1) * fct (2 * B + 1 + d) := by
-    have e3 : npow B (2 * B + 1) * (c * npow B (2 * B + 1 + d))
-        = c * npow B (2 * B + 1 + d) * npow B (2 * B + 1) := by
-      simp only [Nat.mul_assoc, Nat.mul_comm, Nat.mul_left_comm]
-    have e4 : npow B (2 * B + 1) * fct (2 * B + 1 + d) = fct (2 * B + 1 + d) * npow B (2 * B + 1) :=
-      Nat.mul_comm _ _
-    rw [e3, e4]
-    exact Nat.le_trans step1 (fct_ge_geom B d)
-  exact Nat.le_of_mul_le_mul_left chain (npow_pos hB (2 * B + 1))
-
-/-- **Coefficient truncation bound**: `c·B^{2B+1+d}/(2B+1+d)! ≤ 1/e` when `c·e·Bⁱ ≤ d+1` (base exp `2B+1`).
-    The workhorse for bounding each Pythagorean error summand by `1/(n+1)` at a deep reference depth. -/
-theorem truncCoef_Q (B c e d : Nat) (hB : 0 < B) (h : c * e * npow B (2 * B + 1) ≤ d + 1) :
-    Qle (⟨(c * npow B (2 * B + 1 + d) : Int), fct (2 * B + 1 + d)⟩ : Q) ⟨1, e⟩ := by
-  have key : c * npow B (2 * B + 1 + d) * e ≤ fct (2 * B + 1 + d) := by
-    rw [Nat.mul_right_comm c (npow B (2 * B + 1 + d)) e]
-    exact npow_fct_decay B (c * e) d hB h
-  show (c * npow B (2 * B + 1 + d) : Int) * ((e : Nat) : Int) ≤ 1 * ((fct (2 * B + 1 + d) : Nat) : Int)
-  have hI : ((c * npow B (2 * B + 1 + d) * e : Nat) : Int) ≤ ((fct (2 * B + 1 + d) : Nat) : Int) := by
-    exact_mod_cast key
-  push_cast at hI ⊢; omega
-
 /-- A non-negative rational is bounded by the integer `⌈num/den⌉`-overestimate `⟨num.toNat, 1⟩`. -/
 theorem Q_le_num_toNat (a : Q) (ha : 0 ≤ a.num) (hd : 0 < a.den) :
     Qle a ⟨(a.num.toNat : Int), 1⟩ := by
@@ -804,16 +765,6 @@ theorem expTerm_2MM (M N : Nat) :
     simp only [Qeq, add]; push_cast; ring_uor
   exact Qeq_trans (expTerm_den_pos (q := (⟨((2 * (M * M) : Nat) : Int), 1⟩ : Q)) Nat.one_pos N)
     (expTerm_Qeq hbase N) (expTerm_natBase (2 * (M * M)) N)
-
-/-- **Coefficient truncation at an explicit exponent**: `c·B^E / E! ≤ 1/e` when `E ≥ 2B+1` and
-    `c·e·Bⁱ ≤ E−(2B+1)+1` (base exp `2B+1`). The caller supplies the linear `hE` and the (nonlinear)
-    coefficient condition. -/
-theorem truncCoef_QE (B c e E : Nat) (hB : 0 < B) (hE : 2 * B + 1 ≤ E)
-    (hcond : c * e * npow B (2 * B + 1) ≤ E - (2 * B + 1) + 1) :
-    Qle (⟨(c * npow B E : Int), fct E⟩ : Q) ⟨1, e⟩ := by
-  have hd : 2 * B + 1 + (E - (2 * B + 1)) = E := by omega
-  have h := truncCoef_Q B c e (E - (2 * B + 1)) hB hcond
-  rw [hd] at h; exact h
 
 /-- **Corner-term bound**: `U · (cc·(M²)^E / E!) ≤ 1/(n+1)` at a deep exponent `E`, where `U = expM_U M² (2M²)`.
     Bounds `U ≤ ⟨U.num.toNat,1⟩` then applies `truncCoef_QE` with coefficient `U.num.toNat·cc`. -/
