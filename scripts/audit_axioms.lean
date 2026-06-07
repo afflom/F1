@@ -762,3 +762,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rle_self_Radd_left
 #print axioms Analysis.Rcos_sq_le_one
 #print axioms Analysis.Rsin_sq_le_one
+
+-- v0.15.0 payoff — the Cexp modulus identity |Cexp z|² = (exp Re z)² (from cos²+sin²=1).
+#print axioms Analysis.CnormSq
+#print axioms Analysis.Cexp_normSq
