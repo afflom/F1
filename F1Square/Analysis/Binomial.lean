@@ -320,6 +320,15 @@ theorem alternating_binomial (m : Nat) :
     simp only [Qeq]; rw [hnum]; simp
   exact Qeq_trans (qpow_den_pos (by decide) (m + 1)) (Qeq_symm hb) hz
 
+/-- Triangle inequality for finite sums: `|Σ fᵢ| ≤ Σ |fᵢ|`. -/
+theorem Fsum_abs_le {f : Nat → Q} (hf : ∀ i, 0 < (f i).den) :
+    ∀ M, Qle (Qabs (Fsum f M)) (Fsum (fun i => Qabs (f i)) M)
+  | 0 => Qle_refl _
+  | (M + 1) =>
+      Qle_trans (add_den_pos (Qabs_den_pos (Fsum_den_pos hf M)) (Qabs_den_pos (hf (M + 1))))
+        (Qabs_add_le (Fsum f M) (f (M + 1)))
+        (Qadd_le_add (Fsum_abs_le hf M) (Qle_refl (Qabs (f (M + 1)))))
+
 /-- A constant factor pulls out of a sum (on the right). -/
 theorem Fsum_mul_const_right {a : Nat → Q} {c : Q} (hcd : 0 < c.den) (ha : ∀ i, 0 < (a i).den) :
     ∀ M, Qeq (mul (Fsum a M) c) (Fsum (fun i => mul (a i) c) M)
