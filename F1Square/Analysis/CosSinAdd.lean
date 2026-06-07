@@ -925,6 +925,13 @@ theorem Qsq_diff_le (a b : Q) (had : 0 < a.den) (hbd : 0 < b.den) :
   rw [Qabs_mul]
   exact Qmul_le_mul_left (Qabs_num_nonneg _) (Qabs_add_le a b)
 
+/-- The diagonal depth schedule `RaltReal_R x j = 2M² + 4(j+1)·RaltReal_K` is monotone in `j`. -/
+theorem RaltReal_R_mono (x : Real) {j k : Nat} (hjk : j ≤ k) : RaltReal_R x j ≤ RaltReal_R x k := by
+  unfold RaltReal_R
+  have hmul : 4 * (j + 1) * RaltReal_K x ≤ 4 * (k + 1) * RaltReal_K x :=
+    Nat.mul_le_mul_right _ (by omega)
+  omega
+
 /-- The alternating partial sum is bounded by the constant `U = expM_U M² (2M²)` (uniformly in depth). -/
 theorem altSum_abs_le_U {q : Q} {M : Nat} (hqd : 0 < q.den) (hq : Qle (Qabs q) ⟨(M : Int), 1⟩)
     (off N : Nat) : Qle (Qabs (altSum q off N)) (expM_U (M * M) (2 * (M * M))) := by

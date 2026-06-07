@@ -710,6 +710,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.truncCoef_QE
 #print axioms Analysis.uterm_le
 #print axioms Analysis.altErr_bound_decay
+#print axioms Analysis.RaltReal_R_mono
 #print axioms Analysis.altSum_abs_le_U
 #print axioms Analysis.altSq_reconcile
 #print axioms Analysis.deepErr_le
