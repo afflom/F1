@@ -122,7 +122,7 @@ theorem Qmul_sub_distrib (c a b : Q) : Qeq (mul c (Qsub a b)) (Qsub (mul c a) (m
   simp only [Qeq, Qsub, mul, add, neg]; push_cast; ring_uor
 
 /-- Congruence for `Q` negation. -/
-theorem Qneg_congr {a b : Q} (h : Qeq a b) : Qeq (neg a) (neg b) := by
+theorem QnegCongr {a b : Q} (h : Qeq a b) : Qeq (neg a) (neg b) := by
   have h' : a.num * (b.den : Int) = b.num * (a.den : Int) := h
   show (-a.num) * (b.den : Int) = (-b.num) * (a.den : Int)
   calc (-a.num) * (b.den : Int) = -(a.num * (b.den : Int)) := by ring_uor
@@ -130,8 +130,8 @@ theorem Qneg_congr {a b : Q} (h : Qeq a b) : Qeq (neg a) (neg b) := by
     _ = (-b.num) * (a.den : Int) := by ring_uor
 
 /-- Congruence for `Q` subtraction. -/
-theorem Qsub_congr {a b c d : Q} (hac : Qeq a c) (hbd : Qeq b d) : Qeq (Qsub a b) (Qsub c d) :=
-  Qadd_congr hac (Qneg_congr hbd)
+theorem QsubCongr {a b c d : Q} (hac : Qeq a c) (hbd : Qeq b d) : Qeq (Qsub a b) (Qsub c d) :=
+  Qadd_congr hac (QnegCongr hbd)
 
 /-- The general binomial summand `C(n,i)·xⁱ·yⁿ⁻ⁱ`. -/
 def binTerm (x y : Q) (n i : Nat) : Q :=
@@ -490,7 +490,7 @@ theorem expSum_corner_factored {x y : Q} (hxd : 0 < x.den) (hyd : 0 < y.den) (M 
   refine Fsum_congr (fun i => ?_) M
   exact Qeq_trans
     (Qsub_den_pos (Qmul_den_pos (ha i) (Fsum_den_pos hb M)) (Qmul_den_pos (ha i) (Fsum_den_pos hb (M - i))))
-    (Qsub_congr (Fsum_mul_left (ha i) hb M) (Fsum_mul_left (ha i) hb (M - i)))
+    (QsubCongr (Fsum_mul_left (ha i) hb M) (Fsum_mul_left (ha i) hb (M - i)))
     (Qeq_symm (Qmul_sub_distrib (expTerm x i) (Fsum (expTerm y) M) (Fsum (expTerm y) (M - i))))
 
 end UOR.Bridge.F1Square.Analysis
