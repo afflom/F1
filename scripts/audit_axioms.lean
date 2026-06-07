@@ -479,6 +479,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rarctan_diag_le
 #print axioms Analysis.Rarctan_regular
 #print axioms Analysis.Rarctan
+#print axioms Analysis.Qle_of_Qsub_le_Qsub_left
 #print axioms Analysis.Pos_of_Rle_ofQ
 
 -- v0.10.0 — the λₙ / RH proof boundary (analytic face), locked faithfully.

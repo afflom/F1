@@ -27,6 +27,32 @@ private theorem pos_core (cn cd p q : Int) (hcn : 1 ≤ cn) (hcd : 1 ≤ cd) (hq
   have h3 : q * cd < (p * (3 * cd + 1)) * cd := by omega
   exact Int.lt_of_mul_lt_mul_right h3 (by omega)
 
+-- The ℤ core of left-subtraction cancellation (explicit, `omega` sees only linear facts).
+private theorem sub_le_core (un ud an ad bn bd : Int) (hud : 1 ≤ ud)
+    (h : (un * ad - an * ud) * (ud * bd) ≤ (un * bd - bn * ud) * (ud * ad)) : bn * ad ≤ an * bd := by
+  have key : (an * bd - bn * ad) * (ud * ud)
+      = (un * bd - bn * ud) * (ud * ad) - (un * ad - an * ud) * (ud * bd) := by ring_uor
+  have hnn : 0 ≤ (an * bd - bn * ad) * (ud * ud) := by omega
+  have hud2 : (0 : Int) < ud * ud := Int.mul_pos (by omega) (by omega)
+  have hz : 0 * (ud * ud) ≤ (an * bd - bn * ad) * (ud * ud) := by rw [Int.zero_mul]; exact hnn
+  have := Int.le_of_mul_le_mul_right hz hud2
+  omega
+
+/-- Left-subtraction cancellation: `u − a ≤ u − b  ⟹  b ≤ a`. -/
+theorem Qle_of_Qsub_le_Qsub_left {u a b : Q} (hud : 0 < u.den)
+    (h : Qle (Qsub u a) (Qsub u b)) : Qle b a := by
+  have hudI : (1 : Int) ≤ (u.den : Int) := by exact_mod_cast hud
+  show b.num * (a.den : Int) ≤ a.num * (b.den : Int)
+  apply sub_le_core u.num (u.den : Int) a.num (a.den : Int) b.num (b.den : Int) hudI
+  simp only [Qle, Qsub, add, neg] at h
+  show (u.num * (a.den : Int) - a.num * (u.den : Int)) * ((u.den : Int) * (b.den : Int))
+      ≤ (u.num * (b.den : Int) - b.num * (u.den : Int)) * ((u.den : Int) * (a.den : Int))
+  have e1 : (u.num * (a.den : Int) - a.num * (u.den : Int))
+      = u.num * (a.den : Int) + -a.num * (u.den : Int) := by ring_uor
+  have e2 : (u.num * (b.den : Int) - b.num * (u.den : Int))
+      = u.num * (b.den : Int) + -b.num * (u.den : Int) := by ring_uor
+  rw [e1, e2]; exact h
+
 /-- **Strict positivity from a rational lower bound**: if `c ≤ x` for a positive rational `c`
     (`Rle (ofQ c) x`), then `Pos x`. The reusable keystone for every numeric positivity claim. -/
 theorem Pos_of_Rle_ofQ {c : Q} (hcn : 0 < c.num) (hcd : 0 < c.den) {x : Real}
