@@ -265,6 +265,16 @@ def f1SquareStatus : F1SquareStatus := {
 --   exp on ℝ (diagonal)        ← Analysis.{RexpReal = ⟨S_{x_{Rj}}(Rj)⟩ₙ, RexpReal_regular}, built from the
 --                               rational bounds expSum_trunc_bound (geometric tail), expSum_Lip_le +
 --                               LipS_le_U (Lipschitz), fct_ge_geom (factorial growth) — all axiom-clean
+-- v0.13.0 (the transcendentals on ℝ: cos, sin, and log on all positive reals):
+--   cos / sin on ℝ             ← Analysis.{Rcos = RaltReal x 0, Rsin = Rmul x (RaltReal x 1)}, the
+--                               alternating series with base −q² dominated by exp(M²) (altSum_trunc_bound,
+--                               altSum_Lip_le, fct_mono)
+--   log on positive reals      ← Analysis.{Rlog x M = 2·artanh((x−1)/(x+1)) for 1/M ≤ x ≤ M}, built on the
+--                               complete artanh diagonal Rartanh (artanh on every [−ρ,ρ], ρ<1), via the
+--                               geometric tail (artSum_trunc), artanh Lipschitz (artSum_Lip_le), the general
+--                               Bernoulli reindex (qpow_geom_bound), and the t-map q↦(q−1)/(q+1) with its
+--                               cleared difference identity (tmap_diff_cleared), Lipschitz (tmap_lipschitz),
+--                               and range bound (tmap_abs_le) — all axiom-clean, no `sorry`
 -- The crux is NOT backed and stays `none` (BOTH faces, same RH):
 --   hodgeIndexHolds (= RH, geometric) ← Crux.CruxFor 𝕊 — OPEN. Crux.template_hodgeIndex proves the
 --                               property only on the product-of-curves TEMPLATE, never on 𝕊.
@@ -424,5 +434,15 @@ example :
         Analysis.Qle (Analysis.Qabs (Analysis.Qsub (Analysis.RexpReal_seq x j)
           (Analysis.RexpReal_seq x k))) (Analysis.Qbound j)) :=
   ⟨Analysis.Rpow_one, Analysis.RexpReal_regular, fun _ _ _ h => Analysis.RexpReal_diag_le _ h⟩
+
+/-- Elaboration-checked witness binding the v0.13.0 transcendentals: `cos` and `sin` (the alternating
+    diagonal `RaltReal x off`) are genuinely constructed reals — their diagonal sequences are
+    Bishop-regular; and `log` on every positive, `[1/M, M]`-bounded real (`Rlog x M`) is a genuinely
+    constructed real, its diagonal `t.seq n = (x_{2(n+1)}−1)/(x_{2(n+1)}+1)` Bishop-regular. All
+    axiom-clean, no `sorry`; the t-map range bound keeps the artanh argument inside `[−ρ,ρ]`, `ρ<1`. -/
+example :
+    (∀ x : Analysis.Real, ∀ off : Nat, Analysis.IsRegular (Analysis.RaltReal_seq x off))
+    ∧ (∀ x : Analysis.Real, (∀ n, 0 < (x.seq n).num) → Analysis.IsRegular (Analysis.Rlog_seq x)) :=
+  ⟨Analysis.RaltReal_regular, Analysis.Rlog_regular⟩
 
 end UOR.Bridge.F1Square

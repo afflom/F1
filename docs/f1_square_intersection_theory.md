@@ -546,9 +546,17 @@ canonical forms, realizations, no Mathlib — one brick per release:
   Three rational bounds make it rigorous: a geometric **truncation** tail `2Mᵃ⁺¹/(a+1)!`, a uniform
   **Lipschitz** bound, and a **factorial-growth** estimate converting the tail to a `1/(j+1)` reindex —
   all axiom-clean.
-- **The remaining transcendentals (concrete release, no open `+`):** **v0.13.0** `cos`/`sin` (alternating
-  series with the even/odd sandwich remainder) and `log` (positivity-as-data + the artanh series); the
-  prerequisites (`Rinv`, `qpow` with its bounds, ℝ-completeness) are all in place.
+- **v0.13.0 (done):** the **transcendentals on ℝ** — `cos`, `sin`, and `log` on all positive reals.
+  `cos`/`sin` (`CosSin.lean`) are the alternating diagonal `Σ(−x²)ⁿ/(2n+off)!`, the alternating term
+  dominated by `exp(M²)` (factorial vs. geometric), with `Rcos = RaltReal x 0`, `Rsin = x·RaltReal x 1`.
+  `log` (`Log.lean`) is `Rlog x M = 2·artanh((x−1)/(x+1))` for a positive real with rational bounds
+  `1/M ≤ x ≤ M`: the artanh odd series `Σ t^{2n+1}/(2n+1)` is built as a regular diagonal on every
+  `[−ρ,ρ]` (`ρ<1`) — geometric telescoping + truncation + Lipschitz, with a **general Bernoulli reindex**
+  `ρᵐ ≤ q/(q+m(q−p))` taming the geometric tail — and composed with the Möbius **t-map** `q↦(q−1)/(q+1)`
+  (its cleared difference identity, its 2-Lipschitz bound on `x≥0`, and the range bound `|tmap q| ≤ tmap M`
+  keeping the artanh argument inside `[−ρ,ρ]`). All axiom-clean. **Axiom-minimization:** the entire proof
+  layer is now **choice-free** — `Classical.choice` is eliminated, leaving only `{propext, Quot.sound}`
+  (forced by `omega`/`simp`/`Int` core internals), and the honesty gate forbids re-introducing choice.
 - **The next phase (the analytic→arithmetic bridge):** the analytic continuation of ζ into the critical
   strip (needs *complex* exp/log, built on the real transcendentals), the genuine `λₙ` realizing the
   v0.10.0 interfaces, and the explicit formula as an exact-arithmetic trace. This phase ends at

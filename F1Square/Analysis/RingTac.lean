@@ -12,7 +12,7 @@ which is core), with NO Mathlib.
 
 Soundness is inherited entirely from `nf_eq`: the tactic only *builds* the proof term `nf_eq …`; it
 never adds an axiom. So every goal closed by `ring_uor` is as axiom-clean as `nf_eq` itself
-(⊆ {propext, Classical.choice, Quot.sound}). Reification is fuel-bounded (no `partial def`), so the
+(⊆ {propext, Quot.sound}, choice-free). Reification is fuel-bounded (no `partial def`), so the
 tactic source carries no opacity either.
 -/
 

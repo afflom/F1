@@ -4,6 +4,40 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html), starting at `v0.0.1`.
 
+## [0.13.0] - 2026-06-07
+
+### Added — the transcendentals on ℝ: `cos`, `sin`, and `log` on all positive reals (pure Lean 4, no Mathlib, no `sorry`)
+- **`cos` / `sin` on ℝ** (`F1Square/Analysis/CosSin.lean`) — the alternating power series as a directly
+  Bishop-regular diagonal `RaltReal x off = ⟨Σ (−x²)ⁿ/(2n+off)!⟩`. The alternating term is dominated by
+  the exponential of `M²` (`altTerm_abs_le`, `fct_mono`, `qsq_abs_le`), giving the truncation bound
+  `altSum_trunc_bound` (geometric/factorial tail) and the Lipschitz bound `altSum_Lip_le`; the diagonal
+  is regular (`RaltReal_regular`). `Rcos = RaltReal x 0`, `Rsin = x · RaltReal x 1`.
+- **`log` on every positive real** (`F1Square/Analysis/Log.lean`) — `Rlog x M = 2·artanh((x−1)/(x+1))`
+  for a positive real with rational bounds `1/M ≤ x ≤ M`:
+  - **`artanh` on every `[−ρ,ρ]`, `ρ<1`** (`Rartanh`): the odd series `Σ t^{2n+1}/(2n+1)` as a regular
+    diagonal, via the geometric telescoping `geo_diff_bound`, the truncation `artSum_trunc`, the
+    Lipschitz `artSum_Lip_le` (with `geoEven_bound`), and the **general Bernoulli reindex**
+    `qpow_geom_bound` (`ρᵐ ≤ q/(q+m(q−p))`) that tames the geometric tail.
+  - **the t-map `q ↦ (q−1)/(q+1)`**: its cleared difference identity `tmap_diff_cleared`
+    (`(tmap a − tmap b)·(a+1)(b+1) = 2(a−b)`), the Lipschitz bound `tmap_lipschitz`
+    (`|tmap a − tmap b| ≤ (2/(L+1)²)·|a−b|`), and the range bound `tmap_abs_le`
+    (`|tmap q| ≤ tmap M` for `q ∈ [1/M, M]`, keeping the artanh argument inside `[−ρ,ρ]`).
+  - the diagonal `t.seq n = tmap(x_{2(n+1)})` is regular because the t-map is 2-Lipschitz on `x ≥ 0`
+    (`Rlog_regular`); `tmap_M_eq` identifies the radius `ρ = tmap M < 1`.
+
+### Changed — axiom-minimization (the axiom footprint cannot be a peer-review weakness)
+- The entire proof layer is now **choice-free**: `Classical.choice` is eliminated. The only remaining
+  axioms are `{propext, Quot.sound}`, both forced by `omega`/`simp`/`Int` core internals and
+  constructively uncontroversial. (The two theorems that pulled choice did so only because `omega`
+  discharged an `↔` goal directly; splitting into `Iff.intro` per direction is choice-free.)
+- `scripts/honesty_audit.sh` tightened: the allowlist drops `Classical.choice`, so any future
+  re-introduction of choice (or any other named axiom) fails CI. Coverage 399/399, enforced.
+
+### Unchanged — the honest demarcation
+- The crux stays `none` on both faces (`hodgeIndexHolds`, `liPositivityHolds`); RH is **open**
+  (June 2026) and is never asserted. The transcendentals make more of the analytic half *statable and
+  checkable*; they do not touch the crux.
+
 ## [0.12.0] - 2026-06-06
 
 ### Added — ℝ as a constructive field with powers, and `exp` on all of ℝ (pure Lean 4, no Mathlib, no `sorry`)
