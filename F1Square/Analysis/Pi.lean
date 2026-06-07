@@ -238,17 +238,116 @@ theorem Rarctan_le (t : Q) (htd : 0 < t.den) {ρ : Q} (hρ0 : 0 ≤ ρ.num) (hρ
   exact Qle_trans hUd (arctanSum_diag_le t htd hρ0 hρd hlt htρ hUd hcond n)
     (Qle_self_add (by show (0 : Int) ≤ 2; decide))
 
-/-- `arctan(1/5)` (radius 1/2). -/
-def Ratan5 : Real :=
-  Rarctan (⟨1, 5⟩ : Q) (by decide) (ρ := ⟨1, 2⟩) (by decide) (by decide) (by decide) (by decide)
+/-- `c·(a − b) ≈ c·a − c·b`. -/
+theorem Qmul_sub_left (c a b : Q) : Qeq (mul c (Qsub a b)) (Qsub (mul c a) (mul c b)) := by
+  simp only [Qeq, Qsub, mul, add, neg]; push_cast; ring_uor
 
-/-- `arctan(1/239)` (radius 1/2). -/
-def Ratan239 : Real :=
-  Rarctan (⟨1, 239⟩ : Q) (by decide) (ρ := ⟨1, 2⟩) (by decide) (by decide) (by decide) (by decide)
+/-- `|c·a − c·b| = |c|·|a − b|`. -/
+theorem Qabs_mul_const_sub (c a b : Q) :
+    Qeq (Qabs (Qsub (mul c a) (mul c b))) (mul (Qabs c) (Qabs (Qsub a b))) := by
+  have e2 := Qabs_Qeq (Qeq_symm (Qmul_sub_left c a b))
+  rw [Qabs_mul] at e2
+  exact e2
+
+/-- ℚ negation is antitone: `a ≤ b ⟹ −b ≤ −a`. -/
+theorem Qneg_le_neg {a b : Q} (h : Qle a b) : Qle (neg b) (neg a) := by
+  simp only [Qle, neg] at h ⊢
+  have e1 : (-b.num) * (a.den : Int) = -(b.num * (a.den : Int)) := by ring_uor
+  have e2 : (-a.num) * (b.den : Int) = -(a.num * (b.den : Int)) := by ring_uor
+  rw [e1, e2]; omega
+
+/-- ℚ subtraction is monotone: `a ≤ a'` and `b' ≤ b ⟹ a − b ≤ a' − b'`. -/
+theorem Qsub_le_2 {a a' b b' : Q} (ha : Qle a a') (hb : Qle b' b) :
+    Qle (Qsub a b) (Qsub a' b') := Qadd_le_add ha (Qneg_le_neg hb)
+
+/-- `|(−a) − (−b)| = |a − b|`. -/
+theorem Qabs_Qsub_neg_neg (a b : Q) : Qeq (Qabs (Qsub (neg a) (neg b))) (Qabs (Qsub a b)) := by
+  have h1 : Qeq (Qsub (neg a) (neg b)) (Qsub b a) := by
+    simp only [Qeq, Qsub, add, neg]; push_cast; ring_uor
+  have h2 := Qabs_Qeq h1
+  rw [Qabs_Qsub_comm b a] at h2
+  exact h2
+
+/-- The π reindex `g(j) = Rartanh_R ⟨1,2⟩ (20j+19)` — deep enough that
+    `16·1/(20j+20) + 4·1/(20j+20) = 1/(j+1)` fits the regularity budget. -/
+def Rpi_g (j : Nat) : Nat := Rartanh_R ⟨1, 2⟩ (20 * j + 19)
+
+/-- **π** as a single diagonal, Machin: `16·arctan(1/5) − 4·arctan(1/239)` at the common index `g(j)`. -/
+def Rpi_seq (j : Nat) : Q :=
+  Qsub (mul ⟨16, 1⟩ (arctanSum ⟨1, 5⟩ (Rpi_g j)))
+       (mul ⟨4, 1⟩ (arctanSum ⟨1, 239⟩ (Rpi_g j)))
+
+theorem Rpi_seq_den_pos (j : Nat) : 0 < (Rpi_seq j).den :=
+  Qsub_den_pos (Qmul_den_pos (by decide) (arctanSum_den_pos (by decide) _))
+    (Qmul_den_pos (by decide) (arctanSum_den_pos (by decide) _))
+
+set_option maxRecDepth 4000 in
+set_option maxHeartbeats 2000000 in
+theorem Rpi_regular : IsRegular Rpi_seq := by
+  have key : ∀ j k : Nat, j ≤ k → Qle (Qabs (Qsub (Rpi_seq j) (Rpi_seq k))) (Qbound j) := by
+    intro j k hjk
+    have hidx : 20 * j + 19 ≤ 20 * k + 19 := by omega
+    have hAjd : 0 < (arctanSum ⟨1, 5⟩ (Rpi_g j)).den := arctanSum_den_pos (by decide) _
+    have hAkd : 0 < (arctanSum ⟨1, 5⟩ (Rpi_g k)).den := arctanSum_den_pos (by decide) _
+    have hBjd : 0 < (arctanSum ⟨1, 239⟩ (Rpi_g j)).den := arctanSum_den_pos (by decide) _
+    have hBkd : 0 < (arctanSum ⟨1, 239⟩ (Rpi_g k)).den := arctanSum_den_pos (by decide) _
+    have hPaj : 0 < (mul (⟨16, 1⟩ : Q) (arctanSum ⟨1, 5⟩ (Rpi_g j))).den := Qmul_den_pos (by decide) hAjd
+    have hPak : 0 < (mul (⟨16, 1⟩ : Q) (arctanSum ⟨1, 5⟩ (Rpi_g k))).den := Qmul_den_pos (by decide) hAkd
+    have hMbj : 0 < (mul (⟨4, 1⟩ : Q) (arctanSum ⟨1, 239⟩ (Rpi_g j))).den := Qmul_den_pos (by decide) hBjd
+    have hMbk : 0 < (mul (⟨4, 1⟩ : Q) (arctanSum ⟨1, 239⟩ (Rpi_g k))).den := Qmul_den_pos (by decide) hBkd
+    have hgapA := Rarctan_diag_le ⟨1, 5⟩ (by decide) (ρ := ⟨1, 2⟩) (by decide) (by decide)
+      (by decide) (by decide) hidx
+    have hgapB := Rarctan_diag_le ⟨1, 239⟩ (by decide) (ρ := ⟨1, 2⟩) (by decide) (by decide)
+      (by decide) (by decide) hidx
+    have hP : Qle (Qabs (Qsub (mul ⟨16, 1⟩ (arctanSum ⟨1, 5⟩ (Rpi_g j)))
+          (mul ⟨16, 1⟩ (arctanSum ⟨1, 5⟩ (Rpi_g k))))) (mul ⟨16, 1⟩ (Qbound (20 * j + 19))) :=
+      Qle_trans (Qmul_den_pos (Qabs_den_pos (show 0 < (⟨16, 1⟩ : Q).den by decide))
+          (Qabs_den_pos (Qsub_den_pos hAjd hAkd)))
+        (Qeq_le (Qabs_mul_const_sub ⟨16, 1⟩ (arctanSum ⟨1, 5⟩ (Rpi_g j))
+          (arctanSum ⟨1, 5⟩ (Rpi_g k)))) (Qmul_le_mul_left (by decide) hgapA)
+    have hM : Qle (Qabs (Qsub (neg (mul ⟨4, 1⟩ (arctanSum ⟨1, 239⟩ (Rpi_g j))))
+          (neg (mul ⟨4, 1⟩ (arctanSum ⟨1, 239⟩ (Rpi_g k)))))) (mul ⟨4, 1⟩ (Qbound (20 * j + 19))) :=
+      Qle_trans (Qabs_den_pos (Qsub_den_pos hMbj hMbk))
+        (Qeq_le (Qabs_Qsub_neg_neg (mul ⟨4, 1⟩ (arctanSum ⟨1, 239⟩ (Rpi_g j)))
+          (mul ⟨4, 1⟩ (arctanSum ⟨1, 239⟩ (Rpi_g k)))))
+        (Qle_trans (Qmul_den_pos (Qabs_den_pos (show 0 < (⟨4, 1⟩ : Q).den by decide))
+            (Qabs_den_pos (Qsub_den_pos hBjd hBkd)))
+          (Qeq_le (Qabs_mul_const_sub ⟨4, 1⟩ (arctanSum ⟨1, 239⟩ (Rpi_g j))
+            (arctanSum ⟨1, 239⟩ (Rpi_g k)))) (Qmul_le_mul_left (by decide) hgapB))
+    refine Qle_trans (add_den_pos (Qabs_den_pos (Qsub_den_pos hPaj hPak))
+        (Qabs_den_pos (Qsub_den_pos (neg_den_pos hMbj) (neg_den_pos hMbk))))
+      (Qabs_sub_add4 hPaj (neg_den_pos hMbj) hPak (neg_den_pos hMbk)) ?_
+    refine Qle_trans (add_den_pos
+        (Qmul_den_pos (show 0 < (⟨16, 1⟩ : Q).den by decide) (Qbound_den_pos _))
+        (Qmul_den_pos (show 0 < (⟨4, 1⟩ : Q).den by decide) (Qbound_den_pos _)))
+      (Qadd_le_add hP hM) ?_
+    apply Qeq_le
+    simp only [Qeq, add, mul, Qbound]; push_cast; ring_uor
+  intro j k
+  rcases Nat.le_total j k with h | h
+  · exact Qle_trans (Qbound_den_pos j) (key j k h) (Qle_self_add (by show (0 : Int) ≤ 1; decide))
+  · have hsw := key k j h; rw [Qabs_Qsub_comm] at hsw
+    exact Qle_trans (Qbound_den_pos k) hsw (Qle_add_self (by show (0 : Int) ≤ 1; decide))
 
 /-- **π**, via Machin: `π = 16·arctan(1/5) − 4·arctan(1/239)`. -/
-def Rpi : Real :=
-  Rsub (Rmul (ofQ (⟨16, 1⟩ : Q) (by decide)) Ratan5)
-    (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) Ratan239)
+def Rpi : Real := ⟨Rpi_seq, Rpi_regular, Rpi_seq_den_pos⟩
+
+/-- **`Pos π`** — π > 0 (the lower bracket gives `π ≥ 16·(1/8) − 4·(1/5) = 6/5 > 0`). -/
+theorem Rpi_pos : Pos Rpi := by
+  refine Pos_of_Rle_ofQ (c := Qsub (mul ⟨16, 1⟩ ⟨1, 8⟩) (mul ⟨4, 1⟩ ⟨1, 5⟩)) (by decide) (by decide) ?_
+  intro n
+  have hcondA : Qle (qpow (⟨1, 2⟩ : Q) 5)
+      (mul (Qsub (arctanSum ⟨1, 5⟩ 1) ⟨1, 8⟩) (Qsub ⟨1, 1⟩ (mul ⟨1, 2⟩ ⟨1, 2⟩))) := by decide
+  have hcondB : Qle (qpow (⟨1, 2⟩ : Q) 3)
+      (mul (Qsub (⟨1, 5⟩ : Q) (arctanSum ⟨1, 239⟩ 0)) (Qsub ⟨1, 1⟩ (mul ⟨1, 2⟩ ⟨1, 2⟩))) := by decide
+  have hL5 : Qle (⟨1, 8⟩ : Q) (arctanSum ⟨1, 5⟩ (Rpi_g n)) :=
+    arctanSum_diag_ge ⟨1, 5⟩ (by decide) (ρ := ⟨1, 2⟩) (L := ⟨1, 8⟩) (by decide) (by decide)
+      (by decide) (by decide) (by decide) hcondA (20 * n + 19)
+  have hU239 : Qle (arctanSum ⟨1, 239⟩ (Rpi_g n)) (⟨1, 5⟩ : Q) :=
+    arctanSum_diag_le ⟨1, 239⟩ (by decide) (ρ := ⟨1, 2⟩) (U := ⟨1, 5⟩) (by decide) (by decide)
+      (by decide) (by decide) (by decide) hcondB (20 * n + 19)
+  exact Qle_trans (Rpi_seq_den_pos n)
+    (Qsub_le_2 (Qmul_le_mul_left (by decide) hL5) (Qmul_le_mul_left (by decide) hU239))
+    (Qle_self_add (by show (0 : Int) ≤ 2; decide))
 
 end UOR.Bridge.F1Square.Analysis

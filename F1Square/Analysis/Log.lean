@@ -476,7 +476,7 @@ theorem Qmul_swap_right (a b c : Q) : Qeq (mul (mul a b) c) (mul (mul a c) b) :=
 
 /-- The artanh diagonal reindex: `(q² + 4q)·(j+1)` with `q = ρ.den` (≥ 4q and ≥ q², so both the
     Lipschitz and the geometric truncation shrink fast enough). -/
-def Rartanh_R (ρ : Q) (j : Nat) : Nat := (ρ.den * ρ.den + 4 * ρ.den) * (j + 1)
+@[irreducible] def Rartanh_R (ρ : Q) (j : Nat) : Nat := (ρ.den * ρ.den + 4 * ρ.den) * (j + 1)
 
 /-- The `j`-th artanh diagonal approximant. -/
 def Rartanh_seq (t : Real) (ρ : Q) (j : Nat) : Q := artSum (t.seq (Rartanh_R ρ j)) (Rartanh_R ρ j)
