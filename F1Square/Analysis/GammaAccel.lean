@@ -864,4 +864,77 @@ theorem Rlogπc_le :
       (Rartanh_R ⟨15, 29⟩ m))
     (artSum_le_value (by decide) (by decide) (by decide) (by decide) 6 tailπ_eq (Rartanh_R ⟨15, 29⟩ m))
 
+/-! ### Step 6: ℝ-order bridges (monotonicity of `+`, `−`, and halving) and `Pos λ₁` -/
+
+/-- Halving a non-negative rational is `≤` the rational. -/
+theorem Qmul_half_le {e : Q} (he : 0 ≤ e.num) : Qle (mul ⟨1, 2⟩ e) e := by
+  have hp : 0 ≤ e.num * (e.den : Int) := Int.mul_nonneg he (Int.ofNat_nonneg _)
+  show (1 * e.num) * ((e.den : Nat) : Int) ≤ e.num * ((2 * e.den : Nat) : Int)
+  have h1 : (1 * e.num) * ((e.den : Nat) : Int) = e.num * (e.den : Int) := by push_cast; ring_uor
+  have h2 : e.num * ((2 * e.den : Nat) : Int) = 2 * (e.num * (e.den : Int)) := by push_cast; ring_uor
+  rw [h1, h2]; omega
+
+/-- Halving contracts the `Qabs` of a difference: `|½a − ½b| ≤ |a − b|`. -/
+theorem Qabs_half_le {a b : Q} (had : 0 < a.den) (hbd : 0 < b.den) :
+    Qle (Qabs (Qsub (mul ⟨1, 2⟩ a) (mul ⟨1, 2⟩ b))) (Qabs (Qsub a b)) := by
+  have hd : Qeq (Qsub (mul ⟨1, 2⟩ a) (mul ⟨1, 2⟩ b)) (mul ⟨1, 2⟩ (Qsub a b)) := by
+    simp only [Qeq, Qsub, mul, add, neg]; push_cast; ring_uor
+  have hae : Qeq (Qabs (Qsub (mul ⟨1, 2⟩ a) (mul ⟨1, 2⟩ b)))
+      (mul ⟨1, 2⟩ (Qabs (Qsub a b))) := by
+    have h1 := Qabs_Qeq hd
+    have h2 : Qabs (mul ⟨1, 2⟩ (Qsub a b)) = mul ⟨1, 2⟩ (Qabs (Qsub a b)) := by rw [Qabs_mul]; rfl
+    rw [h2] at h1; exact h1
+  refine Qle_trans (Qmul_den_pos (by decide) (Qabs_den_pos (Qsub_den_pos had hbd)))
+    (Qeq_le hae) (Qmul_half_le ?_)
+  show (0 : Int) ≤ ((Qsub a b).num.natAbs : Int); exact Int.ofNat_nonneg _
+
+/-- Antitonicity of real negation. -/
+theorem Rneg_le {x y : Real} (hxy : Rle x y) : Rle (Rneg y) (Rneg x) := by
+  intro n
+  show Qle (neg (y.seq n)) (add (neg (x.seq n)) ⟨2, n + 1⟩)
+  refine Qle_trans
+    (add_den_pos (neg_den_pos (add_den_pos (y.den_pos n) (Nat.succ_pos _))) (Nat.succ_pos _))
+    (Qeq_le ?_) (Qadd_le_add (Qneg_le_neg (hxy n)) (Qle_refl (⟨2, n + 1⟩ : Q)))
+  show Qeq (neg (y.seq n)) (add (neg (add (y.seq n) ⟨2, n + 1⟩)) ⟨2, n + 1⟩)
+  simp only [Qeq, neg, add]; push_cast; ring_uor
+
+/-- **Halving** a constructive real, with no reindexing (`½ ≤ 1`, so regularity is preserved). -/
+def Rhalf (x : Real) : Real where
+  seq := fun n => mul ⟨1, 2⟩ (x.seq n)
+  reg := by
+    intro j k
+    exact Qle_trans (Qabs_den_pos (Qsub_den_pos (x.den_pos j) (x.den_pos k)))
+      (Qabs_half_le (x.den_pos j) (x.den_pos k)) (x.reg j k)
+  den_pos := fun n => Qmul_den_pos (by decide) (x.den_pos n)
+
+/-- A lower bound survives halving. -/
+theorem Rhalf_ge {c : Q} (hcd : 0 < c.den) {x : Real} (h : Rle (ofQ c hcd) x) :
+    Rle (ofQ (mul ⟨1, 2⟩ c) (Qmul_den_pos (by decide) hcd)) (Rhalf x) := by
+  intro n
+  show Qle (mul ⟨1, 2⟩ c) (add (mul ⟨1, 2⟩ (x.seq n)) ⟨2, n + 1⟩)
+  have hQeq : Qeq (mul ⟨1, 2⟩ (add (x.seq n) ⟨2, n + 1⟩)) (add (mul ⟨1, 2⟩ (x.seq n)) ⟨1, n + 1⟩) := by
+    simp only [Qeq, mul, add]; push_cast; ring_uor
+  have hbound : Qle (⟨1, n + 1⟩ : Q) ⟨2, n + 1⟩ := by
+    show (1 : Int) * ((n + 1 : Nat) : Int) ≤ 2 * ((n + 1 : Nat) : Int)
+    have : (0 : Int) ≤ ((n + 1 : Nat) : Int) := Int.ofNat_nonneg _; omega
+  have hmid : Qle (mul ⟨1, 2⟩ (add (x.seq n) ⟨2, n + 1⟩)) (add (mul ⟨1, 2⟩ (x.seq n)) ⟨2, n + 1⟩) :=
+    Qle_trans (add_den_pos (Qmul_den_pos (by decide) (x.den_pos n)) (Nat.succ_pos n))
+      (Qeq_le hQeq) (Qadd_le_add (Qle_refl _) hbound)
+  exact Qle_trans (Qmul_den_pos (by decide) (add_den_pos (x.den_pos n) (Nat.succ_pos n)))
+    (Qmul_le_mul_left (by decide) (h n)) hmid
+
+/-- `ofQ (p+q) ≤ (ofQ p) + (ofQ q)` (the constant sequences coincide). -/
+theorem Rle_ofQ_add_Radd {p q : Q} (hp : 0 < p.den) (hq : 0 < q.den) :
+    Rle (ofQ (add p q) (add_den_pos hp hq)) (Radd (ofQ p hp) (ofQ q hq)) :=
+  fun _ => Qle_self_add (by show (0 : Int) ≤ 2; decide)
+
+/-- `(ofQ p) + (ofQ q) ≤ ofQ (p+q)` (the constant sequences coincide). -/
+theorem Radd_Rle_ofQ_add {p q : Q} (hp : 0 < p.den) (hq : 0 < q.den) :
+    Rle (Radd (ofQ p hp) (ofQ q hq)) (ofQ (add p q) (add_den_pos hp hq)) :=
+  fun _ => Qle_self_add (by show (0 : Int) ≤ 2; decide)
+
+/-- A real bounded above by `ofQ d` has its negation bounded below by `ofQ (−d)`. -/
+theorem Rneg_ofQ_le {d : Q} (hbd : 0 < d.den) {B : Real} (hB : Rle B (ofQ d hbd)) :
+    Rle (ofQ (neg d) (neg_den_pos hbd)) (Rneg B) := Rneg_le hB
+
 end UOR.Bridge.F1Square.Analysis

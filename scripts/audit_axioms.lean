@@ -577,6 +577,14 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.RpiTmap_nonneg
 #print axioms Analysis.tailπ_eq
 #print axioms Analysis.Rlogπc_le
+#print axioms Analysis.Qmul_half_le
+#print axioms Analysis.Qabs_half_le
+#print axioms Analysis.Rneg_le
+#print axioms Analysis.Rhalf_ge
+#print axioms Analysis.Rle_ofQ_add_Radd
+#print axioms Analysis.Radd_Rle_ofQ_add
+#print axioms Analysis.Rneg_ofQ_le
+#print axioms Analysis.Rlambda1_pos
 
 -- v0.10.0 — the λₙ / RH proof boundary (analytic face), locked faithfully.
 #print axioms Li.Pos_one
