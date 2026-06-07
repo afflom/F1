@@ -45,6 +45,7 @@ import F1Square.Analysis.ROrder
 import F1Square.Analysis.Pow
 import F1Square.Analysis.Inv
 import F1Square.Analysis.ExpReal
+import F1Square.Analysis.ExpRealAdd
 import F1Square.Analysis.CosSin
 import F1Square.Analysis.Log
 import F1Square.Analysis.Arctan

@@ -772,3 +772,6 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.RlogNat
 #print axioms Analysis.ncpow
 #print axioms Analysis.ncpow_normSq
+
+-- v0.15.0 ζ-stack — exp functional equation on all of ℝ (general-argument Cauchy corner).
+#print axioms Analysis.expSum_corner_le_gen
