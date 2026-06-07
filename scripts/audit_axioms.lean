@@ -585,6 +585,10 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rneg_ofQ_le
 #print axioms Analysis.Rlambda1_pos
 
+-- v0.15.0 — the complex analytic engine (stage A).
+#print axioms Analysis.Cexp_re
+#print axioms Analysis.Cexp_im
+
 -- v0.10.0 — the λₙ / RH proof boundary (analytic face), locked faithfully.
 #print axioms Li.Pos_one
 #print axioms Li.template_liPositive
