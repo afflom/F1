@@ -620,6 +620,22 @@ theorem altAntidiag_abs_le {q : Q} {M : Nat} (hqd : 0 < q.den) (hq : Qle (Qabs q
       (Qeq_le (expTerm_conv (x := (⟨(M * M : Int), 1⟩ : Q)) (y := (⟨(M * M : Int), 1⟩ : Q))
         Nat.one_pos Nat.one_pos N)))
 
+/-- Three-term triangle inequality `|A + (B + C)| ≤ |A| + (|B| + |C|)`. -/
+theorem Qabs_add3_le (A B C : Q) (hA : 0 < A.den) (hB : 0 < B.den) (hC : 0 < C.den) :
+    Qle (Qabs (add A (add B C))) (add (Qabs A) (add (Qabs B) (Qabs C))) :=
+  Qle_trans (add_den_pos (Qabs_den_pos hA) (Qabs_den_pos (add_den_pos hB hC)))
+    (Qabs_add_le A (add B C)) (Qadd_le_add (Qle_refl _) (Qabs_add_le B C))
+
+/-- `|q²·R| ≤ M²·|R|` (the `q²` factor of two ERR terms is bounded by `M²`). -/
+theorem Qabs_qsq_mul_le {q : Q} {M : Nat} (hqd : 0 < q.den) (hq : Qle (Qabs q) ⟨(M : Int), 1⟩)
+    {R B : Q} (hRd : 0 < R.den) (hB : Qle (Qabs R) B) :
+    Qle (Qabs (mul (mul q q) R)) (mul ⟨((M * M : Nat) : Int), 1⟩ B) := by
+  have hq2 : Qle (Qabs (mul q q)) ⟨((M * M : Nat) : Int), 1⟩ := by
+    rw [← Qabs_neg]; exact qsq_abs_le hqd hq
+  rw [Qabs_mul]
+  exact Qmul_le_mul (Qabs_den_pos (Qmul_den_pos hqd hqd)) Nat.one_pos (Qabs_den_pos hRd)
+    (Qabs_num_nonneg _) (Qabs_num_nonneg _) hq2 hB
+
 /-- **Pythagorean deviation = ERR**: `(cosSum N)² + q²(sinauxSum N)² − 1 ≈ ERR`, the exact rearrangement
     of `altPyth_partial`. The real lift bounds `|ERR|` via `altAntidiag_abs_le` + `altCorner_mertens`. -/
 theorem altPyth_dev_eq_err {q : Q} (hqd : 0 < q.den) (N : Nat) :
