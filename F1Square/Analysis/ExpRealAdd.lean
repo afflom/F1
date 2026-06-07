@@ -13,6 +13,7 @@ Pure Lean 4, no Mathlib, no `sorry`/`native_decide`, choice-free.
 import F1Square.Analysis.ExpReal
 import F1Square.Analysis.Binomial
 import F1Square.Analysis.ROrder
+import F1Square.Analysis.ExpAdd
 
 namespace UOR.Bridge.F1Square.Analysis
 
@@ -49,5 +50,39 @@ theorem expSum_corner_le_gen {a b : Q} {Ma Mb : Nat} (ha0 : 0 ≤ a.num) (had : 
   refine Qle_trans (Qsub_den_pos hP2M hPM) (Qsub_le_sub (expSum_mul_le ha0 had hb0 hbd M)) ?_
   exact Qle_trans (Qabs_den_pos (Qsub_den_pos hP2M hPM)) (Qle_self_Qabs _)
     (expSum_trunc_bound hpqd hsum_bd (a := M) (b := 2 * M) hM (by omega))
+
+/-- **The rational exp functional equation with explicit error**: for arbitrary `|a| ≤ Ma`, `|b| ≤ Mb`
+    and `2(Ma+Mb) ≤ N+2`, `|expSum(a+b) N − expSum a N·expSum b N| ≤ 2(Ma+Mb)^{N+1}/(N+1)!` — the corner
+    `expSum_corner_le_gen`, bridged by `expSum_mul_eq`. -/
+theorem expSum_add_le {a b : Q} {Ma Mb : Nat} (ha0 : 0 ≤ a.num) (had : 0 < a.den)
+    (hb0 : 0 ≤ b.num) (hbd : 0 < b.den) (hqa : Qle (Qabs a) ⟨(Ma : Int), 1⟩) (hqb : Qle (Qabs b) ⟨(Mb : Int), 1⟩)
+    (N : Nat) (hN : 2 * (Ma + Mb) ≤ N + 2) :
+    Qle (Qabs (Qsub (expSum (add a b) N) (mul (expSum a N) (expSum b N))))
+      ⟨(2 * npow (Ma + Mb) (N + 1) : Int), fct (N + 1)⟩ := by
+  have hg : ∀ i j, 0 < (mul (expTerm a i) (expTerm b j)).den :=
+    fun i j => Qmul_den_pos (expTerm_den_pos had i) (expTerm_den_pos hbd j)
+  have hgnn : ∀ i j, 0 ≤ (mul (expTerm a i) (expTerm b j)).num :=
+    fun i j => Int.mul_nonneg (expTerm_num_nonneg ha0 i) (expTerm_num_nonneg hb0 j)
+  have hPN : 0 < (expSum (add a b) N).den := expSum_den_pos (add_den_pos had hbd) N
+  have hprodd : 0 < (mul (expSum a N) (expSum b N)).den :=
+    Qmul_den_pos (expSum_den_pos had N) (expSum_den_pos hbd N)
+  have hcornerd : 0 < (Fsum (fun i => Qsub (Fsum (fun j => mul (expTerm a i) (expTerm b j)) N)
+      (Fsum (fun j => mul (expTerm a i) (expTerm b j)) (N - i))) N).den :=
+    Fsum_den_pos (fun i => Qsub_den_pos (Fsum_den_pos (fun j => hg i j) N)
+      (Fsum_den_pos (fun j => hg i j) (N - i))) N
+  -- |expSum(a+b)N − product| ≈ |corner|, and corner ≥ 0 is ≤ the corner bound
+  have hcorner_nn : 0 ≤ (Fsum (fun i => Qsub (Fsum (fun j => mul (expTerm a i) (expTerm b j)) N)
+      (Fsum (fun j => mul (expTerm a i) (expTerm b j)) (N - i))) N).num :=
+    Fsum_num_nonneg (fun i => Qsub_num_nonneg
+      (Fsum_mono_len (fun j => hgnn i j) (fun j => hg i j) (Nat.sub_le N i))) N
+  have heq : Qeq (Qsub (expSum (add a b) N) (mul (expSum a N) (expSum b N)))
+      (neg (Fsum (fun i => Qsub (Fsum (fun j => mul (expTerm a i) (expTerm b j)) N)
+        (Fsum (fun j => mul (expTerm a i) (expTerm b j)) (N - i))) N)) :=
+    Qeq_trans (Qsub_den_pos hPN (add_den_pos hPN hcornerd))
+      (QsubCongr (Qeq_refl (expSum (add a b) N)) (expSum_mul_eq had hbd N))
+      (Qsub_add_self_left (expSum (add a b) N) _)
+  refine Qle_congr_left (Qabs_den_pos (neg_den_pos hcornerd)) (Qeq_symm (Qabs_Qeq heq)) ?_
+  rw [Qabs_neg]
+  exact Qabs_le_of_nonneg hcorner_nn (expSum_corner_le_gen ha0 had hb0 hbd hqa hqb N hN)
 
 end UOR.Bridge.F1Square.Analysis
