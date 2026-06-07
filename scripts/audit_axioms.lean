@@ -485,6 +485,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rle_Rneg
 #print axioms Analysis.Radd_le_add
 #print axioms Analysis.Rsub_le_sub
+#print axioms Analysis.arctanSum_diag_ge
+#print axioms Analysis.arctanSum_diag_le
 #print axioms Analysis.Rarctan_ge
 #print axioms Analysis.Rarctan_le
 

@@ -157,79 +157,86 @@ theorem Radd_le_add {a a' b b' : Real} (ha : Rle a a') (hb : Rle b b') :
 theorem Rsub_le_sub {a a' b b' : Real} (ha : Rle a' a) (hb : Rle b b') :
     Rle (Rsub a' b') (Rsub a b) := Radd_le_add ha (Rle_Rneg hb)
 
+/-- **Lower pointwise bracket**: `L ≤ arctanSum t (Rₙ)` at every diagonal index `n`. -/
+theorem arctanSum_diag_ge (t : Q) (htd : 0 < t.den) {ρ : Q} (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den)
+    (hlt : ρ.num.toNat < ρ.den) (htρ : Qle (Qabs t) ρ) {L : Q} (hLd : 0 < L.den)
+    (hcond : Qle (qpow ρ 5) (mul (Qsub (arctanSum t 1) L) (Qsub ⟨1, 1⟩ (mul ρ ρ)))) (n : Nat) :
+    Qle L (arctanSum t (Rartanh_R ρ n)) := by
+  have hWn : 0 < (Qsub (⟨1, 1⟩ : Q) (mul ρ ρ)).num := W_pos hρ0 hρd hlt
+  have hWd : 0 < (Qsub (⟨1, 1⟩ : Q) (mul ρ ρ)).den := Qsub_den_pos Nat.one_pos (Nat.mul_pos hρd hρd)
+  have hWnn : 0 ≤ (Qsub (⟨1, 1⟩ : Q) (mul ρ ρ)).num := Int.le_of_lt hWn
+  have hRd : 0 < (arctanSum t (Rartanh_R ρ n)).den := arctanSum_den_pos htd _
+  have h1d : 0 < (arctanSum t 1).den := arctanSum_den_pos htd 1
+  have h1Rn : 1 ≤ Rartanh_R ρ n := by
+    unfold Rartanh_R
+    have : 1 ≤ ρ.den * ρ.den + 4 * ρ.den := by have := hρd; exact Nat.le_trans hρd (by omega)
+    exact Nat.le_trans this (Nat.le_mul_of_pos_right _ (Nat.succ_pos n))
+  have hsign : Qle (Qsub (arctanSum t 1) (arctanSum t (Rartanh_R ρ n)))
+      (Qabs (Qsub (arctanSum t (Rartanh_R ρ n)) (arctanSum t 1))) := by
+    have hs := Qle_self_Qabs (Qsub (arctanSum t 1) (arctanSum t (Rartanh_R ρ n)))
+    rwa [Qabs_Qsub_comm] at hs
+  have htrunc := arctanSum_trunc htd hρ0 hρd htρ hWnn (a := 1) h1Rn
+  have hmain : Qle (mul (Qsub (arctanSum t 1) (arctanSum t (Rartanh_R ρ n)))
+        (Qsub ⟨1, 1⟩ (mul ρ ρ)))
+      (mul (Qsub (arctanSum t 1) L) (Qsub ⟨1, 1⟩ (mul ρ ρ))) :=
+    Qle_trans (Qmul_den_pos (Qabs_den_pos (Qsub_den_pos hRd h1d)) hWd)
+      (Qmul_le_mul_right hWnn hsign)
+      (Qle_trans (qpow_den_pos hρd _) htrunc hcond)
+  have hmain' : Qle (Qsub (mul (arctanSum t 1) (Qsub ⟨1, 1⟩ (mul ρ ρ)))
+        (mul (arctanSum t (Rartanh_R ρ n)) (Qsub ⟨1, 1⟩ (mul ρ ρ))))
+      (Qsub (mul (arctanSum t 1) (Qsub ⟨1, 1⟩ (mul ρ ρ)))
+        (mul L (Qsub ⟨1, 1⟩ (mul ρ ρ)))) :=
+    Qle_trans (Qmul_den_pos (Qsub_den_pos h1d hRd) hWd)
+      (Qeq_le (Qeq_symm (Qmul_sub_right _ _ _)))
+      (Qle_trans (Qmul_den_pos (Qsub_den_pos h1d hLd) hWd) hmain
+        (Qeq_le (Qmul_sub_right _ _ _)))
+  exact Qmul_le_cancel_right hWn hWd (Qle_of_Qsub_le_Qsub_left (Qmul_den_pos h1d hWd) hmain')
+
 /-- **Lower bracket**: a rational `L` with `(arctanSum t 1 − L)·(1−ρ²) ≥ ρ⁵` is `≤ arctan t`. -/
 theorem Rarctan_ge (t : Q) (htd : 0 < t.den) {ρ : Q} (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den)
     (hlt : ρ.num.toNat < ρ.den) (htρ : Qle (Qabs t) ρ) {L : Q} (hLd : 0 < L.den)
     (hcond : Qle (qpow ρ 5) (mul (Qsub (arctanSum t 1) L) (Qsub ⟨1, 1⟩ (mul ρ ρ)))) :
     Rle (ofQ L hLd) (Rarctan t htd hρ0 hρd hlt htρ) := by
+  intro n
+  exact Qle_trans (arctanSum_den_pos htd _) (arctanSum_diag_ge t htd hρ0 hρd hlt htρ hLd hcond n)
+    (Qle_self_add (by show (0 : Int) ≤ 2; decide))
+
+/-- **Upper pointwise bracket**: `arctanSum t (Rₙ) ≤ U` at every diagonal index `n`. -/
+theorem arctanSum_diag_le (t : Q) (htd : 0 < t.den) {ρ : Q} (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den)
+    (hlt : ρ.num.toNat < ρ.den) (htρ : Qle (Qabs t) ρ) {U : Q} (hUd : 0 < U.den)
+    (hcond : Qle (qpow ρ 3) (mul (Qsub U (arctanSum t 0)) (Qsub ⟨1, 1⟩ (mul ρ ρ)))) (n : Nat) :
+    Qle (arctanSum t (Rartanh_R ρ n)) U := by
   have hWn : 0 < (Qsub (⟨1, 1⟩ : Q) (mul ρ ρ)).num := W_pos hρ0 hρd hlt
   have hWd : 0 < (Qsub (⟨1, 1⟩ : Q) (mul ρ ρ)).den := Qsub_den_pos Nat.one_pos (Nat.mul_pos hρd hρd)
   have hWnn : 0 ≤ (Qsub (⟨1, 1⟩ : Q) (mul ρ ρ)).num := Int.le_of_lt hWn
-  intro n
   have hRd : 0 < (arctanSum t (Rartanh_R ρ n)).den := arctanSum_den_pos htd _
-  have h1d : 0 < (arctanSum t 1).den := arctanSum_den_pos htd 1
-  have h1Rn : 1 ≤ Rartanh_R ρ n := by
-    unfold Rartanh_R
-    have : 1 ≤ ρ.den * ρ.den + 4 * ρ.den := by
-      have := hρd; exact Nat.le_trans hρd (by omega)
-    exact Nat.le_trans this (Nat.le_mul_of_pos_right _ (Nat.succ_pos n))
-  -- pointwise:  L ≤ arctanSum t (Rₙ)
-  have hpt : Qle L (arctanSum t (Rartanh_R ρ n)) := by
-    have hsign : Qle (Qsub (arctanSum t 1) (arctanSum t (Rartanh_R ρ n)))
-        (Qabs (Qsub (arctanSum t (Rartanh_R ρ n)) (arctanSum t 1))) := by
-      have hs := Qle_self_Qabs (Qsub (arctanSum t 1) (arctanSum t (Rartanh_R ρ n)))
-      rwa [Qabs_Qsub_comm] at hs
-    have htrunc := arctanSum_trunc htd hρ0 hρd htρ hWnn (a := 1) h1Rn
-    have hmain : Qle (mul (Qsub (arctanSum t 1) (arctanSum t (Rartanh_R ρ n)))
-          (Qsub ⟨1, 1⟩ (mul ρ ρ)))
-        (mul (Qsub (arctanSum t 1) L) (Qsub ⟨1, 1⟩ (mul ρ ρ))) :=
-      Qle_trans (Qmul_den_pos (Qabs_den_pos (Qsub_den_pos hRd h1d)) hWd)
-        (Qmul_le_mul_right hWnn hsign)
-        (Qle_trans (qpow_den_pos hρd _) htrunc hcond)
-    have hmain' : Qle (Qsub (mul (arctanSum t 1) (Qsub ⟨1, 1⟩ (mul ρ ρ)))
-          (mul (arctanSum t (Rartanh_R ρ n)) (Qsub ⟨1, 1⟩ (mul ρ ρ))))
-        (Qsub (mul (arctanSum t 1) (Qsub ⟨1, 1⟩ (mul ρ ρ)))
-          (mul L (Qsub ⟨1, 1⟩ (mul ρ ρ)))) :=
-      Qle_trans (Qmul_den_pos (Qsub_den_pos h1d hRd) hWd)
-        (Qeq_le (Qeq_symm (Qmul_sub_right _ _ _)))
-        (Qle_trans (Qmul_den_pos (Qsub_den_pos h1d hLd) hWd) hmain
-          (Qeq_le (Qmul_sub_right _ _ _)))
-    have hcancel := Qle_of_Qsub_le_Qsub_left (Qmul_den_pos h1d hWd) hmain'
-    exact Qmul_le_cancel_right hWn hWd hcancel
-  exact Qle_trans hRd hpt (Qle_self_add (by show (0 : Int) ≤ 2; decide))
+  have h0d : 0 < (arctanSum t 0).den := arctanSum_den_pos htd 0
+  have hsign : Qle (Qsub (arctanSum t (Rartanh_R ρ n)) (arctanSum t 0))
+      (Qabs (Qsub (arctanSum t (Rartanh_R ρ n)) (arctanSum t 0))) := Qle_self_Qabs _
+  have htrunc := arctanSum_trunc htd hρ0 hρd htρ hWnn (a := 0) (b := Rartanh_R ρ n) (Nat.zero_le _)
+  have hmain : Qle (mul (Qsub (arctanSum t (Rartanh_R ρ n)) (arctanSum t 0))
+        (Qsub ⟨1, 1⟩ (mul ρ ρ)))
+      (mul (Qsub U (arctanSum t 0)) (Qsub ⟨1, 1⟩ (mul ρ ρ))) :=
+    Qle_trans (Qmul_den_pos (Qabs_den_pos (Qsub_den_pos hRd h0d)) hWd)
+      (Qmul_le_mul_right hWnn hsign)
+      (Qle_trans (qpow_den_pos hρd _) htrunc hcond)
+  have hmain' : Qle (Qsub (mul (arctanSum t (Rartanh_R ρ n)) (Qsub ⟨1, 1⟩ (mul ρ ρ)))
+        (mul (arctanSum t 0) (Qsub ⟨1, 1⟩ (mul ρ ρ))))
+      (Qsub (mul U (Qsub ⟨1, 1⟩ (mul ρ ρ))) (mul (arctanSum t 0) (Qsub ⟨1, 1⟩ (mul ρ ρ)))) :=
+    Qle_trans (Qmul_den_pos (Qsub_den_pos hRd h0d) hWd)
+      (Qeq_le (Qeq_symm (Qmul_sub_right _ _ _)))
+      (Qle_trans (Qmul_den_pos (Qsub_den_pos hUd h0d) hWd) hmain
+        (Qeq_le (Qmul_sub_right _ _ _)))
+  exact Qmul_le_cancel_right hWn hWd (Qle_of_Qsub_le_Qsub_right (Qmul_den_pos h0d hWd) hmain')
 
 /-- **Upper bracket**: a rational `U` with `(U − arctanSum t 0)·(1−ρ²) ≥ ρ³` is `≥ arctan t`. -/
 theorem Rarctan_le (t : Q) (htd : 0 < t.den) {ρ : Q} (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den)
     (hlt : ρ.num.toNat < ρ.den) (htρ : Qle (Qabs t) ρ) {U : Q} (hUd : 0 < U.den)
     (hcond : Qle (qpow ρ 3) (mul (Qsub U (arctanSum t 0)) (Qsub ⟨1, 1⟩ (mul ρ ρ)))) :
     Rle (Rarctan t htd hρ0 hρd hlt htρ) (ofQ U hUd) := by
-  have hWn : 0 < (Qsub (⟨1, 1⟩ : Q) (mul ρ ρ)).num := W_pos hρ0 hρd hlt
-  have hWd : 0 < (Qsub (⟨1, 1⟩ : Q) (mul ρ ρ)).den := Qsub_den_pos Nat.one_pos (Nat.mul_pos hρd hρd)
-  have hWnn : 0 ≤ (Qsub (⟨1, 1⟩ : Q) (mul ρ ρ)).num := Int.le_of_lt hWn
   intro n
-  have hRd : 0 < (arctanSum t (Rartanh_R ρ n)).den := arctanSum_den_pos htd _
-  have h0d : 0 < (arctanSum t 0).den := arctanSum_den_pos htd 0
-  have hpt : Qle (arctanSum t (Rartanh_R ρ n)) U := by
-    have hsign : Qle (Qsub (arctanSum t (Rartanh_R ρ n)) (arctanSum t 0))
-        (Qabs (Qsub (arctanSum t (Rartanh_R ρ n)) (arctanSum t 0))) := Qle_self_Qabs _
-    have htrunc := arctanSum_trunc htd hρ0 hρd htρ hWnn (a := 0) (b := Rartanh_R ρ n)
-      (Nat.zero_le _)
-    have hmain : Qle (mul (Qsub (arctanSum t (Rartanh_R ρ n)) (arctanSum t 0))
-          (Qsub ⟨1, 1⟩ (mul ρ ρ)))
-        (mul (Qsub U (arctanSum t 0)) (Qsub ⟨1, 1⟩ (mul ρ ρ))) :=
-      Qle_trans (Qmul_den_pos (Qabs_den_pos (Qsub_den_pos hRd h0d)) hWd)
-        (Qmul_le_mul_right hWnn hsign)
-        (Qle_trans (qpow_den_pos hρd _) htrunc hcond)
-    have hmain' : Qle (Qsub (mul (arctanSum t (Rartanh_R ρ n)) (Qsub ⟨1, 1⟩ (mul ρ ρ)))
-          (mul (arctanSum t 0) (Qsub ⟨1, 1⟩ (mul ρ ρ))))
-        (Qsub (mul U (Qsub ⟨1, 1⟩ (mul ρ ρ))) (mul (arctanSum t 0) (Qsub ⟨1, 1⟩ (mul ρ ρ)))) :=
-      Qle_trans (Qmul_den_pos (Qsub_den_pos hRd h0d) hWd)
-        (Qeq_le (Qeq_symm (Qmul_sub_right _ _ _)))
-        (Qle_trans (Qmul_den_pos (Qsub_den_pos hUd h0d) hWd) hmain
-          (Qeq_le (Qmul_sub_right _ _ _)))
-    have hcancel := Qle_of_Qsub_le_Qsub_right (Qmul_den_pos h0d hWd) hmain'
-    exact Qmul_le_cancel_right hWn hWd hcancel
-  exact Qle_trans hUd hpt (Qle_self_add (by show (0 : Int) ≤ 2; decide))
+  exact Qle_trans hUd (arctanSum_diag_le t htd hρ0 hρd hlt htρ hUd hcond n)
+    (Qle_self_add (by show (0 : Int) ≤ 2; decide))
 
 /-- `arctan(1/5)` (radius 1/2). -/
 def Ratan5 : Real :=
