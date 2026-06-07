@@ -627,6 +627,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Fsum_square_decomp
 #print axioms Analysis.Fsum_swap
 #print axioms Analysis.Fsum_split_add
+#print axioms Analysis.Fsum_split_at
 #print axioms Analysis.Fsum_mono_len
 #print axioms Analysis.Fsum_le_congr
 #print axioms Analysis.Fsum_num_nonneg
@@ -684,6 +685,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.altTail_deep_le
 #print axioms Analysis.Qsub_le_self_loc
 #print axioms Analysis.altGap_le_U
+#print axioms Analysis.altCorner_mertens
 
 -- v0.10.0 — the λₙ / RH proof boundary (analytic face), locked faithfully.
 #print axioms Li.Pos_one

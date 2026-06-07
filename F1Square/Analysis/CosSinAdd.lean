@@ -518,4 +518,59 @@ theorem altGap_le_U {q : Q} {M : Nat} (hqd : 0 < q.den) (hq : Qle (Qabs q) ⟨(M
     (Qle_trans (expSumM_den_pos (M * M) b)
       (Qsub_le_self_loc (expSumM_num_nonneg (M * M) a)) (expSumM_le_U (M * M) b))
 
+/-- **The alt-series Cauchy corner vanishes (Mertens bound)**: for `|q| ≤ M` and `2M² ≤ K+2`,
+    `|corner(2K+1)| ≤ U·(4(M²)^{K+2}/(K+2)!) + (2(M²)^{K+1}/(K+1)!)·U` where `U = expM_U(M²)(2M²)`.
+    Split rows at `K`: low block = small (deep) tails × `U`-bounded term sums; high block = small term
+    sums × `U`-bounded tails. Both factorial factors `→ 0`. -/
+theorem altCorner_mertens {q : Q} {M : Nat} (hqd : 0 < q.den) (hq : Qle (Qabs q) ⟨(M : Int), 1⟩)
+    (off K : Nat) (hK : 2 * (M * M) ≤ K + 2) :
+    Qle (Qabs (Fsum (fun i => Qsub (Fsum (fun j => mul (altTerm q off i) (altTerm q off j)) (2 * K + 1))
+          (Fsum (fun j => mul (altTerm q off i) (altTerm q off j)) (2 * K + 1 - i))) (2 * K + 1)))
+      (add (mul (expM_U (M * M) (2 * (M * M))) ⟨(4 * npow (M * M) (K + 2) : Int), fct (K + 2)⟩)
+        (mul ⟨(2 * npow (M * M) (K + 1) : Int), fct (K + 1)⟩ (expM_U (M * M) (2 * (M * M))))) := by
+  have ha : ∀ i, 0 < (altTerm q off i).den := altTerm_den_pos hqd off
+  have htd : ∀ i, 0 < (Qsub (Fsum (altTerm q off) (2 * K + 1)) (Fsum (altTerm q off) (2 * K + 1 - i))).den :=
+    fun i => Qsub_den_pos (Fsum_den_pos ha (2 * K + 1)) (Fsum_den_pos ha (2 * K + 1 - i))
+  have hh : ∀ i, 0 < (Qabs (mul (altTerm q off i)
+      (Qsub (Fsum (altTerm q off) (2 * K + 1)) (Fsum (altTerm q off) (2 * K + 1 - i))))).den :=
+    fun i => Qabs_den_pos (Qmul_den_pos (ha i) (htd i))
+  have hCnn : (0 : Int) ≤ (4 * npow (M * M) (K + 2) : Int) := Int.ofNat_nonneg _
+  have hUnn : (0 : Int) ≤ (expM_U (M * M) (2 * (M * M))).num := expM_U_num_nonneg _ _
+  have hlow : Qle (Fsum (fun i => Qabs (mul (altTerm q off i)
+        (Qsub (Fsum (altTerm q off) (2 * K + 1)) (Fsum (altTerm q off) (2 * K + 1 - i))))) K)
+      (mul (expM_U (M * M) (2 * (M * M))) ⟨(4 * npow (M * M) (K + 2) : Int), fct (K + 2)⟩) := by
+    have hmid : Qle (Fsum (fun i => Qabs (mul (altTerm q off i)
+          (Qsub (Fsum (altTerm q off) (2 * K + 1)) (Fsum (altTerm q off) (2 * K + 1 - i))))) K)
+        (Fsum (fun i => mul (Qabs (altTerm q off i))
+          (⟨(4 * npow (M * M) (K + 2) : Int), fct (K + 2)⟩ : Q)) K) :=
+      Fsum_le_congr (fun i hi => by
+        rw [Qabs_mul]
+        exact Qmul_le_mul_left (Qabs_num_nonneg _) (altTail_deep_le hqd hq off K i hi (by omega)))
+    exact Qle_trans (Fsum_den_pos (fun i => Qmul_den_pos (Qabs_den_pos (ha i)) (fct_pos _)) K) hmid
+      (Qle_trans (Qmul_den_pos (Fsum_den_pos (fun i => Qabs_den_pos (ha i)) K) (fct_pos _))
+        (Qeq_le (Qeq_symm (Fsum_mul_const_right (fct_pos _) (fun i => Qabs_den_pos (ha i)) K)))
+        (Qmul_le_mul_right hCnn (altAbsSum_le_U hqd hq off K)))
+  have hhigh : Qle (Fsum (fun i' => Qabs (mul (altTerm q off (K + 1 + i'))
+        (Qsub (Fsum (altTerm q off) (2 * K + 1)) (Fsum (altTerm q off) (2 * K + 1 - (K + 1 + i')))))) K)
+      (mul ⟨(2 * npow (M * M) (K + 1) : Int), fct (K + 1)⟩ (expM_U (M * M) (2 * (M * M)))) := by
+    have hmid : Qle (Fsum (fun i' => Qabs (mul (altTerm q off (K + 1 + i'))
+          (Qsub (Fsum (altTerm q off) (2 * K + 1)) (Fsum (altTerm q off) (2 * K + 1 - (K + 1 + i')))))) K)
+        (Fsum (fun i' => mul (Qabs (altTerm q off (K + 1 + i')))
+          (expM_U (M * M) (2 * (M * M)))) K) :=
+      Fsum_le_congr (fun i' _ => by
+        rw [Qabs_mul]
+        exact Qmul_le_mul_left (Qabs_num_nonneg _)
+          (altGap_le_U hqd hq off (a := 2 * K + 1 - (K + 1 + i')) (b := 2 * K + 1) (by omega)))
+    exact Qle_trans (Fsum_den_pos (fun i' => Qmul_den_pos (Qabs_den_pos (ha (K + 1 + i')))
+        (expM_U_den_pos (M * M) (2 * (M * M)))) K) hmid
+      (Qle_trans (Qmul_den_pos (Fsum_den_pos (fun i' => Qabs_den_pos (ha (K + 1 + i'))) K)
+        (expM_U_den_pos (M * M) (2 * (M * M))))
+        (Qeq_le (Qeq_symm (Fsum_mul_const_right (expM_U_den_pos (M * M) (2 * (M * M)))
+          (fun i' => Qabs_den_pos (ha (K + 1 + i'))) K)))
+        (Qmul_le_mul_right hUnn (altAbsTail_le hqd hq off K K hK)))
+  refine Qle_trans (Fsum_den_pos hh (2 * K + 1)) (altCorner_abs_le hqd off (2 * K + 1)) ?_
+  refine Qle_trans (add_den_pos (Fsum_den_pos hh K)
+      (Fsum_den_pos (fun i' => hh (K + 1 + i')) K)) (Qeq_le (Fsum_split_at _ hh K)) ?_
+  exact Qadd_le_add hlow hhigh
+
 end UOR.Bridge.F1Square.Analysis

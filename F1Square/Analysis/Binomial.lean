@@ -424,6 +424,12 @@ theorem Fsum_split_add (f : Nat → Q) (hf : ∀ i, 0 < (f i).den) (K : Nat) :
         (Qadd_congr (Fsum_split_add f hf K d) (Qeq_refl (f (K + 1 + (d + 1)))))
         (Qadd_assoc3 (Fsum f K) (Fsum (fun i => f (K + 1 + i)) d) (f (K + 1 + (d + 1))))
 
+/-- Range split at the midpoint: `Σ_{i≤2K+1} fᵢ ≈ (Σ_{i≤K} fᵢ) + (Σ_{i≤K} f_{K+1+i})`. -/
+theorem Fsum_split_at (f : Nat → Q) (hf : ∀ i, 0 < (f i).den) (K : Nat) :
+    Qeq (Fsum f (2 * K + 1)) (add (Fsum f K) (Fsum (fun i => f (K + 1 + i)) K)) := by
+  rw [show 2 * K + 1 = K + 1 + K from by omega]
+  exact Fsum_split_add f hf K K
+
 /-- A finite sum of non-negative terms grows with its length. -/
 theorem Fsum_mono_len {f : Nat → Q} (hf0 : ∀ i, 0 ≤ (f i).num) (hfd : ∀ i, 0 < (f i).den)
     {M N : Nat} (hMN : M ≤ N) : Qle (Fsum f M) (Fsum f N) := by
