@@ -328,4 +328,42 @@ theorem cApprox_depth_diff (n : Nat) {Tj Tk : Nat} (hT : Tj ≤ Tk) :
           * (((npow (2 * n + 3) (2 * Tj + 1) : Nat) : Int) * ((2 * (n : Int) + 3) * (2 * (n : Int) + 3))) := by
         ring_uor
 
+/-! ### Step 3c: the γ diagonal and its regularity -/
+
+/-- **Term-wise difference of two plain sums**: if each term differs by `≤ 1/e`, the length-`M` sums
+    differ by `≤ M/e`. -/
+theorem Ssum_depth_diff {f g : Nat → Q} (e : Nat) (he : 0 < e) (hfd : ∀ i, 0 < (f i).den)
+    (hgd : ∀ i, 0 < (g i).den) (hdiff : ∀ i, Qle (Qabs (Qsub (f i) (g i))) (⟨1, e⟩ : Q)) :
+    ∀ M, Qle (Qabs (Qsub (Ssum f M) (Ssum g M))) (⟨(M : Int), e⟩ : Q)
+  | 0 => by
+      show Qle (Qabs (Qsub (⟨0, 1⟩ : Q) ⟨0, 1⟩)) (⟨(0 : Int), e⟩ : Q)
+      have hx : (Qabs (Qsub (⟨0, 1⟩ : Q) ⟨0, 1⟩)).num = 0 := by decide
+      unfold Qle; rw [hx]; simp
+  | (M + 1) => by
+      show Qle (Qabs (Qsub (add (Ssum f M) (f M)) (add (Ssum g M) (g M))))
+        (⟨((M + 1 : Nat) : Int), e⟩ : Q)
+      have hreg : Qeq (Qsub (add (Ssum f M) (f M)) (add (Ssum g M) (g M)))
+          (add (Qsub (Ssum f M) (Ssum g M)) (Qsub (f M) (g M))) := by
+        simp only [Qeq, Qsub, add, neg]; push_cast
+        generalize (Ssum f M).num = a1; generalize ((Ssum f M).den : Int) = b1
+        generalize (f M).num = a2; generalize ((f M).den : Int) = b2
+        generalize (Ssum g M).num = a3; generalize ((Ssum g M).den : Int) = b3
+        generalize (g M).num = a4; generalize ((g M).den : Int) = b4
+        ring_uor
+      have hsum : Qeq (add (⟨(M : Int), e⟩ : Q) ⟨1, e⟩) (⟨((M + 1 : Nat) : Int), e⟩ : Q) := by
+        simp only [Qeq, add]; push_cast
+        generalize ((e : Nat) : Int) = E; generalize ((M : Nat) : Int) = Mc
+        ring_uor
+      have key : Qle (Qabs (Qsub (add (Ssum f M) (f M)) (add (Ssum g M) (g M))))
+          (add (Qabs (Qsub (Ssum f M) (Ssum g M))) (Qabs (Qsub (f M) (g M)))) :=
+        Qle_congr_left (Qabs_den_pos (add_den_pos
+          (Qsub_den_pos (Ssum_den_pos hfd M) (Ssum_den_pos hgd M)) (Qsub_den_pos (hfd M) (hgd M))))
+          (Qeq_symm (Qabs_Qeq hreg)) (Qabs_add_le _ _)
+      refine Qle_trans (add_den_pos
+          (Qabs_den_pos (Qsub_den_pos (Ssum_den_pos hfd M) (Ssum_den_pos hgd M)))
+          (Qabs_den_pos (Qsub_den_pos (hfd M) (hgd M)))) key ?_
+      exact Qle_trans (add_den_pos (show 0 < (⟨(M : Int), e⟩ : Q).den from he)
+          (show 0 < (⟨1, e⟩ : Q).den from he))
+        (Qadd_le_add (Ssum_depth_diff e he hfd hgd hdiff M) (hdiff M)) (Qeq_le hsum)
+
 end UOR.Bridge.F1Square.Analysis

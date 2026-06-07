@@ -543,6 +543,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.npow_add
 #print axioms Analysis.qpow_one_den
 #print axioms Analysis.cApprox_depth_diff
+#print axioms Analysis.Ssum_depth_diff
 
 -- v0.10.0 — the λₙ / RH proof boundary (analytic face), locked faithfully.
 #print axioms Li.Pos_one
