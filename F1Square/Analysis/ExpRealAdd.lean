@@ -85,4 +85,32 @@ theorem expSum_add_le {a b : Q} {Ma Mb : Nat} (ha0 : 0 ≤ a.num) (had : 0 < a.d
   rw [Qabs_neg]
   exact Qabs_le_of_nonneg hcorner_nn (expSum_corner_le_gen ha0 had hb0 hbd hqa hqb N hN)
 
+/-- **Exp diagonal reconciliation**: two exp partial sums at different arguments and depths differ by a
+    depth tail plus an argument-Lipschitz term — `|expSum a R − expSum b R'| ≤ 2M^{R'+1}/(R'+1)! +
+    LipS(M,R')·|a − b|` (for `R' ≤ R`, `2M ≤ R'+2`, `|a|,|b| ≤ M`). Triangle through `expSum a R'`. -/
+theorem expSum_reconcile {a b : Q} {M : Nat} (had : 0 < a.den) (hbd : 0 < b.den)
+    (ha : Qle (Qabs a) ⟨(M : Int), 1⟩) (hb : Qle (Qabs b) ⟨(M : Int), 1⟩)
+    {R R' : Nat} (hR'2 : 2 * M ≤ R' + 2) (hRR' : R' ≤ R) :
+    Qle (Qabs (Qsub (expSum a R) (expSum b R')))
+      (add ⟨(2 * npow M (R' + 1) : Int), fct (R' + 1)⟩ (mul (LipS M R') (Qabs (Qsub a b)))) := by
+  refine Qle_trans (add_den_pos (Qabs_den_pos (Qsub_den_pos (expSum_den_pos had R) (expSum_den_pos had R')))
+      (Qabs_den_pos (Qsub_den_pos (expSum_den_pos had R') (expSum_den_pos hbd R'))))
+    (Qabs_sub_triangle (expSum_den_pos had R) (expSum_den_pos had R') (expSum_den_pos hbd R')) ?_
+  exact Qadd_le_add (expSum_trunc_bound had ha hR'2 hRR') (expSum_Lip_le had hbd ha hb R')
+
+/-- **Product difference**: `|A·B − A'·B'| ≤ |B|·|A−A'| + |A'|·|B−B'|`, via `AB−A'B' = B(A−A')+A'(B−B')`. -/
+theorem Qprod_diff_le (A A' B B' : Q) (hAd : 0 < A.den) (hA'd : 0 < A'.den) (hBd : 0 < B.den) (hB'd : 0 < B'.den) :
+    Qle (Qabs (Qsub (mul A B) (mul A' B')))
+      (add (mul (Qabs B) (Qabs (Qsub A A'))) (mul (Qabs A') (Qabs (Qsub B B')))) := by
+  have hid : Qeq (Qsub (mul A B) (mul A' B'))
+      (add (mul B (Qsub A A')) (mul A' (Qsub B B'))) := by
+    simp only [Qeq, Qsub, add, mul, neg]; push_cast; ring_uor
+  refine Qle_congr_left (Qabs_den_pos (add_den_pos (Qmul_den_pos hBd (Qsub_den_pos hAd hA'd))
+      (Qmul_den_pos hA'd (Qsub_den_pos hBd hB'd)))) (Qeq_symm (Qabs_Qeq hid)) ?_
+  refine Qle_trans (add_den_pos (Qabs_den_pos (Qmul_den_pos hBd (Qsub_den_pos hAd hA'd)))
+      (Qabs_den_pos (Qmul_den_pos hA'd (Qsub_den_pos hBd hB'd))))
+    (Qabs_add_le _ _) ?_
+  rw [Qabs_mul B (Qsub A A'), Qabs_mul A' (Qsub B B')]
+  exact Qle_refl _
+
 end UOR.Bridge.F1Square.Analysis

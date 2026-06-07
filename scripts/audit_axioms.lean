@@ -776,3 +776,5 @@ open UOR.Bridge.F1Square
 -- v0.15.0 ζ-stack — exp functional equation on all of ℝ (general-argument Cauchy corner).
 #print axioms Analysis.expSum_corner_le_gen
 #print axioms Analysis.expSum_add_le
+#print axioms Analysis.expSum_reconcile
+#print axioms Analysis.Qprod_diff_le
