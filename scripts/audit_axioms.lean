@@ -755,3 +755,10 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.zetaSeq_regular
 #print axioms Analysis.zeta_seq
 #print axioms Analysis.zeta_pos
+
+-- v0.15.0 keystone D corollary — |cos| ≤ 1, |sin| ≤ 1 (cos² ≤ 1, sin² ≤ 1).
+#print axioms Analysis.Rnonneg_Rmul_self
+#print axioms Analysis.Rle_self_Radd_right
+#print axioms Analysis.Rle_self_Radd_left
+#print axioms Analysis.Rcos_sq_le_one
+#print axioms Analysis.Rsin_sq_le_one
