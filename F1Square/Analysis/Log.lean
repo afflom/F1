@@ -872,4 +872,110 @@ theorem tmap_abs_le {q M : Q} (hqd : 0 < q.den) (hMd : 0 < M.den)
         (Qeq_le hrnq)
         (Qle_trans hL_Mq (tmap_cross_ge hqMge) (Qeq_le (Qeq_symm hrM))))
 
+-- ===========================================================================
+-- Rlog:  log x = 2·artanh((x−1)/(x+1)) on a positive, [1/M, M]-bounded real.
+-- ===========================================================================
+
+/-- The log reindex `g(n) = 2(n+1)`: absorbs the t-map Lipschitz constant `2`. -/
+def Rlog_R (n : Nat) : Nat := 2 * (n + 1)
+
+/-- The `n`-th log diagonal approximant: `tmap` of the reindexed `x`-approximant. -/
+def Rlog_seq (x : Real) (n : Nat) : Q := tmap (x.seq (Rlog_R n))
+
+/-- The log diagonal is Bishop-regular (the t-map is 2-Lipschitz on `x ≥ 0`). -/
+theorem Rlog_regular (x : Real) (hxpos : ∀ n, 0 < (x.seq n).num) : IsRegular (Rlog_seq x) := by
+  intro j k
+  have had : 0 < (x.seq (Rlog_R j)).den := x.den_pos _
+  have hbd : 0 < (x.seq (Rlog_R k)).den := x.den_pos _
+  have ha0 : 0 < (x.seq (Rlog_R j)).num := hxpos _
+  have hb0 : 0 < (x.seq (Rlog_R k)).num := hxpos _
+  have hca : 0 < (add (x.seq (Rlog_R j)) ⟨1, 1⟩).num := by
+    have h := Int.ofNat_nonneg (x.seq (Rlog_R j)).den
+    show 0 < (x.seq (Rlog_R j)).num * 1 + 1 * ((x.seq (Rlog_R j)).den : Int); omega
+  have hcb : 0 < (add (x.seq (Rlog_R k)) ⟨1, 1⟩).num := by
+    have h := Int.ofNat_nonneg (x.seq (Rlog_R k)).den
+    show 0 < (x.seq (Rlog_R k)).num * 1 + 1 * ((x.seq (Rlog_R k)).den : Int); omega
+  have hLa : Qle (add (⟨0, 1⟩ : Q) ⟨1, 1⟩) (add (x.seq (Rlog_R j)) ⟨1, 1⟩) := by
+    simp only [Qle, add]; push_cast; omega
+  have hLb : Qle (add (⟨0, 1⟩ : Q) ⟨1, 1⟩) (add (x.seq (Rlog_R k)) ⟨1, 1⟩) := by
+    simp only [Qle, add]; push_cast; omega
+  -- per-leg reindex: 2/(g m + 1) ≤ 1/(m+1)
+  have hleg : ∀ m : Nat, Qle (mul (Qbound (Rlog_R m))
+      (mul (⟨2, 1⟩ : Q) (Qinv (mul (add (⟨0, 1⟩ : Q) ⟨1, 1⟩) (add (⟨0, 1⟩ : Q) ⟨1, 1⟩)))))
+      (Qbound m) := by
+    intro m
+    show ((1 : Int) * 2) * ((m + 1 : Nat) : Int) ≤ 1 * (((Rlog_R m + 1) * 1 : Nat) : Int)
+    unfold Rlog_R; push_cast; omega
+  refine Qle_trans (Qmul_den_pos (Qmul_den_pos (by decide)
+        (Qinv_den_pos (by decide)))
+      (Qabs_den_pos (Qsub_den_pos had hbd)))
+    (tmap_lipschitz had hbd hca hcb (by decide) (by decide) hLa hLb)
+    (Qle_trans (Qmul_den_pos (Qmul_den_pos (by decide) (Qinv_den_pos (by decide)))
+        (add_den_pos (Qbound_den_pos _) (Qbound_den_pos _)))
+      (Qmul_le_mul_left (by decide) (x.reg (Rlog_R j) (Rlog_R k)))
+      (Qle_trans (add_den_pos (Qmul_den_pos (Qbound_den_pos _)
+          (Qmul_den_pos (by decide) (Qinv_den_pos (by decide))))
+        (Qmul_den_pos (Qbound_den_pos _)
+          (Qmul_den_pos (by decide) (Qinv_den_pos (by decide)))))
+        (Qeq_le (Qeq_trans (Qmul_den_pos (add_den_pos (Qbound_den_pos _) (Qbound_den_pos _))
+            (Qmul_den_pos (by decide) (Qinv_den_pos (by decide))))
+          (mul_comm _ _) (Qmul_add_right _ _ _)))
+        (Qadd_le_add (hleg j) (hleg k))))
+
+/-- `tmap M = (M.num − M.den)/(M.num + M.den)` in lowest-ish terms (the artanh radius `ρ`). -/
+theorem tmap_M_eq {M : Q} (hMd : 0 < M.den) (hMn : 0 ≤ M.num) :
+    Qeq (tmap M) ⟨M.num - (M.den : Int), M.num.toNat + M.den⟩ := by
+  show (tmap M).num * ((M.num.toNat + M.den : Nat) : Int)
+      = (M.num - (M.den : Int)) * ((tmap M).den : Int)
+  unfold tmap Qinv Qsub
+  simp only [Qeq, mul, add, neg]
+  push_cast
+  rw [Int.toNat_of_nonneg hMn,
+    Int.toNat_of_nonneg (show (0 : Int) ≤ M.num * 1 + 1 * (M.den : Int) by omega)]
+  ring_uor
+
+/-- **`log` on a positive, `[1/M, M]`-bounded real**: `Rlog x = 2·artanh((x−1)/(x+1))`. -/
+def Rlog (x : Real) (M : Q) (hMd : 0 < M.den) (hMge : Qle (⟨1, 1⟩ : Q) M)
+    (hxpos : ∀ n, 0 < (x.seq n).num) (hhi : ∀ n, Qle (x.seq n) M)
+    (hlo : ∀ n, Qle (⟨1, 1⟩ : Q) (mul (x.seq n) M)) : Real := by
+  have hMge' : (1 : Int) * (M.den : Int) ≤ M.num * 1 := hMge
+  have hMn : 0 ≤ M.num := by omega
+  have hM1 : 0 < (add M ⟨1, 1⟩).num := by
+    show 0 < M.num * 1 + 1 * (M.den : Int); omega
+  -- the artanh radius ρ = (M−1)/(M+1), in clean form
+  have hρ0 : 0 ≤ (⟨M.num - (M.den : Int), M.num.toNat + M.den⟩ : Q).num := by
+    show 0 ≤ M.num - (M.den : Int); omega
+  have hρd : 0 < (⟨M.num - (M.den : Int), M.num.toNat + M.den⟩ : Q).den := by
+    show 0 < M.num.toNat + M.den; omega
+  have hlt : (⟨M.num - (M.den : Int), M.num.toNat + M.den⟩ : Q).num.toNat
+      < (⟨M.num - (M.den : Int), M.num.toNat + M.den⟩ : Q).den := by
+    show (M.num - (M.den : Int)).toNat < M.num.toNat + M.den
+    have h1 : ((M.num.toNat : Nat) : Int) = M.num := Int.toNat_of_nonneg hMn
+    have h2 : ((M.num - (M.den : Int)).toNat : Int) = M.num - (M.den : Int) :=
+      Int.toNat_of_nonneg (by omega)
+    have : ((M.num - (M.den : Int)).toNat : Int) < ((M.num.toNat + M.den : Nat) : Int) := by
+      push_cast [h1, h2]; omega
+    exact_mod_cast this
+  -- the custom regular sequence t = (x−1)/(x+1)
+  have hden : ∀ n, 0 < (Rlog_seq x n).den := by
+    intro n
+    refine Qmul_den_pos (Qsub_den_pos (x.den_pos _) Nat.one_pos) (Qinv_den_pos ?_)
+    have h := Int.ofNat_nonneg (x.seq (Rlog_R n)).den
+    have h2 := hxpos (Rlog_R n)
+    show 0 < (x.seq (Rlog_R n)).num * 1 + 1 * ((x.seq (Rlog_R n)).den : Int)
+    omega
+  -- the radius bound on every approximant
+  have hb : ∀ n, Qle (Qabs ((⟨Rlog_seq x, Rlog_regular x hxpos, hden⟩ : Real).seq n))
+      (⟨M.num - (M.den : Int), M.num.toNat + M.den⟩ : Q) := by
+    intro n
+    have hca : 0 < (add (x.seq (Rlog_R n)) ⟨1, 1⟩).num := by
+      have h := Int.ofNat_nonneg (x.seq (Rlog_R n)).den; have := hxpos (Rlog_R n)
+      show 0 < (x.seq (Rlog_R n)).num * 1 + 1 * ((x.seq (Rlog_R n)).den : Int); omega
+    exact Qle_trans (show 0 < (tmap M).den from
+        Qmul_den_pos (Qsub_den_pos hMd Nat.one_pos) (Qinv_den_pos hM1))
+      (tmap_abs_le (x.den_pos _) hMd hca hM1 (hhi (Rlog_R n)) (hlo (Rlog_R n)))
+      (Qeq_le (tmap_M_eq hMd hMn))
+  exact Rmul (ofQ ⟨2, 1⟩ (by decide))
+    (Rartanh ⟨Rlog_seq x, Rlog_regular x hxpos, hden⟩ _ hρ0 hρd hlt hb)
+
 end UOR.Bridge.F1Square.Analysis
