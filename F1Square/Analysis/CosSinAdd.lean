@@ -288,4 +288,43 @@ theorem altPyth_conv_vanish {q : Q} (hqd : 0 < q.den) (m : Nat) :
       from by simp only [Qeq, add, neg]; push_cast; ring_uor) (Qeq_refl _)) ?_
   simp only [Qeq, mul]; push_cast; ring_uor
 
+/-- `(A+B) + (C+D) ≈ A + D` when `C + B ≈ 0`. -/
+theorem Qadd_cancel_mid {A B C D : Q} (hA : 0 < A.den) (hB : 0 < B.den) (hC : 0 < C.den) (hD : 0 < D.den)
+    (h : Qeq (add C B) ⟨0, 1⟩) : Qeq (add (add A B) (add C D)) (add A D) := by
+  refine Qeq_trans (add_den_pos (add_den_pos hA hD) (add_den_pos hC hB))
+    (show Qeq (add (add A B) (add C D)) (add (add A D) (add C B)) by
+      simp only [Qeq, add]; push_cast; ring_uor) ?_
+  refine Qeq_trans (add_den_pos (add_den_pos hA hD) Nat.one_pos)
+    (Qadd_congr (Qeq_refl (add A D)) h) ?_
+  exact Qadd_zero_right (add A D)
+
+/-- **The Pythagorean telescope**: `Σ_{m≤N} cosConv(m) + Σ_{m≤N} q²·sinConv(m) ≈ 1 + q²·sinConv(N)`.
+    By `altPyth_conv_vanish`, `cosConv(m+1) + q²·sinConv(m) ≈ 0`, so consecutive terms cancel, leaving the
+    `m=0` cos term (`=1`) and the final `q²·sinConv(N)`. -/
+theorem altPyth_telescope {q : Q} (hqd : 0 < q.den) :
+    ∀ N, Qeq (add (Fsum (fun m => Fsum (fun i => mul (altTerm q 0 i) (altTerm q 0 (m - i))) m) N)
+        (Fsum (fun m => mul (mul q q) (Fsum (fun i => mul (altTerm q 1 i) (altTerm q 1 (m - i))) m)) N))
+      (add ⟨1, 1⟩ (mul (mul q q) (Fsum (fun i => mul (altTerm q 1 i) (altTerm q 1 (N - i))) N)))
+  | 0 => by
+      refine Qadd_congr ?_ (Qeq_refl _)
+      show Qeq (mul (altTerm q 0 0) (altTerm q 0 0)) ⟨1, 1⟩
+      rw [show altTerm q 0 0 = (⟨1, 1⟩ : Q) from rfl]; decide
+  | (N + 1) => by
+      have hcc : ∀ m, 0 < (Fsum (fun i => mul (altTerm q 0 i) (altTerm q 0 (m - i))) m).den :=
+        fun m => Fsum_den_pos (fun i => Qmul_den_pos (altTerm_den_pos hqd 0 i) (altTerm_den_pos hqd 0 (m - i))) m
+      have hqsc : ∀ m, 0 < (mul (mul q q) (Fsum (fun i => mul (altTerm q 1 i) (altTerm q 1 (m - i))) m)).den :=
+        fun m => Qmul_den_pos (Qmul_den_pos hqd hqd)
+          (Fsum_den_pos (fun i => Qmul_den_pos (altTerm_den_pos hqd 1 i) (altTerm_den_pos hqd 1 (m - i))) m)
+      exact Qeq_trans
+        (add_den_pos (add_den_pos (Fsum_den_pos hcc N) (Fsum_den_pos hqsc N))
+          (add_den_pos (hcc (N + 1)) (hqsc (N + 1))))
+        (Qadd_rearrange (Fsum (fun m => Fsum (fun i => mul (altTerm q 0 i) (altTerm q 0 (m - i))) m) N)
+          (Fsum (fun i => mul (altTerm q 0 i) (altTerm q 0 (N + 1 - i))) (N + 1))
+          (Fsum (fun m => mul (mul q q) (Fsum (fun i => mul (altTerm q 1 i) (altTerm q 1 (m - i))) m)) N)
+          (mul (mul q q) (Fsum (fun i => mul (altTerm q 1 i) (altTerm q 1 (N + 1 - i))) (N + 1))))
+        (Qeq_trans
+          (add_den_pos (add_den_pos Nat.one_pos (hqsc N)) (add_den_pos (hcc (N + 1)) (hqsc (N + 1))))
+          (Qadd_congr (altPyth_telescope hqd N) (Qeq_refl _))
+          (Qadd_cancel_mid Nat.one_pos (hqsc N) (hcc (N + 1)) (hqsc (N + 1)) (altPyth_conv_vanish hqd N)))
+
 end UOR.Bridge.F1Square.Analysis
