@@ -697,4 +697,38 @@ theorem artSum_base_mono {a b : Q} (ha0 : 0 ≤ a.num) (had : 0 < a.den) (hbd : 
   | (N + 1) =>
       Qadd_le_add (artSum_base_mono ha0 had hbd hab N) (artTerm_base_mono ha0 had hbd hab (N + 1))
 
+/-! ### Step 5b: pointwise bounds on the π approximants (for `log π`'s modulus) -/
+
+/-- `6/5 ≤ Rpi.seq n` pointwise (the Machin lower bracket, without the regularity slack). -/
+theorem Rpi_seq_lb (n : Nat) :
+    Qle (Qsub (mul ⟨16, 1⟩ ⟨1, 8⟩) (mul ⟨4, 1⟩ ⟨1, 5⟩)) (Rpi_seq n) := by
+  have hcondA : Qle (qpow (⟨1, 2⟩ : Q) 5)
+      (mul (Qsub (arctanSum ⟨1, 5⟩ 1) ⟨1, 8⟩) (Qsub ⟨1, 1⟩ (mul ⟨1, 2⟩ ⟨1, 2⟩))) := by decide
+  have hcondB : Qle (qpow (⟨1, 2⟩ : Q) 3)
+      (mul (Qsub (⟨1, 5⟩ : Q) (arctanSum ⟨1, 239⟩ 0)) (Qsub ⟨1, 1⟩ (mul ⟨1, 2⟩ ⟨1, 2⟩))) := by decide
+  have hL5 : Qle (⟨1, 8⟩ : Q) (arctanSum ⟨1, 5⟩ (Rpi_g n)) :=
+    arctanSum_diag_ge ⟨1, 5⟩ (by decide) (ρ := ⟨1, 2⟩) (L := ⟨1, 8⟩) (by decide) (by decide)
+      (by decide) (by decide) (by decide) hcondA (20 * n + 19)
+  have hU239 : Qle (arctanSum ⟨1, 239⟩ (Rpi_g n)) (⟨1, 5⟩ : Q) :=
+    arctanSum_diag_le ⟨1, 239⟩ (by decide) (ρ := ⟨1, 2⟩) (U := ⟨1, 5⟩) (by decide) (by decide)
+      (by decide) (by decide) (by decide) hcondB (20 * n + 19)
+  exact Qsub_le_2 (Qmul_le_mul_left (by decide) hL5) (Qmul_le_mul_left (by decide) hU239)
+
+/-- `Rpi.seq n ≤ 7` pointwise (a loose Machin upper bracket: `16·(2/5) + 4·(1/24) ≤ 7`). -/
+theorem Rpi_seq_ub (n : Nat) : Qle (Rpi_seq n) (⟨7, 1⟩ : Q) := by
+  have hcondU : Qle (qpow (⟨1, 2⟩ : Q) 3)
+      (mul (Qsub (⟨2, 5⟩ : Q) (arctanSum ⟨1, 5⟩ 0)) (Qsub ⟨1, 1⟩ (mul ⟨1, 2⟩ ⟨1, 2⟩))) := by decide
+  have hcondL : Qle (qpow (⟨1, 2⟩ : Q) 5)
+      (mul (Qsub (arctanSum ⟨1, 239⟩ 1) ⟨-1, 24⟩) (Qsub ⟨1, 1⟩ (mul ⟨1, 2⟩ ⟨1, 2⟩))) := by decide
+  have hU5 : Qle (arctanSum ⟨1, 5⟩ (Rpi_g n)) (⟨2, 5⟩ : Q) :=
+    arctanSum_diag_le ⟨1, 5⟩ (by decide) (ρ := ⟨1, 2⟩) (U := ⟨2, 5⟩) (by decide) (by decide)
+      (by decide) (by decide) (by decide) hcondU (20 * n + 19)
+  have hL239 : Qle (⟨-1, 24⟩ : Q) (arctanSum ⟨1, 239⟩ (Rpi_g n)) :=
+    arctanSum_diag_ge ⟨1, 239⟩ (by decide) (ρ := ⟨1, 2⟩) (L := ⟨-1, 24⟩) (by decide) (by decide)
+      (by decide) (by decide) (by decide) hcondL (20 * n + 19)
+  exact Qle_trans (Qsub_den_pos (Qmul_den_pos (by decide) (by decide))
+      (Qmul_den_pos (by decide) (by decide)))
+    (Qsub_le_2 (Qmul_le_mul_left (by decide) hU5) (Qmul_le_mul_left (by decide) hL239))
+    (by decide)
+
 end UOR.Bridge.F1Square.Analysis
