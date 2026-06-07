@@ -422,4 +422,22 @@ theorem altCorner_abs_le {q : Q} (hqd : 0 < q.den) (off N : Nat) :
     (Qeq_symm (Qabs_Qeq (altCorner_factored hqd off N)))
     (Fsum_abs_le hfactterm_den N)
 
+/-- The `M`-base exponential partial sum as an `Fsum` of its terms `Mⁱ/i!`. -/
+theorem expSumM_eq_Fsum (M : Nat) : ∀ N, expSumM M N = Fsum (fun i => (⟨(npow M i : Int), fct i⟩ : Q)) N
+  | 0 => rfl
+  | (n + 1) => by
+      show add (expSumM M n) (⟨(npow M (n + 1) : Int), fct (n + 1)⟩ : Q)
+        = add (Fsum (fun i => (⟨(npow M i : Int), fct i⟩ : Q)) n) (⟨(npow M (n + 1) : Int), fct (n + 1)⟩ : Q)
+      rw [expSumM_eq_Fsum M n]
+
+/-- **Uniform bound on the absolute alt-series sum**: `Σ_{i≤N} |altTermᵢ| ≤ expM_U(M²)(2M²)`, a constant
+    independent of `N` (each `|altTermᵢ| ≤ (M²)ⁱ/i!`, summing to `expSumM(M²) N ≤` the uniform bound). -/
+theorem altAbsSum_le_U {q : Q} {M : Nat} (hqd : 0 < q.den) (hq : Qle (Qabs q) ⟨(M : Int), 1⟩)
+    (off N : Nat) :
+    Qle (Fsum (fun i => Qabs (altTerm q off i)) N) (expM_U (M * M) (2 * (M * M))) := by
+  refine Qle_trans (Fsum_den_pos (fun i => fct_pos i) N)
+    (Fsum_le_congr (fun i _ => altTerm_abs_le hqd hq off i)) ?_
+  rw [← expSumM_eq_Fsum]
+  exact expSumM_le_U (M * M) N
+
 end UOR.Bridge.F1Square.Analysis
