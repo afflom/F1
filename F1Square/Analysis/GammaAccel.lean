@@ -575,4 +575,48 @@ theorem Rgamma_h_lower : Rle (ofQ (⟨54, 100⟩ : Q) (by decide)) Rgamma_h := b
       Qle_trans (Ssum_den_pos clow_den_pos 20) (by decide : Qle (⟨54, 100⟩ : Q) (Ssum clow 20)) hge
     exact Qle_trans (gammaHseq_den_pos (m + 9)) hg (Qle_self_add (by show (0 : Int) ≤ 2; decide))
 
+/-! ### Step 5 foundation: the artanh series upper bound -/
+
+/-- `a − b ≤ c → a ≤ b + c`. -/
+theorem Qle_add_of_Qsub_le {a b c : Q} (had : 0 < a.den) (hbd : 0 < b.den) (hcd : 0 < c.den)
+    (h : Qle (Qsub a b) c) : Qle a (add b c) := by
+  have hcancel : Qeq (add (Qsub a b) b) a := by
+    simp only [Qeq, Qsub, add, neg]; push_cast
+    generalize a.num = an; generalize ((a.den : Nat) : Int) = ad
+    generalize b.num = bn; generalize ((b.den : Nat) : Int) = bd
+    ring_uor
+  have h3 : Qle a (add c b) :=
+    Qle_congr_left (add_den_pos (Qsub_den_pos had hbd) hbd) hcancel (Qadd_le_add h (Qle_refl b))
+  have hcomm : Qeq (add c b) (add b c) := by
+    simp only [Qeq, add]; push_cast
+    generalize c.num = cn; generalize ((c.den : Nat) : Int) = cd
+    generalize b.num = bn; generalize ((b.den : Nat) : Int) = bd
+    ring_uor
+  exact Qle_congr_right (add_den_pos hcd hbd) hcomm h3
+
+/-- **The artanh series upper bound (cleared)**: for every length `M`,
+    `artSum t M · (1−t²) ≤ artSum t T · (1−t²) + t^{2T+3}` — the partial sum never exceeds the
+    depth-`T` value plus its geometric tail. -/
+theorem artSum_upper_cleared {t : Q} (ht0 : 0 ≤ t.num) (htd : 0 < t.den)
+    (hWnn : 0 ≤ (Qsub (⟨1, 1⟩ : Q) (mul t t)).num) (T M : Nat) :
+    Qle (mul (artSum t M) (Qsub ⟨1, 1⟩ (mul t t)))
+      (add (mul (artSum t T) (Qsub ⟨1, 1⟩ (mul t t))) (qpow t (2 * T + 3))) := by
+  have hWd : 0 < (Qsub (⟨1, 1⟩ : Q) (mul t t)).den :=
+    Qsub_den_pos Nat.one_pos (Qmul_den_pos htd htd)
+  rcases Nat.le_total T M with h | h
+  · have htr := artSum_trunc htd ht0 htd (Qeq_le (Qabs_of_nonneg ht0)) hWnn h
+    have hstep : Qle (mul (Qsub (artSum t M) (artSum t T)) (Qsub ⟨1, 1⟩ (mul t t)))
+        (qpow t (2 * T + 3)) :=
+      Qle_trans (Qmul_den_pos (Qabs_den_pos (Qsub_den_pos (artSum_den_pos htd M)
+          (artSum_den_pos htd T))) hWd)
+        (Qmul_le_mul_right hWnn (Qle_self_Qabs _)) htr
+    have h2 : Qle (Qsub (mul (artSum t M) (Qsub ⟨1, 1⟩ (mul t t)))
+        (mul (artSum t T) (Qsub ⟨1, 1⟩ (mul t t)))) (qpow t (2 * T + 3)) :=
+      Qle_congr_left (Qmul_den_pos (Qsub_den_pos (artSum_den_pos htd M) (artSum_den_pos htd T)) hWd)
+        (Qmul_sub_right _ _ _) hstep
+    exact Qle_add_of_Qsub_le (Qmul_den_pos (artSum_den_pos htd M) hWd)
+      (Qmul_den_pos (artSum_den_pos htd T) hWd) (qpow_den_pos htd _) h2
+  · exact Qle_trans (Qmul_den_pos (artSum_den_pos htd T) hWd)
+      (Qmul_le_mul_right hWnn (artSum_mono ht0 htd h)) (Qle_self_add (qpow_nonneg ht0 _))
+
 end UOR.Bridge.F1Square.Analysis

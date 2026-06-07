@@ -556,6 +556,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.gammaHseq_ge_clow
 #print axioms Analysis.gammaHseq_nonneg
 #print axioms Analysis.Rgamma_h_lower
+#print axioms Analysis.Qle_add_of_Qsub_le
+#print axioms Analysis.artSum_upper_cleared
 
 -- v0.10.0 — the λₙ / RH proof boundary (analytic face), locked faithfully.
 #print axioms Li.Pos_one
