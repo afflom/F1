@@ -320,6 +320,49 @@ theorem alternating_binomial (m : Nat) :
     simp only [Qeq]; rw [hnum]; simp
   exact Qeq_trans (qpow_den_pos (by decide) (m + 1)) (Qeq_symm hb) hz
 
+/-- Associativity of `Q` addition (up to `≈`). -/
+theorem Qadd_assoc3 (a b c : Q) : Qeq (add (add a b) c) (add a (add b c)) := by
+  simp only [Qeq, add]; push_cast; ring_uor
+
+/-- **Triangle reindex**: the low-triangle `Σ_{i≤M} Σ_{j≤M−i} gᵢⱼ` equals the antidiagonal form
+    `Σ_{m≤M} Σ_{i≤m} gᵢ,ₘ₋ᵢ` (both are `Σ_{i+j≤M} gᵢⱼ`). Connects `Fsum_square_decomp` to the convolution. -/
+theorem Fsum_triangle_reindex {g : Nat → Nat → Q} (hg : ∀ i j, 0 < (g i j).den) :
+    ∀ M, Qeq (Fsum (fun i => Fsum (fun j => g i j) (M - i)) M)
+      (Fsum (fun m => Fsum (fun i => g i (m - i)) m) M)
+  | 0 => Qeq_refl _
+  | (M + 1) => by
+      have hrow : ∀ i, i ≤ M → Qeq (Fsum (fun j => g i j) (M + 1 - i))
+          (add (Fsum (fun j => g i j) (M - i)) (g i (M + 1 - i))) := by
+        intro i hi
+        rw [show M + 1 - i = (M - i) + 1 from by omega]
+        exact Qeq_refl _
+      have hfirst : Qeq (Fsum (fun i => Fsum (fun j => g i j) (M + 1 - i)) M)
+          (add (Fsum (fun i => Fsum (fun j => g i j) (M - i)) M)
+            (Fsum (fun i => g i (M + 1 - i)) M)) :=
+        Qeq_trans
+          (Fsum_den_pos (fun i => add_den_pos (Fsum_den_pos (fun j => hg i j) (M - i)) (hg i (M + 1 - i))) M)
+          (Fsum_congr_le hrow)
+          (Fsum_add (fun i => Fsum_den_pos (fun j => hg i j) (M - i)) (fun i => hg i (M + 1 - i)) M)
+      have hsub0 : M + 1 - (M + 1) = 0 := by omega
+      show Qeq (add (Fsum (fun i => Fsum (fun j => g i j) (M + 1 - i)) M)
+            (Fsum (fun j => g (M + 1) j) (M + 1 - (M + 1))))
+        (add (Fsum (fun m => Fsum (fun i => g i (m - i)) m) M)
+          (add (Fsum (fun i => g i (M + 1 - i)) M) (g (M + 1) (M + 1 - (M + 1)))))
+      rw [hsub0]
+      refine Qeq_trans
+        (add_den_pos (add_den_pos
+          (Fsum_den_pos (fun i => Fsum_den_pos (fun j => hg i j) (M - i)) M)
+          (Fsum_den_pos (fun i => hg i (M + 1 - i)) M)) (Fsum_den_pos (fun j => hg (M + 1) j) 0))
+        (Qadd_congr hfirst (Qeq_refl (Fsum (fun j => g (M + 1) j) 0))) ?_
+      refine Qeq_trans
+        (add_den_pos (add_den_pos
+          (Fsum_den_pos (fun m => Fsum_den_pos (fun i => hg i (m - i)) m) M)
+          (Fsum_den_pos (fun i => hg i (M + 1 - i)) M)) (Fsum_den_pos (fun j => hg (M + 1) j) 0))
+        (Qadd_congr (Qadd_congr (Fsum_triangle_reindex hg M)
+          (Qeq_refl (Fsum (fun i => g i (M + 1 - i)) M))) (Qeq_refl (Fsum (fun j => g (M + 1) j) 0))) ?_
+      exact Qadd_assoc3 (Fsum (fun m => Fsum (fun i => g i (m - i)) m) M)
+        (Fsum (fun i => g i (M + 1 - i)) M) (Fsum (fun j => g (M + 1) j) 0)
+
 /-- **Square = low-triangle + high-corner**: split each row `i` of the `M×M` square at `j = M−i`.
     The low part is `Σ_{i+j≤M}` (the triangle); the high part is the corner `Σ_{i+j>M, j≤M}`. Exact. -/
 theorem Fsum_square_decomp {g : Nat → Nat → Q} (hg : ∀ i j, 0 < (g i j).den) (M : Nat) :
