@@ -472,4 +472,107 @@ theorem gammaHseq_regular : IsRegular gammaHseq := by
     constructive real with small-denominator approximants (so `Pos λ₁` is kernel-certifiable). -/
 def Rgamma_h : Real := ⟨gammaHseq, gammaHseq_regular, gammaHseq_den_pos⟩
 
+/-! ### Step 4: the γ lower bracket `Rle (ofQ γ_lo) Rgamma_h` -/
+
+/-- From `|a − b| ≤ e` extract the lower bound `a − e ≤ b`. -/
+theorem Qabs_lower {a b e : Q} (had : 0 < a.den) (hbd : 0 < b.den) (hed : 0 < e.den)
+    (h : Qle (Qabs (Qsub a b)) e) : Qle (Qsub a e) b := by
+  have h1 : Qle (Qsub a b) e :=
+    Qle_trans (Qabs_den_pos (Qsub_den_pos had hbd)) (Qle_self_Qabs _) h
+  have hc1 : Qeq (add (Qsub a b) b) a := by
+    simp only [Qeq, Qsub, add, neg]; push_cast
+    generalize a.num = an; generalize ((a.den : Nat) : Int) = ad
+    generalize b.num = bn; generalize ((b.den : Nat) : Int) = bd
+    ring_uor
+  have h3 : Qle a (add e b) :=
+    Qle_congr_left (add_den_pos (Qsub_den_pos had hbd) hbd) hc1 (Qadd_le_add h1 (Qle_refl b))
+  have h4 : Qle (Qsub a e) (Qsub (add e b) e) := Qsub_le_sub h3
+  have hc2 : Qeq (Qsub (add e b) e) b := by
+    simp only [Qeq, Qsub, add, neg]; push_cast
+    generalize e.num = en; generalize ((e.den : Nat) : Int) = ed
+    generalize b.num = bn; generalize ((b.den : Nat) : Int) = bd
+    ring_uor
+  exact Qle_congr_right (Qsub_den_pos (add_den_pos hed hbd) hed) hc2 h4
+
+/-- The fixed-depth-3 uniform lower bound term `clow i = cApprox(i,3) − 1/3⁷`. -/
+def clow (i : Nat) : Q := Qsub (cApprox i 3) ⟨1, npow 3 7⟩
+
+/-- `clow i ≤ cApprox(i, n+1)` for `n+1 ≥ 3` (uniform in the depth). -/
+theorem clow_le_cApprox (i n : Nat) (hn : 3 ≤ n + 1) : Qle (clow i) (cApprox i (n + 1)) :=
+  Qabs_lower (cApprox_den_pos i 3) (cApprox_den_pos i (n + 1))
+    (by show 0 < npow 3 7; exact npow_pos (by omega) _) (cApprox_depth_diff i hn)
+
+/-- Plain sums are monotone in the summand. -/
+theorem Ssum_le_of_le {f g : Nat → Q} (h : ∀ i, Qle (f i) (g i)) :
+    ∀ M, Qle (Ssum f M) (Ssum g M)
+  | 0 => Qle_refl _
+  | (M + 1) => Qadd_le_add (Ssum_le_of_le h M) (h M)
+
+theorem clow_den_pos (i : Nat) : 0 < (clow i).den :=
+  Qsub_den_pos (cApprox_den_pos i 3) (by show 0 < npow 3 7; exact npow_pos (by omega) _)
+
+/-- The first `min(2(n+1),20)` `clow`-terms lower-bound `gammaHseq n` (for `n ≥ 2`, so depth `≥ 3`). -/
+theorem gammaHseq_ge_clow {n : Nat} (hn : 2 ≤ n) :
+    Qle (Ssum clow (min (2 * (n + 1)) 20)) (gammaHseq n) := by
+  have h2 : Qle (Ssum clow (min (2 * (n + 1)) 20))
+      (Ssum (fun i => cApprox i (n + 1)) (min (2 * (n + 1)) 20)) :=
+    Ssum_le_of_le (fun i => clow_le_cApprox i n (by omega)) (min (2 * (n + 1)) 20)
+  have h1 : Qle (Ssum (fun i => cApprox i (n + 1)) (min (2 * (n + 1)) 20)) (gammaHseq n) :=
+    Ssum_le (fun i => cApprox_num_nonneg i (n + 1)) (fun i => cApprox_den_pos i (n + 1))
+      (by show min (2 * (n + 1)) 20 ≤ gammaHN n; unfold gammaHN; exact Nat.min_le_left _ _)
+  exact Qle_trans (Ssum_den_pos (fun i => cApprox_den_pos i (n + 1)) _) h2 h1
+
+theorem gammaHseq_nonneg (n : Nat) : Qle (⟨0, 1⟩ : Q) (gammaHseq n) :=
+  Ssum_le (fun i => cApprox_num_nonneg i (n + 1)) (fun i => cApprox_den_pos i (n + 1)) (Nat.zero_le _)
+
+/-- **The γ lower bracket**: `Rgamma_h ≥ 54/100` (`γ ≈ 0.5772`). The shallow `Ssum clow 20 ≥ 0.54`
+    certificate plus the uniform lower bound `gammaHseq n ≥ Ssum clow (min(2(n+1),20))`. -/
+theorem Rgamma_h_lower : Rle (ofQ (⟨54, 100⟩ : Q) (by decide)) Rgamma_h := by
+  intro n
+  show Qle (⟨54, 100⟩ : Q) (add (gammaHseq n) ⟨2, n + 1⟩)
+  match n with
+  | 0 =>
+    exact Qle_trans (add_den_pos (by decide) (by decide))
+      (by decide : Qle (⟨54, 100⟩ : Q) (add ⟨0, 1⟩ ⟨2, 0 + 1⟩))
+      (Qadd_le_add (gammaHseq_nonneg 0) (Qle_refl _))
+  | 1 =>
+    exact Qle_trans (add_den_pos (by decide) (by decide))
+      (by decide : Qle (⟨54, 100⟩ : Q) (add ⟨0, 1⟩ ⟨2, 1 + 1⟩))
+      (Qadd_le_add (gammaHseq_nonneg 1) (Qle_refl _))
+  | 2 =>
+    exact Qle_trans (add_den_pos (Ssum_den_pos clow_den_pos _) (by decide))
+      (by decide : Qle (⟨54, 100⟩ : Q) (add (Ssum clow (min (2 * (2 + 1)) 20)) ⟨2, 2 + 1⟩))
+      (Qadd_le_add (gammaHseq_ge_clow (by omega)) (Qle_refl _))
+  | 3 =>
+    exact Qle_trans (add_den_pos (Ssum_den_pos clow_den_pos _) (by decide))
+      (by decide : Qle (⟨54, 100⟩ : Q) (add (Ssum clow (min (2 * (3 + 1)) 20)) ⟨2, 3 + 1⟩))
+      (Qadd_le_add (gammaHseq_ge_clow (by omega)) (Qle_refl _))
+  | 4 =>
+    exact Qle_trans (add_den_pos (Ssum_den_pos clow_den_pos _) (by decide))
+      (by decide : Qle (⟨54, 100⟩ : Q) (add (Ssum clow (min (2 * (4 + 1)) 20)) ⟨2, 4 + 1⟩))
+      (Qadd_le_add (gammaHseq_ge_clow (by omega)) (Qle_refl _))
+  | 5 =>
+    exact Qle_trans (add_den_pos (Ssum_den_pos clow_den_pos _) (by decide))
+      (by decide : Qle (⟨54, 100⟩ : Q) (add (Ssum clow (min (2 * (5 + 1)) 20)) ⟨2, 5 + 1⟩))
+      (Qadd_le_add (gammaHseq_ge_clow (by omega)) (Qle_refl _))
+  | 6 =>
+    exact Qle_trans (add_den_pos (Ssum_den_pos clow_den_pos _) (by decide))
+      (by decide : Qle (⟨54, 100⟩ : Q) (add (Ssum clow (min (2 * (6 + 1)) 20)) ⟨2, 6 + 1⟩))
+      (Qadd_le_add (gammaHseq_ge_clow (by omega)) (Qle_refl _))
+  | 7 =>
+    exact Qle_trans (add_den_pos (Ssum_den_pos clow_den_pos _) (by decide))
+      (by decide : Qle (⟨54, 100⟩ : Q) (add (Ssum clow (min (2 * (7 + 1)) 20)) ⟨2, 7 + 1⟩))
+      (Qadd_le_add (gammaHseq_ge_clow (by omega)) (Qle_refl _))
+  | 8 =>
+    exact Qle_trans (add_den_pos (Ssum_den_pos clow_den_pos _) (by decide))
+      (by decide : Qle (⟨54, 100⟩ : Q) (add (Ssum clow (min (2 * (8 + 1)) 20)) ⟨2, 8 + 1⟩))
+      (Qadd_le_add (gammaHseq_ge_clow (by omega)) (Qle_refl _))
+  | (m + 9) =>
+    have hmin : min (2 * ((m + 9) + 1)) 20 = 20 := Nat.min_eq_right (by omega)
+    have hge := gammaHseq_ge_clow (show 2 ≤ m + 9 by omega)
+    rw [hmin] at hge
+    have hg : Qle (⟨54, 100⟩ : Q) (gammaHseq (m + 9)) :=
+      Qle_trans (Ssum_den_pos clow_den_pos 20) (by decide : Qle (⟨54, 100⟩ : Q) (Ssum clow 20)) hge
+    exact Qle_trans (gammaHseq_den_pos (m + 9)) hg (Qle_self_add (by show (0 : Int) ≤ 2; decide))
+
 end UOR.Bridge.F1Square.Analysis
