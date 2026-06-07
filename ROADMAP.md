@@ -37,8 +37,14 @@ Lift the analytic substrate from ℝ to ℂ and build ζ for complex argument in
 - `Analysis/ComplexExp.lean` — `Cexp z = exp(re z)·(cos(im z) + i·sin(im z))` from `RexpReal/Rcos/Rsin`;
   principal `Clog` on `Re > 0`; `ncpow n s = Cexp (s · log n)` (`nˢ`, positive-integer base — the only
   base ζ needs, so full multi-branch `Clog` is off the critical path).
+- `Analysis/ExpAdd.lean` — **the keystone** (discovered dependency): the exponential/trig **functional
+  equation** via the Cauchy product + binomial theorem from scratch (`exp(x+y) ≈ exp x · exp y`;
+  `cos²+sin² ≈ 1`), giving the bounds `|cos| ≤ 1`, `|sin| ≤ 1`. Required for the `Czeta` modulus and
+  reused for `Γ` in v0.16.0. The substrate had no addition formula / Cauchy product / binomial / trig
+  bounds, so this is a genuine from-scratch build (binomial theorem → double-sum Cauchy product →
+  error bound → lift to reals), the technical core of stage A.
 - `Analysis/ZetaC.lean` — `Czeta s` for `Re(s) > 1` via `Σ n^{-s}` with a rigorous complex tail bound
-  (`|n^{-s}| = n^{-Re s}`, mirroring `Zeta.lean`).
+  (`|n^{-s}| = n^{-Re s}`, mirroring `Zeta.lean`); the modulus `|n^{-s}| ≤ n^{-Re s}` uses `|cos|,|sin| ≤ 1`.
 - `Analysis/Mangoldt.lean` — von Mangoldt `Λ` and the explicit-formula **prime side**
   `Σ_p Σ_k log p · h(k log p)` as a real (finite, intrinsically computable).
 - Realize the **Bombieri–Lagarias `λₙ = λₙ^{arith} + λₙ^{∞}` for `n = 1`** as a theorem (uses the
