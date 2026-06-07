@@ -705,4 +705,23 @@ theorem altErr_abs_le {q : Q} {M : Nat} (hqd : 0 < q.den) (hq : Qle (Qabs q) ⟨
     (Qadd_le_add (altCorner_mertens hqd hq 0 K hK)
       (Qabs_qsq_mul_le hqd hq hCsd (altCorner_mertens hqd hq 1 K hK)))
 
+-- ===========================================================================
+-- The real lift: `cos² + sin² = 1` as constructive reals (begins here).
+-- ===========================================================================
+
+/-- Four-factor real rearrangement `(a·b)·(c·d) ≈ (a·c)·(b·d)` (via `Rmul` associativity/commutativity). -/
+theorem Rmul4_rearrange (a b c d : Real) :
+    Req (Rmul (Rmul a b) (Rmul c d)) (Rmul (Rmul a c) (Rmul b d)) :=
+  Req_trans (Rmul_assoc a b (Rmul c d))
+    (Req_trans (Rmul_congr (Req_refl a) (Req_symm (Rmul_assoc b c d)))
+      (Req_trans (Rmul_congr (Req_refl a) (Rmul_congr (Rmul_comm b c) (Req_refl d)))
+        (Req_trans (Rmul_congr (Req_refl a) (Rmul_assoc c b d))
+          (Req_symm (Rmul_assoc a c (Rmul b d))))))
+
+/-- **`sin²x = x²·(sinaux x)²`** as reals (since `Rsin x = Rmul x (RsinAux x)`). This rewrites the
+    `sin²` summand into the `x²·(alt-series)²` form that matches the rational Pythagorean identity. -/
+theorem Rsin_sq_eq (x : Real) :
+    Req (Rmul (Rsin x) (Rsin x)) (Rmul (Rmul x x) (Rmul (RsinAux x) (RsinAux x))) :=
+  Rmul4_rearrange x (RsinAux x) x (RsinAux x)
+
 end UOR.Bridge.F1Square.Analysis
