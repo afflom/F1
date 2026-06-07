@@ -590,4 +590,34 @@ theorem altCorner_mertens {q : Q} {M : Nat} (hqd : 0 < q.den) (hq : Qle (Qabs q)
       (Fsum_den_pos (fun i' => hh (K + 1 + i')) K)) (Qeq_le (Fsum_split_at _ hh K)) ?_
   exact Qadd_le_add hlow hhigh
 
+/-- `|altTermᵢ| ≤ (M²)ⁱ/i! = expTerm ⟨M²,1⟩ i`. -/
+theorem altTerm_abs_le_exp {q : Q} {M : Nat} (hqd : 0 < q.den) (hq : Qle (Qabs q) ⟨(M : Int), 1⟩)
+    (off i : Nat) : Qle (Qabs (altTerm q off i)) (expTerm (⟨(M * M : Int), 1⟩ : Q) i) :=
+  Qle_congr_right (fct_pos i) (Qeq_symm (expTerm_natBase (M * M) i)) (altTerm_abs_le hqd hq off i)
+
+/-- **Antidiagonal bound**: `|Σ_{i≤N} altTermᵢ·altTerm_{N−i}| ≤ (2M²)ᴺ/N!`. Each `|altTermᵢ| ≤ (M²)ⁱ/i!`,
+    so the antidiagonal is `≤` the exp convolution `Σ (M²)ⁱ/i!·(M²)^{N−i}/(N−i)! = (M²+M²)ᴺ/N!`
+    (`expTerm_conv`). This bounds the leading `sinConv(N)` term of `ERR`. -/
+theorem altAntidiag_abs_le {q : Q} {M : Nat} (hqd : 0 < q.den) (hq : Qle (Qabs q) ⟨(M : Int), 1⟩)
+    (off N : Nat) :
+    Qle (Qabs (Fsum (fun i => mul (altTerm q off i) (altTerm q off (N - i))) N))
+      (expTerm (add (⟨(M * M : Int), 1⟩ : Q) ⟨(M * M : Int), 1⟩) N) := by
+  have hmid : Qle (Fsum (fun i => Qabs (mul (altTerm q off i) (altTerm q off (N - i)))) N)
+      (Fsum (fun i => mul (expTerm (⟨(M * M : Int), 1⟩ : Q) i)
+        (expTerm (⟨(M * M : Int), 1⟩ : Q) (N - i))) N) :=
+    Fsum_le_congr (fun i _ => by
+      rw [Qabs_mul]
+      exact Qmul_le_mul (Qabs_den_pos (altTerm_den_pos hqd off i)) (expTerm_den_pos Nat.one_pos i)
+        (Qabs_den_pos (altTerm_den_pos hqd off (N - i)))
+        (Qabs_num_nonneg _) (Qabs_num_nonneg _)
+        (altTerm_abs_le_exp hqd hq off i) (altTerm_abs_le_exp hqd hq off (N - i)))
+  exact Qle_trans (Fsum_den_pos (fun i => Qabs_den_pos
+      (Qmul_den_pos (altTerm_den_pos hqd off i) (altTerm_den_pos hqd off (N - i)))) N)
+    (Fsum_abs_le (fun i => Qmul_den_pos (altTerm_den_pos hqd off i) (altTerm_den_pos hqd off (N - i))) N)
+    (Qle_trans (Fsum_den_pos (fun i => Qmul_den_pos (expTerm_den_pos Nat.one_pos i)
+        (expTerm_den_pos Nat.one_pos (N - i))) N)
+      hmid
+      (Qeq_le (expTerm_conv (x := (⟨(M * M : Int), 1⟩ : Q)) (y := (⟨(M * M : Int), 1⟩ : Q))
+        Nat.one_pos Nat.one_pos N)))
+
 end UOR.Bridge.F1Square.Analysis
