@@ -471,4 +471,29 @@ theorem altAbsTail_le {q : Q} {M : Nat} (hqd : 0 < q.den) (hq : Qle (Qabs q) ⟨
     (Qsub_den_pos (expSumM_den_pos (M * M) (K + 1 + d)) (expSumM_den_pos (M * M) K))
     (Qeq_symm hconv) (expM_diff_bound (M * M) hK (by omega))
 
+/-- **Uniform deep-tail bound for the low block**: for `i ≤ K` (and `2M² ≤ K+3`), the gap
+    `|altSum(2K+1) − altSum(2K+1−i)| ≤ 4(M²)^{K+2}/(K+2)!`. Both `2K+1` and `2K+1−i` lie at depth `≥ K+1`,
+    so each leg of the triangle through `altSum(K+1)` is bounded by `altSum_trunc_bound` at `a = K+1`. -/
+theorem altTail_deep_le {q : Q} {M : Nat} (hqd : 0 < q.den) (hq : Qle (Qabs q) ⟨(M : Int), 1⟩)
+    (off K i : Nat) (hi : i ≤ K) (hK : 2 * (M * M) ≤ K + 3) :
+    Qle (Qabs (Qsub (Fsum (altTerm q off) (2 * K + 1)) (Fsum (altTerm q off) (2 * K + 1 - i))))
+      ⟨(4 * npow (M * M) (K + 2) : Int), fct (K + 2)⟩ := by
+  rw [← altSum_eq_Fsum, ← altSum_eq_Fsum]
+  have hleg1 : Qle (Qabs (Qsub (altSum q off (2 * K + 1)) (altSum q off (K + 1))))
+      ⟨(2 * npow (M * M) (K + 1 + 1) : Int), fct (K + 1 + 1)⟩ :=
+    altSum_trunc_bound hqd hq off (by omega) (by omega)
+  have hleg2 : Qle (Qabs (Qsub (altSum q off (K + 1)) (altSum q off (2 * K + 1 - i))))
+      ⟨(2 * npow (M * M) (K + 1 + 1) : Int), fct (K + 1 + 1)⟩ := by
+    rw [Qabs_Qsub_comm]
+    exact altSum_trunc_bound hqd hq off (by omega) (by omega)
+  refine Qle_trans (add_den_pos (Qabs_den_pos (Qsub_den_pos (altSum_den_pos hqd off (2 * K + 1))
+      (altSum_den_pos hqd off (K + 1)))) (Qabs_den_pos (Qsub_den_pos (altSum_den_pos hqd off (K + 1))
+      (altSum_den_pos hqd off (2 * K + 1 - i)))))
+    (Qabs_sub_triangle (altSum_den_pos hqd off (2 * K + 1)) (altSum_den_pos hqd off (K + 1))
+      (altSum_den_pos hqd off (2 * K + 1 - i))) ?_
+  refine Qle_trans (add_den_pos (fct_pos _) (fct_pos _)) (Qadd_le_add hleg1 hleg2) ?_
+  have he : K + 1 + 1 = K + 2 := by omega
+  rw [he]
+  exact Qeq_le (by simp only [Qeq, add]; push_cast; ring_uor)
+
 end UOR.Bridge.F1Square.Analysis
