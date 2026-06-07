@@ -413,6 +413,22 @@ theorem Fsum_mono_len {f : Nat → Q} (hf0 : ∀ i, 0 ≤ (f i).num) (hfd : ∀ 
   | refl => exact Qle_refl _
   | @step N' _ ih => exact Qle_trans (Fsum_den_pos hfd N') ih (Qle_self_add (hf0 (N' + 1)))
 
+/-- Termwise-`≤` gives `≤` on the sums (up to the summation bound). -/
+theorem Fsum_le_congr {f g : Nat → Q} :
+    ∀ {k : Nat}, (∀ i, i ≤ k → Qle (f i) (g i)) → Qle (Fsum f k) (Fsum g k)
+  | 0, h => h 0 (Nat.le_refl 0)
+  | (k + 1), h =>
+      Qadd_le_add (Fsum_le_congr (fun i hi => h i (Nat.le_succ_of_le hi))) (h (k + 1) (Nat.le_refl _))
+
+/-- A finite sum of non-negative terms has non-negative numerator. -/
+theorem Fsum_num_nonneg {f : Nat → Q} (hf0 : ∀ i, 0 ≤ (f i).num) : ∀ M, 0 ≤ (Fsum f M).num
+  | 0 => hf0 0
+  | (M + 1) => by
+      show 0 ≤ (Fsum f M).num * ((f (M + 1)).den : Int) + (f (M + 1)).num * ((Fsum f M).den : Int)
+      exact Int.add_nonneg
+        (Int.mul_nonneg (Fsum_num_nonneg hf0 M) (by exact_mod_cast Nat.zero_le _))
+        (Int.mul_nonneg (hf0 (M + 1)) (by exact_mod_cast Nat.zero_le _))
+
 /-- Triangle inequality for finite sums: `|Σ fᵢ| ≤ Σ |fᵢ|`. -/
 theorem Fsum_abs_le {f : Nat → Q} (hf : ∀ i, 0 < (f i).den) :
     ∀ M, Qle (Qabs (Fsum f M)) (Fsum (fun i => Qabs (f i)) M)
@@ -492,5 +508,41 @@ theorem expSum_corner_factored {x y : Q} (hxd : 0 < x.den) (hyd : 0 < y.den) (M 
     (Qsub_den_pos (Qmul_den_pos (ha i) (Fsum_den_pos hb M)) (Qmul_den_pos (ha i) (Fsum_den_pos hb (M - i))))
     (QsubCongr (Fsum_mul_left (ha i) hb M) (Fsum_mul_left (ha i) hb (M - i)))
     (Qeq_symm (Qmul_sub_distrib (expTerm x i) (Fsum (expTerm y) M) (Fsum (expTerm y) (M - i))))
+
+/-- **Square dominated by the doubled antidiagonal**: for non-negative `a, b`,
+    `expSum a M · expSum b M ≤ expSum(a+b) (2M)`. Every square term `(i,j)` with `i,j ≤ M` lands in the
+    antidiagonal `i+j ≤ 2M`; the extra terms are non-negative. Proved by extending each row to `2M−i`
+    (`Fsum_mono_len`), then the outer sum to `2M`, then `Fsum_triangle_reindex` + `Fsum_conv_expSum`. -/
+theorem expSum_mul_le {a b : Q} (ha0 : 0 ≤ a.num) (had : 0 < a.den) (hb0 : 0 ≤ b.num) (hbd : 0 < b.den)
+    (M : Nat) : Qle (mul (expSum a M) (expSum b M)) (expSum (add a b) (2 * M)) := by
+  have hax : ∀ i, 0 < (expTerm a i).den := fun i => expTerm_den_pos had i
+  have hby : ∀ j, 0 < (expTerm b j).den := fun j => expTerm_den_pos hbd j
+  have hg : ∀ i j, 0 < (mul (expTerm a i) (expTerm b j)).den := fun i j => Qmul_den_pos (hax i) (hby j)
+  have hgnn : ∀ i j, 0 ≤ (mul (expTerm a i) (expTerm b j)).num := fun i j =>
+    Int.mul_nonneg (expTerm_num_nonneg ha0 i) (expTerm_num_nonneg hb0 j)
+  have hSQ : Qeq (mul (expSum a M) (expSum b M))
+      (Fsum (fun i => Fsum (fun j => mul (expTerm a i) (expTerm b j)) M) M) :=
+    Qeq_trans (Qmul_den_pos (Fsum_den_pos hax M) (Fsum_den_pos hby M))
+      (Qmul_congr (expSum_eq_Fsum a M) (expSum_eq_Fsum b M))
+      (Fsum_mul_square hax hby M)
+  have hrows : Qle (Fsum (fun i => Fsum (fun j => mul (expTerm a i) (expTerm b j)) M) M)
+      (Fsum (fun i => Fsum (fun j => mul (expTerm a i) (expTerm b j)) (2 * M - i)) M) :=
+    Fsum_le_congr (fun i hi =>
+      Fsum_mono_len (fun j => hgnn i j) (fun j => hg i j) (by omega))
+  have houter : Qle (Fsum (fun i => Fsum (fun j => mul (expTerm a i) (expTerm b j)) (2 * M - i)) M)
+      (Fsum (fun i => Fsum (fun j => mul (expTerm a i) (expTerm b j)) (2 * M - i)) (2 * M)) :=
+    Fsum_mono_len (fun i => Fsum_num_nonneg (fun j => hgnn i j) (2 * M - i))
+      (fun i => Fsum_den_pos (fun j => hg i j) (2 * M - i)) (by omega)
+  have hmid : Qle (Fsum (fun i => Fsum (fun j => mul (expTerm a i) (expTerm b j)) M) M)
+      (Fsum (fun i => Fsum (fun j => mul (expTerm a i) (expTerm b j)) (2 * M - i)) (2 * M)) :=
+    Qle_trans (Fsum_den_pos (fun i => Fsum_den_pos (fun j => hg i j) (2 * M - i)) M) hrows houter
+  have hTRI : Qeq (Fsum (fun i => Fsum (fun j => mul (expTerm a i) (expTerm b j)) (2 * M - i)) (2 * M))
+      (expSum (add a b) (2 * M)) :=
+    Qeq_trans (Fsum_den_pos (fun m => Fsum_den_pos (fun i => hg i (m - i)) m) (2 * M))
+      (Fsum_triangle_reindex hg (2 * M)) (Fsum_conv_expSum had hbd (2 * M))
+  exact Qle_congr_left
+    (Fsum_den_pos (fun i => Fsum_den_pos (fun j => hg i j) M) M) (Qeq_symm hSQ)
+    (Qle_congr_right
+      (Fsum_den_pos (fun i => Fsum_den_pos (fun j => hg i j) (2 * M - i)) (2 * M)) hTRI hmid)
 
 end UOR.Bridge.F1Square.Analysis
