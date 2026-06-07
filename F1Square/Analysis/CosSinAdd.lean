@@ -620,4 +620,33 @@ theorem altAntidiag_abs_le {q : Q} {M : Nat} (hqd : 0 < q.den) (hq : Qle (Qabs q
       (Qeq_le (expTerm_conv (x := (⟨(M * M : Int), 1⟩ : Q)) (y := (⟨(M * M : Int), 1⟩ : Q))
         Nat.one_pos Nat.one_pos N)))
 
+/-- **Pythagorean deviation = ERR**: `(cosSum N)² + q²(sinauxSum N)² − 1 ≈ ERR`, the exact rearrangement
+    of `altPyth_partial`. The real lift bounds `|ERR|` via `altAntidiag_abs_le` + `altCorner_mertens`. -/
+theorem altPyth_dev_eq_err {q : Q} (hqd : 0 < q.den) (N : Nat) :
+    Qeq (Qsub (add (mul (Fsum (altTerm q 0) N) (Fsum (altTerm q 0) N))
+        (mul (mul q q) (mul (Fsum (altTerm q 1) N) (Fsum (altTerm q 1) N)))) ⟨1, 1⟩)
+      (add (mul (mul q q) (Fsum (fun i => mul (altTerm q 1 i) (altTerm q 1 (N - i))) N))
+        (add (Fsum (fun i => Qsub (Fsum (fun j => mul (altTerm q 0 i) (altTerm q 0 j)) N)
+              (Fsum (fun j => mul (altTerm q 0 i) (altTerm q 0 j)) (N - i))) N)
+          (mul (mul q q) (Fsum (fun i => Qsub (Fsum (fun j => mul (altTerm q 1 i) (altTerm q 1 j)) N)
+              (Fsum (fun j => mul (altTerm q 1 i) (altTerm q 1 j)) (N - i))) N)))) := by
+  have ha0 : ∀ i, 0 < (altTerm q 0 i).den := altTerm_den_pos hqd 0
+  have ha1 : ∀ i, 0 < (altTerm q 1 i).den := altTerm_den_pos hqd 1
+  have hsqd : 0 < (mul q q).den := Qmul_den_pos hqd hqd
+  have hERR : 0 < (add (mul (mul q q) (Fsum (fun i => mul (altTerm q 1 i) (altTerm q 1 (N - i))) N))
+      (add (Fsum (fun i => Qsub (Fsum (fun j => mul (altTerm q 0 i) (altTerm q 0 j)) N)
+            (Fsum (fun j => mul (altTerm q 0 i) (altTerm q 0 j)) (N - i))) N)
+        (mul (mul q q) (Fsum (fun i => Qsub (Fsum (fun j => mul (altTerm q 1 i) (altTerm q 1 j)) N)
+            (Fsum (fun j => mul (altTerm q 1 i) (altTerm q 1 j)) (N - i))) N)))).den :=
+    add_den_pos (Qmul_den_pos hsqd (Fsum_den_pos (fun i => Qmul_den_pos (ha1 i) (ha1 (N - i))) N))
+      (add_den_pos
+        (Fsum_den_pos (fun i => Qsub_den_pos (Fsum_den_pos (fun j => Qmul_den_pos (ha0 i) (ha0 j)) N)
+          (Fsum_den_pos (fun j => Qmul_den_pos (ha0 i) (ha0 j)) (N - i))) N)
+        (Qmul_den_pos hsqd (Fsum_den_pos (fun i => Qsub_den_pos
+          (Fsum_den_pos (fun j => Qmul_den_pos (ha1 i) (ha1 j)) N)
+          (Fsum_den_pos (fun j => Qmul_den_pos (ha1 i) (ha1 j)) (N - i))) N)))
+  exact Qeq_trans (Qsub_den_pos (add_den_pos Nat.one_pos hERR) Nat.one_pos)
+    (QsubCongr (altPyth_partial hqd N) (Qeq_refl (⟨1, 1⟩ : Q)))
+    (Qsub_add_left_cancel (⟨1, 1⟩ : Q) _)
+
 end UOR.Bridge.F1Square.Analysis
