@@ -667,6 +667,9 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.cosFct_term
 #print axioms Analysis.sinFct_term
 #print axioms Analysis.cosFct_eq_sinFct
+#print axioms Analysis.Qmul_assoc3
+#print axioms Analysis.Qmul_qsq_qpow
+#print axioms Analysis.altPyth_conv_vanish
 
 -- v0.10.0 — the λₙ / RH proof boundary (analytic face), locked faithfully.
 #print axioms Li.Pos_one

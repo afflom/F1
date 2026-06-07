@@ -234,4 +234,58 @@ theorem cosFct_eq_sinFct (m : Nat) :
     rw [binom_even_odd_eq m]; exact Qeq_refl _
   exact Qeq_trans (fct_pos _) hcos (Qeq_trans (fct_pos _) heq (Qeq_symm hsin))
 
+/-- `a·(b·c) ≈ (a·b)·c`. -/
+theorem Qmul_assoc3 (a b c : Q) : Qeq (mul a (mul b c)) (mul (mul a b) c) := by
+  simp only [Qeq, mul]; push_cast; ring_uor
+
+/-- `q²·(−q²)^m ≈ −(−q²)^{m+1}` — the sign/degree shift relating the `sin²` `x²` factor to `cos²`. -/
+theorem Qmul_qsq_qpow (q : Q) (m : Nat) :
+    Qeq (mul (mul q q) (qpow (neg (mul q q)) m)) (neg (qpow (neg (mul q q)) (m + 1))) := by
+  rw [qpow_succ]; simp only [Qeq, mul, neg]; push_cast; ring_uor
+
+/-- **The per-degree Pythagorean coefficient vanishes**: `cosConv(m+1) + q²·sinConv(m) ≈ 0`, where
+    `cosConv d = Σ_{i≤d} cosTermᵢ·cosT_{d−i}` and `sinConv d` likewise. Both convolutions factor as
+    `(−q²)^· × (factorial sum)` (`altConv_factor`); the factorial sums are equal (`cosFct_eq_sinFct`) and
+    the `(−q²)` powers are opposite (`Qmul_qsq_qpow`), so the two terms cancel. -/
+theorem altPyth_conv_vanish {q : Q} (hqd : 0 < q.den) (m : Nat) :
+    Qeq (add (Fsum (fun i => mul (altTerm q 0 i) (altTerm q 0 ((m + 1) - i))) (m + 1))
+      (mul (mul q q) (Fsum (fun i => mul (altTerm q 1 i) (altTerm q 1 (m - i))) m))) ⟨0, 1⟩ := by
+  have hN : 0 < (neg (mul q q)).den := Nat.mul_pos hqd hqd
+  have hPden : 0 < (qpow (neg (mul q q)) (m + 1)).den := qpow_den_pos hN (m + 1)
+  have hPmden : 0 < (qpow (neg (mul q q)) m).den := qpow_den_pos hN m
+  have hCfden : 0 < (Fsum (fun i => (⟨1, fct (2 * i + 0) * fct (2 * ((m + 1) - i) + 0)⟩ : Q)) (m + 1)).den :=
+    Fsum_den_pos (fun _ => Nat.mul_pos (fct_pos _) (fct_pos _)) (m + 1)
+  have hSfden : 0 < (Fsum (fun i => (⟨1, fct (2 * i + 1) * fct (2 * (m - i) + 1)⟩ : Q)) m).den :=
+    Fsum_den_pos (fun _ => Nat.mul_pos (fct_pos _) (fct_pos _)) m
+  have heq : Qeq (Fsum (fun i => (⟨1, fct (2 * i + 0) * fct (2 * ((m + 1) - i) + 0)⟩ : Q)) (m + 1))
+      (Fsum (fun i => (⟨1, fct (2 * i + 1) * fct (2 * (m - i) + 1)⟩ : Q)) m) := cosFct_eq_sinFct m
+  -- cosC ≈ P·Sf
+  have hc2 : Qeq (Fsum (fun i => mul (altTerm q 0 i) (altTerm q 0 ((m + 1) - i))) (m + 1))
+      (mul (qpow (neg (mul q q)) (m + 1))
+        (Fsum (fun i => (⟨1, fct (2 * i + 1) * fct (2 * (m - i) + 1)⟩ : Q)) m)) :=
+    Qeq_trans (Qmul_den_pos hPden hCfden) (altConv_factor hqd 0 (m + 1))
+      (Qmul_congr (Qeq_refl _) heq)
+  -- q²·sinC ≈ (−P)·Sf
+  have hs2 : Qeq (mul (mul q q) (Fsum (fun i => mul (altTerm q 1 i) (altTerm q 1 (m - i))) m))
+      (mul (neg (qpow (neg (mul q q)) (m + 1)))
+        (Fsum (fun i => (⟨1, fct (2 * i + 1) * fct (2 * (m - i) + 1)⟩ : Q)) m)) :=
+    Qeq_trans (Qmul_den_pos (Qmul_den_pos hqd hqd) (Qmul_den_pos hPmden hSfden))
+      (Qmul_congr (Qeq_refl (mul q q)) (altConv_factor hqd 1 m))
+      (Qeq_trans (Qmul_den_pos (Qmul_den_pos (Qmul_den_pos hqd hqd) hPmden) hSfden)
+        (Qmul_assoc3 (mul q q) (qpow (neg (mul q q)) m)
+          (Fsum (fun i => (⟨1, fct (2 * i + 1) * fct (2 * (m - i) + 1)⟩ : Q)) m))
+        (Qmul_congr (Qmul_qsq_qpow q m) (Qeq_refl _)))
+  -- add ≈ (P + (−P))·Sf ≈ 0
+  refine Qeq_trans (add_den_pos (Qmul_den_pos hPden hSfden)
+      (Qmul_den_pos (show 0 < (neg (qpow (neg (mul q q)) (m + 1))).den from hPden) hSfden))
+    (Qadd_congr hc2 hs2) ?_
+  refine Qeq_trans (Qmul_den_pos (add_den_pos (a := qpow (neg (mul q q)) (m + 1))
+      (b := neg (qpow (neg (mul q q)) (m + 1))) hPden hPden) hSfden)
+    (Qeq_symm (Qmul_add_right (qpow (neg (mul q q)) (m + 1)) (neg (qpow (neg (mul q q)) (m + 1)))
+      (Fsum (fun i => (⟨1, fct (2 * i + 1) * fct (2 * (m - i) + 1)⟩ : Q)) m))) ?_
+  refine Qeq_trans (Qmul_den_pos (show 0 < (⟨0, 1⟩ : Q).den from Nat.one_pos) hSfden)
+    (Qmul_congr (show Qeq (add (qpow (neg (mul q q)) (m + 1)) (neg (qpow (neg (mul q q)) (m + 1)))) ⟨0, 1⟩
+      from by simp only [Qeq, add, neg]; push_cast; ring_uor) (Qeq_refl _)) ?_
+  simp only [Qeq, mul]; push_cast; ring_uor
+
 end UOR.Bridge.F1Square.Analysis
