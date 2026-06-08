@@ -3864,4 +3864,41 @@ theorem Qmul_cancel_left {c A B : Q} (hcn : 0 < c.num) (hcd : 0 < c.den)
         = (c.num * B.num) * ((c.den * A.den : Nat) : Int) from by push_cast; ring_uor]
   exact h
 
+/-- The core polynomial identity behind `tmap_sq_uval` (fresh `Int` vars, to dodge the cast-reifier
+    issue `ring_uor` hits on the `↑y.den` form). -/
+theorem tmap_uval_core (a d : Int) :
+    (1 * (d * 1 * (a * 1 + 1 * d) * (d * 1 * (a * 1 + 1 * d))) +
+          (a * 1 + -1 * d) * (d * 1) * ((a * 1 + -1 * d) * (d * 1)) * 1) *
+        ((a * a * 1 + -1 * (d * d)) * (d * d * 1)) *
+      (1 * (d * 1 * (a * 1 + 1 * d))) =
+    2 * ((a * 1 + -1 * d) * (d * 1)) *
+      (1 * (d * 1 * (a * 1 + 1 * d) * (d * 1 * (a * 1 + 1 * d))) *
+        (d * d * 1 * (a * a * 1 + 1 * (d * d)))) := by ring_uor
+
+/-- **The `tmap`–`uval` doubling identity**: `tmap(y²) = uval(tmap y)`. Cleared `(1+t²)·tmap(y²) = 2t` +
+    `uval_rel` uniqueness, via `Qmul_cancel_left`. Needs `y+1 > 0`, `y²+1 > 0`. -/
+theorem tmap_sq_uval (y : Q) (hyd : 0 < y.den) (hy1 : 0 < (add y ⟨1, 1⟩).num)
+    (hy2 : 0 < (add (mul y y) ⟨1, 1⟩).num) :
+    Qeq (tmap (mul y y)) (uval (tmap y)) := by
+  have htd : 0 < (tmap y).den := Qmul_den_pos (Qsub_den_pos hyd Nat.one_pos) (Qinv_den_pos hy1)
+  have ht2n : 0 ≤ (mul (tmap y) (tmap y)).num := by
+    show 0 ≤ (tmap y).num * (tmap y).num; rw [← Int.natAbs_mul_self]; exact Int.ofNat_nonneg _
+  have hcn : 0 < (add ⟨1, 1⟩ (mul (tmap y) (tmap y))).num := by
+    show 0 < 1 * ((mul (tmap y) (tmap y)).den : Int) + (mul (tmap y) (tmap y)).num * 1
+    have hd : (0 : Int) < ((mul (tmap y) (tmap y)).den : Int) := by
+      exact_mod_cast Qmul_den_pos htd htd
+    omega
+  have hcd : 0 < (add ⟨1, 1⟩ (mul (tmap y) (tmap y))).den :=
+    add_den_pos Nat.one_pos (Qmul_den_pos htd htd)
+  have rel1 : Qeq (mul (add ⟨1, 1⟩ (mul (tmap y) (tmap y))) (tmap (mul y y)))
+      (mul ⟨2, 1⟩ (tmap y)) := by
+    have hy1c := hy1; have hy2c := hy2
+    simp only [mul, add] at hy1c hy2c
+    push_cast at hy1c hy2c
+    simp only [tmap, mul, add, Qsub, neg, Qinv, Qeq]
+    push_cast [Int.toNat_of_nonneg (Int.le_of_lt hy1c), Int.toNat_of_nonneg (Int.le_of_lt hy2c)]
+    exact tmap_uval_core y.num (y.den : Int)
+  exact Qmul_cancel_left hcn hcd
+    (Qeq_trans (Qmul_den_pos Nat.one_pos htd) rel1 (Qeq_symm (uval_rel (tmap y) htd)))
+
 end UOR.Bridge.F1Square.Analysis
