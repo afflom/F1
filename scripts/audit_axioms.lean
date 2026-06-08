@@ -936,3 +936,6 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.peval_num_nonneg
 #print axioms Analysis.peval_fpow_le_pow
 #print axioms Analysis.peval_fpow_abs_bound
+#print axioms Analysis.fabs_kdbl_even
+#print axioms Analysis.fabs_kdbl_odd
+#print axioms Analysis.peval_fabs_kdbl_geoSum

@@ -2059,6 +2059,55 @@ theorem peval_fcomp_swap (a b : Nat → Q) (ha : ∀ i, 0 < (a i).den) (hb : ∀
     (Fsum_congr (fun k => Qmul_assoc (a m) (fpow b m k) (qpow w k)) M)
     (Fsum_mul_left (ha m) (fun k => Qmul_den_pos (fpow_den_pos hb m k) (qpow_den_pos hwd k)) M)
 
+/-- The even-index terms of `|kdbl|·ρ^•` vanish. -/
+theorem fabs_kdbl_even (ρ : Q) (n : Nat) :
+    Qeq (mul (fabs kdbl (2 * n)) (qpow ρ (2 * n))) ⟨0, 1⟩ := by
+  have h : fabs kdbl (2 * n) = ⟨0, 1⟩ := by
+    show Qabs (kdbl (2 * n)) = ⟨0, 1⟩
+    rw [show kdbl (2 * n) = ⟨0, 1⟩ from by
+      unfold kdbl; rw [if_neg (by omega), if_neg (by omega)]]
+    decide
+  rw [h]; exact mul_left_zero _
+
+/-- The odd-index term of `|kdbl|·ρ^•` is `2·ρ^{2n+1} = 2·geoTerm`. -/
+theorem fabs_kdbl_odd (ρ : Q) (n : Nat) :
+    Qeq (mul (fabs kdbl (2 * n + 1)) (qpow ρ (2 * n + 1))) (mul ⟨2, 1⟩ (geoTerm ρ n)) := by
+  have h : fabs kdbl (2 * n + 1) = ⟨2, 1⟩ := by
+    show Qabs (kdbl (2 * n + 1)) = ⟨2, 1⟩
+    rcases (by omega : (2 * n + 1) % 4 = 1 ∨ (2 * n + 1) % 4 = 3) with h1 | h3
+    · rw [show kdbl (2 * n + 1) = ⟨2, 1⟩ from by unfold kdbl; rw [if_pos h1]]; decide
+    · rw [show kdbl (2 * n + 1) = ⟨-2, 1⟩ from by unfold kdbl; rw [if_neg (by omega), if_pos h3]]
+      decide
+  rw [h]; exact Qeq_refl _
+
+/-- **The geometric majorant evaluation**: `eval(|kdbl|, ρ, 2N+1) = 2·geoSum ρ N` (= `2 Σ_{n≤N} ρ^{2n+1}`). -/
+theorem peval_fabs_kdbl_geoSum (ρ : Q) (hρd : 0 < ρ.den) (N : Nat) :
+    Qeq (peval (fabs kdbl) ρ (2 * N + 1)) (mul ⟨2, 1⟩ (geoSum ρ N)) := by
+  induction N with
+  | zero =>
+      show Qeq (add (mul (fabs kdbl 0) (qpow ρ 0)) (mul (fabs kdbl 1) (qpow ρ 1)))
+        (mul ⟨2, 1⟩ (geoTerm ρ 0))
+      exact Qeq_trans (add_den_pos Nat.one_pos (Qmul_den_pos Nat.one_pos (qpow_den_pos hρd 1)))
+        (Qadd_congr (fabs_kdbl_even ρ 0) (fabs_kdbl_odd ρ 0)) (Qzero_add _)
+  | succ N ih =>
+      rw [show 2 * (N + 1) + 1 = 2 * N + 1 + 1 + 1 from by omega]
+      show Qeq (add (add (peval (fabs kdbl) ρ (2 * N + 1))
+          (mul (fabs kdbl (2 * N + 1 + 1)) (qpow ρ (2 * N + 1 + 1))))
+          (mul (fabs kdbl (2 * N + 1 + 1 + 1)) (qpow ρ (2 * N + 1 + 1 + 1))))
+        (mul ⟨2, 1⟩ (add (geoSum ρ N) (geoTerm ρ (N + 1))))
+      have he : Qeq (mul (fabs kdbl (2 * N + 1 + 1)) (qpow ρ (2 * N + 1 + 1))) ⟨0, 1⟩ := by
+        rw [show 2 * N + 1 + 1 = 2 * (N + 1) from by omega]; exact fabs_kdbl_even ρ (N + 1)
+      have ho : Qeq (mul (fabs kdbl (2 * N + 1 + 1 + 1)) (qpow ρ (2 * N + 1 + 1 + 1)))
+          (mul ⟨2, 1⟩ (geoTerm ρ (N + 1))) := by
+        rw [show 2 * N + 1 + 1 + 1 = 2 * (N + 1) + 1 from by omega]; exact fabs_kdbl_odd ρ (N + 1)
+      refine Qeq_trans (add_den_pos (add_den_pos (Qmul_den_pos Nat.one_pos (geoSum_den_pos hρd N))
+          Nat.one_pos) (Qmul_den_pos Nat.one_pos (qpow_den_pos hρd (2 * (N + 1) + 1))))
+        (Qadd_congr (Qadd_congr ih he) ho) ?_
+      refine Qeq_trans (add_den_pos (Qmul_den_pos Nat.one_pos (geoSum_den_pos hρd N))
+        (Qmul_den_pos Nat.one_pos (qpow_den_pos hρd (2 * (N + 1) + 1))))
+        (Qadd_congr (Qadd_zero_right _) (Qeq_refl _)) ?_
+      exact Qeq_symm (Qmul_add_left ⟨2, 1⟩ (geoSum ρ N) (geoTerm ρ (N + 1)))
+
 /-- **The composed-series evaluation IS twice the artanh sum** (formal_doubling, evaluated): the formal
     series `artanh∘kdbl`, evaluated at `w` and truncated at `2N+1`, equals `2·artSum w N`. This carries
     `formal_doubling` to the analytic `artSum` side; combined with the composition eval bridge
