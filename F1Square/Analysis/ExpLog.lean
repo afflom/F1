@@ -628,6 +628,7 @@ theorem kdbl_den (m : Nat) : 0 < (kdbl m).den := Nat.one_pos
 /-- The `1+t²` and `2t` coefficient sequences. -/
 def oneplusSq (k : Nat) : Q := add (fmono 0 k) (fmono 2 k)
 def twoT (k : Nat) : Q := ⟨(if k = 1 then 2 else 0 : Int), 1⟩
+theorem twoT_den (k : Nat) : 0 < (twoT k).den := Nat.one_pos
 
 /-- The two-step sign cancellation `kdbl_{m+2} + kdbl_m = 0` (`(−1)ʲ⁺¹ + (−1)ʲ = 0`). -/
 theorem kdbl_shift_cancel (m : Nat) : Qeq (add (kdbl (m + 2)) (kdbl m)) ⟨0, 1⟩ := by
@@ -1306,6 +1307,43 @@ theorem fmul_oneplusSq_cancel {X Y : Nat → Q} (hX : ∀ i, 0 < (X i).den) (hY 
       (Qsub_congr (Qeq_refl _) (Qeq_symm (h m)))
       (by simp only [Qeq, Qsub, add, neg]; push_cast; ring_uor)
   exact Qeq_of_Qsub_zero (oneplusSq_zero_cancel hZ hzero k)
+
+/-- Sub-identity `(1+t²)·k² = 2t·k` (`= fmul twoT kdbl`), via associativity + `kdbl_rel`. -/
+theorem ksq_rel (k : Nat) : Qeq (fmul oneplusSq (fmul kdbl kdbl) k) (fmul twoT kdbl k) := by
+  refine Qeq_trans (fmul_den_pos (fun i => fmul_den_pos (fun j => oneplusSq_den j)
+      (fun _ => kdbl_den _) i) (fun _ => kdbl_den _) k)
+    (Qeq_symm (fmul_assoc oneplusSq kdbl kdbl (fun i => oneplusSq_den i) (fun _ => kdbl_den _)
+      (fun _ => kdbl_den _) k)) ?_
+  exact fmul_congr_left (fun i => kdbl_rel i) k
+
+/-- The 1-shift `t·(2t) = 2t²`: `fmul (fmono 1) twoT = 2·t²` (`= fsmono ⟨2,1⟩ 2`). -/
+theorem fmono1_twoT : ∀ k, Qeq (fmul (fmono 1) twoT k) (fsmono ⟨2, 1⟩ 2 k)
+  | 0 => by
+      have h := fmul_fmono_zero (fun i => twoT_den i) (show (0 : Nat) < 1 by omega)
+      exact Qeq_trans Nat.one_pos h (by decide)
+  | 1 => by
+      have h := fmul_fmono (fun i => twoT_den i) 1 (show 1 ≤ 1 by omega)
+      exact Qeq_trans (twoT_den _) h (by decide)
+  | 2 => by
+      have h := fmul_fmono (fun i => twoT_den i) 1 (show 1 ≤ 2 by omega)
+      exact Qeq_trans (twoT_den _) h (by decide)
+  | (j + 3) => by
+      have h := fmul_fmono (fun i => twoT_den i) 1 (show 1 ≤ j + 3 by omega)
+      refine Qeq_trans (twoT_den _) h ?_
+      have ht : twoT (j + 3 - 1) = ⟨0, 1⟩ := by unfold twoT; rw [if_neg (by omega)]
+      have hf : fsmono (⟨2, 1⟩ : Q) 2 (j + 3) = ⟨0, 1⟩ := by unfold fsmono; rw [if_neg (by omega)]
+      rw [ht, hf]; simp [Qeq, mul]
+
+/-- Sub-identity `(1+t²)·(t·k) = 2t²` (`fmul (fmono 1) kdbl = t·k`), via `fmul_swap_left` + `kdbl_rel`. -/
+theorem tk_rel (k : Nat) : Qeq (fmul oneplusSq (fmul (fmono 1) kdbl) k) (fsmono ⟨2, 1⟩ 2 k) := by
+  have h1 : Qeq (fmul oneplusSq (fmul (fmono 1) kdbl) k) (fmul (fmono 1) (fmul oneplusSq kdbl) k) :=
+    fmul_swap_left oneplusSq (fmono 1) kdbl (fun i => oneplusSq_den i) (fun i => fmono_den 1 i)
+      (fun _ => kdbl_den _) k
+  have h2 : Qeq (fmul (fmono 1) (fmul oneplusSq kdbl) k) (fmul (fmono 1) twoT k) :=
+    fmul_congr_right (fun i => kdbl_rel i) k
+  exact Qeq_trans (fmul_den_pos (fun i => fmono_den 1 i)
+      (fun i => fmul_den_pos (fun j => oneplusSq_den j) (fun _ => kdbl_den _) i) k) h1
+    (Qeq_trans (fmul_den_pos (fun i => fmono_den 1 i) (fun i => twoT_den i) k) h2 (fmono1_twoT k))
 
 /-- **The artanh ODE** `(1−t²)·artanh' = 1` at the coefficient level. -/
 theorem artanh_ode (k : Nat) : Qeq (fmul oneMinusSq gcoef k) (fone k) :=
