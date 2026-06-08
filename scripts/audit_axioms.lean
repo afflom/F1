@@ -902,3 +902,6 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.fpow_sq_bump
 #print axioms Analysis.geoEven_telescope
 #print axioms Analysis.Fsum_collapse_odd
+#print axioms Analysis.kdbl_zero
+#print axioms Analysis.fcomp_gcoef_geoEven
+#print axioms Analysis.comp_recip

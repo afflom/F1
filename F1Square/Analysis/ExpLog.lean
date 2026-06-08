@@ -640,18 +640,18 @@ theorem kdbl_shift_cancel (m : Nat) : Qeq (add (kdbl (m + 2)) (kdbl m)) ⟨0, 1�
 /-- The per-degree split `((1+t²)·kdbl)_k = kdbl_k + kdbl_{k−2} = (2t)_k`. -/
 theorem kdbl_main : ∀ k, Qeq (add (fmul (fmono 0) kdbl k) (fmul (fmono 2) kdbl k)) (twoT k)
   | 0 => by
-      have h0 : Qeq (fmul (fmono 0) kdbl 0) (kdbl 0) := fmul_fmono (fun _ => kdbl_den _) 0 (by omega)
-      have h2 : Qeq (fmul (fmono 2) kdbl 0) ⟨0, 1⟩ := fmul_fmono_zero (fun _ => kdbl_den _) (by omega)
+      have h0 : Qeq (fmul (fmono 0) kdbl 0) (kdbl 0) := fmul_fmono (fun i => kdbl_den i) 0 (by omega)
+      have h2 : Qeq (fmul (fmono 2) kdbl 0) ⟨0, 1⟩ := fmul_fmono_zero (fun i => kdbl_den i) (by omega)
       exact Qeq_trans (add_den_pos (kdbl_den 0) Nat.one_pos) (Qadd_congr h0 h2) (by decide)
   | 1 => by
-      have h0 : Qeq (fmul (fmono 0) kdbl 1) (kdbl 1) := fmul_fmono (fun _ => kdbl_den _) 0 (by omega)
-      have h2 : Qeq (fmul (fmono 2) kdbl 1) ⟨0, 1⟩ := fmul_fmono_zero (fun _ => kdbl_den _) (by omega)
+      have h0 : Qeq (fmul (fmono 0) kdbl 1) (kdbl 1) := fmul_fmono (fun i => kdbl_den i) 0 (by omega)
+      have h2 : Qeq (fmul (fmono 2) kdbl 1) ⟨0, 1⟩ := fmul_fmono_zero (fun i => kdbl_den i) (by omega)
       exact Qeq_trans (add_den_pos (kdbl_den 1) Nat.one_pos) (Qadd_congr h0 h2) (by decide)
   | (m + 2) => by
       have h0 : Qeq (fmul (fmono 0) kdbl (m + 2)) (kdbl (m + 2)) :=
-        fmul_fmono (fun _ => kdbl_den _) 0 (by omega)
+        fmul_fmono (fun i => kdbl_den i) 0 (by omega)
       have h2 : Qeq (fmul (fmono 2) kdbl (m + 2)) (kdbl m) :=
-        fmul_fmono (fun _ => kdbl_den _) 2 (by omega)
+        fmul_fmono (fun i => kdbl_den i) 2 (by omega)
       refine Qeq_trans (add_den_pos (kdbl_den (m + 2)) (kdbl_den m)) (Qadd_congr h0 h2) ?_
       have ht : Qeq (⟨0, 1⟩ : Q) (twoT (m + 2)) := by
         unfold twoT; rw [if_neg (show m + 2 ≠ 1 by omega)]; exact Qeq_refl _
@@ -659,9 +659,9 @@ theorem kdbl_main : ∀ k, Qeq (add (fmul (fmono 0) kdbl k) (fmul (fmono 2) kdbl
 
 /-- **The defining relation** `(1+t²)·kdbl = 2t` of the doubling inner function `k = 2t/(1+t²)`. -/
 theorem kdbl_rel (k : Nat) : Qeq (fmul oneplusSq kdbl k) (twoT k) :=
-  Qeq_trans (add_den_pos (fmul_den_pos (fun i => fmono_den 0 i) (fun _ => kdbl_den _) k)
-      (fmul_den_pos (fun i => fmono_den 2 i) (fun _ => kdbl_den _) k))
-    (fmul_add_left (fun i => fmono_den 0 i) (fun i => fmono_den 2 i) (fun _ => kdbl_den _) k)
+  Qeq_trans (add_den_pos (fmul_den_pos (fun i => fmono_den 0 i) (fun i => kdbl_den i) k)
+      (fmul_den_pos (fun i => fmono_den 2 i) (fun i => kdbl_den i) k))
+    (fmul_add_left (fun i => fmono_den 0 i) (fun i => fmono_den 2 i) (fun i => kdbl_den i) k)
     (kdbl_main k)
 
 theorem oneplusSq_den (k : Nat) : 0 < (oneplusSq k).den := add_den_pos (fmono_den 0 k) (fmono_den 2 k)
@@ -705,22 +705,22 @@ theorem kdbl_deriv_rel (k : Nat) :
     Qeq (add (fmul twoT kdbl k) (fmul oneplusSq (fderiv kdbl) k)) (twoFone k) := by
   have e1 : Qeq (fderiv (fmul oneplusSq kdbl) k)
       (add (fmul (fderiv oneplusSq) kdbl k) (fmul oneplusSq (fderiv kdbl) k)) :=
-    fderiv_fmul oneplusSq kdbl (fun i => oneplusSq_den i) (fun _ => kdbl_den _) k
+    fderiv_fmul oneplusSq kdbl (fun i => oneplusSq_den i) (fun i => kdbl_den i) k
   have e4 : Qeq (fmul (fderiv oneplusSq) kdbl k) (fmul twoT kdbl k) :=
     fmul_congr_left (fun i => fderiv_oneplusSq i) k
   -- fderiv(fmul oneplusSq kdbl) ≈ add (fmul twoT kdbl) (fmul oneplusSq kdbl')
   have step1 : Qeq (fderiv (fmul oneplusSq kdbl) k)
       (add (fmul twoT kdbl k) (fmul oneplusSq (fderiv kdbl) k)) :=
     Qeq_trans (add_den_pos (fmul_den_pos (fun i => fderiv_den_pos (fun j => oneplusSq_den j) i)
-        (fun _ => kdbl_den _) k) (fmul_den_pos (fun i => oneplusSq_den i)
-        (fun i => fderiv_den_pos (fun _ => kdbl_den _) i) k)) e1
+        (fun i => kdbl_den i) k) (fmul_den_pos (fun i => oneplusSq_den i)
+        (fun i => fderiv_den_pos (fun i => kdbl_den i) i) k)) e1
       (Qadd_congr e4 (Qeq_refl _))
   -- and fderiv(fmul oneplusSq kdbl) ≈ fderiv twoT ≈ 2
   have step2 : Qeq (fderiv (fmul oneplusSq kdbl) k) (twoFone k) :=
     Qeq_trans (fderiv_den_pos (fun i => Nat.one_pos) k)
       (fderiv_congr (fun i => kdbl_rel i) k) (fderiv_twoT k)
   exact Qeq_trans (fderiv_den_pos (fun i => fmul_den_pos (fun j => oneplusSq_den j)
-      (fun _ => kdbl_den _) i) k) (Qeq_symm step1) step2
+      (fun i => kdbl_den i) i) k) (Qeq_symm step1) step2
 
 -- ===========================================================================
 -- Formal composition foundations: powers fpow b m = bᵐ, and the vanishing lemma
@@ -1311,9 +1311,9 @@ theorem fmul_oneplusSq_cancel {X Y : Nat → Q} (hX : ∀ i, 0 < (X i).den) (hY 
 /-- Sub-identity `(1+t²)·k² = 2t·k` (`= fmul twoT kdbl`), via associativity + `kdbl_rel`. -/
 theorem ksq_rel (k : Nat) : Qeq (fmul oneplusSq (fmul kdbl kdbl) k) (fmul twoT kdbl k) := by
   refine Qeq_trans (fmul_den_pos (fun i => fmul_den_pos (fun j => oneplusSq_den j)
-      (fun _ => kdbl_den _) i) (fun _ => kdbl_den _) k)
-    (Qeq_symm (fmul_assoc oneplusSq kdbl kdbl (fun i => oneplusSq_den i) (fun _ => kdbl_den _)
-      (fun _ => kdbl_den _) k)) ?_
+      (fun i => kdbl_den i) i) (fun i => kdbl_den i) k)
+    (Qeq_symm (fmul_assoc oneplusSq kdbl kdbl (fun i => oneplusSq_den i) (fun i => kdbl_den i)
+      (fun i => kdbl_den i) k)) ?_
   exact fmul_congr_left (fun i => kdbl_rel i) k
 
 /-- The 1-shift `t·(2t) = 2t²`: `fmul (fmono 1) twoT = 2·t²` (`= fsmono ⟨2,1⟩ 2`). -/
@@ -1338,11 +1338,11 @@ theorem fmono1_twoT : ∀ k, Qeq (fmul (fmono 1) twoT k) (fsmono ⟨2, 1⟩ 2 k)
 theorem tk_rel (k : Nat) : Qeq (fmul oneplusSq (fmul (fmono 1) kdbl) k) (fsmono ⟨2, 1⟩ 2 k) := by
   have h1 : Qeq (fmul oneplusSq (fmul (fmono 1) kdbl) k) (fmul (fmono 1) (fmul oneplusSq kdbl) k) :=
     fmul_swap_left oneplusSq (fmono 1) kdbl (fun i => oneplusSq_den i) (fun i => fmono_den 1 i)
-      (fun _ => kdbl_den _) k
+      (fun i => kdbl_den i) k
   have h2 : Qeq (fmul (fmono 1) (fmul oneplusSq kdbl) k) (fmul (fmono 1) twoT k) :=
     fmul_congr_right (fun i => kdbl_rel i) k
   exact Qeq_trans (fmul_den_pos (fun i => fmono_den 1 i)
-      (fun i => fmul_den_pos (fun j => oneplusSq_den j) (fun _ => kdbl_den _) i) k) h1
+      (fun i => fmul_den_pos (fun j => oneplusSq_den j) (fun i => kdbl_den i) i) k) h1
     (Qeq_trans (fmul_den_pos (fun i => fmono_den 1 i) (fun i => twoT_den i) k) h2 (fmono1_twoT k))
 
 /-- **Right-distributivity of the Cauchy product**: `a·(b+c) = a·b + a·c`. -/
@@ -1376,9 +1376,9 @@ theorem oneplusSq_kderiv (m : Nat) :
   have hr : Qeq (fmul oneplusSq (fderiv kdbl) m)
       (Qsub (add (fmul twoT kdbl m) (fmul oneplusSq (fderiv kdbl) m)) (fmul twoT kdbl m)) := by
     simp only [Qeq, Qsub, add, neg]; push_cast; ring_uor
-  refine Qeq_trans (Qsub_den_pos (add_den_pos (fmul_den_pos (fun i => twoT_den i) (fun _ => kdbl_den _) m)
-      (fmul_den_pos (fun i => oneplusSq_den i) (fun i => fderiv_den_pos (fun _ => kdbl_den _) i) m))
-      (fmul_den_pos (fun i => twoT_den i) (fun _ => kdbl_den _) m)) hr ?_
+  refine Qeq_trans (Qsub_den_pos (add_den_pos (fmul_den_pos (fun i => twoT_den i) (fun i => kdbl_den i) m)
+      (fmul_den_pos (fun i => oneplusSq_den i) (fun i => fderiv_den_pos (fun i => kdbl_den i) i) m))
+      (fmul_den_pos (fun i => twoT_den i) (fun i => kdbl_den i) m)) hr ?_
   exact Qsub_congr (kdbl_deriv_rel m) (Qeq_refl _)
 
 /-- **The `kdbl²` identity, internal form**: `k' + t·k + k² = 2` (`fmul_oneplusSq_cancel` of
@@ -1386,10 +1386,10 @@ theorem oneplusSq_kderiv (m : Nat) :
 theorem kdbl_W (k : Nat) :
     Qeq (add (fderiv kdbl k) (add (fmul (fmono 1) kdbl k) (fmul kdbl kdbl k))) (twoFone k) := by
   have htk : ∀ i, 0 < (fmul (fmono 1) kdbl i).den :=
-    fun i => fmul_den_pos (fun j => fmono_den 1 j) (fun _ => kdbl_den _) i
+    fun i => fmul_den_pos (fun j => fmono_den 1 j) (fun i => kdbl_den i) i
   have hksq : ∀ i, 0 < (fmul kdbl kdbl i).den :=
-    fun i => fmul_den_pos (fun _ => kdbl_den _) (fun _ => kdbl_den _) i
-  have hk' : ∀ i, 0 < (fderiv kdbl i).den := fun i => fderiv_den_pos (fun _ => kdbl_den _) i
+    fun i => fmul_den_pos (fun i => kdbl_den i) (fun i => kdbl_den i) i
+  have hk' : ∀ i, 0 < (fderiv kdbl i).den := fun i => fderiv_den_pos (fun i => kdbl_den i) i
   refine fmul_oneplusSq_cancel
     (fun i => add_den_pos (hk' i) (add_den_pos (htk i) (hksq i))) (fun i => twoFone_den i) ?_ k
   intro m
@@ -1418,9 +1418,9 @@ theorem kdbl_W (k : Nat) :
       (add_den_pos (fmul_den_pos (fun i => oneplusSq_den i) htk m)
         (fmul_den_pos (fun i => oneplusSq_den i) hksq m))) hdist ?_
   refine Qeq_trans (add_den_pos (Qsub_den_pos (twoFone_den m)
-        (fmul_den_pos (fun i => twoT_den i) (fun _ => kdbl_den _) m))
+        (fmul_den_pos (fun i => twoT_den i) (fun i => kdbl_den i) m))
       (add_den_pos (fsmono_den (c := ⟨2, 1⟩) Nat.one_pos 2 m)
-        (fmul_den_pos (fun i => twoT_den i) (fun _ => kdbl_den _) m))) hsub ?_
+        (fmul_den_pos (fun i => twoT_den i) (fun i => kdbl_den i) m))) hsub ?_
   refine Qeq_trans (add_den_pos (twoFone_den m) (fsmono_den (c := ⟨2, 1⟩) Nat.one_pos 2 m))
     hcancel ?_
   exact Qeq_symm (oneplusSq_twoFone m)
@@ -1454,15 +1454,15 @@ theorem twoT_fmono (m : Nat) : Qeq (twoT m) (mul ⟨2, 1⟩ (fmono 1 m)) := by
 /-- `2t·k = 2·(t·k)`. -/
 theorem twoT_2tk (m : Nat) :
     Qeq (fmul twoT kdbl m) (mul ⟨2, 1⟩ (fmul (fmono 1) kdbl m)) := by
-  refine Qeq_trans (fmul_den_pos (fun _ => kdbl_den _) (fun i => twoT_den i) m)
-    (fmul_comm twoT kdbl (fun i => twoT_den i) (fun _ => kdbl_den _) m) ?_
-  refine Qeq_trans (fmul_den_pos (fun _ => kdbl_den _)
+  refine Qeq_trans (fmul_den_pos (fun i => kdbl_den i) (fun i => twoT_den i) m)
+    (fmul_comm twoT kdbl (fun i => twoT_den i) (fun i => kdbl_den i) m) ?_
+  refine Qeq_trans (fmul_den_pos (fun i => kdbl_den i)
       (fun i => Qmul_den_pos Nat.one_pos (fmono_den 1 i)) m)
     (fmul_congr_right (fun i => twoT_fmono i) m) ?_
-  refine Qeq_trans (Qmul_den_pos Nat.one_pos (fmul_den_pos (fun _ => kdbl_den _)
+  refine Qeq_trans (Qmul_den_pos Nat.one_pos (fmul_den_pos (fun i => kdbl_den i)
       (fun i => fmono_den 1 i) m))
-    (fmul_smul_right kdbl (fmono 1) ⟨2, 1⟩ Nat.one_pos (fun _ => kdbl_den _) (fun i => fmono_den 1 i) m) ?_
-  exact Qmul_congr (Qeq_refl _) (fmul_comm kdbl (fmono 1) (fun _ => kdbl_den _) (fun i => fmono_den 1 i) m)
+    (fmul_smul_right kdbl (fmono 1) ⟨2, 1⟩ Nat.one_pos (fun i => kdbl_den i) (fun i => fmono_den 1 i) m) ?_
+  exact Qmul_congr (Qeq_refl _) (fmul_comm kdbl (fmono 1) (fun i => kdbl_den i) (fun i => fmono_den 1 i) m)
 
 /-- `(1−t²) = 2 − (1+t²)` as a sequence. -/
 theorem oneMinusSq_as_sub (m : Nat) : Qeq (oneMinusSq m) (Qsub (twoFone m) (oneplusSq m)) := by
@@ -1478,11 +1478,11 @@ theorem oneMinusSq_as_sub (m : Nat) : Qeq (oneMinusSq m) (Qsub (twoFone m) (onep
     gives `2(1−k²) = −2 + 2k' + 2t·k`. The bridge from the kdbl relations to the composition side. -/
 theorem kdbl_sq_id (m : Nat) :
     Qeq (fmul oneMinusSq (fderiv kdbl) m) (mul ⟨2, 1⟩ (Qsub (fone m) (fmul kdbl kdbl m))) := by
-  have hk' : ∀ i, 0 < (fderiv kdbl i).den := fun i => fderiv_den_pos (fun _ => kdbl_den _) i
+  have hk' : ∀ i, 0 < (fderiv kdbl i).den := fun i => fderiv_den_pos (fun i => kdbl_den i) i
   have htk : ∀ i, 0 < (fmul (fmono 1) kdbl i).den :=
-    fun i => fmul_den_pos (fun j => fmono_den 1 j) (fun _ => kdbl_den _) i
+    fun i => fmul_den_pos (fun j => fmono_den 1 j) (fun i => kdbl_den i) i
   have hksq : ∀ i, 0 < (fmul kdbl kdbl i).den :=
-    fun i => fmul_den_pos (fun _ => kdbl_den _) (fun _ => kdbl_den _) i
+    fun i => fmul_den_pos (fun i => kdbl_den i) (fun i => kdbl_den i) i
   have hLHS : Qeq (fmul oneMinusSq (fderiv kdbl) m)
       (Qsub (mul ⟨2, 1⟩ (fderiv kdbl m))
         (Qsub (twoFone m) (mul ⟨2, 1⟩ (fmul (fmono 1) kdbl m)))) := by
@@ -1492,7 +1492,7 @@ theorem kdbl_sq_id (m : Nat) :
         (fmul_den_pos (fun i => oneplusSq_den i) hk' m))
       (fmul_sub_left (fun i => twoFone_den i) (fun i => oneplusSq_den i) hk' m) ?_
     refine Qeq_trans (Qsub_den_pos (Qmul_den_pos Nat.one_pos (hk' m))
-        (Qsub_den_pos (twoFone_den m) (fmul_den_pos (fun i => twoT_den i) (fun _ => kdbl_den _) m)))
+        (Qsub_den_pos (twoFone_den m) (fmul_den_pos (fun i => twoT_den i) (fun i => kdbl_den i) m)))
       (Qsub_congr (fmul_twoFone (fderiv kdbl) hk' m) (oneplusSq_kderiv m)) ?_
     exact Qsub_congr (Qeq_refl _) (Qsub_congr (Qeq_refl _) (twoT_2tk m))
   have hC' : Qeq (fmul kdbl kdbl m)
@@ -1664,6 +1664,62 @@ theorem geoEven_telescope {c : Nat → Q} (hc : ∀ i, 0 < (c i).den) (N k : Nat
           (Qsub_den_pos (fpow_den_pos hc (2 * (N + 1)) k) (fpow_den_pos hc (2 * (N + 2)) k)))
         (Qadd_congr ih hstep) ?_
       exact Qsub_telescope3 (fone k) (fpow c (2 * (N + 1)) k) (fpow c (2 * (N + 2)) k)
+
+/-- `kdbl 0 = 0` (the inner function vanishes at the origin). -/
+theorem kdbl_zero : Qeq (kdbl 0) ⟨0, 1⟩ := by decide
+
+/-- **`artanh'∘kdbl` is the even-power geometric series**: `fcomp gcoef kdbl i = geoEvenPow kdbl k i`
+    for `i ≤ k` (the odd terms of `gcoef` vanish; the high even terms `2j>i` vanish by `fpow_vanish`). -/
+theorem fcomp_gcoef_geoEven (k i : Nat) (hik : i ≤ k) :
+    Qeq (fcomp gcoef kdbl i) (geoEvenPow kdbl k i) := by
+  have hg : ∀ m, 0 < (mul (gcoef m) (fpow kdbl m i)).den :=
+    fun m => Qmul_den_pos (gcoef_den m) (fpow_den_pos (fun i => kdbl_den i) m i)
+  have hext : Qeq (Fsum (fun m => mul (gcoef m) (fpow kdbl m i)) i)
+      (Fsum (fun m => mul (gcoef m) (fpow kdbl m i)) (2 * k + 1)) :=
+    Fsum_extend_zero hg (by omega) (fun m hm1 _ =>
+      Qeq_trans (Qmul_den_pos (gcoef_den m) Nat.one_pos)
+        (Qmul_congr (Qeq_refl _) (fpow_vanish (fun i => kdbl_den i) kdbl_zero m i hm1))
+        (by simp [Qeq, mul]))
+  have hcol : Qeq (Fsum (fun m => mul (gcoef m) (fpow kdbl m i)) (2 * k + 1))
+      (Fsum (fun j => mul (gcoef (2 * j)) (fpow kdbl (2 * j) i)) k) :=
+    Fsum_collapse_odd hg (fun m => by
+      have he : gcoef (2 * m + 1) = ⟨0, 1⟩ := by unfold gcoef; rw [if_neg (by omega)]
+      rw [he]; simp [Qeq, mul]) k
+  have hcongr : Qeq (Fsum (fun j => mul (gcoef (2 * j)) (fpow kdbl (2 * j) i)) k)
+      (geoEvenPow kdbl k i) := by
+    show Qeq (Fsum (fun j => mul (gcoef (2 * j)) (fpow kdbl (2 * j) i)) k)
+      (Fsum (fun j => fpow kdbl (2 * j) i) k)
+    refine Fsum_congr (fun j => ?_) k
+    have he : gcoef (2 * j) = ⟨1, 1⟩ := by unfold gcoef; rw [if_pos (by omega)]
+    rw [he]; simp [Qeq, mul]
+  show Qeq (Fsum (fun m => mul (gcoef m) (fpow kdbl m i)) i) (geoEvenPow kdbl k i)
+  exact Qeq_trans (Fsum_den_pos hg (2 * k + 1)) hext
+    (Qeq_trans (Fsum_den_pos (fun j => Qmul_den_pos (gcoef_den _)
+      (fpow_den_pos (fun i => kdbl_den i) _ i)) k) hcol hcongr)
+
+/-- **The composition identity** `(1−k²)·(artanh'∘kdbl) = 1` (piece ii). Replace `artanh'∘kdbl` by the
+    geometric partial sum on `[0,k]`, then the telescope gives `1 − kdbl^{2(k+1)}_k = 1` (high power
+    vanishes). -/
+theorem comp_recip (k : Nat) :
+    Qeq (fmul (fun i => Qsub (fone i) (fmul kdbl kdbl i)) (fcomp gcoef kdbl) k) (fone k) := by
+  have hcong : Qeq (fmul (fun i => Qsub (fone i) (fmul kdbl kdbl i)) (fcomp gcoef kdbl) k)
+      (fmul (fun i => Qsub (fone i) (fmul kdbl kdbl i)) (geoEvenPow kdbl k) k) := by
+    show Qeq (Fsum (fun p => mul (Qsub (fone p) (fmul kdbl kdbl p)) (fcomp gcoef kdbl (k - p))) k)
+      (Fsum (fun p => mul (Qsub (fone p) (fmul kdbl kdbl p)) (geoEvenPow kdbl k (k - p))) k)
+    exact Fsum_congr_le (k := k) (fun p _ =>
+      Qmul_congr (Qeq_refl _) (fcomp_gcoef_geoEven k (k - p) (by omega)))
+  have htel : Qeq (fmul (fun i => Qsub (fone i) (fmul kdbl kdbl i)) (geoEvenPow kdbl k) k)
+      (Qsub (fone k) (fpow kdbl (2 * (k + 1)) k)) :=
+    geoEven_telescope (fun i => kdbl_den i) k k
+  have hvan : Qeq (fpow kdbl (2 * (k + 1)) k) ⟨0, 1⟩ :=
+    fpow_vanish (fun i => kdbl_den i) kdbl_zero (2 * (k + 1)) k (by omega)
+  refine Qeq_trans (fmul_den_pos (fun i => Qsub_den_pos (fone_den_pos i) (fmul_den_pos
+      (fun i => kdbl_den i) (fun i => kdbl_den i) i)) (fun i => geoEvenPow_den (fun i => kdbl_den i) k i) k)
+    hcong ?_
+  refine Qeq_trans (Qsub_den_pos (fone_den_pos k) (fpow_den_pos (fun i => kdbl_den i) (2 * (k + 1)) k))
+    htel ?_
+  refine Qeq_trans (Qsub_den_pos (fone_den_pos k) Nat.one_pos) (Qsub_congr (Qeq_refl _) hvan) ?_
+  exact Qadd_zero_right _
 
 /-- **The artanh ODE** `(1−t²)·artanh' = 1` at the coefficient level. -/
 theorem artanh_ode (k : Nat) : Qeq (fmul oneMinusSq gcoef k) (fone k) :=
