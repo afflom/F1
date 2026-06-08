@@ -3224,4 +3224,95 @@ theorem qpow_const_combine (c : Int) (ρ : Q) (hρd : 0 < ρ.den) (k : Nat) :
     (Qmul_congr (Qeq_refl _) (Qeq_symm (qpow_const_nat c k))) ?_
   exact Qeq_symm (qpow_mul ρ ⟨c, 1⟩ hρd Nat.one_pos k)
 
+/-- `2·Y + 2·Y ≈ 4·Y`. -/
+theorem Qadd_2_2_4 (Y : Q) : Qeq (add (mul ⟨2, 1⟩ Y) (mul ⟨2, 1⟩ Y)) (mul ⟨4, 1⟩ Y) := by
+  simp only [Qeq, add, mul]; push_cast; ring_uor
+
+/-- `4·Y + 4·Y ≈ 8·Y`. -/
+theorem Qadd_4_4_8 (Y : Q) : Qeq (add (mul ⟨4, 1⟩ Y) (mul ⟨4, 1⟩ Y)) (mul ⟨8, 1⟩ Y) := by
+  simp only [Qeq, add, mul]; push_cast; ring_uor
+
+/-- `2·(a·(2·Y)) ≈ 4·(a·Y)`. -/
+theorem Qmul_2_2_4 (a Y : Q) : Qeq (mul ⟨2, 1⟩ (mul a (mul ⟨2, 1⟩ Y))) (mul ⟨4, 1⟩ (mul a Y)) := by
+  simp only [Qeq, mul]; push_cast; ring_uor
+
+/-- `qpow` respects `≈` of the base (local copy). -/
+theorem qpow_Qeq_loc {a b : Q} (h : Qeq a b) : ∀ n, Qeq (qpow a n) (qpow b n)
+  | 0 => Qeq_refl _
+  | (n + 1) => by
+    show Qeq (mul a (qpow a n)) (mul b (qpow b n))
+    exact Qmul_congr h (qpow_Qeq_loc h n)
+
+set_option maxHeartbeats 1000000 in
+/-- **`T_closed` collapsed to one geometric**: `T_closed ≤ 8·(2N+2)·(8ρ)^{2N+2}` (for `0 ≤ ρ ≤ 1`). -/
+theorem T_pow_le (ρ : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num) (hρ1 : Qle ρ ⟨1, 1⟩) (N : Nat) :
+    Qle (add (mul (⟨((2 * N + 1 : Nat) : Int) + 1, 1⟩ : Q)
+            (add (mul ⟨2, 1⟩ (qpow ρ (2 * N + 2))) (mul ⟨2, 1⟩ (qpow ρ (2 * N + 3)))))
+          (mul ⟨2, 1⟩ (mul (mul (⟨((2 * N + 1 : Nat) : Int) + 1, 1⟩ : Q)
+            (qpow (mul ⟨2, 1⟩ ρ) (2 * N + 2))) (⟨2 * (4 : Int) ^ (2 * N + 2), 1⟩ : Q))))
+      (mul ⟨8, 1⟩ (mul (⟨((2 * N + 1 : Nat) : Int) + 1, 1⟩ : Q)
+        (qpow (mul ρ ⟨8, 1⟩) (2 * N + 2)))) := by
+  have h8d : 0 < (mul ρ ⟨8, 1⟩).den := Qmul_den_pos hρd Nat.one_pos
+  have hQ8d : 0 < (qpow (mul ρ ⟨8, 1⟩) (2 * N + 2)).den := qpow_den_pos h8d (2 * N + 2)
+  have hP2ρd : 0 < (qpow (mul ⟨2, 1⟩ ρ) (2 * N + 2)).den :=
+    qpow_den_pos (Qmul_den_pos Nat.one_pos hρd) (2 * N + 2)
+  have hcstnn : 0 ≤ (⟨((2 * N + 1 : Nat) : Int) + 1, 1⟩ : Q).num := by
+    have : (0 : Int) ≤ ((2 * N + 1 : Nat) : Int) := Int.ofNat_nonneg _
+    show 0 ≤ ((2 * N + 1 : Nat) : Int) + 1; omega
+  have hbase : Qle ρ (mul ρ ⟨8, 1⟩) :=
+    Qle_trans (Qmul_den_pos hρd Nat.one_pos)
+      (Qeq_le (Qeq_symm (mul_one ρ))) (Qmul_le_mul_left hρ0 (by decide))
+  have hb2 : Qle (qpow ρ (2 * N + 2)) (qpow (mul ρ ⟨8, 1⟩) (2 * N + 2)) :=
+    qpow_base_mono hρd h8d hρ0 hbase (2 * N + 2)
+  have hb3 : Qle (qpow ρ (2 * N + 3)) (qpow (mul ρ ⟨8, 1⟩) (2 * N + 2)) :=
+    Qle_trans (qpow_den_pos hρd (2 * N + 2)) (qpow_mono_exp hρ0 hρd hρ1 (2 * N + 2) 1) hb2
+  -- Part 1
+  have hinner : Qle (add (mul ⟨2, 1⟩ (qpow ρ (2 * N + 2))) (mul ⟨2, 1⟩ (qpow ρ (2 * N + 3))))
+      (mul ⟨4, 1⟩ (qpow (mul ρ ⟨8, 1⟩) (2 * N + 2))) :=
+    Qle_trans (add_den_pos (Qmul_den_pos Nat.one_pos hQ8d) (Qmul_den_pos Nat.one_pos hQ8d))
+      (Qadd_le_add (Qmul_le_mul_left (by decide) hb2) (Qmul_le_mul_left (by decide) hb3))
+      (Qeq_le (Qadd_2_2_4 (qpow (mul ρ ⟨8, 1⟩) (2 * N + 2))))
+  have hP1 : Qle (mul (⟨((2 * N + 1 : Nat) : Int) + 1, 1⟩ : Q)
+        (add (mul ⟨2, 1⟩ (qpow ρ (2 * N + 2))) (mul ⟨2, 1⟩ (qpow ρ (2 * N + 3)))))
+      (mul ⟨4, 1⟩ (mul (⟨((2 * N + 1 : Nat) : Int) + 1, 1⟩ : Q)
+        (qpow (mul ρ ⟨8, 1⟩) (2 * N + 2)))) :=
+    Qle_trans (Qmul_den_pos Nat.one_pos (Qmul_den_pos Nat.one_pos hQ8d))
+      (Qmul_le_mul_left hcstnn hinner)
+      (Qeq_le (Qmul_swap_outer (⟨((2 * N + 1 : Nat) : Int) + 1, 1⟩ : Q) ⟨4, 1⟩
+        (qpow (mul ρ ⟨8, 1⟩) (2 * N + 2))))
+  -- Part 2 (exact): bridge (2ρ)^k·⟨2·4^k⟩ ≈ 2·(8ρ)^k
+  have hE : Qeq (⟨2 * (4 : Int) ^ (2 * N + 2), 1⟩ : Q) (mul ⟨2, 1⟩ ⟨(4 : Int) ^ (2 * N + 2), 1⟩) := by
+    simp only [Qeq, mul]
+  have hbq : Qeq (mul (mul ⟨2, 1⟩ ρ) ⟨4, 1⟩) (mul ρ ⟨8, 1⟩) := by
+    simp only [Qeq, mul]; push_cast; ring_uor
+  have hcombine2 : Qeq (mul (qpow (mul ⟨2, 1⟩ ρ) (2 * N + 2)) (⟨2 * (4 : Int) ^ (2 * N + 2), 1⟩ : Q))
+      (mul ⟨2, 1⟩ (qpow (mul ρ ⟨8, 1⟩) (2 * N + 2))) := by
+    refine Qeq_trans (Qmul_den_pos hP2ρd (Qmul_den_pos Nat.one_pos Nat.one_pos))
+      (Qmul_congr (Qeq_refl _) hE) ?_
+    refine Qeq_trans (Qmul_den_pos Nat.one_pos (Qmul_den_pos hP2ρd Nat.one_pos))
+      (Qmul_swap_outer (qpow (mul ⟨2, 1⟩ ρ) (2 * N + 2)) ⟨2, 1⟩ ⟨(4 : Int) ^ (2 * N + 2), 1⟩) ?_
+    refine Qmul_congr (Qeq_refl _) ?_
+    exact Qeq_trans (qpow_den_pos (Qmul_den_pos (Qmul_den_pos Nat.one_pos hρd) Nat.one_pos) _)
+      (qpow_const_combine 4 (mul ⟨2, 1⟩ ρ) (Qmul_den_pos Nat.one_pos hρd) (2 * N + 2))
+      (qpow_Qeq_loc hbq (2 * N + 2))
+  have hP2 : Qle (mul ⟨2, 1⟩ (mul (mul (⟨((2 * N + 1 : Nat) : Int) + 1, 1⟩ : Q)
+          (qpow (mul ⟨2, 1⟩ ρ) (2 * N + 2))) (⟨2 * (4 : Int) ^ (2 * N + 2), 1⟩ : Q)))
+      (mul ⟨4, 1⟩ (mul (⟨((2 * N + 1 : Nat) : Int) + 1, 1⟩ : Q)
+        (qpow (mul ρ ⟨8, 1⟩) (2 * N + 2)))) := by
+    apply Qeq_le
+    refine Qeq_trans (Qmul_den_pos Nat.one_pos (Qmul_den_pos Nat.one_pos
+        (Qmul_den_pos hP2ρd Nat.one_pos)))
+      (Qmul_congr (Qeq_refl _) (Qmul_assoc (⟨((2 * N + 1 : Nat) : Int) + 1, 1⟩ : Q)
+        (qpow (mul ⟨2, 1⟩ ρ) (2 * N + 2)) (⟨2 * (4 : Int) ^ (2 * N + 2), 1⟩ : Q))) ?_
+    refine Qeq_trans (Qmul_den_pos Nat.one_pos (Qmul_den_pos Nat.one_pos
+        (Qmul_den_pos Nat.one_pos hQ8d)))
+      (Qmul_congr (Qeq_refl _) (Qmul_congr (Qeq_refl _) hcombine2)) ?_
+    exact Qmul_2_2_4 (⟨((2 * N + 1 : Nat) : Int) + 1, 1⟩ : Q) (qpow (mul ρ ⟨8, 1⟩) (2 * N + 2))
+  -- Combine Part1 + Part2
+  exact Qle_trans (add_den_pos (Qmul_den_pos Nat.one_pos (Qmul_den_pos Nat.one_pos hQ8d))
+      (Qmul_den_pos Nat.one_pos (Qmul_den_pos Nat.one_pos hQ8d)))
+    (Qadd_le_add hP1 hP2)
+    (Qeq_le (Qadd_4_4_8 (mul (⟨((2 * N + 1 : Nat) : Int) + 1, 1⟩ : Q)
+      (qpow (mul ρ ⟨8, 1⟩) (2 * N + 2)))))
+
 end UOR.Bridge.F1Square.Analysis

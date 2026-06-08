@@ -1005,3 +1005,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.qpow_mono_exp
 #print axioms Analysis.qpow_const_nat
 #print axioms Analysis.qpow_const_combine
+#print axioms Analysis.Qadd_2_2_4
+#print axioms Analysis.Qadd_4_4_8
+#print axioms Analysis.Qmul_2_2_4
+#print axioms Analysis.qpow_Qeq_loc
+#print axioms Analysis.T_pow_le
