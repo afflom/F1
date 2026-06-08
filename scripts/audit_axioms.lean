@@ -883,3 +883,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.ksq_rel
 #print axioms Analysis.fmono1_twoT
 #print axioms Analysis.tk_rel
+#print axioms Analysis.fmul_add_right

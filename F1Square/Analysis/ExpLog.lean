@@ -1345,6 +1345,16 @@ theorem tk_rel (k : Nat) : Qeq (fmul oneplusSq (fmul (fmono 1) kdbl) k) (fsmono 
       (fun i => fmul_den_pos (fun j => oneplusSq_den j) (fun _ => kdbl_den _) i) k) h1
     (Qeq_trans (fmul_den_pos (fun i => fmono_den 1 i) (fun i => twoT_den i) k) h2 (fmono1_twoT k))
 
+/-- **Right-distributivity of the Cauchy product**: `a·(b+c) = a·b + a·c`. -/
+theorem fmul_add_right {a b c : Nat → Q} (ha : ∀ i, 0 < (a i).den) (hb : ∀ i, 0 < (b i).den)
+    (hc : ∀ i, 0 < (c i).den) (k : Nat) :
+    Qeq (fmul a (fun i => add (b i) (c i)) k) (add (fmul a b k) (fmul a c k)) := by
+  refine Qeq_trans (fmul_den_pos (fun i => add_den_pos (hb i) (hc i)) ha k)
+    (fmul_comm a (fun i => add (b i) (c i)) ha (fun i => add_den_pos (hb i) (hc i)) k) ?_
+  refine Qeq_trans (add_den_pos (fmul_den_pos hb ha k) (fmul_den_pos hc ha k))
+    (fmul_add_left hb hc ha k) ?_
+  exact Qadd_congr (fmul_comm b a hb ha k) (fmul_comm c a hc ha k)
+
 /-- **The artanh ODE** `(1−t²)·artanh' = 1` at the coefficient level. -/
 theorem artanh_ode (k : Nat) : Qeq (fmul oneMinusSq gcoef k) (fone k) :=
   Qeq_trans (add_den_pos (fmul_den_pos (fun i => fsmono_den Nat.one_pos 0 i) (fun _ => gcoef_den _) k)
