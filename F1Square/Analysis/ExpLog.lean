@@ -2958,4 +2958,25 @@ theorem DN_double_le (w : Q) (N : Nat) (hwd : 0 < w.den)
     (DN_abs_le w hwd N) ?_
   exact Fsum_le_congr (fun m hm => e_le_T w N hwd hq1 hu1 m hm)
 
+/-- **Polynomial-into-geometric absorption**: `(M+1)² ≤ 4ᴹ` for all `M`. This is what lets the
+    `(M+1)`-factors in the `D_N` bound be absorbed into a slightly larger geometric base. -/
+theorem sq_le_four_pow : ∀ M : Nat, (M + 1) * (M + 1) ≤ 4 ^ M
+  | 0 => by decide
+  | (M + 1) => by
+    have ih := sq_le_four_pow M
+    have key : (M + 1 + 1) * (M + 1 + 1) = (M + 1) * (M + 1) + (2 * (M + 1) + 1) := by
+      have h : (((M + 1 + 1) * (M + 1 + 1) : Nat) : Int)
+          = (((M + 1) * (M + 1) + (2 * (M + 1) + 1) : Nat) : Int) := by push_cast; ring_uor
+      exact_mod_cast h
+    have h1 : M + 1 ≤ (M + 1) * (M + 1) := by
+      calc M + 1 = (M + 1) * 1 := (Nat.mul_one _).symm
+        _ ≤ (M + 1) * (M + 1) := Nat.mul_le_mul_left _ (by omega)
+    have hpow : 4 ^ (M + 1) = 4 * 4 ^ M := by rw [Nat.pow_succ]; omega
+    have hP1 : 1 ≤ 4 ^ M := by
+      clear ih key h1 hpow
+      induction M with
+      | zero => decide
+      | succ k ih => rw [Nat.pow_succ]; omega
+    omega
+
 end UOR.Bridge.F1Square.Analysis

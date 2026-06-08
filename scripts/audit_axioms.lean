@@ -988,3 +988,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.DN_double_le
 #print axioms Analysis.Qadd_num_nonneg_loc
 #print axioms Analysis.Qzero_le_loc
+#print axioms Analysis.sq_le_four_pow
