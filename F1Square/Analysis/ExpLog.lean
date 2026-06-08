@@ -3442,4 +3442,29 @@ theorem peval_kdbl_abs_le_one (ρ w : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.nu
   refine Qle_trans (Qmul_den_pos Nat.one_pos hρd)
     (Qeq_le (Qmul_congr (Qeq_refl _) (mul_one ρ))) hρ8
 
+set_option maxHeartbeats 1000000 in
+/-- **`|D_N| ≤ (8·ρ.den)/(n+1)`** whenever `n+1 ≤ 2N+2` (for `ρ < 1/16`, `|w| ≤ ρ`). Combines `DN_pow_le`
+    (geometric) with `qpow_le_recip` and the uniform `hq1`/`hu1`. This is the per-index input to the real `Req`. -/
+theorem DN_recip (ρ w : Q) (N n : Nat) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num) (hρ1 : Qle ρ ⟨1, 1⟩)
+    (hwd : 0 < w.den) (hw : Qle (Qabs w) ρ) (h2ρ : 0 ≤ (Qsub (⟨1, 1⟩ : Q) (mul ⟨2, 1⟩ ρ)).num)
+    (hρ4 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ⟨2, 1⟩ ρ)))
+    (hρ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ρ ρ))) (hρ8 : Qle (mul ⟨4, 1⟩ ρ) ⟨1, 1⟩)
+    (hlt : (mul ρ ⟨16, 1⟩).num.toNat < (mul ρ ⟨16, 1⟩).den) (hMn : n + 1 ≤ 2 * N + 2) :
+    Qle (Qabs (Qsub (peval (fcomp acoef kdbl) w (2 * N + 1)) (peval acoef (uval w) (2 * N + 1))))
+      (⟨((8 * ρ.den : Nat) : Int), n + 1⟩ : Q) := by
+  have h2ρle1 : Qle (mul ⟨2, 1⟩ ρ) ⟨1, 1⟩ :=
+    Qle_trans (Qmul_den_pos Nat.one_pos hρd) (Qmul_le_mul_right hρ0 (by decide)) hρ8
+  have hu1 : Qle (Qabs (uval w)) ⟨1, 1⟩ :=
+    Qle_trans (Qmul_den_pos Nat.one_pos hρd) (uval_abs_le ρ w hwd hw) h2ρle1
+  have hq1 := peval_kdbl_abs_le_one ρ w hρd hρ0 hwd hw hρ2 hρ8 N
+  have h16d : 0 ≤ (mul ρ ⟨16, 1⟩).num := Qmul_num_nonneg hρ0 (by decide)
+  have hdn := DN_pow_le ρ w N hρd hρ0 hρ1 hwd hw h2ρ hρ4 hq1 hu1
+  have hrec := qpow_le_recip h16d (Qmul_den_pos hρd Nat.one_pos) hlt hMn
+  refine Qle_trans (Qmul_den_pos Nat.one_pos
+      (qpow_den_pos (Qmul_den_pos hρd Nat.one_pos) (2 * N + 2))) hdn ?_
+  refine Qle_trans (Qmul_den_pos Nat.one_pos (Nat.succ_pos n))
+    (Qmul_le_mul_left (by decide) hrec) ?_
+  apply Qeq_le
+  simp only [Qeq, mul]; push_cast; ring_uor
+
 end UOR.Bridge.F1Square.Analysis
