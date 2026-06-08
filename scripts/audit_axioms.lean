@@ -935,3 +935,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.fpow_num_nonneg
 #print axioms Analysis.peval_num_nonneg
 #print axioms Analysis.peval_fpow_le_pow
+#print axioms Analysis.peval_fpow_abs_bound

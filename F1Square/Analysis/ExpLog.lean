@@ -2009,6 +2009,18 @@ theorem peval_fpow_le_pow (c : Nat → Q) (hc : ∀ k, 0 < (c k).den) (hc0 : ∀
         (Qsub_le_self hcorner_nonneg) ?_
       exact Qmul_le_mul_left (peval_num_nonneg hc0 ρ hρ0 M) (peval_fpow_le_pow c hc hc0 ρ hρd hρ0 M m)
 
+/-- **Geometric domination of the powers**: `|eval(bᵐ, w, M)| ≤ (eval |b| ρ M)ᵐ` for `|w| ≤ ρ`, `ρ ≥ 0`.
+    Chains per-coefficient abs (`peval_abs_le_peval_fabs`), coefficient domination (`fpow_abs_dom`,
+    `peval_mono`), and the truncated-power bound (`peval_fpow_le_pow`). -/
+theorem peval_fpow_abs_bound (b : Nat → Q) (hb : ∀ i, 0 < (b i).den) (w : Q) (hwd : 0 < w.den)
+    {ρ : Q} (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num) (hw : Qle (Qabs w) ρ) (m M : Nat) :
+    Qle (Qabs (peval (fpow b m) w M)) (qpow (peval (fabs b) ρ M) m) := by
+  refine Qle_trans (peval_den_pos (fun k => fabs_den_pos (fpow_den_pos hb m) k) hρd M)
+    (peval_abs_le_peval_fabs (fpow b m) (fpow_den_pos hb m) w hwd hρd hw M) ?_
+  refine Qle_trans (peval_den_pos (fpow_den_pos (fun i => fabs_den_pos hb i) m) hρd M)
+    (peval_mono (fun k => fpow_abs_dom b hb m k) ρ hρ0 M) ?_
+  exact peval_fpow_le_pow (fabs b) (fun i => fabs_den_pos hb i) (fabs_nonneg b) ρ hρd hρ0 M m
+
 /-- `0·x = 0`. -/
 theorem mul_left_zero (x : Q) : Qeq (mul ⟨0, 1⟩ x) ⟨0, 1⟩ := by simp [Qeq, mul]
 
