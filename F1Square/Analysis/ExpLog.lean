@@ -3701,4 +3701,23 @@ def uvalReal (t : Real) (ρ : Q) (hρd : 0 < ρ.den) (hρ1 : Qle ρ ⟨1, 1⟩)
     simp only [Qeq, mul, add, Qbound]; push_cast; ring_uor
   den_pos := fun n => uval_den_pos (t.seq (4 * n + 3)) (t.den_pos _)
 
+/-- **artSum depth-Cauchy ⇒ reciprocal**: `|artSum(u,b) − artSum(u,a)| ≤ 2σ.den/(n+1)` for `a ≤ b`,
+    `n+1 ≤ 2a+3`, `|u| ≤ σ < 1`, `1/2 ≤ 1−σ²`. (artSum_trunc + mul_div2 + qpow_le_recip.) -/
+theorem artSum_depth_recip (u σ : Q) (hud : 0 < u.den) (hσ0 : 0 ≤ σ.num) (hσd : 0 < σ.den)
+    (hu : Qle (Qabs u) σ) (hσ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul σ σ)))
+    (hσlt : σ.num.toNat < σ.den) {a b n : Nat} (hab : a ≤ b) (hn : n + 1 ≤ 2 * a + 3) :
+    Qle (Qabs (Qsub (artSum u b) (artSum u a))) (⟨2 * (σ.den : Int), n + 1⟩ : Q) := by
+  have hW : 0 ≤ (Qsub (⟨1, 1⟩ : Q) (mul σ σ)).num := by
+    have h := hσ2; simp only [Qle] at h
+    have hd : 0 < (Qsub (⟨1, 1⟩ : Q) (mul σ σ)).den := Qsub_den_pos Nat.one_pos (Qmul_den_pos hσd hσd)
+    omega
+  have htrunc := artSum_trunc hud hσ0 hσd hu hW hab
+  have hd2 := mul_div2 (Qabs_num_nonneg _)
+    (Qabs_den_pos (Qsub_den_pos (artSum_den_pos hud b) (artSum_den_pos hud a)))
+    (Qsub_den_pos Nat.one_pos (Qmul_den_pos hσd hσd)) (qpow_den_pos hσd _) hσ2 htrunc
+  refine Qle_trans (Qmul_den_pos Nat.one_pos (qpow_den_pos hσd _)) hd2 ?_
+  refine Qle_trans (Qmul_den_pos Nat.one_pos (Nat.succ_pos n))
+    (Qmul_le_mul_left (by decide) (qpow_le_recip hσ0 hσd hσlt hn)) ?_
+  apply Qeq_le; simp only [Qeq, mul]; push_cast; ring_uor
+
 end UOR.Bridge.F1Square.Analysis

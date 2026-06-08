@@ -1028,3 +1028,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rartanh_congr
 #print axioms Analysis.uval_diff_cleared
 #print axioms Analysis.uval_lip
+#print axioms Analysis.artSum_depth_recip
