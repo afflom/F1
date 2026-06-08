@@ -2059,6 +2059,47 @@ theorem peval_fcomp_swap (a b : Nat → Q) (ha : ∀ i, 0 < (a i).den) (hb : ∀
     (Fsum_congr (fun k => Qmul_assoc (a m) (fpow b m k) (qpow w k)) M)
     (Fsum_mul_left (ha m) (fun k => Qmul_den_pos (fpow_den_pos hb m k) (qpow_den_pos hwd k)) M)
 
+/-- Per-term geometric telescope: `ρ^{2N+1}·(1−ρ²) = ρ^{2N+1} − ρ^{2N+3}`. -/
+theorem geoTerm_tel (ρ : Q) (hρd : 0 < ρ.den) (N : Nat) :
+    Qeq (mul (geoTerm ρ N) (Qsub ⟨1, 1⟩ (mul ρ ρ)))
+      (Qsub (qpow ρ (2 * N + 1)) (qpow ρ (2 * N + 3))) := by
+  have hexp : Qeq (qpow ρ (2 * N + 3)) (mul (qpow ρ (2 * N + 1)) (mul ρ ρ)) :=
+    Qeq_trans (Qmul_den_pos (qpow_den_pos hρd (2 * N + 1)) (qpow_den_pos hρd 2))
+      (by rw [show 2 * N + 3 = (2 * N + 1) + 2 from by omega]; exact qpow_add ρ hρd (2 * N + 1) 2)
+      (Qmul_congr (Qeq_refl _) (by show Qeq (qpow ρ 2) (mul ρ ρ); simp only [Qeq, mul, qpow]; push_cast; ring_uor))
+  show Qeq (mul (qpow ρ (2 * N + 1)) (Qsub ⟨1, 1⟩ (mul ρ ρ)))
+    (Qsub (qpow ρ (2 * N + 1)) (qpow ρ (2 * N + 3)))
+  refine Qeq_trans (Qsub_den_pos (qpow_den_pos hρd _)
+      (Qmul_den_pos (qpow_den_pos hρd _) (Qmul_den_pos hρd hρd)))
+    (by simp only [Qeq, mul, Qsub, add, neg]; push_cast; ring_uor)
+    (Qsub_congr (Qeq_refl _) (Qeq_symm hexp))
+
+/-- **Geometric telescope** for `geoSum`: `(Σ_{n≤N} ρ^{2n+1})·(1−ρ²) = ρ − ρ^{2N+3}`. -/
+theorem geoSum_telescope (ρ : Q) (hρd : 0 < ρ.den) :
+    ∀ N, Qeq (mul (geoSum ρ N) (Qsub ⟨1, 1⟩ (mul ρ ρ))) (Qsub (qpow ρ 1) (qpow ρ (2 * N + 3)))
+  | 0 => geoTerm_tel ρ hρd 0
+  | (N + 1) => by
+      show Qeq (mul (add (geoSum ρ N) (geoTerm ρ (N + 1))) (Qsub ⟨1, 1⟩ (mul ρ ρ)))
+        (Qsub (qpow ρ 1) (qpow ρ (2 * (N + 1) + 3)))
+      have hW : 0 < (Qsub (⟨1, 1⟩ : Q) (mul ρ ρ)).den := Qsub_den_pos Nat.one_pos (Qmul_den_pos hρd hρd)
+      refine Qeq_trans (add_den_pos (Qmul_den_pos (geoSum_den_pos hρd N) hW)
+          (Qmul_den_pos (qpow_den_pos hρd _) hW))
+        (Qmul_add_right (geoSum ρ N) (geoTerm ρ (N + 1)) (Qsub ⟨1, 1⟩ (mul ρ ρ))) ?_
+      refine Qeq_trans (add_den_pos (Qsub_den_pos (qpow_den_pos hρd _) (qpow_den_pos hρd _))
+          (Qsub_den_pos (qpow_den_pos hρd _) (qpow_den_pos hρd _)))
+        (Qadd_congr (geoSum_telescope ρ hρd N)
+          (by rw [show 2 * (N + 1) + 1 = 2 * N + 3 from by omega] at *; exact geoTerm_tel ρ hρd (N + 1))) ?_
+      show Qeq (add (Qsub (qpow ρ 1) (qpow ρ (2 * N + 3))) (Qsub (qpow ρ (2 * N + 3)) (qpow ρ (2 * N + 5))))
+        (Qsub (qpow ρ 1) (qpow ρ (2 * (N + 1) + 3)))
+      rw [show 2 * (N + 1) + 3 = 2 * N + 5 from by omega]
+      simp only [Qeq, mul, Qsub, add, neg]; push_cast; ring_uor
+
+/-- `geoSum ρ N · (1−ρ²) ≤ ρ` (drop the nonnegative `ρ^{2N+3}` tail). -/
+theorem geoSum_tel_le (ρ : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num) (N : Nat) :
+    Qle (mul (geoSum ρ N) (Qsub ⟨1, 1⟩ (mul ρ ρ))) (qpow ρ 1) :=
+  Qle_congr_left (Qsub_den_pos (qpow_den_pos hρd _) (qpow_den_pos hρd _))
+    (Qeq_symm (geoSum_telescope ρ hρd N)) (Qsub_le_self (qpow_nonneg hρ0 _))
+
 /-- The even-index terms of `|kdbl|·ρ^•` vanish. -/
 theorem fabs_kdbl_even (ρ : Q) (n : Nat) :
     Qeq (mul (fabs kdbl (2 * n)) (qpow ρ (2 * n))) ⟨0, 1⟩ := by

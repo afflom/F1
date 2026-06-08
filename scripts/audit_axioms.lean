@@ -939,3 +939,6 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.fabs_kdbl_even
 #print axioms Analysis.fabs_kdbl_odd
 #print axioms Analysis.peval_fabs_kdbl_geoSum
+#print axioms Analysis.geoTerm_tel
+#print axioms Analysis.geoSum_telescope
+#print axioms Analysis.geoSum_tel_le
