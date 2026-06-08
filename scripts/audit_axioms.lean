@@ -855,3 +855,13 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.fcomp_chain_pre
 #print axioms Analysis.Fsum_extend_zero
 #print axioms Analysis.fcomp_chain
+#print axioms Analysis.fsmono_den
+#print axioms Analysis.fmul_fsmono
+#print axioms Analysis.fmul_fsmono_zero
+#print axioms Analysis.gcoef_den
+#print axioms Analysis.acoef_den
+#print axioms Analysis.fderiv_acoef
+#print axioms Analysis.oneMinusSq_den
+#print axioms Analysis.gcoef_shift_cancel
+#print axioms Analysis.artanh_main
+#print axioms Analysis.artanh_ode

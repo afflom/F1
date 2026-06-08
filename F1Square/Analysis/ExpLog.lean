@@ -1005,4 +1005,112 @@ theorem fcomp_chain (a b : Nat → Q) (ha : ∀ i, 0 < (a i).den) (hb : ∀ i, 0
           (Qeq_trans (Fsum_den_pos (fun j => Fsum_den_pos (fun m =>
               Qmul_den_pos (Qmul_den_pos (hA' m) (fpow_den_pos hb m j)) (hB' (k - j))) k) k) hD hE))))
 
+-- ===========================================================================
+-- The artanh ODE (1−t²)·artanh' = 1.  Scaled monomial machinery + the coefficient identity.
+-- ===========================================================================
+
+/-- A scaled monomial `c·tᵈ`. -/
+def fsmono (c : Q) (d : Nat) (k : Nat) : Q := if k = d then c else ⟨0, 1⟩
+
+theorem fsmono_den {c : Q} (hc : 0 < c.den) (d k : Nat) : 0 < (fsmono c d k).den := by
+  unfold fsmono; split
+  · exact hc
+  · exact Nat.one_pos
+
+/-- `fmul (c·tᵈ) e k = c·e(k−d)` for `d ≤ k`. -/
+theorem fmul_fsmono {c : Q} (hc : 0 < c.den) (e : Nat → Q) (he : ∀ i, 0 < (e i).den) (d : Nat)
+    {k : Nat} (hdk : d ≤ k) : Qeq (fmul (fsmono c d) e k) (mul c (e (k - d))) := by
+  have hg : ∀ i, 0 < (mul (fsmono c d i) (e (k - i))).den :=
+    fun i => Qmul_den_pos (fsmono_den hc d i) (he (k - i))
+  have hz : ∀ i, i ≠ d → Qeq (mul (fsmono c d i) (e (k - i))) ⟨0, 1⟩ := by
+    intro i hi
+    have he2 : fsmono c d i = ⟨0, 1⟩ := by unfold fsmono; rw [if_neg hi]
+    rw [he2]; simp [Qeq, mul]
+  have hgd : Qeq (mul (fsmono c d d) (e (k - d))) (mul c (e (k - d))) := by
+    have he2 : fsmono c d d = c := by unfold fsmono; rw [if_pos rfl]
+    rw [he2]; exact Qeq_refl _
+  show Qeq (Fsum (fun i => mul (fsmono c d i) (e (k - i))) k) (mul c (e (k - d)))
+  exact Qeq_trans (hg d) (Fsum_single hg hz hdk) hgd
+
+theorem fmul_fsmono_zero {c : Q} (hc : 0 < c.den) (e : Nat → Q) (he : ∀ i, 0 < (e i).den) (d : Nat)
+    {k : Nat} (hk : k < d) : Qeq (fmul (fsmono c d) e k) ⟨0, 1⟩ := by
+  show Qeq (Fsum (fun i => mul (fsmono c d i) (e (k - i))) k) ⟨0, 1⟩
+  refine Qeq_trans (Fsum_den_pos (fun _ => Nat.one_pos) k)
+    (Fsum_congr_le (g := fun _ => (⟨0, 1⟩ : Q)) (k := k) (fun i _ => ?_)) (Fsum_zeros k)
+  have he2 : fsmono c d i = ⟨0, 1⟩ := by unfold fsmono; rw [if_neg (by omega)]
+  rw [he2]; simp [Qeq, mul]
+
+/-- The geometric coefficients `1/(1−t²) = Σ t²ʲ`: `1` at even degree, `0` at odd. (`= artanh'`.) -/
+def gcoef (k : Nat) : Q := if k % 2 = 0 then ⟨1, 1⟩ else ⟨0, 1⟩
+theorem gcoef_den (k : Nat) : 0 < (gcoef k).den := by unfold gcoef; split <;> exact Nat.one_pos
+
+/-- The artanh coefficients `Σ t^{2n+1}/(2n+1)`: `1/k` at odd `k`, `0` at even. -/
+def acoef (k : Nat) : Q := if k % 2 = 1 then ⟨1, k⟩ else ⟨0, 1⟩
+theorem acoef_den (k : Nat) : 0 < (acoef k).den := by
+  unfold acoef
+  by_cases h : k % 2 = 1
+  · rw [if_pos h]; show 0 < k; omega
+  · rw [if_neg h]; exact Nat.one_pos
+
+/-- `artanh' = 1/(1−t²)` at the coefficient level: `fderiv acoef = gcoef`. -/
+theorem fderiv_acoef (k : Nat) : Qeq (fderiv acoef k) (gcoef k) := by
+  show Qeq (mul ⟨(k + 1 : Int), 1⟩ (acoef (k + 1))) (gcoef k)
+  rcases (by omega : k % 2 = 0 ∨ k % 2 = 1) with h | h
+  · have h1 : acoef (k + 1) = ⟨1, k + 1⟩ := by unfold acoef; rw [if_pos (by omega)]
+    have h2 : gcoef k = ⟨1, 1⟩ := by unfold gcoef; rw [if_pos h]
+    rw [h1, h2]; simp [Qeq, mul]
+  · have h1 : acoef (k + 1) = ⟨0, 1⟩ := by unfold acoef; rw [if_neg (by omega)]
+    have h2 : gcoef k = ⟨0, 1⟩ := by unfold gcoef; rw [if_neg (by omega)]
+    rw [h1, h2]; simp [Qeq, mul]
+
+/-- The `1−t²` coefficient sequence. -/
+def oneMinusSq (k : Nat) : Q := add (fsmono ⟨1, 1⟩ 0 k) (fsmono ⟨-1, 1⟩ 2 k)
+theorem oneMinusSq_den (k : Nat) : 0 < (oneMinusSq k).den :=
+  add_den_pos (fsmono_den Nat.one_pos 0 k) (fsmono_den Nat.one_pos 2 k)
+
+/-- Two-step parity cancellation `gcoef_{k+2} − gcoef_k = 0`. -/
+theorem gcoef_shift_cancel (k : Nat) :
+    Qeq (add (mul ⟨1, 1⟩ (gcoef (k + 2))) (mul ⟨-1, 1⟩ (gcoef k))) ⟨0, 1⟩ := by
+  have h2 : (k + 2) % 2 = k % 2 := by omega
+  unfold gcoef; rw [h2]
+  rcases (by omega : k % 2 = 0 ∨ k % 2 = 1) with h | h <;> rw [h] <;> decide
+
+/-- The per-degree split `((1−t²)·gcoef)_k = gcoef_k − gcoef_{k−2} = (fone)_k`. -/
+theorem artanh_main : ∀ k,
+    Qeq (add (fmul (fsmono ⟨1, 1⟩ 0) gcoef k) (fmul (fsmono ⟨-1, 1⟩ 2) gcoef k)) (fone k)
+  | 0 => by
+      have h0 : Qeq (fmul (fsmono ⟨1, 1⟩ 0) gcoef 0) (mul ⟨1, 1⟩ (gcoef 0)) :=
+        fmul_fsmono Nat.one_pos gcoef (fun _ => gcoef_den _) 0 (by omega)
+      have h2 : Qeq (fmul (fsmono ⟨-1, 1⟩ 2) gcoef 0) ⟨0, 1⟩ :=
+        fmul_fsmono_zero Nat.one_pos gcoef (fun _ => gcoef_den _) 2 (by omega)
+      exact Qeq_trans (add_den_pos (Qmul_den_pos Nat.one_pos (gcoef_den 0)) Nat.one_pos)
+        (Qadd_congr h0 h2) (by decide)
+  | 1 => by
+      have h0 : Qeq (fmul (fsmono ⟨1, 1⟩ 0) gcoef 1) (mul ⟨1, 1⟩ (gcoef 1)) :=
+        fmul_fsmono Nat.one_pos gcoef (fun _ => gcoef_den _) 0 (by omega)
+      have h2 : Qeq (fmul (fsmono ⟨-1, 1⟩ 2) gcoef 1) ⟨0, 1⟩ :=
+        fmul_fsmono_zero Nat.one_pos gcoef (fun _ => gcoef_den _) 2 (by omega)
+      exact Qeq_trans (add_den_pos (Qmul_den_pos Nat.one_pos (gcoef_den 1)) Nat.one_pos)
+        (Qadd_congr h0 h2) (by decide)
+  | (k + 2) => by
+      have h0 : Qeq (fmul (fsmono ⟨1, 1⟩ 0) gcoef (k + 2)) (mul ⟨1, 1⟩ (gcoef (k + 2))) :=
+        fmul_fsmono Nat.one_pos gcoef (fun _ => gcoef_den _) 0 (by omega)
+      have h2 : Qeq (fmul (fsmono ⟨-1, 1⟩ 2) gcoef (k + 2)) (mul ⟨-1, 1⟩ (gcoef k)) := by
+        have h := fmul_fsmono (c := ⟨-1, 1⟩) Nat.one_pos gcoef (fun _ => gcoef_den _) 2
+          (show 2 ≤ k + 2 by omega)
+        rwa [show k + 2 - 2 = k from by omega] at h
+      refine Qeq_trans (add_den_pos (Qmul_den_pos Nat.one_pos (gcoef_den (k + 2)))
+        (Qmul_den_pos Nat.one_pos (gcoef_den k))) (Qadd_congr h0 h2) ?_
+      have ht : Qeq (⟨0, 1⟩ : Q) (fone (k + 2)) := by
+        unfold fone; rw [if_neg (by omega)]; exact Qeq_refl _
+      exact Qeq_trans Nat.one_pos (gcoef_shift_cancel k) ht
+
+/-- **The artanh ODE** `(1−t²)·artanh' = 1` at the coefficient level. -/
+theorem artanh_ode (k : Nat) : Qeq (fmul oneMinusSq gcoef k) (fone k) :=
+  Qeq_trans (add_den_pos (fmul_den_pos (fun i => fsmono_den Nat.one_pos 0 i) (fun _ => gcoef_den _) k)
+      (fmul_den_pos (fun i => fsmono_den Nat.one_pos 2 i) (fun _ => gcoef_den _) k))
+    (fmul_add_left (fun i => fsmono_den Nat.one_pos 0 i) (fun i => fsmono_den Nat.one_pos 2 i)
+      (fun _ => gcoef_den _) k)
+    (artanh_main k)
+
 end UOR.Bridge.F1Square.Analysis
