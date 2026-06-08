@@ -1231,6 +1231,82 @@ theorem fmul_oneMinusSq_cancel {X Y : Nat → Q} (hX : ∀ i, 0 < (X i).den) (hY
       (by simp only [Qeq, Qsub, add, neg]; push_cast; ring_uor)
   exact Qeq_of_Qsub_zero (oneMinusSq_zero_cancel hZ hzero k)
 
+/-- The 2-step evaluation `((1+t²)·X)_{j+2} = X_{j+2} + X_j`. -/
+theorem oneplusSq_eval2 (X : Nat → Q) (hX : ∀ i, 0 < (X i).den) (j : Nat) :
+    Qeq (fmul oneplusSq X (j + 2)) (add (X (j + 2)) (X j)) := by
+  have hsplit := fmul_add_left (fun i => fmono_den 0 i) (fun i => fmono_den 2 i) hX (j + 2)
+  have e1 : Qeq (fmul (fmono 0) X (j + 2)) (X (j + 2)) := by
+    have hh := fmul_fmono hX 0 (Nat.zero_le (j + 2)); rwa [Nat.sub_zero] at hh
+  have e2 : Qeq (fmul (fmono 2) X (j + 2)) (X j) := by
+    have hh := fmul_fmono hX 2 (show 2 ≤ j + 2 by omega); rwa [show j + 2 - 2 = j from by omega] at hh
+  exact Qeq_trans (add_den_pos (fmul_den_pos (fun i => fmono_den 0 i) hX (j + 2))
+    (fmul_den_pos (fun i => fmono_den 2 i) hX (j + 2))) hsplit (Qadd_congr e1 e2)
+
+theorem oneplusSq_eval0 (X : Nat → Q) (hX : ∀ i, 0 < (X i).den) :
+    Qeq (fmul oneplusSq X 0) (X 0) := by
+  have hsplit := fmul_add_left (fun i => fmono_den 0 i) (fun i => fmono_den 2 i) hX 0
+  have e1 : Qeq (fmul (fmono 0) X 0) (X 0) := fmul_fmono hX 0 (Nat.le_refl 0)
+  have e2 : Qeq (fmul (fmono 2) X 0) ⟨0, 1⟩ := fmul_fmono_zero hX (by omega)
+  refine Qeq_trans (add_den_pos (fmul_den_pos (fun i => fmono_den 0 i) hX 0)
+      (fmul_den_pos (fun i => fmono_den 2 i) hX 0)) hsplit ?_
+  exact Qeq_trans (add_den_pos (hX 0) Nat.one_pos) (Qadd_congr e1 e2) (Qadd_zero_right _)
+
+theorem oneplusSq_eval1 (X : Nat → Q) (hX : ∀ i, 0 < (X i).den) :
+    Qeq (fmul oneplusSq X 1) (X 1) := by
+  have hsplit := fmul_add_left (fun i => fmono_den 0 i) (fun i => fmono_den 2 i) hX 1
+  have e1 : Qeq (fmul (fmono 0) X 1) (X 1) := by
+    have hh := fmul_fmono (k := 1) hX 0 (by omega); rwa [Nat.sub_zero] at hh
+  have e2 : Qeq (fmul (fmono 2) X 1) ⟨0, 1⟩ := fmul_fmono_zero hX (by omega)
+  refine Qeq_trans (add_den_pos (fmul_den_pos (fun i => fmono_den 0 i) hX 1)
+      (fmul_den_pos (fun i => fmono_den 2 i) hX 1)) hsplit ?_
+  exact Qeq_trans (add_den_pos (hX 1) Nat.one_pos) (Qadd_congr e1 e2) (Qadd_zero_right _)
+
+/-- **`(1+t²)` is a unit**: `(1+t²)·Z = 0 ⇒ Z = 0` (`Z_{k+2} = −Z_k`, `Z₀=Z₁=0`). -/
+theorem oneplusSq_zero_cancel {Z : Nat → Q} (hZ : ∀ i, 0 < (Z i).den)
+    (h : ∀ k, Qeq (fmul oneplusSq Z k) ⟨0, 1⟩) : ∀ k, Qeq (Z k) ⟨0, 1⟩ := by
+  have key : ∀ k, Qeq (Z k) ⟨0, 1⟩ ∧ Qeq (Z (k + 1)) ⟨0, 1⟩ := by
+    intro k
+    induction k with
+    | zero => exact ⟨Qeq_trans (fmul_den_pos (fun i => oneplusSq_den i) hZ 0)
+                       (Qeq_symm (oneplusSq_eval0 Z hZ)) (h 0),
+                     Qeq_trans (fmul_den_pos (fun i => oneplusSq_den i) hZ 1)
+                       (Qeq_symm (oneplusSq_eval1 Z hZ)) (h 1)⟩
+    | succ n ih =>
+        refine ⟨ih.2, ?_⟩
+        have hev : Qeq (add (Z (n + 2)) (Z n)) ⟨0, 1⟩ :=
+          Qeq_trans (fmul_den_pos (fun i => oneplusSq_den i) hZ (n + 2))
+            (Qeq_symm (oneplusSq_eval2 Z hZ n)) (h (n + 2))
+        have hrw : Qeq (Z (n + 2)) (Qsub (add (Z (n + 2)) (Z n)) (Z n)) := by
+          simp only [Qeq, add, Qsub, neg]; push_cast; ring_uor
+        have hsum : Qeq (Qsub (add (Z (n + 2)) (Z n)) (Z n)) ⟨0, 1⟩ :=
+          Qeq_trans (Qsub_den_pos Nat.one_pos Nat.one_pos) (Qsub_congr hev ih.1)
+            (by simp [Qeq, Qsub, add, neg])
+        exact Qeq_trans (Qsub_den_pos (add_den_pos (hZ (n + 2)) (hZ n)) (hZ n)) hrw hsum
+  exact fun k => (key k).1
+
+/-- **`fmul oneplusSq` is injective**. -/
+theorem fmul_oneplusSq_cancel {X Y : Nat → Q} (hX : ∀ i, 0 < (X i).den) (hY : ∀ i, 0 < (Y i).den)
+    (h : ∀ k, Qeq (fmul oneplusSq X k) (fmul oneplusSq Y k)) (k : Nat) : Qeq (X k) (Y k) := by
+  have hZ : ∀ i, 0 < (Qsub (X i) (Y i)).den := fun i => Qsub_den_pos (hX i) (hY i)
+  have hzero : ∀ m, Qeq (fmul oneplusSq (fun i => Qsub (X i) (Y i)) m) ⟨0, 1⟩ := by
+    intro m
+    have hXc : Qeq (fmul X oneplusSq m) (fmul oneplusSq X m) :=
+      fmul_comm X oneplusSq hX (fun i => oneplusSq_den i) m
+    have hYc : Qeq (fmul Y oneplusSq m) (fmul oneplusSq Y m) :=
+      fmul_comm Y oneplusSq hY (fun i => oneplusSq_den i) m
+    refine Qeq_trans (fmul_den_pos hZ (fun i => oneplusSq_den i) m)
+      (fmul_comm oneplusSq (fun i => Qsub (X i) (Y i)) (fun i => oneplusSq_den i) hZ m) ?_
+    refine Qeq_trans (Qsub_den_pos (fmul_den_pos hX (fun i => oneplusSq_den i) m)
+        (fmul_den_pos hY (fun i => oneplusSq_den i) m))
+      (fmul_sub_left hX hY (fun i => oneplusSq_den i) m) ?_
+    refine Qeq_trans (Qsub_den_pos (fmul_den_pos (fun i => oneplusSq_den i) hX m)
+        (fmul_den_pos (fun i => oneplusSq_den i) hY m)) (Qsub_congr hXc hYc) ?_
+    exact Qeq_trans (Qsub_den_pos (fmul_den_pos (fun i => oneplusSq_den i) hX m)
+        (fmul_den_pos (fun i => oneplusSq_den i) hX m))
+      (Qsub_congr (Qeq_refl _) (Qeq_symm (h m)))
+      (by simp only [Qeq, Qsub, add, neg]; push_cast; ring_uor)
+  exact Qeq_of_Qsub_zero (oneplusSq_zero_cancel hZ hzero k)
+
 /-- **The artanh ODE** `(1−t²)·artanh' = 1` at the coefficient level. -/
 theorem artanh_ode (k : Nat) : Qeq (fmul oneMinusSq gcoef k) (fone k) :=
   Qeq_trans (add_den_pos (fmul_den_pos (fun i => fsmono_den Nat.one_pos 0 i) (fun _ => gcoef_den _) k)

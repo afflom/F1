@@ -874,3 +874,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.oneMinusSq_eval1
 #print axioms Analysis.oneMinusSq_zero_cancel
 #print axioms Analysis.fmul_oneMinusSq_cancel
+#print axioms Analysis.oneplusSq_eval2
+#print axioms Analysis.oneplusSq_eval0
+#print axioms Analysis.oneplusSq_eval1
+#print axioms Analysis.oneplusSq_zero_cancel
+#print axioms Analysis.fmul_oneplusSq_cancel
