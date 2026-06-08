@@ -2180,6 +2180,33 @@ theorem fpow_kdbl_term_bound (ρ : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num) 
     (Qmul_congr (Qeq_refl _) (Qeq_trans (Qmul_den_pos (qpow_den_pos (by decide) k) (qpow_den_pos hρd k))
       (Qmul_congr (Qeq_symm (qpow_two_nat k)) (Qeq_refl _)) (Qeq_symm (qpow_mul ⟨2, 1⟩ ρ (by decide) hρd k)))))
 
+/-- `Σ_{k≤N} rᵏ = gPow r N`. -/
+theorem gPow_eq_Fsum (r : Q) : ∀ N, Qeq (Fsum (fun k => qpow r k) N) (gPow r N)
+  | 0 => Qeq_refl _
+  | (N + 1) => Qadd_congr (gPow_eq_Fsum r N) (Qeq_refl _)
+
+/-- `(1−A) − (1−B) = B − A`. -/
+theorem Qsub_sub_one (A B : Q) :
+    Qeq (Qsub (Qsub ⟨1, 1⟩ A) (Qsub ⟨1, 1⟩ B)) (Qsub B A) := by
+  simp only [Qeq, Qsub, add, neg]; push_cast; ring_uor
+
+/-- **Geometric gap bound**: `(gPow r M' − gPow r M)·(1−r) ≤ r^{M+1}` for `M ≤ M'`, `0 ≤ r`. -/
+theorem gPow_gap_le (r : Q) (hr0 : 0 ≤ r.num) (hrd : 0 < r.den) {M M' : Nat} (hMM : M ≤ M') :
+    Qle (mul (Qsub (gPow r M') (gPow r M)) (Qsub ⟨1, 1⟩ r)) (qpow r (M + 1)) := by
+  have hw : 0 < (Qsub (⟨1, 1⟩ : Q) r).den := Qsub_den_pos Nat.one_pos hrd
+  have e1 : Qeq (mul (Qsub (gPow r M') (gPow r M)) (Qsub ⟨1, 1⟩ r))
+      (Qsub (Qsub ⟨1, 1⟩ (qpow r (M' + 1))) (Qsub ⟨1, 1⟩ (qpow r (M + 1)))) :=
+    Qeq_trans (Qsub_den_pos (Qmul_den_pos (gPow_den_pos hrd M') hw) (Qmul_den_pos (gPow_den_pos hrd M) hw))
+      (Qmul_sub_right (gPow r M') (gPow r M) (Qsub ⟨1, 1⟩ r))
+      (Qsub_congr (gPow_telescope hrd M') (gPow_telescope hrd M))
+  have eXY : Qeq (mul (Qsub (gPow r M') (gPow r M)) (Qsub ⟨1, 1⟩ r))
+      (Qsub (qpow r (M + 1)) (qpow r (M' + 1))) :=
+    Qeq_trans (Qsub_den_pos (Qsub_den_pos Nat.one_pos (qpow_den_pos hrd _))
+        (Qsub_den_pos Nat.one_pos (qpow_den_pos hrd _)))
+      e1 (Qsub_sub_one (qpow r (M' + 1)) (qpow r (M + 1)))
+  exact Qle_congr_left (Qsub_den_pos (qpow_den_pos hrd _) (qpow_den_pos hrd _)) (Qeq_symm eXY)
+    (Qsub_le_self (qpow_nonneg hr0 (M' + 1)))
+
 /-- **The Cauchy gap for `kdblᵐ` evaluation**: for `|w| ≤ ρ`, `M ≤ M'`, the partial-sum gap of
     `peval(kdblᵐ, w, ·)` is dominated by the geometric gap `Σ 4ᵐ(2ρ)ᵏ`. -/
 theorem peval_kdbl_pow_gap (ρ w : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num) (hwd : 0 < w.den)

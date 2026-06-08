@@ -950,3 +950,6 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.fpow_kdbl_term_bound
 #print axioms Analysis.Fsum_abs_diff_le
 #print axioms Analysis.peval_kdbl_pow_gap
+#print axioms Analysis.gPow_eq_Fsum
+#print axioms Analysis.Qsub_sub_one
+#print axioms Analysis.gPow_gap_le
