@@ -996,3 +996,6 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Qmul_rearr3
 #print axioms Analysis.pow4_2_sum_le
 #print axioms Analysis.corner_sum_closed
+#print axioms Analysis.Qmul_swap_outer
+#print axioms Analysis.mul_div2
+#print axioms Analysis.corner_sum_final

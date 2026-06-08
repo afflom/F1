@@ -3092,4 +3092,37 @@ theorem corner_sum_closed (ρ w : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num) (
       (fun _ => Nat.one_pos) (2 * N + 1))) ?_
   exact Qmul_le_mul_left hKnn (pow4_2_sum_le (2 * N + 1))
 
+/-- `a·(c·F) ≈ c·(a·F)` (swap the outer factor inward). -/
+theorem Qmul_swap_outer (a c F : Q) : Qeq (mul a (mul c F)) (mul c (mul a F)) := by
+  simp only [Qeq, mul]; push_cast; ring_uor
+
+/-- **Divide out a factor `F ≥ 1/2`**: `a·F ≤ B` with `a ≥ 0` gives `a ≤ 2·B`. -/
+theorem mul_div2 {a B F : Q} (ha : 0 ≤ a.num) (had : 0 < a.den) (hFd : 0 < F.den) (hBd : 0 < B.den)
+    (hF : Qle (⟨1, 2⟩ : Q) F) (hab : Qle (mul a F) B) : Qle a (mul ⟨2, 1⟩ B) := by
+  have h2F : Qle (⟨1, 1⟩ : Q) (mul ⟨2, 1⟩ F) :=
+    Qle_trans (Qmul_den_pos Nat.one_pos (by decide : 0 < (⟨1, 2⟩ : Q).den))
+      (by decide : Qle (⟨1, 1⟩ : Q) (mul ⟨2, 1⟩ ⟨1, 2⟩))
+      (Qmul_le_mul_left (by decide) hF)
+  have ea : Qeq a (mul a ⟨1, 1⟩) := by simp only [Qeq, mul]; push_cast; ring_uor
+  refine Qle_trans (Qmul_den_pos had (Qmul_den_pos Nat.one_pos hFd))
+    (Qle_trans (Qmul_den_pos had Nat.one_pos) (Qeq_le ea) (Qmul_le_mul_left ha h2F)) ?_
+  refine Qle_trans (Qmul_den_pos Nat.one_pos (Qmul_den_pos had hFd))
+    (Qeq_le (Qmul_swap_outer a ⟨2, 1⟩ F)) ?_
+  exact Qmul_le_mul_left (by decide) hab
+
+/-- **Corner sum (factor removed)**: `Σ_{j≤2N+1}|corner_j| ≤ 2·((2N+2)·(2ρ)^{2N+2})·(2·4^{2N+2})`
+    (for `ρ ≤ 1/4`, so `1−2ρ ≥ 1/2`). -/
+theorem corner_sum_final (ρ w : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num) (hwd : 0 < w.den)
+    (hw : Qle (Qabs w) ρ) (h2ρ : 0 ≤ (Qsub (⟨1, 1⟩ : Q) (mul ⟨2, 1⟩ ρ)).num)
+    (hρ4 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ⟨2, 1⟩ ρ))) (N : Nat) :
+    Qle (Fsum (fun j => Qabs (kcorner w j (2 * N + 1))) (2 * N + 1))
+      (mul ⟨2, 1⟩ (mul (mul (⟨((2 * N + 1 : Nat) : Int) + 1, 1⟩ : Q) (qpow (mul ⟨2, 1⟩ ρ) (2 * N + 2)))
+        (⟨2 * (4 : Int) ^ (2 * N + 2), 1⟩ : Q))) := by
+  refine mul_div2 (Fsum_num_nonneg (fun j => Qabs_num_nonneg _) (2 * N + 1))
+    (Fsum_den_pos (fun j => Qabs_den_pos (kcorner_den w hwd j _)) (2 * N + 1))
+    (Qsub_den_pos Nat.one_pos (Qmul_den_pos Nat.one_pos hρd))
+    (Qmul_den_pos (Qmul_den_pos Nat.one_pos
+      (qpow_den_pos (Qmul_den_pos Nat.one_pos hρd) (2 * N + 2))) Nat.one_pos)
+    hρ4 (corner_sum_closed ρ w hρd hρ0 hwd hw h2ρ N)
+
 end UOR.Bridge.F1Square.Analysis
