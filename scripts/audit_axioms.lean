@@ -945,3 +945,6 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.fabs_kdbl_le2
 #print axioms Analysis.pow2_sum
 #print axioms Analysis.fpow_fabs_kdbl_bound
+#print axioms Analysis.qpow_mul
+#print axioms Analysis.qpow_two_nat
+#print axioms Analysis.fpow_kdbl_term_bound
