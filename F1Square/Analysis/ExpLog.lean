@@ -892,4 +892,39 @@ theorem fderiv_fcomp_sum (a b : Nat → Q) (ha : ∀ i, 0 < (a i).den) (hb : ∀
   exact Qeq_trans (Fsum_den_pos (fun m => Qmul_den_pos Nat.one_pos
     (Qmul_den_pos (ha m) (fpow_den_pos hb m (k + 1)))) (k + 1)) h1 h2
 
+/-- Chain rule, part 1: peel the constant term (which vanishes via `fderiv_fone`) and rewrite each
+    `(bᵐ⁺¹)'` by the power rule, giving `(a∘b)'_k = Σ_{m=0}^{k} (a')ₘ·(b'·bᵐ)_k`. -/
+theorem fcomp_chain_pre (a b : Nat → Q) (ha : ∀ i, 0 < (a i).den) (hb : ∀ i, 0 < (b i).den) (k : Nat) :
+    Qeq (fderiv (fcomp a b) k)
+      (Fsum (fun m => mul (fderiv a m) (fmul (fderiv b) (fpow b m) k)) k) := by
+  have hb' : ∀ i, 0 < (fderiv b i).den := fun i => fderiv_den_pos hb i
+  have s1 := fderiv_fcomp_sum a b ha hb k
+  have s2 : Qeq (Fsum (fun m => mul (a m) (fderiv (fpow b m) k)) (k + 1))
+      (add (mul (a 0) (fderiv (fpow b 0) k))
+        (Fsum (fun i => mul (a (i + 1)) (fderiv (fpow b (i + 1)) k)) k)) :=
+    Fsum_front (fun m => Qmul_den_pos (ha m) (fderiv_den_pos (fun j => fpow_den_pos hb m j) k)) k
+  have sf0 : Qeq (mul (a 0) (fderiv (fpow b 0) k)) ⟨0, 1⟩ := by
+    refine Qeq_trans (Qmul_den_pos (ha 0) Nat.one_pos)
+      (Qmul_congr (Qeq_refl _) (fderiv_fone k)) ?_
+    simp [Qeq, mul]
+  have stail : Qeq (Fsum (fun i => mul (a (i + 1)) (fderiv (fpow b (i + 1)) k)) k)
+      (Fsum (fun m => mul (fderiv a m) (fmul (fderiv b) (fpow b m) k)) k) := by
+    refine Fsum_congr_le (k := k) (fun i _ => ?_)
+    refine Qeq_trans (Qmul_den_pos (ha (i + 1)) (fsmul_den Nat.one_pos
+        (fun j => fmul_den_pos hb' (fun l => fpow_den_pos hb i l) j) k))
+      (Qmul_congr (Qeq_refl _) (fpow_deriv hb i k)) ?_
+    show Qeq (mul (a (i + 1)) (mul ⟨(i + 1 : Int), 1⟩ (fmul (fderiv b) (fpow b i) k)))
+      (mul (mul ⟨(i + 1 : Int), 1⟩ (a (i + 1))) (fmul (fderiv b) (fpow b i) k))
+    simp only [Qeq, mul]; push_cast; ring_uor
+  refine Qeq_trans (Fsum_den_pos (fun m => Qmul_den_pos (ha m)
+      (fderiv_den_pos (fun j => fpow_den_pos hb m j) k)) (k + 1)) s1 ?_
+  refine Qeq_trans (add_den_pos (Qmul_den_pos (ha 0)
+      (fderiv_den_pos (fun j => fpow_den_pos hb 0 j) k))
+      (Fsum_den_pos (fun i => Qmul_den_pos (ha (i + 1))
+        (fderiv_den_pos (fun j => fpow_den_pos hb (i + 1) j) k)) k)) s2 ?_
+  refine Qeq_trans (add_den_pos Nat.one_pos (Fsum_den_pos (fun m => Qmul_den_pos
+      (fderiv_den_pos (fun j => ha j) m)
+      (fmul_den_pos hb' (fun l => fpow_den_pos hb m l) k)) k)) (Qadd_congr sf0 stail) ?_
+  exact Qzero_add _
+
 end UOR.Bridge.F1Square.Analysis
