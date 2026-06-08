@@ -1577,6 +1577,71 @@ theorem fcomp_fone {c : Nat → Q} (hc : ∀ i, 0 < (c i).den) (k : Nat) :
     show Qeq (mul ⟨1, 1⟩ (fone k)) (fone k); simp [Qeq, mul]
   exact Qeq_trans (hg 0) (Fsum_single hg hz (Nat.zero_le k)) hg0
 
+/-- `(A−B) + (B−C) = A−C` (abstract telescope, atoms `A B C`). -/
+theorem Qsub_telescope3 (A B C : Q) : Qeq (add (Qsub A B) (Qsub B C)) (Qsub A C) := by
+  simp only [Qeq, add, Qsub, neg]; push_cast; ring_uor
+
+/-- The even-power geometric partial sum `Σ_{j=0}^{N} c^{2j}` as a coefficient sequence. -/
+def geoEvenPow (c : Nat → Q) (N k : Nat) : Q := Fsum (fun j => fpow c (2 * j) k) N
+
+theorem geoEvenPow_den {c : Nat → Q} (hc : ∀ i, 0 < (c i).den) (N k : Nat) :
+    0 < (geoEvenPow c N k).den := Fsum_den_pos (fun j => fpow_den_pos hc (2 * j) k) N
+
+/-- `c²·c^{2(N+1)} = c^{2(N+2)}`: the telescope step's power bump. -/
+theorem fpow_sq_bump {c : Nat → Q} (hc : ∀ i, 0 < (c i).den) (N k : Nat) :
+    Qeq (fmul (fmul c c) (fpow c (2 * (N + 1))) k) (fpow c (2 * (N + 2)) k) := by
+  have hcc : ∀ l, Qeq (fmul c c l) (fpow c 2 l) :=
+    fun l => fmul_congr_right (fun j => Qeq_symm (fmul_one c hc j)) l
+  have hadd := Qeq_symm (fpow_add hc 2 (2 * (N + 1)) k)
+  rw [show 2 + 2 * (N + 1) = 2 * (N + 2) from by omega] at hadd
+  exact Qeq_trans (fmul_den_pos (fun _ => fpow_den_pos hc 2 _)
+    (fun _ => fpow_den_pos hc (2 * (N + 1)) _) k) (fmul_congr_left hcc k) hadd
+
+/-- **The geometric telescope** `(1−c²)·Σ_{j≤N} c^{2j} = 1 − c^{2(N+1)}`. -/
+theorem geoEven_telescope {c : Nat → Q} (hc : ∀ i, 0 < (c i).den) (N k : Nat) :
+    Qeq (fmul (fun i => Qsub (fone i) (fmul c c i)) (geoEvenPow c N) k)
+      (Qsub (fone k) (fpow c (2 * (N + 1)) k)) := by
+  induction N with
+  | zero =>
+      have hge : Qeq (fmul (fun i => Qsub (fone i) (fmul c c i)) (geoEvenPow c 0) k)
+          (fmul (fun i => Qsub (fone i) (fmul c c i)) fone k) :=
+        fmul_congr_right (fun l => Qeq_refl _) k
+      refine Qeq_trans (fmul_den_pos (fun i => Qsub_den_pos (fone_den_pos i) (fmul_den_pos hc hc i))
+          (fun _ => fone_den_pos _) k) hge ?_
+      refine Qeq_trans (Qsub_den_pos (fone_den_pos k) (fmul_den_pos hc hc k))
+        (fmul_one (fun i => Qsub (fone i) (fmul c c i)) (fun i => Qsub_den_pos (fone_den_pos i)
+          (fmul_den_pos hc hc i)) k) ?_
+      refine Qsub_congr (Qeq_refl _) ?_
+      show Qeq (fmul c c k) (fmul c (fmul c fone) k)
+      exact fmul_congr_right (fun l => Qeq_symm (fmul_one c hc l)) k
+  | succ N ih =>
+      have hrec : Qeq (fmul (fun i => Qsub (fone i) (fmul c c i)) (geoEvenPow c (N + 1)) k)
+          (add (fmul (fun i => Qsub (fone i) (fmul c c i)) (geoEvenPow c N) k)
+            (fmul (fun i => Qsub (fone i) (fmul c c i)) (fpow c (2 * (N + 1))) k)) :=
+        fmul_add_right (fun i => Qsub_den_pos (fone_den_pos i) (fmul_den_pos hc hc i))
+          (fun i => geoEvenPow_den hc N i) (fun i => fpow_den_pos hc (2 * (N + 1)) i) k
+      have hstep : Qeq (fmul (fun i => Qsub (fone i) (fmul c c i)) (fpow c (2 * (N + 1))) k)
+          (Qsub (fpow c (2 * (N + 1)) k) (fpow c (2 * (N + 2)) k)) := by
+        refine Qeq_trans (Qsub_den_pos (fmul_den_pos (fun _ => fone_den_pos _)
+            (fun _ => fpow_den_pos hc (2 * (N + 1)) _) k) (fmul_den_pos (fun _ => fmul_den_pos hc hc _)
+            (fun _ => fpow_den_pos hc (2 * (N + 1)) _) k))
+          (fmul_sub_left (fun _ => fone_den_pos _) (fun _ => fmul_den_pos hc hc _)
+            (fun _ => fpow_den_pos hc (2 * (N + 1)) _) k) ?_
+        refine Qsub_congr (Qeq_trans (fmul_den_pos (fun _ => fpow_den_pos hc (2 * (N + 1)) _)
+            (fun _ => fone_den_pos _) k)
+          (fmul_comm fone (fpow c (2 * (N + 1))) (fun _ => fone_den_pos _)
+            (fun _ => fpow_den_pos hc (2 * (N + 1)) _) k)
+          (fmul_one (fpow c (2 * (N + 1))) (fun _ => fpow_den_pos hc (2 * (N + 1)) _) k))
+          (fpow_sq_bump hc N k)
+      refine Qeq_trans (add_den_pos (fmul_den_pos (fun i => Qsub_den_pos (fone_den_pos i)
+            (fmul_den_pos hc hc i)) (fun i => geoEvenPow_den hc N i) k)
+          (fmul_den_pos (fun i => Qsub_den_pos (fone_den_pos i) (fmul_den_pos hc hc i))
+            (fun _ => fpow_den_pos hc (2 * (N + 1)) _) k)) hrec ?_
+      refine Qeq_trans (add_den_pos (Qsub_den_pos (fone_den_pos k) (fpow_den_pos hc (2 * (N + 1)) k))
+          (Qsub_den_pos (fpow_den_pos hc (2 * (N + 1)) k) (fpow_den_pos hc (2 * (N + 2)) k)))
+        (Qadd_congr ih hstep) ?_
+      exact Qsub_telescope3 (fone k) (fpow c (2 * (N + 1)) k) (fpow c (2 * (N + 2)) k)
+
 /-- **The artanh ODE** `(1−t²)·artanh' = 1` at the coefficient level. -/
 theorem artanh_ode (k : Nat) : Qeq (fmul oneMinusSq gcoef k) (fone k) :=
   Qeq_trans (add_den_pos (fmul_den_pos (fun i => fsmono_den Nat.one_pos 0 i) (fun _ => gcoef_den _) k)

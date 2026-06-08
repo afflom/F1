@@ -897,3 +897,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.fpow_add
 #print axioms Analysis.fcomp_add
 #print axioms Analysis.fcomp_fone
+#print axioms Analysis.Qsub_telescope3
+#print axioms Analysis.geoEvenPow_den
+#print axioms Analysis.fpow_sq_bump
+#print axioms Analysis.geoEven_telescope
