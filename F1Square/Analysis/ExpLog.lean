@@ -944,4 +944,65 @@ theorem Fsum_extend_zero {f : Nat → Q} (hf : ∀ m, 0 < (f m).den) {i : Nat} :
             (Qadd_congr (Qeq_refl _) hfk1) (Qadd_zero_right _)
         exact Qeq_trans (Fsum_den_pos hf k) hIH (Qeq_symm hstep)
 
+/-- **The chain rule** for formal composition: `(a∘b)' = (a'∘b)·b'` (requires `b(0)=0`). Built from
+    `fcomp_chain_pre` by a double-sum reindex — expand the inner Cauchy product, swap the order
+    (`Fsum_swap`), reverse the outer index (`Fsum_reverse`), and pad the truncated composition
+    coefficient back up (`Fsum_extend_zero`, terms vanishing by `fpow_vanish`). -/
+theorem fcomp_chain (a b : Nat → Q) (ha : ∀ i, 0 < (a i).den) (hb : ∀ i, 0 < (b i).den)
+    (hb0 : Qeq (b 0) ⟨0, 1⟩) (k : Nat) :
+    Qeq (fderiv (fcomp a b) k) (fmul (fcomp (fderiv a) b) (fderiv b) k) := by
+  have hA' : ∀ i, 0 < (fderiv a i).den := fun i => fderiv_den_pos (fun j => ha j) i
+  have hB' : ∀ i, 0 < (fderiv b i).den := fun i => fderiv_den_pos hb i
+  have hA : Qeq (Fsum (fun m => mul (fderiv a m) (fmul (fderiv b) (fpow b m) k)) k)
+      (Fsum (fun m => Fsum (fun j =>
+        mul (fderiv a m) (mul (fderiv b j) (fpow b m (k - j)))) k) k) := by
+    refine Fsum_congr (fun m => ?_) k
+    exact Qeq_symm (Fsum_mul_left (hA' m)
+      (fun j => Qmul_den_pos (hB' j) (fpow_den_pos hb m (k - j))) k)
+  have hB : Qeq (Fsum (fun m => Fsum (fun j =>
+        mul (fderiv a m) (mul (fderiv b j) (fpow b m (k - j)))) k) k)
+      (Fsum (fun j => Fsum (fun m =>
+        mul (fderiv a m) (mul (fderiv b j) (fpow b m (k - j)))) k) k) :=
+    Fsum_swap (fun m j => Qmul_den_pos (hA' m) (Qmul_den_pos (hB' j) (fpow_den_pos hb m (k - j)))) k k
+  have hC : Qeq (Fsum (fun j => Fsum (fun m =>
+        mul (fderiv a m) (mul (fderiv b j) (fpow b m (k - j)))) k) k)
+      (Fsum (fun j => Fsum (fun m =>
+        mul (fderiv a m) (mul (fderiv b (k - j)) (fpow b m (k - (k - j))))) k) k) :=
+    Fsum_reverse (fun j => Fsum_den_pos
+      (fun m => Qmul_den_pos (hA' m) (Qmul_den_pos (hB' j) (fpow_den_pos hb m (k - j)))) k) k
+  have hD : Qeq (Fsum (fun j => Fsum (fun m =>
+        mul (fderiv a m) (mul (fderiv b (k - j)) (fpow b m (k - (k - j))))) k) k)
+      (Fsum (fun j => Fsum (fun m =>
+        mul (mul (fderiv a m) (fpow b m j)) (fderiv b (k - j))) k) k) := by
+    refine Fsum_congr_le (k := k) (fun j hj => Fsum_congr (fun m => ?_) k)
+    rw [show k - (k - j) = j from by omega]
+    simp only [Qeq, mul]; push_cast; ring_uor
+  have hE : Qeq (Fsum (fun j => Fsum (fun m =>
+        mul (mul (fderiv a m) (fpow b m j)) (fderiv b (k - j))) k) k)
+      (fmul (fcomp (fderiv a) b) (fderiv b) k) := by
+    show Qeq (Fsum (fun j => Fsum (fun m =>
+        mul (mul (fderiv a m) (fpow b m j)) (fderiv b (k - j))) k) k)
+      (Fsum (fun i => mul (fcomp (fderiv a) b i) (fderiv b (k - i))) k)
+    refine Fsum_congr_le (k := k) (fun i hi => ?_)
+    have hext : Qeq (Fsum (fun m => mul (fderiv a m) (fpow b m i)) k) (fcomp (fderiv a) b i) :=
+      Qeq_symm (Fsum_extend_zero (fun m => Qmul_den_pos (hA' m) (fpow_den_pos hb m i)) hi
+        (fun m hm1 _ => Qeq_trans (Qmul_den_pos (hA' m) Nat.one_pos)
+          (Qmul_congr (Qeq_refl _) (fpow_vanish hb hb0 m i hm1)) (by simp [Qeq, mul])))
+    exact Qeq_trans (Qmul_den_pos (Fsum_den_pos
+        (fun m => Qmul_den_pos (hA' m) (fpow_den_pos hb m i)) k) (hB' (k - i)))
+      (Qeq_symm (Fsum_mul_const_right (hB' (k - i))
+        (fun m => Qmul_den_pos (hA' m) (fpow_den_pos hb m i)) k))
+      (Qmul_congr hext (Qeq_refl _))
+  exact Qeq_trans (Fsum_den_pos (fun m => Qmul_den_pos (hA' m)
+      (fmul_den_pos hB' (fun l => fpow_den_pos hb m l) k)) k) (fcomp_chain_pre a b ha hb k)
+    (Qeq_trans (Fsum_den_pos (fun m => Fsum_den_pos (fun j =>
+        Qmul_den_pos (hA' m) (Qmul_den_pos (hB' j) (fpow_den_pos hb m (k - j)))) k) k) hA
+      (Qeq_trans (Fsum_den_pos (fun j => Fsum_den_pos (fun m =>
+          Qmul_den_pos (hA' m) (Qmul_den_pos (hB' j) (fpow_den_pos hb m (k - j)))) k) k) hB
+        (Qeq_trans (Fsum_den_pos (fun j => Fsum_den_pos (fun m =>
+            Qmul_den_pos (hA' m) (Qmul_den_pos (hB' (k - j))
+              (fpow_den_pos hb m (k - (k - j))))) k) k) hC
+          (Qeq_trans (Fsum_den_pos (fun j => Fsum_den_pos (fun m =>
+              Qmul_den_pos (Qmul_den_pos (hA' m) (fpow_den_pos hb m j)) (hB' (k - j))) k) k) hD hE))))
+
 end UOR.Bridge.F1Square.Analysis
