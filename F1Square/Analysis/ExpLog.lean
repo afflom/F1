@@ -769,4 +769,15 @@ theorem fcomp_const (a b : Nat → Q) : Qeq (fcomp a b 0) (a 0) := by
   show Qeq (mul (a 0) ⟨1, 1⟩) (a 0)
   simp [Qeq, mul]
 
+/-- The formal derivative of the constant series `1` is `0`. -/
+theorem fderiv_fone (k : Nat) : Qeq (fderiv fone k) ⟨0, 1⟩ := by
+  show Qeq (mul ⟨(k + 1 : Int), 1⟩ (fone (k + 1))) ⟨0, 1⟩
+  have h : fone (k + 1) = ⟨0, 1⟩ := by unfold fone; rw [if_neg (by omega)]
+  rw [h]; simp [Qeq, mul]
+
+/-- `fmul` respects `≈` in its right argument. -/
+theorem fmul_congr_right {a b b' : Nat → Q} (h : ∀ i, Qeq (b i) (b' i)) (k : Nat) :
+    Qeq (fmul a b k) (fmul a b' k) :=
+  Fsum_congr (fun i => Qmul_congr (Qeq_refl _) (h (k - i))) k
+
 end UOR.Bridge.F1Square.Analysis
