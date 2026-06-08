@@ -1874,6 +1874,29 @@ theorem formal_doubling (k : Nat) :
     have h00 : acoef 0 = ⟨0, 1⟩ := by decide
     rw [h00]; decide
 
+/-- From `x = p + c` recover `p = x − c`. -/
+theorem Qeq_sub_of_eq_add {x p c : Q} (hp : 0 < p.den) (hc : 0 < c.den) (h : Qeq x (add p c)) :
+    Qeq p (Qsub x c) :=
+  Qeq_symm (Qeq_trans (Qsub_den_pos (add_den_pos hc hp) hc)
+    (Qsub_congr (Qeq_trans (add_den_pos hp hc) h (Qadd_comm p c)) (Qeq_refl c))
+    (Qsub_add_cancel c p))
+
+/-- **Power recursion** (the telescoping backbone): `eval(bᵐ⁺¹,w,M) = eval(b,w,M)·eval(bᵐ,w,M) − corner`,
+    the corner being the high-antidiagonal (`i+j>M`) part of the product (from `peval_mul`). -/
+theorem peval_fpow_succ (b : Nat → Q) (hb : ∀ i, 0 < (b i).den) (w : Q) (hwd : 0 < w.den) (m M : Nat) :
+    Qeq (peval (fpow b (m + 1)) w M)
+      (Qsub (mul (peval b w M) (peval (fpow b m) w M))
+        (Fsum (fun i => Qsub
+          (Fsum (fun j => mul (mul (b i) (qpow w i)) (mul (fpow b m j) (qpow w j))) M)
+          (Fsum (fun j => mul (mul (b i) (qpow w i)) (mul (fpow b m j) (qpow w j))) (M - i))) M)) :=
+  Qeq_sub_of_eq_add (peval_den_pos (fpow_den_pos hb (m + 1)) hwd M)
+    (Fsum_den_pos (fun i => Qsub_den_pos
+      (Fsum_den_pos (fun j => Qmul_den_pos (Qmul_den_pos (hb i) (qpow_den_pos hwd i))
+        (Qmul_den_pos (fpow_den_pos hb m j) (qpow_den_pos hwd j))) M)
+      (Fsum_den_pos (fun j => Qmul_den_pos (Qmul_den_pos (hb i) (qpow_den_pos hwd i))
+        (Qmul_den_pos (fpow_den_pos hb m j) (qpow_den_pos hwd j))) (M - i))) M)
+    (peval_mul b (fpow b m) hb (fpow_den_pos hb m) hwd M)
+
 /-- `0·x = 0`. -/
 theorem mul_left_zero (x : Q) : Qeq (mul ⟨0, 1⟩ x) ⟨0, 1⟩ := by simp [Qeq, mul]
 

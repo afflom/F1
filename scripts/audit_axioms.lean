@@ -920,3 +920,5 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.peval_fcomp_swap
 #print axioms Analysis.Fsum_le_Fsum
 #print axioms Analysis.peval_abs_bound
+#print axioms Analysis.Qeq_sub_of_eq_add
+#print axioms Analysis.peval_fpow_succ
