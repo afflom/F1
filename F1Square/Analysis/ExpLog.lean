@@ -2330,6 +2330,12 @@ theorem corner_inner_eq (w : Q) (hwd : 0 < w.den) (m M i : Nat) :
     (Qeq_symm (Qmul_sub_left_loc (mul (kdbl i) (qpow w i))
       (peval (fpow kdbl m) w M) (peval (fpow kdbl m) w (M - i))))
 
+/-- Bounded termwise sum monotonicity (`f ≤ g` for `i ≤ M`). -/
+theorem Fsum_le_Fsum_le {f g : Nat → Q} :
+    ∀ {M}, (∀ i, i ≤ M → Qle (f i) (g i)) → Qle (Fsum f M) (Fsum g M)
+  | 0, h => h 0 (Nat.le_refl 0)
+  | (M + 1), h => Qadd_le_add (Fsum_le_Fsum_le (fun i hi => h i (by omega))) (h (M + 1) (Nat.le_refl _))
+
 /-- **Per-`i` corner term bound**: `|inner_i|·(1−2ρ) ≤ 2·4ᵐ·(2ρ)^{M+1}` for `i ≤ M`. -/
 theorem corner_term_le (ρ w : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num) (hwd : 0 < w.den)
     (hw : Qle (Qabs w) ρ) (h2ρ : 0 ≤ (Qsub (⟨1, 1⟩ : Q) (mul ⟨2, 1⟩ ρ)).num) (m M i : Nat) (hiM : i ≤ M) :
@@ -2375,6 +2381,30 @@ theorem corner_term_le (ρ w : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num) (hwd
       Qeq (mul (⟨2, 1⟩ : Q) ⟨(4 : Int) ^ m, 1⟩) ⟨2 * (4 : Int) ^ m, 1⟩) (Qeq_refl _))) ?_
   exact Qmul_le_mul_left (by show (0 : Int) ≤ 2 * (4 : Int) ^ m; omega)
     (qpow_conv_le ρ hρd hρ0 i M hiM)
+
+/-- **The corner bound**: `|corner_m(M)|·(1−2ρ) ≤ Σ_{i≤M} 2·4ᵐ·(2ρ)^{M+1}` (= `(M+1)·2·4ᵐ·(2ρ)^{M+1}`),
+    which → 0 as `M → ∞`. The corner of `peval_fpow_succ` for `kdbl`. -/
+theorem corner_bound (ρ w : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num) (hwd : 0 < w.den)
+    (hw : Qle (Qabs w) ρ) (h2ρ : 0 ≤ (Qsub (⟨1, 1⟩ : Q) (mul ⟨2, 1⟩ ρ)).num) (m M : Nat) :
+    Qle (mul (Qabs (Fsum (fun i => Qsub
+            (Fsum (fun j => mul (mul (kdbl i) (qpow w i)) (mul (fpow kdbl m j) (qpow w j))) M)
+            (Fsum (fun j => mul (mul (kdbl i) (qpow w i)) (mul (fpow kdbl m j) (qpow w j))) (M - i))) M))
+          (Qsub ⟨1, 1⟩ (mul ⟨2, 1⟩ ρ)))
+      (Fsum (fun _ => mul (⟨2 * (4 : Int) ^ m, 1⟩ : Q) (qpow (mul ⟨2, 1⟩ ρ) (M + 1))) M) := by
+  have hgd : ∀ i j, 0 < (mul (mul (kdbl i) (qpow w i)) (mul (fpow kdbl m j) (qpow w j))).den :=
+    fun i j => Qmul_den_pos (Qmul_den_pos (kdbl_den i) (qpow_den_pos hwd i))
+      (Qmul_den_pos (fpow_den_pos (fun l => kdbl_den l) m j) (qpow_den_pos hwd j))
+  have hid : ∀ i, 0 < (Qsub
+      (Fsum (fun j => mul (mul (kdbl i) (qpow w i)) (mul (fpow kdbl m j) (qpow w j))) M)
+      (Fsum (fun j => mul (mul (kdbl i) (qpow w i)) (mul (fpow kdbl m j) (qpow w j))) (M - i))).den :=
+    fun i => Qsub_den_pos (Fsum_den_pos (fun j => hgd i j) M) (Fsum_den_pos (fun j => hgd i j) (M - i))
+  have hwd1 : 0 < (Qsub (⟨1, 1⟩ : Q) (mul ⟨2, 1⟩ ρ)).den :=
+    Qsub_den_pos Nat.one_pos (Qmul_den_pos (by decide) hρd)
+  refine Qle_trans (Qmul_den_pos (Fsum_den_pos (fun i => Qabs_den_pos (hid i)) M) hwd1)
+    (Qmul_le_mul_right h2ρ (Fsum_abs_le (fun i => hid i) M)) ?_
+  refine Qle_trans (Fsum_den_pos (fun i => Qmul_den_pos (Qabs_den_pos (hid i)) hwd1) M)
+    (Qeq_le (Fsum_mul_const_right hwd1 (fun i => Qabs_den_pos (hid i)) M)) ?_
+  exact Fsum_le_Fsum_le (fun i hi => corner_term_le ρ w hρd hρ0 hwd hw h2ρ m M i hi)
 
 /-- Per-term geometric telescope: `ρ^{2N+1}·(1−ρ²) = ρ^{2N+1} − ρ^{2N+3}`. -/
 theorem geoTerm_tel (ρ : Q) (hρd : 0 < ρ.den) (N : Nat) :

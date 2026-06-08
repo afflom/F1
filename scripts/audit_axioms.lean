@@ -962,3 +962,5 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.mul_rearrange
 #print axioms Analysis.Qabs_C_le
 #print axioms Analysis.corner_term_le
+#print axioms Analysis.Fsum_le_Fsum_le
+#print axioms Analysis.corner_bound
