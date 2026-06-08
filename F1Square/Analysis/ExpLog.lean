@@ -1105,6 +1105,11 @@ theorem artanh_main : ∀ k,
         unfold fone; rw [if_neg (by omega)]; exact Qeq_refl _
       exact Qeq_trans Nat.one_pos (gcoef_shift_cancel k) ht
 
+/-- `fcomp` respects `≈` in its outer (composed) argument. -/
+theorem fcomp_congr_left {a a' b : Nat → Q} (h : ∀ i, Qeq (a i) (a' i)) (k : Nat) :
+    Qeq (fcomp a b k) (fcomp a' b k) :=
+  Fsum_congr (fun m => Qmul_congr (h m) (Qeq_refl _)) k
+
 /-- **The artanh ODE** `(1−t²)·artanh' = 1` at the coefficient level. -/
 theorem artanh_ode (k : Nat) : Qeq (fmul oneMinusSq gcoef k) (fone k) :=
   Qeq_trans (add_den_pos (fmul_den_pos (fun i => fsmono_den Nat.one_pos 0 i) (fun _ => gcoef_den _) k)

@@ -865,3 +865,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.gcoef_shift_cancel
 #print axioms Analysis.artanh_main
 #print axioms Analysis.artanh_ode
+#print axioms Analysis.fcomp_congr_left
