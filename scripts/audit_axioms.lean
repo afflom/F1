@@ -826,3 +826,9 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.fmul_fmono
 #print axioms Analysis.peval_conv
 #print axioms Analysis.peval_mul
+#print axioms Analysis.fmul_fmono_zero
+#print axioms Analysis.fmul_add_left
+#print axioms Analysis.kdbl_den
+#print axioms Analysis.kdbl_shift_cancel
+#print axioms Analysis.kdbl_main
+#print axioms Analysis.kdbl_rel

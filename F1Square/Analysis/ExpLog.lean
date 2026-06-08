@@ -597,4 +597,70 @@ theorem fmul_fmono {c : Nat → Q} (hc : ∀ i, 0 < (c i).den) (d : Nat) {k : Na
   show Qeq (Fsum (fun i => mul (fmono d i) (c (k - i))) k) (c (k - d))
   exact Qeq_trans (hg d) (Fsum_single hg hz hdk) hgd
 
+/-- Below the monomial degree, the shift is zero: `fmul (tᵈ) c k = 0` for `k < d`. -/
+theorem fmul_fmono_zero {c : Nat → Q} (hc : ∀ i, 0 < (c i).den) {d k : Nat} (hdk : k < d) :
+    Qeq (fmul (fmono d) c k) ⟨0, 1⟩ := by
+  show Qeq (Fsum (fun i => mul (fmono d i) (c (k - i))) k) ⟨0, 1⟩
+  refine Qeq_trans (Fsum_den_pos (fun _ => Nat.one_pos) k)
+    (Fsum_congr_le (g := fun _ => (⟨0, 1⟩ : Q)) (k := k) (fun i hi => ?_)) (Fsum_zeros k)
+  have he : fmono d i = ⟨0, 1⟩ := by unfold fmono; rw [if_neg (by omega)]
+  rw [he]; simp [Qeq, mul]
+
+/-- **Left-distributivity of the formal Cauchy product**: `(a+b)·c = a·c + b·c`. -/
+theorem fmul_add_left {a b c : Nat → Q} (ha : ∀ i, 0 < (a i).den) (hb : ∀ i, 0 < (b i).den)
+    (hc : ∀ i, 0 < (c i).den) (k : Nat) :
+    Qeq (fmul (fun i => add (a i) (b i)) c k) (add (fmul a c k) (fmul b c k)) := by
+  show Qeq (Fsum (fun i => mul (add (a i) (b i)) (c (k - i))) k)
+    (add (Fsum (fun i => mul (a i) (c (k - i))) k) (Fsum (fun i => mul (b i) (c (k - i))) k))
+  refine Qeq_trans
+    (Fsum_den_pos (fun i => add_den_pos (Qmul_den_pos (ha i) (hc (k - i)))
+      (Qmul_den_pos (hb i) (hc (k - i)))) k)
+    (Fsum_congr (fun i => Qmul_add_right (a i) (b i) (c (k - i))) k)
+    (Fsum_add (fun i => Qmul_den_pos (ha i) (hc (k - i)))
+      (fun i => Qmul_den_pos (hb i) (hc (k - i))) k)
+
+/-- The coefficient sequence of `2t/(1+t²)`: `0` at even degree, `2·(−1)ʲ` at degree `2j+1`
+    (encoded by `m % 4`). -/
+def kdbl (m : Nat) : Q := ⟨(if m % 4 = 1 then 2 else if m % 4 = 3 then -2 else 0 : Int), 1⟩
+
+theorem kdbl_den (m : Nat) : 0 < (kdbl m).den := Nat.one_pos
+
+/-- The `1+t²` and `2t` coefficient sequences. -/
+def oneplusSq (k : Nat) : Q := add (fmono 0 k) (fmono 2 k)
+def twoT (k : Nat) : Q := ⟨(if k = 1 then 2 else 0 : Int), 1⟩
+
+/-- The two-step sign cancellation `kdbl_{m+2} + kdbl_m = 0` (`(−1)ʲ⁺¹ + (−1)ʲ = 0`). -/
+theorem kdbl_shift_cancel (m : Nat) : Qeq (add (kdbl (m + 2)) (kdbl m)) ⟨0, 1⟩ := by
+  have hm2 : (m + 2) % 4 = (m % 4 + 2) % 4 := by omega
+  have hm : m % 4 = 0 ∨ m % 4 = 1 ∨ m % 4 = 2 ∨ m % 4 = 3 := by omega
+  unfold kdbl
+  rcases hm with h | h | h | h <;> rw [hm2, h] <;> decide
+
+/-- The per-degree split `((1+t²)·kdbl)_k = kdbl_k + kdbl_{k−2} = (2t)_k`. -/
+theorem kdbl_main : ∀ k, Qeq (add (fmul (fmono 0) kdbl k) (fmul (fmono 2) kdbl k)) (twoT k)
+  | 0 => by
+      have h0 : Qeq (fmul (fmono 0) kdbl 0) (kdbl 0) := fmul_fmono (fun _ => kdbl_den _) 0 (by omega)
+      have h2 : Qeq (fmul (fmono 2) kdbl 0) ⟨0, 1⟩ := fmul_fmono_zero (fun _ => kdbl_den _) (by omega)
+      exact Qeq_trans (add_den_pos (kdbl_den 0) Nat.one_pos) (Qadd_congr h0 h2) (by decide)
+  | 1 => by
+      have h0 : Qeq (fmul (fmono 0) kdbl 1) (kdbl 1) := fmul_fmono (fun _ => kdbl_den _) 0 (by omega)
+      have h2 : Qeq (fmul (fmono 2) kdbl 1) ⟨0, 1⟩ := fmul_fmono_zero (fun _ => kdbl_den _) (by omega)
+      exact Qeq_trans (add_den_pos (kdbl_den 1) Nat.one_pos) (Qadd_congr h0 h2) (by decide)
+  | (m + 2) => by
+      have h0 : Qeq (fmul (fmono 0) kdbl (m + 2)) (kdbl (m + 2)) :=
+        fmul_fmono (fun _ => kdbl_den _) 0 (by omega)
+      have h2 : Qeq (fmul (fmono 2) kdbl (m + 2)) (kdbl m) :=
+        fmul_fmono (fun _ => kdbl_den _) 2 (by omega)
+      refine Qeq_trans (add_den_pos (kdbl_den (m + 2)) (kdbl_den m)) (Qadd_congr h0 h2) ?_
+      have ht : Qeq (⟨0, 1⟩ : Q) (twoT (m + 2)) := by
+        unfold twoT; rw [if_neg (show m + 2 ≠ 1 by omega)]; exact Qeq_refl _
+      exact Qeq_trans Nat.one_pos (kdbl_shift_cancel m) ht
+
+/-- **The defining relation** `(1+t²)·kdbl = 2t` of the doubling inner function `k = 2t/(1+t²)`. -/
+theorem kdbl_rel (k : Nat) : Qeq (fmul oneplusSq kdbl k) (twoT k) :=
+  Qeq_trans (add_den_pos (fmul_den_pos (fun i => fmono_den 0 i) (fun _ => kdbl_den _) k)
+      (fmul_den_pos (fun i => fmono_den 2 i) (fun _ => kdbl_den _) k))
+    (fmul_add_left (fun i => fmono_den 0 i) (fun i => fmono_den 2 i) (fun _ => kdbl_den _) k)
+    (kdbl_main k)
+
 end UOR.Bridge.F1Square.Analysis
