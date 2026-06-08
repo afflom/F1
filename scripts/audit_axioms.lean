@@ -841,3 +841,5 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.kdbl_deriv_rel
 #print axioms Analysis.fpow_den_pos
 #print axioms Analysis.fpow_vanish
+#print axioms Analysis.fcomp_den_pos
+#print axioms Analysis.fcomp_const

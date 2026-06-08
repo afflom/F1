@@ -755,4 +755,18 @@ theorem fpow_vanish {b : Nat → Q} (hb : ∀ i, 0 < (b i).den) (hb0 : Qeq (b 0)
           (Qmul_congr (Qeq_refl _) hv) ?_
         simp [Qeq, mul]
 
+/-- **Formal composition** `(a∘b)_k = Σ_{m=0}^{k} aₘ·(bᵐ)_k`. When `b(0)=0` (`fpow_vanish`) the terms
+    with `m > k` vanish, so this finite sum is the full composition coefficient. -/
+def fcomp (a b : Nat → Q) (k : Nat) : Q := Fsum (fun m => mul (a m) (fpow b m k)) k
+
+theorem fcomp_den_pos {a b : Nat → Q} (ha : ∀ i, 0 < (a i).den) (hb : ∀ i, 0 < (b i).den)
+    (k : Nat) : 0 < (fcomp a b k).den :=
+  Fsum_den_pos (fun m => Qmul_den_pos (ha m) (fpow_den_pos hb m k)) k
+
+/-- The constant term of a composition is the constant term of the outer series: `(a∘b)_0 = a_0`. -/
+theorem fcomp_const (a b : Nat → Q) : Qeq (fcomp a b 0) (a 0) := by
+  show Qeq (mul (a 0) (fpow b 0 0)) (a 0)
+  show Qeq (mul (a 0) ⟨1, 1⟩) (a 0)
+  simp [Qeq, mul]
+
 end UOR.Bridge.F1Square.Analysis
