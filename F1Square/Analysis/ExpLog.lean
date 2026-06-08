@@ -1053,6 +1053,39 @@ theorem acoef_den (k : Nat) : 0 < (acoef k).den := by
   · rw [if_pos h]; show 0 < k; omega
   · rw [if_neg h]; exact Nat.one_pos
 
+/-- The even-index terms of the formal artanh evaluation vanish. -/
+theorem acoef_even_zero (w : Q) (n : Nat) :
+    Qeq (mul (acoef (2 * n)) (qpow w (2 * n))) ⟨0, 1⟩ := by
+  have h : acoef (2 * n) = ⟨0, 1⟩ := by unfold acoef; rw [if_neg (by omega : ¬ (2 * n) % 2 = 1)]
+  rw [h]; simp [Qeq, mul]
+
+/-- The odd-index term of the formal artanh evaluation is the analytic artanh term `w^{2n+1}/(2n+1)`. -/
+theorem acoef_odd_artTerm (w : Q) (n : Nat) :
+    Qeq (mul (acoef (2 * n + 1)) (qpow w (2 * n + 1))) (artTerm w n) := by
+  have h : acoef (2 * n + 1) = ⟨1, 2 * n + 1⟩ := by unfold acoef; rw [if_pos (by omega)]
+  rw [h]; exact Qmul_comm ⟨1, 2 * n + 1⟩ (qpow w (2 * n + 1))
+
+/-- **Eval bridge, piece 1**: the formal artanh series evaluated at `w` (truncated at the odd cutoff
+    `2N+1`) is exactly the analytic partial sum `artSum w N = Σ_{n≤N} w^{2n+1}/(2n+1)`. -/
+theorem peval_acoef_artSum (w : Q) (hwd : 0 < w.den) (N : Nat) :
+    Qeq (peval acoef w (2 * N + 1)) (artSum w N) := by
+  induction N with
+  | zero =>
+      show Qeq (add (mul (acoef 0) (qpow w 0)) (mul (acoef 1) (qpow w 1))) (artTerm w 0)
+      refine Qeq_trans (add_den_pos Nat.one_pos (artTerm_den_pos hwd 0))
+        (Qadd_congr (acoef_even_zero w 0) (acoef_odd_artTerm w 0)) (Qzero_add _)
+  | succ N ih =>
+      rw [show 2 * (N + 1) + 1 = 2 * N + 1 + 1 + 1 from by omega]
+      show Qeq (add (add (peval acoef w (2 * N + 1)) (mul (acoef (2 * N + 1 + 1)) (qpow w (2 * N + 1 + 1))))
+        (mul (acoef (2 * N + 1 + 1 + 1)) (qpow w (2 * N + 1 + 1 + 1)))) (add (artSum w N) (artTerm w (N + 1)))
+      have he : Qeq (mul (acoef (2 * N + 1 + 1)) (qpow w (2 * N + 1 + 1))) ⟨0, 1⟩ := by
+        rw [show 2 * N + 1 + 1 = 2 * (N + 1) from by omega]; exact acoef_even_zero w (N + 1)
+      have ho : Qeq (mul (acoef (2 * N + 1 + 1 + 1)) (qpow w (2 * N + 1 + 1 + 1))) (artTerm w (N + 1)) := by
+        rw [show 2 * N + 1 + 1 + 1 = 2 * (N + 1) + 1 from by omega]; exact acoef_odd_artTerm w (N + 1)
+      refine Qeq_trans (add_den_pos (add_den_pos (artSum_den_pos hwd N) Nat.one_pos)
+        (artTerm_den_pos hwd (N + 1))) (Qadd_congr (Qadd_congr ih he) ho) ?_
+      exact Qadd_congr (Qadd_zero_right _) (Qeq_refl _)
+
 /-- `artanh' = 1/(1−t²)` at the coefficient level: `fderiv acoef = gcoef`. -/
 theorem fderiv_acoef (k : Nat) : Qeq (fderiv acoef k) (gcoef k) := by
   show Qeq (mul ⟨(k + 1 : Int), 1⟩ (acoef (k + 1))) (gcoef k)
