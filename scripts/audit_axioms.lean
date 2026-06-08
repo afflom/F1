@@ -980,3 +980,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.kcorner_den
 #print axioms Analysis.per_m_step
 #print axioms Analysis.per_m_bound
+#print axioms Analysis.DN_eq

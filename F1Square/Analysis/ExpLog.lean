@@ -2847,4 +2847,23 @@ theorem per_m_bound (w : Q) (M : Nat) (hwd : 0 < w.den)
       -- add |e_{m+1}| (add |q−u| |kcorner (m+1)|) ≤ add (Fsum g m) (g (m+1)) = Fsum g (m+1)
       exact Qadd_le_add ih (Qle_refl _)
 
+/-- **The `D_N` identity**: `eval(artanh∘kdbl,w,2N+1) − eval(acoef,u,2N+1) = Σ_{m≤2N+1} acoef(m)·(p_m − uᵐ)`. -/
+theorem DN_eq (w : Q) (hwd : 0 < w.den) (N : Nat) :
+    Qeq (Qsub (peval (fcomp acoef kdbl) w (2 * N + 1)) (peval acoef (uval w) (2 * N + 1)))
+      (Fsum (fun m => mul (acoef m)
+        (Qsub (peval (fpow kdbl m) w (2 * N + 1)) (qpow (uval w) m))) (2 * N + 1)) := by
+  have hpm : ∀ m, 0 < (peval (fpow kdbl m) w (2 * N + 1)).den :=
+    fun m => peval_den_pos (fpow_den_pos (fun i => kdbl_den i) m) hwd _
+  have hum : ∀ m, 0 < (qpow (uval w) m).den := fun m => qpow_den_pos (uval_den_pos w hwd) m
+  refine Qeq_trans (Qsub_den_pos (Fsum_den_pos (fun m => Qmul_den_pos (acoef_den m) (hpm m)) _)
+      (peval_den_pos (fun k => acoef_den k) (uval_den_pos w hwd) _))
+    (Qsub_congr (peval_fcomp_swap acoef kdbl (fun i => acoef_den i) (fun i => kdbl_den i)
+      kdbl_zero w hwd (2 * N + 1)) (Qeq_refl _)) ?_
+  refine Qeq_trans (Fsum_den_pos (fun m => Qsub_den_pos (Qmul_den_pos (acoef_den m) (hpm m))
+      (Qmul_den_pos (acoef_den m) (hum m))) _)
+    (Qeq_symm (Fsum_sub (fun m => Qmul_den_pos (acoef_den m) (hpm m))
+      (fun m => Qmul_den_pos (acoef_den m) (hum m)) (2 * N + 1))) ?_
+  exact Fsum_congr (fun m => Qeq_symm (Qmul_sub_left_loc (acoef m)
+    (peval (fpow kdbl m) w (2 * N + 1)) (qpow (uval w) m))) (2 * N + 1)
+
 end UOR.Bridge.F1Square.Analysis
