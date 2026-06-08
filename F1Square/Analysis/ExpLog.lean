@@ -2277,6 +2277,25 @@ theorem peval_kdbl_pow_cauchy (ρ w : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.nu
   exact Qmul_le_mul_left (by show (0 : Int) ≤ (4 : Int) ^ m; exact_mod_cast Nat.zero_le (4 ^ m))
     (gPow_gap_le (mul ⟨2, 1⟩ ρ) hr0 hrd hMM)
 
+/-- `ρ ≤ 2ρ` for `ρ ≥ 0`. -/
+theorem Qle_rho_two_rho (ρ : Q) (hρ0 : 0 ≤ ρ.num) : Qle ρ (mul ⟨2, 1⟩ ρ) := by
+  show ρ.num * ((1 * ρ.den : Nat) : Int) ≤ (2 * ρ.num) * (ρ.den : Int)
+  rw [show ((1 * ρ.den : Nat) : Int) = (ρ.den : Int) from by push_cast; ring_uor]
+  exact Int.mul_le_mul_of_nonneg_right (by omega) (Int.ofNat_nonneg _)
+
+/-- **Geometric convolution inequality**: `ρⁱ·(2ρ)^{M−i+1} ≤ (2ρ)^{M+1}` for `i ≤ M`. -/
+theorem qpow_conv_le (ρ : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num) (i M : Nat) (hiM : i ≤ M) :
+    Qle (mul (qpow ρ i) (qpow (mul ⟨2, 1⟩ ρ) (M - i + 1))) (qpow (mul ⟨2, 1⟩ ρ) (M + 1)) := by
+  have h2d : 0 < (mul (⟨2, 1⟩ : Q) ρ).den := Qmul_den_pos (by decide) hρd
+  have h2n : 0 ≤ (mul (⟨2, 1⟩ : Q) ρ).num := Qmul_num_nonneg (by decide) hρ0
+  have hexp : i + (M - i + 1) = M + 1 := by omega
+  refine Qle_trans (Qmul_den_pos (qpow_den_pos h2d i) (qpow_den_pos h2d _))
+    (Qmul_le_mul_right (qpow_nonneg h2n _)
+      (qpow_base_mono hρd h2d hρ0 (Qle_rho_two_rho ρ hρ0) i)) ?_
+  refine Qeq_le ?_
+  rw [← hexp]
+  exact Qeq_symm (qpow_add (mul ⟨2, 1⟩ ρ) h2d i (M - i + 1))
+
 /-- The `i`-th inner gap of the `peval_fpow_succ` corner factors as `(kdbl_i·wⁱ)·(p_m gap)`. -/
 theorem corner_inner_eq (w : Q) (hwd : 0 < w.den) (m M i : Nat) :
     Qeq (Qsub (Fsum (fun j => mul (mul (kdbl i) (qpow w i)) (mul (fpow kdbl m j) (qpow w j))) M)
