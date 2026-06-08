@@ -19,6 +19,23 @@ import F1Square.Analysis.Complete
 
 namespace UOR.Bridge.F1Square.Analysis
 
+/-- `a·(b·c) ≈ b·(a·c)`. -/
+theorem Qmul_left_comm (a b c : Q) : Qeq (mul a (mul b c)) (mul b (mul a c)) := by
+  simp only [Qeq, mul]; push_cast; ring_uor
+
+/-- `qⁿ⁺ᵐ ≈ qⁿ · qᵐ`. -/
+theorem qpow_add (q : Q) (hqd : 0 < q.den) (a : Nat) :
+    ∀ b, Qeq (qpow q (a + b)) (mul (qpow q a) (qpow q b))
+  | 0 => by
+      rw [Nat.add_zero]
+      show Qeq (qpow q a) (mul (qpow q a) ⟨1, 1⟩)
+      simp only [Qeq, mul]; push_cast; ring_uor
+  | (b + 1) => by
+      show Qeq (mul q (qpow q (a + b))) (mul (qpow q a) (mul q (qpow q b)))
+      exact Qeq_trans (Qmul_den_pos hqd (Qmul_den_pos (qpow_den_pos hqd a) (qpow_den_pos hqd b)))
+        (Qmul_congr (Qeq_refl q) (qpow_add q hqd a b))
+        (Qmul_left_comm q (qpow q a) (qpow q b))
+
 /-- `|qⁱ| = |q|ⁱ` (the absolute value of a power is the power of the absolute value). -/
 theorem qpow_abs (q : Q) : ∀ i, Qeq (Qabs (qpow q i)) (qpow (Qabs q) i)
   | 0 => by rfl

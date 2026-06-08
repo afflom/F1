@@ -14,26 +14,9 @@ import F1Square.Analysis.ROrder
 
 namespace UOR.Bridge.F1Square.Analysis
 
-/-- Left-commutativity of `Q` multiplication (up to `≈`). -/
-theorem Qmul_left_comm (a b c : Q) : Qeq (mul a (mul b c)) (mul b (mul a c)) := by
-  simp only [Qeq, mul]; push_cast; ring_uor
-
 /-- Four-factor rearrangement `(a·b)·(c·d) ≈ (a·c)·(b·d)`. -/
 theorem Qmul4_rearrange (a b c d : Q) : Qeq (mul (mul a b) (mul c d)) (mul (mul a c) (mul b d)) := by
   simp only [Qeq, mul]; push_cast; ring_uor
-
-/-- `qⁿ⁺ᵐ ≈ qⁿ · qᵐ`. -/
-theorem qpow_add (q : Q) (hqd : 0 < q.den) (a : Nat) :
-    ∀ b, Qeq (qpow q (a + b)) (mul (qpow q a) (qpow q b))
-  | 0 => by
-      rw [Nat.add_zero]
-      show Qeq (qpow q a) (mul (qpow q a) ⟨1, 1⟩)
-      simp only [Qeq, mul]; push_cast; ring_uor
-  | (b + 1) => by
-      show Qeq (mul q (qpow q (a + b))) (mul (qpow q a) (mul q (qpow q b)))
-      exact Qeq_trans (Qmul_den_pos hqd (Qmul_den_pos (qpow_den_pos hqd a) (qpow_den_pos hqd b)))
-        (Qmul_congr (Qeq_refl q) (qpow_add q hqd a b))
-        (Qmul_left_comm q (qpow q a) (qpow q b))
 
 /-- **The trig product term**: `((−q²)ⁱ/(2i+off)!) · ((−q²)ʲ/(2j+off')!) ≈ (−q²)^{i+j}/((2i+off)!·(2j+off')!)`. -/
 theorem altTerm_mul {q : Q} (hqd : 0 < q.den) (off off' i j : Nat) :

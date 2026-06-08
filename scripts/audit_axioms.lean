@@ -817,3 +817,5 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.dgeom_ode
 #print axioms Analysis.peval_den_pos
 #print axioms Analysis.peval_dgeom
+#print axioms Analysis.peval_conv
+#print axioms Analysis.peval_mul

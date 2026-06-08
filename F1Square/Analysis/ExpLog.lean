@@ -412,4 +412,54 @@ theorem peval_dgeom (w : Q) (hwd : 0 < w.den) :
         (Qadd_congr (peval_dgeom w hwd N) (Qeq_refl _)) ?_
       simp only [Qeq, mul, Qsub, add, neg]; push_cast; ring_uor
 
+/-- **Per-row convolution**: the `m`-th antidiagonal of `(aᵢwⁱ)·(bⱼwʲ)` collapses to `(a·b)_m · wᵐ`
+    (`wⁱ·w^{m−i} = wᵐ` via `qpow_add`). The bridge between the product double sum and `peval (a·b)`. -/
+theorem peval_conv (a b : Nat → Q) {w : Q} (ha : ∀ i, 0 < (a i).den) (hb : ∀ j, 0 < (b j).den)
+    (hwd : 0 < w.den) (m : Nat) :
+    Qeq (Fsum (fun i => mul (mul (a i) (qpow w i)) (mul (b (m - i)) (qpow w (m - i)))) m)
+      (mul (fmul a b m) (qpow w m)) := by
+  refine Qeq_trans (Fsum_den_pos (fun i => Qmul_den_pos (Qmul_den_pos (ha i) (hb (m - i)))
+      (qpow_den_pos hwd m)) m)
+    (Fsum_congr_le (fun i hi => ?_))
+    (Qeq_symm (Fsum_mul_const_right (qpow_den_pos hwd m)
+      (fun i => Qmul_den_pos (ha i) (hb (m - i))) m))
+  -- termwise: (aᵢwⁱ)(b_{m−i}w^{m−i}) ≈ (aᵢ·b_{m−i})·wᵐ
+  have hqp : Qeq (mul (qpow w i) (qpow w (m - i))) (qpow w m) := by
+    have h1 : i + (m - i) = m := by omega
+    have hpa := qpow_add w hwd i (m - i)
+    rw [h1] at hpa
+    exact Qeq_symm hpa
+  refine Qeq_trans (Qmul_den_pos (Qmul_den_pos (ha i) (hb (m - i)))
+      (Qmul_den_pos (qpow_den_pos hwd i) (qpow_den_pos hwd (m - i))))
+    (show Qeq (mul (mul (a i) (qpow w i)) (mul (b (m - i)) (qpow w (m - i))))
+        (mul (mul (a i) (b (m - i))) (mul (qpow w i) (qpow w (m - i)))) by
+      simp only [Qeq, mul]; push_cast; ring_uor)
+    (Qmul_congr (Qeq_refl _) hqp)
+
+/-- **The product (Cauchy) bridge**: `eval(a,w)·eval(b,w) ≈ eval(a·b, w) + corner`, the corner being the
+    high antidiagonal part. Mirrors `expSum_mul_eq` for general coefficient series via `Fsum_mul_square`
+    → `Fsum_square_decomp` → `Fsum_triangle_reindex` → `peval_conv`. -/
+theorem peval_mul (a b : Nat → Q) {w : Q} (ha : ∀ i, 0 < (a i).den) (hb : ∀ j, 0 < (b j).den)
+    (hwd : 0 < w.den) (M : Nat) :
+    Qeq (mul (peval a w M) (peval b w M))
+      (add (peval (fmul a b) w M)
+        (Fsum (fun i => Qsub
+          (Fsum (fun j => mul (mul (a i) (qpow w i)) (mul (b j) (qpow w j))) M)
+          (Fsum (fun j => mul (mul (a i) (qpow w i)) (mul (b j) (qpow w j))) (M - i))) M)) := by
+  have hta : ∀ i, 0 < (mul (a i) (qpow w i)).den := fun i => Qmul_den_pos (ha i) (qpow_den_pos hwd i)
+  have htb : ∀ j, 0 < (mul (b j) (qpow w j)).den := fun j => Qmul_den_pos (hb j) (qpow_den_pos hwd j)
+  have hg : ∀ i j, 0 < (mul (mul (a i) (qpow w i)) (mul (b j) (qpow w j))).den :=
+    fun i j => Qmul_den_pos (hta i) (htb j)
+  have hcorner : 0 < (Fsum (fun i => Qsub (Fsum (fun j => mul (mul (a i) (qpow w i)) (mul (b j) (qpow w j))) M)
+      (Fsum (fun j => mul (mul (a i) (qpow w i)) (mul (b j) (qpow w j))) (M - i))) M).den :=
+    Fsum_den_pos (fun i => Qsub_den_pos (Fsum_den_pos (fun j => hg i j) M)
+      (Fsum_den_pos (fun j => hg i j) (M - i))) M
+  refine Qeq_trans (Fsum_den_pos (fun i => Fsum_den_pos (fun j => hg i j) M) M)
+    (Fsum_mul_square hta htb M) ?_
+  refine Qeq_trans (add_den_pos (Fsum_den_pos (fun i => Fsum_den_pos (fun j => hg i j) (M - i)) M) hcorner)
+    (Fsum_square_decomp hg M) ?_
+  refine Qeq_trans (add_den_pos (Fsum_den_pos (fun m => Fsum_den_pos (fun i => hg i (m - i)) m) M) hcorner)
+    (Qadd_congr (Fsum_triangle_reindex hg M) (Qeq_refl _)) ?_
+  exact Qadd_congr (Fsum_congr (fun m => peval_conv a b ha hb hwd m) M) (Qeq_refl _)
+
 end UOR.Bridge.F1Square.Analysis
