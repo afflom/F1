@@ -893,3 +893,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.twoT_fmono
 #print axioms Analysis.twoT_2tk
 #print axioms Analysis.oneMinusSq_as_sub
+#print axioms Analysis.kdbl_sq_id

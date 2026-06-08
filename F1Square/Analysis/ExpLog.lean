@@ -1473,6 +1473,64 @@ theorem oneMinusSq_as_sub (m : Nat) : Qeq (oneMinusSq m) (Qsub (twoFone m) (onep
     · subst h2; decide
     · simp only [if_neg h0, if_neg h2]; decide
 
+/-- **The `kdbl²` identity** `(1−t²)·k' = 2·(1 − k²)` — from `kdbl_W` (`k'+t·k+k²=2`) by the
+    `1−t² = 2 − (1+t²)` algebra: `(1−t²)k' = 2k' − (2 − 2t·k) = 2k' − 2 + 2t·k`, and `k² = 2 − k' − t·k`
+    gives `2(1−k²) = −2 + 2k' + 2t·k`. The bridge from the kdbl relations to the composition side. -/
+theorem kdbl_sq_id (m : Nat) :
+    Qeq (fmul oneMinusSq (fderiv kdbl) m) (mul ⟨2, 1⟩ (Qsub (fone m) (fmul kdbl kdbl m))) := by
+  have hk' : ∀ i, 0 < (fderiv kdbl i).den := fun i => fderiv_den_pos (fun _ => kdbl_den _) i
+  have htk : ∀ i, 0 < (fmul (fmono 1) kdbl i).den :=
+    fun i => fmul_den_pos (fun j => fmono_den 1 j) (fun _ => kdbl_den _) i
+  have hksq : ∀ i, 0 < (fmul kdbl kdbl i).den :=
+    fun i => fmul_den_pos (fun _ => kdbl_den _) (fun _ => kdbl_den _) i
+  have hLHS : Qeq (fmul oneMinusSq (fderiv kdbl) m)
+      (Qsub (mul ⟨2, 1⟩ (fderiv kdbl m))
+        (Qsub (twoFone m) (mul ⟨2, 1⟩ (fmul (fmono 1) kdbl m)))) := by
+    refine Qeq_trans (fmul_den_pos (fun i => Qsub_den_pos (twoFone_den i) (oneplusSq_den i)) hk' m)
+      (fmul_congr_left (fun i => oneMinusSq_as_sub i) m) ?_
+    refine Qeq_trans (Qsub_den_pos (fmul_den_pos (fun i => twoFone_den i) hk' m)
+        (fmul_den_pos (fun i => oneplusSq_den i) hk' m))
+      (fmul_sub_left (fun i => twoFone_den i) (fun i => oneplusSq_den i) hk' m) ?_
+    refine Qeq_trans (Qsub_den_pos (Qmul_den_pos Nat.one_pos (hk' m))
+        (Qsub_den_pos (twoFone_den m) (fmul_den_pos (fun i => twoT_den i) (fun _ => kdbl_den _) m)))
+      (Qsub_congr (fmul_twoFone (fderiv kdbl) hk' m) (oneplusSq_kderiv m)) ?_
+    exact Qsub_congr (Qeq_refl _) (Qsub_congr (Qeq_refl _) (twoT_2tk m))
+  have hC' : Qeq (fmul kdbl kdbl m)
+      (Qsub (Qsub (mul ⟨2, 1⟩ (fone m)) (fderiv kdbl m)) (fmul (fmono 1) kdbl m)) := by
+    have hr : Qeq (fmul kdbl kdbl m)
+        (Qsub (Qsub (add (fderiv kdbl m) (add (fmul (fmono 1) kdbl m) (fmul kdbl kdbl m)))
+          (fderiv kdbl m)) (fmul (fmono 1) kdbl m)) := by
+      simp only [Qeq, Qsub, add, neg]; push_cast; ring_uor
+    refine Qeq_trans (Qsub_den_pos (Qsub_den_pos (add_den_pos (hk' m) (add_den_pos (htk m) (hksq m)))
+        (hk' m)) (htk m)) hr ?_
+    exact Qsub_congr (Qsub_congr (Qeq_trans (twoFone_den m)
+      (kdbl_W m) (twoFone_2fone m)) (Qeq_refl _)) (Qeq_refl _)
+  have hfin : Qeq (Qsub (mul ⟨2, 1⟩ (fderiv kdbl m))
+        (Qsub (twoFone m) (mul ⟨2, 1⟩ (fmul (fmono 1) kdbl m))))
+      (mul ⟨2, 1⟩ (Qsub (fone m) (fmul kdbl kdbl m))) := by
+    have step1 : Qeq (Qsub (mul ⟨2, 1⟩ (fderiv kdbl m))
+          (Qsub (twoFone m) (mul ⟨2, 1⟩ (fmul (fmono 1) kdbl m))))
+        (Qsub (mul ⟨2, 1⟩ (fderiv kdbl m))
+          (Qsub (mul ⟨2, 1⟩ (fone m)) (mul ⟨2, 1⟩ (fmul (fmono 1) kdbl m)))) :=
+      Qsub_congr (Qeq_refl _) (Qsub_congr (twoFone_2fone m) (Qeq_refl _))
+    have step2 : Qeq (mul ⟨2, 1⟩ (Qsub (fone m) (fmul kdbl kdbl m)))
+        (mul ⟨2, 1⟩ (Qsub (fone m)
+          (Qsub (Qsub (mul ⟨2, 1⟩ (fone m)) (fderiv kdbl m)) (fmul (fmono 1) kdbl m)))) :=
+      Qmul_congr (Qeq_refl _) (Qsub_congr (Qeq_refl _) hC')
+    have step3 : Qeq (Qsub (mul ⟨2, 1⟩ (fderiv kdbl m))
+          (Qsub (mul ⟨2, 1⟩ (fone m)) (mul ⟨2, 1⟩ (fmul (fmono 1) kdbl m))))
+        (mul ⟨2, 1⟩ (Qsub (fone m)
+          (Qsub (Qsub (mul ⟨2, 1⟩ (fone m)) (fderiv kdbl m)) (fmul (fmono 1) kdbl m)))) := by
+      simp only [Qeq, Qsub, add, neg, mul]; push_cast; ring_uor
+    refine Qeq_trans (Qsub_den_pos (Qmul_den_pos Nat.one_pos (hk' m))
+        (Qsub_den_pos (Qmul_den_pos Nat.one_pos (fone_den_pos m))
+          (Qmul_den_pos Nat.one_pos (htk m)))) step1 ?_
+    exact Qeq_trans (Qmul_den_pos Nat.one_pos (Qsub_den_pos (fone_den_pos m)
+        (Qsub_den_pos (Qsub_den_pos (Qmul_den_pos Nat.one_pos (fone_den_pos m)) (hk' m)) (htk m))))
+      step3 (Qeq_symm step2)
+  exact Qeq_trans (Qsub_den_pos (Qmul_den_pos Nat.one_pos (hk' m))
+      (Qsub_den_pos (twoFone_den m) (Qmul_den_pos Nat.one_pos (htk m)))) hLHS hfin
+
 /-- **The artanh ODE** `(1−t²)·artanh' = 1` at the coefficient level. -/
 theorem artanh_ode (k : Nat) : Qeq (fmul oneMinusSq gcoef k) (fone k) :=
   Qeq_trans (add_den_pos (fmul_den_pos (fun i => fsmono_den Nat.one_pos 0 i) (fun _ => gcoef_den _) k)
