@@ -1021,3 +1021,5 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Qadd_self
 #print axioms Analysis.RartanhAtQ_seq
 #print axioms Analysis.Qadd_same_den
+#print axioms Analysis.Rartanh_double_via
+#print axioms Analysis.Rartanh_double_rat

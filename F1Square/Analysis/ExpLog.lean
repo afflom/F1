@@ -3486,4 +3486,87 @@ theorem RartanhAtQ_seq (v : Q) (hvd : 0 < v.den) (ρ : Q) (hρ0 : 0 ≤ ρ.num) 
     (hlt : ρ.num.toNat < ρ.den) (hb : Qle (Qabs v) ρ) (j : Nat) :
     (RartanhAtQ v hvd ρ hρ0 hρd hlt hb).seq j = artSum v (Rartanh_R ρ j) := rfl
 
+set_option maxHeartbeats 1000000 in
+/-- **⭐ The real artanh doubling (abstract diagonals)**: for reals `X, Y` whose diagonals are
+    `artSum w` and `artSum (uval w)` at the `Rartanh σ` modulus, `2·X = Y` (= `Req (Radd X X) Y`),
+    via `Req_of_lin_bound` splitting the diagonal gap into the `D`-term (`DN_recip`) and the
+    artSum-Cauchy tail (`Y.reg`). Needs `|w| ≤ ρ < 1/16`. -/
+theorem Rartanh_double_via (X Y : Real) (w ρ σ : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num)
+    (hρ1 : Qle ρ ⟨1, 1⟩) (hwd : 0 < w.den) (hw : Qle (Qabs w) ρ)
+    (h2ρ : 0 ≤ (Qsub (⟨1, 1⟩ : Q) (mul ⟨2, 1⟩ ρ)).num)
+    (hρ4 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ⟨2, 1⟩ ρ))) (hρ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ρ ρ)))
+    (hρ8 : Qle (mul ⟨4, 1⟩ ρ) ⟨1, 1⟩) (hlt : (mul ρ ⟨16, 1⟩).num.toNat < (mul ρ ⟨16, 1⟩).den)
+    (hσd : 0 < σ.den) (huvd : 0 < (uval w).den)
+    (hXseq : ∀ j, X.seq j = artSum w (Rartanh_R σ j))
+    (hYseq : ∀ j, Y.seq j = artSum (uval w) (Rartanh_R σ j)) :
+    Req (Radd X X) Y := by
+  refine Req_of_lin_bound (C := 8 * ρ.den + 2) ?_
+  intro n
+  have hAAd : 0 < ((Radd X X).seq n).den := (Radd X X).den_pos n
+  have hBd : 0 < (Y.seq n).den := Y.den_pos n
+  have hB1d : 0 < (Y.seq (2 * n + 1)).den := Y.den_pos (2 * n + 1)
+  have hMn : n + 1 ≤ 2 * Rartanh_R σ (2 * n + 1) + 2 := by
+    have hge : 2 * n + 2 ≤ Rartanh_R σ (2 * n + 1) := by
+      unfold Rartanh_R
+      have hk : 1 ≤ σ.den * σ.den + 4 * σ.den :=
+        Nat.le_trans (by omega : 1 ≤ 4 * σ.den) (Nat.le_add_left _ _)
+      calc 2 * n + 2 = 1 * (2 * n + 1 + 1) := by omega
+        _ ≤ (σ.den * σ.den + 4 * σ.den) * (2 * n + 1 + 1) := Nat.mul_le_mul_right _ hk
+    omega
+  have ha2 : Qeq ((Radd X X).seq n)
+      (peval (fcomp acoef kdbl) w (2 * Rartanh_R σ (2 * n + 1) + 1)) := by
+    have e1 : (Radd X X).seq n
+        = add (artSum w (Rartanh_R σ (2 * n + 1))) (artSum w (Rartanh_R σ (2 * n + 1))) := by
+      show add (X.seq (2 * n + 1)) (X.seq (2 * n + 1)) = _
+      rw [hXseq]
+    rw [e1]
+    exact Qeq_trans (Qmul_den_pos Nat.one_pos (artSum_den_pos hwd _))
+      (Qadd_self (artSum w (Rartanh_R σ (2 * n + 1))))
+      (Qeq_symm (dcomp_artSum w hwd (Rartanh_R σ (2 * n + 1))))
+  have hb2 : Qeq (Y.seq (2 * n + 1))
+      (peval acoef (uval w) (2 * Rartanh_R σ (2 * n + 1) + 1)) := by
+    rw [hYseq]
+    exact Qeq_symm (peval_acoef_artSum (uval w) huvd (Rartanh_R σ (2 * n + 1)))
+  have hab : Qle (Qabs (Qsub ((Radd X X).seq n) (Y.seq (2 * n + 1))))
+      (⟨((8 * ρ.den : Nat) : Int), n + 1⟩ : Q) := by
+    refine Qle_trans (Qabs_den_pos (Qsub_den_pos
+        (peval_den_pos (fun k => Fsum_den_pos
+          (fun m => Qmul_den_pos (acoef_den m) (fpow_den_pos (fun i => kdbl_den i) m k)) k) hwd _)
+        (peval_den_pos (fun k => acoef_den k) huvd _)))
+      (Qeq_le (Qabs_Qeq (Qsub_congr ha2 hb2))) ?_
+    exact DN_recip ρ w (Rartanh_R σ (2 * n + 1)) n hρd hρ0 hρ1 hwd hw h2ρ hρ4 hρ2 hρ8 hlt hMn
+  have hbc : Qle (Qabs (Qsub (Y.seq (2 * n + 1)) (Y.seq n))) (add (Qbound (2 * n + 1)) (Qbound n)) :=
+    Y.reg (2 * n + 1) n
+  have hb2n : Qle (Qbound (2 * n + 1)) (Qbound n) := by
+    show (1 : Int) * ((n + 1 : Nat) : Int) ≤ 1 * ((2 * n + 1 + 1 : Nat) : Int)
+    rw [Int.one_mul, Int.one_mul]; exact_mod_cast (show n + 1 ≤ 2 * n + 1 + 1 by omega)
+  have hstep : Qle (add (Qbound (2 * n + 1)) (Qbound n)) (⟨2, n + 1⟩ : Q) :=
+    Qle_trans (add_den_pos (Qbound_den_pos n) (Qbound_den_pos n))
+      (Qadd_le_add hb2n (Qle_refl _)) (Qeq_le (Qadd_same_den_loc 1 1 (n + 1)))
+  refine Qle_trans (add_den_pos (Qabs_den_pos (Qsub_den_pos hAAd hB1d))
+      (Qabs_den_pos (Qsub_den_pos hB1d hBd)))
+    (Qabs_sub_triangle hAAd hB1d hBd) ?_
+  refine Qle_trans (add_den_pos (Nat.succ_pos n) (add_den_pos (Qbound_den_pos _) (Qbound_den_pos _)))
+    (Qadd_le_add hab hbc) ?_
+  refine Qle_trans (add_den_pos (Nat.succ_pos n) (Nat.succ_pos n))
+    (Qadd_le_add (Qle_refl _) hstep) ?_
+  refine Qle_trans (Nat.succ_pos n)
+    (Qeq_le (Qadd_same_den_loc ((8 * ρ.den : Nat) : Int) 2 (n + 1))) ?_
+  apply Qeq_le; simp only [Qeq]; push_cast; ring_uor
+
+/-- **⭐ The real artanh doubling (rational argument)**: `2·Rartanh(w) = Rartanh(2w/(1+w²))` for rational
+    `w` with `|w| ≤ ρ < 1/16`, at `Rartanh`-radius `σ`. -/
+theorem Rartanh_double_rat (ρ w σ : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num) (hρ1 : Qle ρ ⟨1, 1⟩)
+    (hwd : 0 < w.den) (hw : Qle (Qabs w) ρ) (h2ρ : 0 ≤ (Qsub (⟨1, 1⟩ : Q) (mul ⟨2, 1⟩ ρ)).num)
+    (hρ4 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ⟨2, 1⟩ ρ))) (hρ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ρ ρ)))
+    (hρ8 : Qle (mul ⟨4, 1⟩ ρ) ⟨1, 1⟩) (hlt : (mul ρ ⟨16, 1⟩).num.toNat < (mul ρ ⟨16, 1⟩).den)
+    (hσ0 : 0 ≤ σ.num) (hσd : 0 < σ.den) (hσlt : σ.num.toNat < σ.den)
+    (hbw : Qle (Qabs w) σ) (hbu : Qle (Qabs (uval w)) σ) (huvd : 0 < (uval w).den) :
+    Req (Radd (RartanhAtQ w hwd σ hσ0 hσd hσlt hbw) (RartanhAtQ w hwd σ hσ0 hσd hσlt hbw))
+      (RartanhAtQ (uval w) huvd σ hσ0 hσd hσlt hbu) :=
+  Rartanh_double_via (RartanhAtQ w hwd σ hσ0 hσd hσlt hbw)
+    (RartanhAtQ (uval w) huvd σ hσ0 hσd hσlt hbu) w ρ σ hρd hρ0 hρ1 hwd hw h2ρ hρ4 hρ2 hρ8 hlt hσd huvd
+    (fun j => RartanhAtQ_seq w hwd σ hσ0 hσd hσlt hbw j)
+    (fun j => RartanhAtQ_seq (uval w) huvd σ hσ0 hσd hσlt hbu j)
+
 end UOR.Bridge.F1Square.Analysis
