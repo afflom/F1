@@ -3031,4 +3031,65 @@ theorem pow4_sum_le : ∀ k, Qle (Fsum (fun j => (⟨(4 : Int) ^ j, 1⟩ : Q)) k
     push_cast
     omega
 
+/-- `A·(E·D) ≈ (A·D)·E` (abstract rearrangement). -/
+theorem Qmul_rearr3 (A E D : Q) : Qeq (mul A (mul E D)) (mul (mul A D) E) := by
+  simp only [Qeq, mul]; push_cast; ring_uor
+
+/-- **`2·4ʲ` sum bound**: `Σ_{j≤k} 2·4ʲ ≤ 2·4^{k+1}`. -/
+theorem pow4_2_sum_le :
+    ∀ k, Qle (Fsum (fun j => (⟨2 * (4 : Int) ^ j, 1⟩ : Q)) k) (⟨2 * (4 : Int) ^ (k + 1), 1⟩ : Q)
+  | 0 => by decide
+  | (k + 1) => by
+    have hnn : (0 : Int) ≤ (4 : Int) ^ (k + 1) := by
+      have h : (4 : Int) ^ (k + 1) = (((4 : Nat) ^ (k + 1) : Nat) : Int) := by push_cast; ring_uor
+      rw [h]; exact Int.ofNat_nonneg _
+    have hp : (4 : Int) ^ (k + 1 + 1) = 4 * (4 : Int) ^ (k + 1) := by rw [Int.pow_succ]; ring_uor
+    refine Qle_trans (add_den_pos Nat.one_pos Nat.one_pos)
+      (Qadd_le_add (pow4_2_sum_le k) (Qle_refl _)) ?_
+    show Qle (add (⟨2 * (4 : Int) ^ (k + 1), 1⟩ : Q) (⟨2 * (4 : Int) ^ (k + 1), 1⟩ : Q))
+      (⟨2 * (4 : Int) ^ (k + 1 + 1), 1⟩ : Q)
+    simp only [Qle, add]
+    rw [hp]
+    generalize (4 : Int) ^ (k + 1) = A at hnn ⊢
+    push_cast
+    omega
+
+/-- **Closed corner-sum bound**: `(Σ_{j≤2N+1}|corner_j|)·(1−2ρ) ≤ ((2N+2)·(2ρ)^{2N+2})·(2·4^{2N+2})`. -/
+theorem corner_sum_closed (ρ w : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num) (hwd : 0 < w.den)
+    (hw : Qle (Qabs w) ρ) (h2ρ : 0 ≤ (Qsub (⟨1, 1⟩ : Q) (mul ⟨2, 1⟩ ρ)).num) (N : Nat) :
+    Qle (mul (Fsum (fun j => Qabs (kcorner w j (2 * N + 1))) (2 * N + 1))
+          (Qsub ⟨1, 1⟩ (mul ⟨2, 1⟩ ρ)))
+      (mul (mul (⟨((2 * N + 1 : Nat) : Int) + 1, 1⟩ : Q) (qpow (mul ⟨2, 1⟩ ρ) (2 * N + 2)))
+        (⟨2 * (4 : Int) ^ (2 * N + 2), 1⟩ : Q)) := by
+  have hQpd : 0 < (qpow (mul ⟨2, 1⟩ ρ) (2 * N + 2)).den :=
+    qpow_den_pos (Qmul_den_pos Nat.one_pos hρd) (2 * N + 2)
+  have h2ρ0 : 0 ≤ (mul ⟨2, 1⟩ ρ).num := by show 0 ≤ 2 * ρ.num; omega
+  have hQpnn : 0 ≤ (qpow (mul ⟨2, 1⟩ ρ) (2 * N + 2)).num := qpow_nonneg h2ρ0 (2 * N + 2)
+  have hcstnn : 0 ≤ (⟨((2 * N + 1 : Nat) : Int) + 1, 1⟩ : Q).num := by
+    have : (0 : Int) ≤ ((2 * N + 1 : Nat) : Int) := Int.ofNat_nonneg _
+    show 0 ≤ ((2 * N + 1 : Nat) : Int) + 1; omega
+  have hKd : 0 < (mul (⟨((2 * N + 1 : Nat) : Int) + 1, 1⟩ : Q)
+      (qpow (mul ⟨2, 1⟩ ρ) (2 * N + 2))).den := Qmul_den_pos Nat.one_pos hQpd
+  have hKnn : 0 ≤ (mul (⟨((2 * N + 1 : Nat) : Int) + 1, 1⟩ : Q)
+      (qpow (mul ⟨2, 1⟩ ρ) (2 * N + 2))).num := Qmul_num_nonneg hcstnn hQpnn
+  refine Qle_trans (Fsum_den_pos (fun j =>
+      Fsum_den_pos (fun _ => Qmul_den_pos Nat.one_pos hQpd) (2 * N + 1)) (2 * N + 1))
+    (corner_sum_bound ρ w hρd hρ0 hwd hw h2ρ N) ?_
+  refine Qle_trans (Fsum_den_pos (fun j =>
+      Qmul_den_pos Nat.one_pos (Qmul_den_pos Nat.one_pos hQpd)) (2 * N + 1))
+    (Qeq_le (Fsum_congr (fun j => Fsum_const_eq
+      (mul (⟨2 * (4 : Int) ^ j, 1⟩ : Q) (qpow (mul ⟨2, 1⟩ ρ) (2 * N + 2)))
+      (Qmul_den_pos Nat.one_pos hQpd) (2 * N + 1)) (2 * N + 1))) ?_
+  refine Qle_trans (Fsum_den_pos (fun j =>
+      Qmul_den_pos (Qmul_den_pos Nat.one_pos hQpd) Nat.one_pos) (2 * N + 1))
+    (Qeq_le (Fsum_congr (fun j => Qmul_rearr3 (⟨((2 * N + 1 : Nat) : Int) + 1, 1⟩ : Q)
+      (⟨2 * (4 : Int) ^ j, 1⟩ : Q) (qpow (mul ⟨2, 1⟩ ρ) (2 * N + 2))) (2 * N + 1))) ?_
+  refine Qle_trans (Qmul_den_pos hKd (Fsum_den_pos
+      (f := fun j => (⟨2 * (4 : Int) ^ j, 1⟩ : Q)) (fun _ => Nat.one_pos) (2 * N + 1)))
+    (Qeq_le (Fsum_mul_left
+      (c := mul (⟨((2 * N + 1 : Nat) : Int) + 1, 1⟩ : Q) (qpow (mul ⟨2, 1⟩ ρ) (2 * N + 2)))
+      (f := fun j => (⟨2 * (4 : Int) ^ j, 1⟩ : Q)) hKd
+      (fun _ => Nat.one_pos) (2 * N + 1))) ?_
+  exact Qmul_le_mul_left hKnn (pow4_2_sum_le (2 * N + 1))
+
 end UOR.Bridge.F1Square.Analysis
