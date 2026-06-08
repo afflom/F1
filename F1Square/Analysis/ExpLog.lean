@@ -2445,6 +2445,37 @@ theorem kdbl_innerval (w : Q) (hwd : 0 < w.den) : ∀ N,
       exact Qeq_trans (add_den_pos Nat.one_pos (add_den_pos hB hD))
         (Qadd_congr hAC (Qeq_refl _)) (Qzero_add _)
 
+/-- **`|u| ≤ 2ρ`** for `|w| ≤ ρ` (so `|u| < 1` when `ρ < ½`). -/
+theorem uval_abs_le (ρ w : Q) (hwd : 0 < w.den) (hw : Qle (Qabs w) ρ) :
+    Qle (Qabs (uval w)) (mul ⟨2, 1⟩ ρ) := by
+  have hSden : 0 < (add (⟨1, 1⟩ : Q) (mul w w)).den := add_den_pos Nat.one_pos (Qmul_den_pos hwd hwd)
+  have hSnn : 0 ≤ (add (⟨1, 1⟩ : Q) (mul w w)).num := by
+    show 0 ≤ 1 * ((w.den * w.den : Nat) : Int) + (w.num * w.num) * 1
+    have h1 : (0 : Int) ≤ ((w.den * w.den : Nat) : Int) := Int.ofNat_nonneg _
+    have h2 : (0 : Int) ≤ w.num * w.num := by rw [← Int.natAbs_mul_self]; exact Int.ofNat_nonneg _
+    omega
+  have hud : 0 < (uval w).den := uval_den_pos w hwd
+  -- |u|·(1+w²) = |2w| = 2|w| ≤ 2ρ
+  have habs : Qeq (mul (Qabs (uval w)) (add ⟨1, 1⟩ (mul w w))) (mul ⟨2, 1⟩ (Qabs w)) :=
+    Qeq_trans (Qmul_den_pos (Qabs_den_pos hud) (Qabs_den_pos hSden))
+      (Qmul_congr (Qeq_refl _) (Qeq_symm (Qabs_of_nonneg hSnn)))
+      (Qeq_trans (Qabs_den_pos (Qmul_den_pos hud hSden))
+        (by rw [Qabs_mul]; exact Qeq_refl _ :
+          Qeq (mul (Qabs (uval w)) (Qabs (add ⟨1, 1⟩ (mul w w))))
+            (Qabs (mul (uval w) (add ⟨1, 1⟩ (mul w w)))))
+        (Qeq_trans (Qabs_den_pos (Qmul_den_pos hSden hud))
+          (Qabs_Qeq (Qmul_comm (uval w) (add ⟨1, 1⟩ (mul w w))))
+          (Qeq_trans (Qabs_den_pos (Qmul_den_pos Nat.one_pos hwd)) (Qabs_Qeq (uval_rel w hwd))
+            (by rw [Qabs_mul]; exact Qeq_refl _ :
+              Qeq (Qabs (mul ⟨2, 1⟩ w)) (mul ⟨2, 1⟩ (Qabs w))))))
+  refine Qle_trans (Qmul_den_pos (Qabs_den_pos hud) Nat.one_pos)
+    (Qeq_le (Qeq_symm (mul_one (Qabs (uval w))))) ?_
+  exact Qle_trans (Qmul_den_pos (Qabs_den_pos hud) hSden)
+    (Qmul_le_mul_left (Qabs_num_nonneg _) (Qle_add_right_nonneg
+      (by rw [← Int.natAbs_mul_self]; exact Int.ofNat_nonneg _ : (0 : Int) ≤ w.num * w.num)))
+    (Qle_congr_left (Qmul_den_pos Nat.one_pos (Qabs_den_pos hwd)) (Qeq_symm habs)
+      (Qmul_le_mul_left (by decide) hw))
+
 /-- **Inner-value convergence**: `|peval(kdbl,w,N+1) − u| ≤ 2ρ^{N+2} + 2ρ^{N+3} → 0`. -/
 theorem q_conv (ρ w : Q) (hρd : 0 < ρ.den) (hwd : 0 < w.den) (hw : Qle (Qabs w) ρ) (N : Nat) :
     Qle (Qabs (Qsub (peval kdbl w (N + 1)) (uval w)))
