@@ -851,3 +851,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.fmul_swap_left
 #print axioms Analysis.Qcombine_succ
 #print axioms Analysis.fpow_deriv
+#print axioms Analysis.fderiv_fcomp_sum

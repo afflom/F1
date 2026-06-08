@@ -875,4 +875,21 @@ theorem fpow_deriv {b : Nat → Q} (hb : ∀ i, 0 < (b i).den) :
         (mul ⟨(m + 1 + 1 : Int), 1⟩ (fmul (fderiv b) (fpow b (m + 1)) k))
       exact Qcombine_succ m (fmul (fderiv b) (fpow b (m + 1)) k)
 
+/-- **`fderiv` commutes with the composition sum**: `(a∘b)'_k = Σ_{m=0}^{k+1} aₘ·(bᵐ)'_k`. The first
+    half of the chain rule — the outer derivative passes through the (extended) composition sum. -/
+theorem fderiv_fcomp_sum (a b : Nat → Q) (ha : ∀ i, 0 < (a i).den) (hb : ∀ i, 0 < (b i).den)
+    (k : Nat) : Qeq (fderiv (fcomp a b) k)
+      (Fsum (fun m => mul (a m) (fderiv (fpow b m) k)) (k + 1)) := by
+  show Qeq (mul ⟨(k + 1 : Int), 1⟩ (Fsum (fun m => mul (a m) (fpow b m (k + 1))) (k + 1)))
+    (Fsum (fun m => mul (a m) (mul ⟨(k + 1 : Int), 1⟩ (fpow b m (k + 1)))) (k + 1))
+  have h1 : Qeq (mul ⟨(k + 1 : Int), 1⟩ (Fsum (fun m => mul (a m) (fpow b m (k + 1))) (k + 1)))
+      (Fsum (fun m => mul ⟨(k + 1 : Int), 1⟩ (mul (a m) (fpow b m (k + 1)))) (k + 1)) :=
+    Qeq_symm (Fsum_mul_left Nat.one_pos
+      (fun m => Qmul_den_pos (ha m) (fpow_den_pos hb m (k + 1))) (k + 1))
+  have h2 : Qeq (Fsum (fun m => mul ⟨(k + 1 : Int), 1⟩ (mul (a m) (fpow b m (k + 1)))) (k + 1))
+      (Fsum (fun m => mul (a m) (mul ⟨(k + 1 : Int), 1⟩ (fpow b m (k + 1)))) (k + 1)) :=
+    Fsum_congr (fun m => by simp only [Qeq, mul]; push_cast; ring_uor) (k + 1)
+  exact Qeq_trans (Fsum_den_pos (fun m => Qmul_den_pos Nat.one_pos
+    (Qmul_den_pos (ha m) (fpow_den_pos hb m (k + 1)))) (k + 1)) h1 h2
+
 end UOR.Bridge.F1Square.Analysis
