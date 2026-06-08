@@ -2233,6 +2233,50 @@ theorem peval_kdbl_pow_gap (ρ w : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num) 
         (fpow_kdbl_term_bound ρ hρd hρ0 m k)))
     hMM
 
+/-- `c·(a−b) = c·a − c·b` (local; `Qmul_sub_left` lives in Pi, not imported here). -/
+theorem Qmul_sub_left_loc (c a b : Q) : Qeq (mul c (Qsub a b)) (Qsub (mul c a) (mul c b)) := by
+  simp only [Qeq, mul, Qsub, add, neg]; push_cast; ring_uor
+
+/-- **The Cauchy modulus for `kdblᵐ` evaluation**: `|peval(kdblᵐ,w,M') − peval(kdblᵐ,w,M)|·(1−2ρ)
+    ≤ 4ᵐ·(2ρ)^{M+1}` for `|w| ≤ ρ`, `2ρ ≤ 1`, `M ≤ M'`. The explicit modulus (→ 0) that makes
+    `peval(kdblᵐ, w, ·)` a regular real sequence. -/
+theorem peval_kdbl_pow_cauchy (ρ w : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num) (hwd : 0 < w.den)
+    (hw : Qle (Qabs w) ρ) (h2ρ : 0 ≤ (Qsub (⟨1, 1⟩ : Q) (mul ⟨2, 1⟩ ρ)).num)
+    (m : Nat) {M M' : Nat} (hMM : M ≤ M') :
+    Qle (mul (Qabs (Qsub (peval (fpow kdbl m) w M') (peval (fpow kdbl m) w M)))
+          (Qsub ⟨1, 1⟩ (mul ⟨2, 1⟩ ρ)))
+      (mul (⟨(4 : Int) ^ m, 1⟩ : Q) (qpow (mul ⟨2, 1⟩ ρ) (M + 1))) := by
+  have hrd : 0 < (mul (⟨2, 1⟩ : Q) ρ).den := Qmul_den_pos (by decide) hρd
+  have hr0 : 0 ≤ (mul (⟨2, 1⟩ : Q) ρ).num := Qmul_num_nonneg (by decide) hρ0
+  have hgN : ∀ N, 0 < (Fsum (fun k => mul (⟨(4 : Int) ^ m, 1⟩ : Q) (qpow (mul ⟨2, 1⟩ ρ) k)) N).den :=
+    fun N => Fsum_den_pos (fun k => Qmul_den_pos Nat.one_pos (qpow_den_pos hrd k)) N
+  have hDden : 0 < (Qsub (gPow (mul ⟨2, 1⟩ ρ) M') (gPow (mul ⟨2, 1⟩ ρ) M)).den :=
+    Qsub_den_pos (gPow_den_pos hrd M') (gPow_den_pos hrd M)
+  have hwd1 : 0 < (Qsub (⟨1, 1⟩ : Q) (mul ⟨2, 1⟩ ρ)).den := Qsub_den_pos Nat.one_pos hrd
+  -- RHS gap = 4ᵐ · (gPow gap)
+  have eRG : ∀ N, Qeq (Fsum (fun k => mul (⟨(4 : Int) ^ m, 1⟩ : Q) (qpow (mul ⟨2, 1⟩ ρ) k)) N)
+      (mul (⟨(4 : Int) ^ m, 1⟩ : Q) (gPow (mul ⟨2, 1⟩ ρ) N)) :=
+    fun N => Qeq_trans (Qmul_den_pos Nat.one_pos (Fsum_den_pos (fun k => qpow_den_pos hrd k) N))
+      (Fsum_mul_left Nat.one_pos (fun k => qpow_den_pos hrd k) N)
+      (Qmul_congr (Qeq_refl _) (gPow_eq_Fsum (mul ⟨2, 1⟩ ρ) N))
+  have eGap : Qeq (Qsub (Fsum (fun k => mul (⟨(4 : Int) ^ m, 1⟩ : Q) (qpow (mul ⟨2, 1⟩ ρ) k)) M')
+        (Fsum (fun k => mul (⟨(4 : Int) ^ m, 1⟩ : Q) (qpow (mul ⟨2, 1⟩ ρ) k)) M))
+      (mul (⟨(4 : Int) ^ m, 1⟩ : Q) (Qsub (gPow (mul ⟨2, 1⟩ ρ) M') (gPow (mul ⟨2, 1⟩ ρ) M))) :=
+    Qeq_trans (Qsub_den_pos (Qmul_den_pos Nat.one_pos (gPow_den_pos hrd M'))
+        (Qmul_den_pos Nat.one_pos (gPow_den_pos hrd M)))
+      (Qsub_congr (eRG M') (eRG M))
+      (Qeq_symm (Qmul_sub_left_loc ⟨(4 : Int) ^ m, 1⟩ (gPow (mul ⟨2, 1⟩ ρ) M') (gPow (mul ⟨2, 1⟩ ρ) M)))
+  -- chain: |gap|·(1−2ρ) ≤ RHSgap·(1−2ρ) = 4ᵐ·(gPowGap·(1−2ρ)) ≤ 4ᵐ·(2ρ)^{M+1}
+  refine Qle_trans (Qmul_den_pos (Qsub_den_pos (hgN M') (hgN M)) hwd1)
+    (Qmul_le_mul_right h2ρ (peval_kdbl_pow_gap ρ w hρd hρ0 hwd hw m hMM)) ?_
+  refine Qle_trans (Qmul_den_pos (Qmul_den_pos Nat.one_pos hDden) hwd1)
+    (Qeq_le (Qmul_congr eGap (Qeq_refl _))) ?_
+  refine Qle_trans (Qmul_den_pos Nat.one_pos (Qmul_den_pos hDden hwd1))
+    (Qeq_le (Qmul_assoc ⟨(4 : Int) ^ m, 1⟩ (Qsub (gPow (mul ⟨2, 1⟩ ρ) M') (gPow (mul ⟨2, 1⟩ ρ) M))
+      (Qsub ⟨1, 1⟩ (mul ⟨2, 1⟩ ρ)))) ?_
+  exact Qmul_le_mul_left (by show (0 : Int) ≤ (4 : Int) ^ m; exact_mod_cast Nat.zero_le (4 ^ m))
+    (gPow_gap_le (mul ⟨2, 1⟩ ρ) hr0 hrd hMM)
+
 /-- Per-term geometric telescope: `ρ^{2N+1}·(1−ρ²) = ρ^{2N+1} − ρ^{2N+3}`. -/
 theorem geoTerm_tel (ρ : Q) (hρd : 0 < ρ.den) (N : Nat) :
     Qeq (mul (geoTerm ρ N) (Qsub ⟨1, 1⟩ (mul ρ ρ)))
