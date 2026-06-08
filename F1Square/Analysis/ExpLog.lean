@@ -3760,4 +3760,95 @@ theorem artSum_uval_argdiff (ρ σ w w' : Q) (hρd : 0 < ρ.den) (hρ1 : Qle ρ 
     (Qmul_le_mul_left (by decide) (uval_lip ρ w w' hρd hρ1 hwd hw'd hw hw')) ?_
   apply Qeq_le; simp only [Qeq, mul]; push_cast; ring_uor
 
+set_option maxHeartbeats 1200000 in
+/-- **⭐ The real artanh doubling (real argument)**: for a real `t` with `|t.seq m| ≤ ρ < 1/16` and abstract
+    diagonals `X = Rartanh t`, `Y = Rartanh (uvalReal t)` (at radius `σ`, `2ρ ≤ σ ≤ 1/2`), `2·X = Y`. Via
+    `Req_of_lin_bound` and the 3-way split of the diagonal gap (D-term `Dterm_recip`, depth-Cauchy
+    `artSum_depth_recip`, arg-variation `artSum_uval_argdiff` + `t.reg`). The doubling at real arguments. -/
+theorem Rartanh_double_real_via (t X Y : Real) (ρ σ : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num)
+    (hρ1 : Qle ρ ⟨1, 1⟩) (h2ρ : 0 ≤ (Qsub (⟨1, 1⟩ : Q) (mul ⟨2, 1⟩ ρ)).num)
+    (hρ4 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ⟨2, 1⟩ ρ))) (hρ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ρ ρ)))
+    (hρ8 : Qle (mul ⟨4, 1⟩ ρ) ⟨1, 1⟩) (hlt : (mul ρ ⟨16, 1⟩).num.toNat < (mul ρ ⟨16, 1⟩).den)
+    (hσ0 : 0 ≤ σ.num) (hσd : 0 < σ.den) (hσ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul σ σ)))
+    (hσlt : σ.num.toNat < σ.den) (hbtρ : ∀ m, Qle (Qabs (t.seq m)) ρ)
+    (hbu : ∀ m, Qle (Qabs (uval (t.seq m))) σ)
+    (hXseq : ∀ j, X.seq j = artSum (t.seq (Rartanh_R σ j)) (Rartanh_R σ j))
+    (hYseq : ∀ j, Y.seq j = artSum (uval (t.seq (4 * Rartanh_R σ j + 3))) (Rartanh_R σ j)) :
+    Req (Radd X X) Y := by
+  -- index facts (Rartanh_R σ j = (σ.den²+4σ.den)(j+1))
+  have hk : 1 ≤ σ.den * σ.den + 4 * σ.den :=
+    Nat.le_trans (by omega : 1 ≤ 4 * σ.den) (Nat.le_add_left _ _)
+  have hRge : ∀ j, j + 1 ≤ Rartanh_R σ j := by
+    intro j; unfold Rartanh_R
+    calc j + 1 = 1 * (j + 1) := by omega
+      _ ≤ (σ.den * σ.den + 4 * σ.den) * (j + 1) := Nat.mul_le_mul_right _ hk
+  have hmono : ∀ {i j}, i ≤ j → Rartanh_R σ i ≤ Rartanh_R σ j := by
+    intro i j hij; unfold Rartanh_R; exact Nat.mul_le_mul_left _ (by omega)
+  refine Req_of_lin_bound (C := 8 * ρ.den + 2 * σ.den + 16) ?_
+  intro n
+  have htd : ∀ m, 0 < (t.seq m).den := fun m => t.den_pos m
+  have hud : ∀ m, 0 < (uval (t.seq m)).den := fun m => uval_den_pos _ (htd m)
+  -- the four diagonal points
+  have hae : (Radd X X).seq n
+      = add (artSum (t.seq (Rartanh_R σ (2 * n + 1))) (Rartanh_R σ (2 * n + 1)))
+          (artSum (t.seq (Rartanh_R σ (2 * n + 1))) (Rartanh_R σ (2 * n + 1))) := by
+    show add (X.seq (2 * n + 1)) (X.seq (2 * n + 1)) = _; rw [hXseq]
+  rw [hae, hYseq n]
+  -- index conditions
+  have hMn1 : n + 1 ≤ 2 * Rartanh_R σ (2 * n + 1) + 2 := by have := hRge (2 * n + 1); omega
+  have hn2 : n + 1 ≤ 2 * Rartanh_R σ n + 3 := by have := hRge n; omega
+  have hRnR : Rartanh_R σ n ≤ Rartanh_R σ (2 * n + 1) := hmono (by omega)
+  -- the three term bounds
+  have hT1 := Dterm_recip ρ (t.seq (Rartanh_R σ (2 * n + 1))) (Rartanh_R σ (2 * n + 1)) n
+    hρd hρ0 hρ1 (htd _) (hbtρ _) h2ρ hρ4 hρ2 hρ8 hlt hMn1
+  have hT2 := artSum_depth_recip (uval (t.seq (Rartanh_R σ (2 * n + 1)))) σ (hud _) hσ0 hσd
+    (hbu _) hσ2 hσlt hRnR hn2
+  have hT3 : Qle (Qabs (Qsub (artSum (uval (t.seq (Rartanh_R σ (2 * n + 1)))) (Rartanh_R σ n))
+        (artSum (uval (t.seq (4 * Rartanh_R σ n + 3))) (Rartanh_R σ n)))) (⟨16, n + 1⟩ : Q) := by
+    refine Qle_trans (Qmul_den_pos Nat.one_pos (Qabs_den_pos (Qsub_den_pos (htd _) (htd _))))
+      (artSum_uval_argdiff ρ σ (t.seq (Rartanh_R σ (2 * n + 1))) (t.seq (4 * Rartanh_R σ n + 3))
+        hρd hρ1 hσ0 hσd hσ2 (htd _) (htd _) (hbtρ _) (hbtρ _) (hbu _) (hbu _) (Rartanh_R σ n)) ?_
+    refine Qle_trans (Qmul_den_pos Nat.one_pos (add_den_pos (Qbound_den_pos _) (Qbound_den_pos _)))
+      (Qmul_le_mul_left (by decide) (t.reg (Rartanh_R σ (2 * n + 1)) (4 * Rartanh_R σ n + 3))) ?_
+    -- 8·(Qbound R + Qbound (4 Rn+3)) ≤ ⟨16, n+1⟩
+    have hR1 : Qle (Qbound (Rartanh_R σ (2 * n + 1))) (Qbound n) := by
+      show (1 : Int) * ((n + 1 : Nat) : Int) ≤ 1 * ((Rartanh_R σ (2 * n + 1) + 1 : Nat) : Int)
+      have := hRge (2 * n + 1); rw [Int.one_mul, Int.one_mul]
+      exact_mod_cast (show n + 1 ≤ Rartanh_R σ (2 * n + 1) + 1 by omega)
+    have hR2 : Qle (Qbound (4 * Rartanh_R σ n + 3)) (Qbound n) := by
+      show (1 : Int) * ((n + 1 : Nat) : Int) ≤ 1 * ((4 * Rartanh_R σ n + 3 + 1 : Nat) : Int)
+      have := hRge n; rw [Int.one_mul, Int.one_mul]
+      exact_mod_cast (show n + 1 ≤ 4 * Rartanh_R σ n + 3 + 1 by omega)
+    refine Qle_trans (Qmul_den_pos Nat.one_pos (add_den_pos (Qbound_den_pos n) (Qbound_den_pos n)))
+      (Qmul_le_mul_left (by decide) (Qadd_le_add hR1 hR2)) ?_
+    apply Qeq_le; show Qeq (mul ⟨8, 1⟩ (add (Qbound n) (Qbound n))) (⟨16, n + 1⟩ : Q)
+    simp only [Qeq, mul, add, Qbound]; push_cast; ring_uor
+  -- combine via two triangles
+  have hp1d : 0 < (artSum (uval (t.seq (Rartanh_R σ (2 * n + 1)))) (Rartanh_R σ (2 * n + 1))).den :=
+    artSum_den_pos (hud _) _
+  have hp2d : 0 < (artSum (uval (t.seq (Rartanh_R σ (2 * n + 1)))) (Rartanh_R σ n)).den :=
+    artSum_den_pos (hud _) _
+  have had : 0 < (add (artSum (t.seq (Rartanh_R σ (2 * n + 1))) (Rartanh_R σ (2 * n + 1)))
+      (artSum (t.seq (Rartanh_R σ (2 * n + 1))) (Rartanh_R σ (2 * n + 1)))).den :=
+    add_den_pos (artSum_den_pos (htd _) _) (artSum_den_pos (htd _) _)
+  have hcd : 0 < (artSum (uval (t.seq (4 * Rartanh_R σ n + 3))) (Rartanh_R σ n)).den :=
+    artSum_den_pos (hud _) _
+  have hpc : Qle (Qabs (Qsub (artSum (uval (t.seq (Rartanh_R σ (2 * n + 1)))) (Rartanh_R σ (2 * n + 1)))
+        (artSum (uval (t.seq (4 * Rartanh_R σ n + 3))) (Rartanh_R σ n))))
+      (add (⟨2 * (σ.den : Int), n + 1⟩ : Q) (⟨16, n + 1⟩ : Q)) :=
+    Qle_trans (add_den_pos (Qabs_den_pos (Qsub_den_pos hp1d hp2d))
+        (Qabs_den_pos (Qsub_den_pos hp2d hcd)))
+      (Qabs_sub_triangle hp1d hp2d hcd) (Qadd_le_add hT2 hT3)
+  refine Qle_trans (add_den_pos (Qabs_den_pos (Qsub_den_pos had hp1d))
+      (Qabs_den_pos (Qsub_den_pos hp1d hcd)))
+    (Qabs_sub_triangle had hp1d hcd) ?_
+  refine Qle_trans (add_den_pos (Nat.succ_pos n) (add_den_pos (Nat.succ_pos n) (Nat.succ_pos n)))
+    (Qadd_le_add hT1 hpc) ?_
+  -- ⟨8ρ.den,n+1⟩ + (⟨2σ.den,n+1⟩ + ⟨16,n+1⟩) ≤ ⟨8ρ.den+2σ.den+16, n+1⟩
+  refine Qle_trans (add_den_pos (Nat.succ_pos n) (Nat.succ_pos n))
+    (Qadd_le_add (Qle_refl _) (Qeq_le (Qadd_same_den_loc (2 * (σ.den : Int)) 16 (n + 1)))) ?_
+  refine Qle_trans (Nat.succ_pos n)
+    (Qeq_le (Qadd_same_den_loc ((8 * ρ.den : Nat) : Int) (2 * (σ.den : Int) + 16) (n + 1))) ?_
+  apply Qeq_le; simp only [Qeq]; push_cast; ring_uor
+
 end UOR.Bridge.F1Square.Analysis
