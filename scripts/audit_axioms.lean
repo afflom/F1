@@ -964,3 +964,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.corner_term_le
 #print axioms Analysis.Fsum_le_Fsum_le
 #print axioms Analysis.corner_bound
+#print axioms Analysis.kdbl_period

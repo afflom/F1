@@ -2330,6 +2330,20 @@ theorem corner_inner_eq (w : Q) (hwd : 0 < w.den) (m M i : Nat) :
     (Qeq_symm (Qmul_sub_left_loc (mul (kdbl i) (qpow w i))
       (peval (fpow kdbl m) w M) (peval (fpow kdbl m) w (M - i))))
 
+/-- Period-4 cancellation: `kdbl N + kdbl (N+2) = 0`. -/
+theorem kdbl_period (N : Nat) : Qeq (add (kdbl N) (kdbl (N + 2))) ⟨0, 1⟩ := by
+  by_cases h1 : N % 4 = 1
+  · rw [show kdbl N = ⟨2, 1⟩ from by unfold kdbl; rw [if_pos h1],
+        show kdbl (N + 2) = ⟨-2, 1⟩ from by unfold kdbl; rw [if_neg (by omega), if_pos (by omega)]]
+    decide
+  · by_cases h3 : N % 4 = 3
+    · rw [show kdbl N = ⟨-2, 1⟩ from by unfold kdbl; rw [if_neg h1, if_pos h3],
+          show kdbl (N + 2) = ⟨2, 1⟩ from by unfold kdbl; rw [if_pos (by omega)]]
+      decide
+    · rw [show kdbl N = ⟨0, 1⟩ from by unfold kdbl; rw [if_neg h1, if_neg h3],
+          show kdbl (N + 2) = ⟨0, 1⟩ from by unfold kdbl; rw [if_neg (by omega), if_neg (by omega)]]
+      decide
+
 /-- Bounded termwise sum monotonicity (`f ≤ g` for `i ≤ M`). -/
 theorem Fsum_le_Fsum_le {f g : Nat → Q} :
     ∀ {M}, (∀ i, i ≤ M → Qle (f i) (g i)) → Qle (Fsum f M) (Fsum g M)
