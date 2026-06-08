@@ -839,3 +839,5 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.fderiv_oneplusSq
 #print axioms Analysis.fderiv_twoT
 #print axioms Analysis.kdbl_deriv_rel
+#print axioms Analysis.fpow_den_pos
+#print axioms Analysis.fpow_vanish

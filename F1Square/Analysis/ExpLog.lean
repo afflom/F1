@@ -721,4 +721,38 @@ theorem kdbl_deriv_rel (k : Nat) :
   exact Qeq_trans (fderiv_den_pos (fun i => fmul_den_pos (fun j => oneplusSq_den j)
       (fun _ => kdbl_den _) i) k) (Qeq_symm step1) step2
 
+-- ===========================================================================
+-- Formal composition foundations: powers fpow b m = bᵐ, and the vanishing lemma
+-- (when b(0)=0, bᵐ has lowest degree ≥ m) that makes composition coefficient-finite.
+-- ===========================================================================
+
+/-- Formal powers of a series: `bᵐ`. -/
+def fpow (b : Nat → Q) : Nat → Nat → Q
+  | 0 => fone
+  | (m + 1) => fmul b (fpow b m)
+
+theorem fpow_den_pos {b : Nat → Q} (hb : ∀ i, 0 < (b i).den) : ∀ (m k : Nat), 0 < (fpow b m k).den
+  | 0, k => fone_den_pos k
+  | (m + 1), k => fmul_den_pos hb (fun j => fpow_den_pos hb m j) k
+
+/-- **The vanishing lemma**: if `b(0) = 0`, then `bᵐ` has no terms below degree `m`
+    (`fpow b m k = 0` for `k < m`) — the finiteness that makes formal composition well-defined. -/
+theorem fpow_vanish {b : Nat → Q} (hb : ∀ i, 0 < (b i).den) (hb0 : Qeq (b 0) ⟨0, 1⟩) :
+    ∀ (m k : Nat), k < m → Qeq (fpow b m k) ⟨0, 1⟩
+  | 0, k, hk => absurd hk (Nat.not_lt_zero k)
+  | (m + 1), k, hk => by
+      show Qeq (Fsum (fun i => mul (b i) (fpow b m (k - i))) k) ⟨0, 1⟩
+      refine Qeq_trans (Fsum_den_pos (fun _ => Nat.one_pos) k)
+        (Fsum_congr_le (g := fun _ => (⟨0, 1⟩ : Q)) (k := k) (fun i hi => ?_)) (Fsum_zeros k)
+      by_cases hi0 : i = 0
+      · subst hi0
+        refine Qeq_trans (Qmul_den_pos Nat.one_pos (fpow_den_pos hb m (k - 0)))
+          (Qmul_congr hb0 (Qeq_refl _)) ?_
+        simp [Qeq, mul]
+      · have hkm : k - i < m := by omega
+        have hv : Qeq (fpow b m (k - i)) ⟨0, 1⟩ := fpow_vanish hb hb0 m (k - i) hkm
+        refine Qeq_trans (Qmul_den_pos (hb i) Nat.one_pos)
+          (Qmul_congr (Qeq_refl _) hv) ?_
+        simp [Qeq, mul]
+
 end UOR.Bridge.F1Square.Analysis
