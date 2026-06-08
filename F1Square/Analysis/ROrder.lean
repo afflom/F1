@@ -162,4 +162,14 @@ theorem Rle_zero_of_Rnonneg {x : Real} (h : Rnonneg x) : Rle zero x := by
     simp only [Qeq, add, neg, Qbound]; push_cast; ring_uor
   exact Qle_congr_left (add_den_pos (neg_den_pos (Qbound_den_pos n)) (Qbound_den_pos n)) hz hcomb
 
+/-- Real regularity at a common floor: `|x.seq i − x.seq j| ≤ 2/(n+1)` for `n ≤ i, j`. -/
+theorem xreg_n_le (x : Real) {n i j : Nat} (hi : n ≤ i) (hj : n ≤ j) :
+    Qle (Qabs (Qsub (x.seq i) (x.seq j))) ⟨2, n + 1⟩ := by
+  refine Qle_trans (add_den_pos (Qbound_den_pos i) (Qbound_den_pos j)) (x.reg i j) ?_
+  refine Qle_trans (add_den_pos (Nat.succ_pos n) (Nat.succ_pos n))
+    (Qadd_le_add (a := Qbound i) (b := (⟨1, n + 1⟩ : Q)) (c := Qbound j) (d := (⟨1, n + 1⟩ : Q))
+      (by show (1 : Int) * ((n + 1 : Nat) : Int) ≤ 1 * ((i + 1 : Nat) : Int); omega)
+      (by show (1 : Int) * ((n + 1 : Nat) : Int) ≤ 1 * ((j + 1 : Nat) : Int); omega))
+    (Qeq_le (by simp only [Qeq, add]; push_cast; ring_uor))
+
 end UOR.Bridge.F1Square.Analysis

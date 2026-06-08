@@ -280,16 +280,6 @@ theorem n_le_RexpReal_R (x : Real) (j : Nat) : j ≤ RexpReal_R x j := by
   have h : 4 * (j + 1) * 1 ≤ 4 * (j + 1) * RexpReal_K x := Nat.mul_le_mul (Nat.le_refl _) hK
   unfold RexpReal_R; omega
 
-/-- Real regularity at a common floor: `|x.seq i − x.seq j| ≤ 2/(n+1)` for `n ≤ i, j`. -/
-theorem xreg_n_le (x : Real) {n i j : Nat} (hi : n ≤ i) (hj : n ≤ j) :
-    Qle (Qabs (Qsub (x.seq i) (x.seq j))) ⟨2, n + 1⟩ := by
-  refine Qle_trans (add_den_pos (Qbound_den_pos i) (Qbound_den_pos j)) (x.reg i j) ?_
-  refine Qle_trans (add_den_pos (Nat.succ_pos n) (Nat.succ_pos n))
-    (Qadd_le_add (a := Qbound i) (b := (⟨1, n + 1⟩ : Q)) (c := Qbound j) (d := (⟨1, n + 1⟩ : Q))
-      (by show (1 : Int) * ((n + 1 : Nat) : Int) ≤ 1 * ((i + 1 : Nat) : Int); omega)
-      (by show (1 : Int) * ((n + 1 : Nat) : Int) ≤ 1 * ((j + 1 : Nat) : Int); omega))
-    (Qeq_le (by simp only [Qeq, add]; push_cast; ring_uor))
-
 /-- **Single-factor reconciliation** for `RexpReal_add`: the exp partial sum at a floor index `p ≥ n` and
     deep depth `D` differs from the `x`-diagonal at the common reindex `J ≥ n` by `≤ (1 + 2Uₓ)/(n+1)`,
     where `Uₓ = (expM_U (xBound x) (2·xBound x)).num.toNat`. Depth tail (`RexpReal_trunc_le`) + Lipschitz

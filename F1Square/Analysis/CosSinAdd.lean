@@ -10,6 +10,7 @@ Pure Lean 4, no Mathlib, no `sorry`/`native_decide`, choice-free.
 
 import F1Square.Analysis.Binomial
 import F1Square.Analysis.CosSin
+import F1Square.Analysis.ROrder
 
 namespace UOR.Bridge.F1Square.Analysis
 
@@ -876,15 +877,6 @@ theorem Qsq_diff_le (a b : Q) (had : 0 < a.den) (hbd : 0 < b.den) :
   rw [Qabs_mul]
   exact Qmul_le_mul_left (Qabs_num_nonneg _) (Qabs_add_le a b)
 
-/-- Real regularity at a common floor: `|x.seq i − x.seq j| ≤ 2/(n+1)` for `n ≤ i, j`. -/
-theorem xreg_n_le (x : Real) {n i j : Nat} (hi : n ≤ i) (hj : n ≤ j) :
-    Qle (Qabs (Qsub (x.seq i) (x.seq j))) ⟨2, n + 1⟩ := by
-  refine Qle_trans (add_den_pos (Qbound_den_pos i) (Qbound_den_pos j)) (x.reg i j) ?_
-  refine Qle_trans (add_den_pos (Nat.succ_pos n) (Nat.succ_pos n))
-    (Qadd_le_add (a := Qbound i) (b := (⟨1, n + 1⟩ : Q)) (c := Qbound j) (d := (⟨1, n + 1⟩ : Q))
-      (by show (1 : Int) * ((n + 1 : Nat) : Int) ≤ 1 * ((i + 1 : Nat) : Int); omega)
-      (by show (1 : Int) * ((n + 1 : Nat) : Int) ≤ 1 * ((j + 1 : Nat) : Int); omega))
-    (Qeq_le (by simp only [Qeq, add]; push_cast; ring_uor))
 
 /-- Squared regularity at a common floor: `|(x.seq i)² − (x.seq j)²| ≤ 4·xBound/(n+1)` for `n ≤ i, j`. -/
 theorem xsq_diff_n_le (x : Real) {n i j : Nat} (hi : n ≤ i) (hj : n ≤ j) :

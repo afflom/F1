@@ -788,5 +788,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.expSum_add_le_signed
 #print axioms Analysis.expSum_add_decay_signed
 #print axioms Analysis.n_le_RexpReal_R
-#print axioms Analysis.xreg_n_le
 #print axioms Analysis.rexp_factor_reconcile
