@@ -927,4 +927,21 @@ theorem fcomp_chain_pre (a b : Nat → Q) (ha : ∀ i, 0 < (a i).den) (hb : ∀ 
       (fmul_den_pos hb' (fun l => fpow_den_pos hb m l) k)) k)) (Qadd_congr sf0 stail) ?_
   exact Qzero_add _
 
+/-- **Extend a sum by trailing zeros**: if `f` vanishes on `(i, k]` then `Σ_{0}^{i} f = Σ_{0}^{k} f`.
+    (Used to pad the truncated composition sum `(a∘b)ᵢ` up to a uniform bound.) -/
+theorem Fsum_extend_zero {f : Nat → Q} (hf : ∀ m, 0 < (f m).den) {i : Nat} :
+    ∀ {k}, i ≤ k → (∀ m, i < m → m ≤ k → Qeq (f m) ⟨0, 1⟩) → Qeq (Fsum f i) (Fsum f k)
+  | 0, hik, _ => by have hi : i = 0 := by omega
+                    rw [hi]; exact Qeq_refl _
+  | (k + 1), _, hz => by
+      by_cases h : i = k + 1
+      · rw [h]; exact Qeq_refl _
+      · have hIH : Qeq (Fsum f i) (Fsum f k) :=
+          Fsum_extend_zero hf (by omega) (fun m hm1 hm2 => hz m hm1 (by omega))
+        have hfk1 : Qeq (f (k + 1)) ⟨0, 1⟩ := hz (k + 1) (by omega) (Nat.le_refl _)
+        have hstep : Qeq (add (Fsum f k) (f (k + 1))) (Fsum f k) :=
+          Qeq_trans (add_den_pos (Fsum_den_pos hf k) Nat.one_pos)
+            (Qadd_congr (Qeq_refl _) hfk1) (Qadd_zero_right _)
+        exact Qeq_trans (Fsum_den_pos hf k) hIH (Qeq_symm hstep)
+
 end UOR.Bridge.F1Square.Analysis

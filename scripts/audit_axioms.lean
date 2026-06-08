@@ -853,3 +853,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.fpow_deriv
 #print axioms Analysis.fderiv_fcomp_sum
 #print axioms Analysis.fcomp_chain_pre
+#print axioms Analysis.Fsum_extend_zero
