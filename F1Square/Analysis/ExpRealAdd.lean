@@ -17,6 +17,42 @@ import F1Square.Analysis.ExpAdd
 
 namespace UOR.Bridge.F1Square.Analysis
 
+/-- `|exp-term aⁱ/i!| = |a|ⁱ/i!`: the absolute value of an exp term is the exp term of `|a|`. -/
+theorem expTerm_abs (a : Q) (i : Nat) : Qeq (Qabs (expTerm a i)) (expTerm (Qabs a) i) := by
+  show Qeq (Qabs (mul (qpow a i) ⟨1, fct i⟩)) (mul (qpow (Qabs a) i) ⟨1, fct i⟩)
+  rw [Qabs_mul]
+  exact Qmul_congr (qpow_abs a i) (Qeq_refl _)
+
+/-- **Tail triangle inequality**: if `|g i| ≤ h i` termwise (`h` with positive denominators), then the
+    absolute value of any tail `Σ_{a<k≤b} g` is bounded by the corresponding tail `Σ_{a<k≤b} h`. -/
+theorem Fsum_tail_abs_le {g h : Nat → Q} (hgd : ∀ i, 0 < (g i).den) (hhd : ∀ i, 0 < (h i).den)
+    (hgh : ∀ i, Qle (Qabs (g i)) (h i)) {a b : Nat} (hab : a ≤ b) :
+    Qle (Qabs (Qsub (Fsum g b) (Fsum g a))) (Qsub (Fsum h b) (Fsum h a)) := by
+  induction hab with
+  | refl =>
+      have eg : Qeq (Qsub (Fsum g a) (Fsum g a)) ⟨0, 1⟩ := by
+        simp only [Qeq, Qsub, neg, add]; push_cast; ring_uor
+      have eh : Qeq (Qsub (Fsum h a) (Fsum h a)) ⟨0, 1⟩ := by
+        simp only [Qeq, Qsub, neg, add]; push_cast; ring_uor
+      refine Qle_trans (b := ⟨0, 1⟩) Nat.one_pos ?_ (Qeq_le (Qeq_symm eh))
+      exact Qeq_le (Qeq_trans (b := Qabs ⟨0, 1⟩) Nat.one_pos (Qabs_Qeq eg) (by decide))
+  | @step b' hab' ih =>
+      have eg : Qeq (Qsub (Fsum g (b' + 1)) (Fsum g a))
+          (add (Qsub (Fsum g b') (Fsum g a)) (g (b' + 1))) := by
+        show Qeq (Qsub (add (Fsum g b') (g (b' + 1))) (Fsum g a)) _
+        simp only [Qeq, Qsub, neg, add]; push_cast; ring_uor
+      have eh : Qeq (add (Qsub (Fsum h b') (Fsum h a)) (h (b' + 1)))
+          (Qsub (Fsum h (b' + 1)) (Fsum h a)) := by
+        show Qeq _ (Qsub (add (Fsum h b') (h (b' + 1))) (Fsum h a))
+        simp only [Qeq, Qsub, neg, add]; push_cast; ring_uor
+      refine Qle_congr_left (Qabs_den_pos (add_den_pos
+          (Qsub_den_pos (Fsum_den_pos hgd b') (Fsum_den_pos hgd a)) (hgd (b' + 1))))
+        (Qeq_symm (Qabs_Qeq eg)) ?_
+      refine Qle_trans (add_den_pos (Qabs_den_pos (Qsub_den_pos (Fsum_den_pos hgd b') (Fsum_den_pos hgd a)))
+          (Qabs_den_pos (hgd (b' + 1)))) (Qabs_add_le _ _) ?_
+      refine Qle_trans (add_den_pos (Qsub_den_pos (Fsum_den_pos hhd b') (Fsum_den_pos hhd a)) (hhd (b' + 1)))
+        (Qadd_le_add ih (hgh (b' + 1))) (Qeq_le eh)
+
 /-- **The Cauchy-product corner for arbitrary arguments**: with `|a| ≤ Ma`, `|b| ≤ Mb` and `2(Ma+Mb) ≤ M+2`,
     the corner `Σᵢ (Σⱼ≤M − Σⱼ≤M−i)` is bounded by the `exp(a+b)` tail `2(Ma+Mb)^{M+1}/(M+1)!`. Since
     `corner = expSum a M·expSum b M − expSum(a+b) M` (`expSum_mul_eq`) and the product `≤ expSum(a+b)(2M)`
@@ -168,6 +204,74 @@ theorem expSum_add_decay {a b : Q} {Mx My : Nat} (ha0 : 0 ≤ a.num) (had : 0 < 
     (hD : 2 * (n + 1) * npow (Mx + My) (2 * (Mx + My) + 1) + 2 * (Mx + My) ≤ D) :
     Qle (Qabs (Qsub (expSum (add a b) D) (mul (expSum a D) (expSum b D)))) ⟨1, n + 1⟩ :=
   Qle_trans (fct_pos _) (expSum_add_le ha0 had hb0 hbd hqa hqb D (by omega))
+    (truncCoef_QE (Mx + My) 2 (n + 1) (D + 1) hMxy (by omega) (by omega))
+
+/-- **The Cauchy-product corner for SIGNED arguments**: `|corner(a,b)| ≤ corner(|a|,|b|) ≤ 2(Ma+Mb)^{M+1}/(M+1)!`.
+    Each row's tail is dominated (`Fsum_tail_abs_le` + `expTerm_abs`) by the same row for `|a|, |b|`, and the
+    fully non-negative `|a|,|b|` corner is bounded by `expSum_corner_le_gen`. Removes the `0 ≤ a.num` hypothesis. -/
+theorem expSum_corner_le_gen_signed {a b : Q} {Ma Mb : Nat} (had : 0 < a.den) (hbd : 0 < b.den)
+    (hqa : Qle (Qabs a) ⟨(Ma : Int), 1⟩) (hqb : Qle (Qabs b) ⟨(Mb : Int), 1⟩)
+    (M : Nat) (hM : 2 * (Ma + Mb) ≤ M + 2) :
+    Qle (Qabs (Fsum (fun i => Qsub (Fsum (fun j => mul (expTerm a i) (expTerm b j)) M)
+          (Fsum (fun j => mul (expTerm a i) (expTerm b j)) (M - i))) M))
+      ⟨(2 * npow (Ma + Mb) (M + 1) : Int), fct (M + 1)⟩ := by
+  have hax : ∀ i, 0 < (expTerm a i).den := fun i => expTerm_den_pos had i
+  have hby : ∀ j, 0 < (expTerm b j).den := fun j => expTerm_den_pos hbd j
+  have haax : ∀ i, 0 < (expTerm (Qabs a) i).den := fun i => expTerm_den_pos (Qabs_den_pos had) i
+  have hbby : ∀ j, 0 < (expTerm (Qabs b) j).den := fun j => expTerm_den_pos (Qabs_den_pos hbd) j
+  have hterm : ∀ i j, Qle (Qabs (mul (expTerm a i) (expTerm b j)))
+      (mul (expTerm (Qabs a) i) (expTerm (Qabs b) j)) := fun i j => by
+    refine Qeq_le ?_
+    rw [Qabs_mul]
+    exact Qmul_congr (expTerm_abs a i) (expTerm_abs b j)
+  have hrow : ∀ i, Qle (Qabs (Qsub (Fsum (fun j => mul (expTerm a i) (expTerm b j)) M)
+        (Fsum (fun j => mul (expTerm a i) (expTerm b j)) (M - i))))
+      (Qsub (Fsum (fun j => mul (expTerm (Qabs a) i) (expTerm (Qabs b) j)) M)
+        (Fsum (fun j => mul (expTerm (Qabs a) i) (expTerm (Qabs b) j)) (M - i))) := fun i =>
+    Fsum_tail_abs_le (fun j => Qmul_den_pos (hax i) (hby j)) (fun j => Qmul_den_pos (haax i) (hbby j))
+      (fun j => hterm i j) (Nat.sub_le M i)
+  refine Qle_trans (Fsum_den_pos (fun i => Qabs_den_pos (Qsub_den_pos
+      (Fsum_den_pos (fun j => Qmul_den_pos (hax i) (hby j)) M)
+      (Fsum_den_pos (fun j => Qmul_den_pos (hax i) (hby j)) (M - i)))) M)
+    (Fsum_abs_le (fun i => Qsub_den_pos (Fsum_den_pos (fun j => Qmul_den_pos (hax i) (hby j)) M)
+      (Fsum_den_pos (fun j => Qmul_den_pos (hax i) (hby j)) (M - i))) M) ?_
+  refine Qle_trans (Fsum_den_pos (fun i => Qsub_den_pos
+      (Fsum_den_pos (fun j => Qmul_den_pos (haax i) (hbby j)) M)
+      (Fsum_den_pos (fun j => Qmul_den_pos (haax i) (hbby j)) (M - i))) M)
+    (Fsum_le_congr (fun i _ => hrow i)) ?_
+  exact expSum_corner_le_gen (Qabs_num_nonneg a) had (Qabs_num_nonneg b) hbd hqa hqb M hM
+
+/-- **The rational exp functional equation for SIGNED arguments** (no `0 ≤ a.num` hypothesis):
+    `|expSum(a+b) N − expSum a N·expSum b N| ≤ 2(Ma+Mb)^{N+1}/(N+1)!`, via `expSum_corner_le_gen_signed`. -/
+theorem expSum_add_le_signed {a b : Q} {Ma Mb : Nat} (had : 0 < a.den) (hbd : 0 < b.den)
+    (hqa : Qle (Qabs a) ⟨(Ma : Int), 1⟩) (hqb : Qle (Qabs b) ⟨(Mb : Int), 1⟩)
+    (N : Nat) (hN : 2 * (Ma + Mb) ≤ N + 2) :
+    Qle (Qabs (Qsub (expSum (add a b) N) (mul (expSum a N) (expSum b N))))
+      ⟨(2 * npow (Ma + Mb) (N + 1) : Int), fct (N + 1)⟩ := by
+  have hg : ∀ i j, 0 < (mul (expTerm a i) (expTerm b j)).den :=
+    fun i j => Qmul_den_pos (expTerm_den_pos had i) (expTerm_den_pos hbd j)
+  have hPN : 0 < (expSum (add a b) N).den := expSum_den_pos (add_den_pos had hbd) N
+  have hcornerd : 0 < (Fsum (fun i => Qsub (Fsum (fun j => mul (expTerm a i) (expTerm b j)) N)
+      (Fsum (fun j => mul (expTerm a i) (expTerm b j)) (N - i))) N).den :=
+    Fsum_den_pos (fun i => Qsub_den_pos (Fsum_den_pos (fun j => hg i j) N)
+      (Fsum_den_pos (fun j => hg i j) (N - i))) N
+  have heq : Qeq (Qsub (expSum (add a b) N) (mul (expSum a N) (expSum b N)))
+      (neg (Fsum (fun i => Qsub (Fsum (fun j => mul (expTerm a i) (expTerm b j)) N)
+        (Fsum (fun j => mul (expTerm a i) (expTerm b j)) (N - i))) N)) :=
+    Qeq_trans (Qsub_den_pos hPN (add_den_pos hPN hcornerd))
+      (QsubCongr (Qeq_refl (expSum (add a b) N)) (expSum_mul_eq had hbd N))
+      (Qsub_add_self_left (expSum (add a b) N) _)
+  refine Qle_congr_left (Qabs_den_pos (neg_den_pos hcornerd)) (Qeq_symm (Qabs_Qeq heq)) ?_
+  rw [Qabs_neg]
+  exact expSum_corner_le_gen_signed had hbd hqa hqb N hN
+
+/-- **The exp FE corner decays to `1/(n+1)` for SIGNED arguments** at a deep depth `D` (signed `expSum_add_decay`). -/
+theorem expSum_add_decay_signed {a b : Q} {Mx My : Nat} (had : 0 < a.den) (hbd : 0 < b.den)
+    (hqa : Qle (Qabs a) ⟨(Mx : Int), 1⟩) (hqb : Qle (Qabs b) ⟨(My : Int), 1⟩)
+    (hMxy : 0 < Mx + My) (n D : Nat)
+    (hD : 2 * (n + 1) * npow (Mx + My) (2 * (Mx + My) + 1) + 2 * (Mx + My) ≤ D) :
+    Qle (Qabs (Qsub (expSum (add a b) D) (mul (expSum a D) (expSum b D)))) ⟨1, n + 1⟩ :=
+  Qle_trans (fct_pos _) (expSum_add_le_signed had hbd hqa hqb D (by omega))
     (truncCoef_QE (Mx + My) 2 (n + 1) (D + 1) hMxy (by omega) (by omega))
 
 end UOR.Bridge.F1Square.Analysis
