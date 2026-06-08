@@ -2996,4 +2996,39 @@ theorem corner_sum_bound (ρ w : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num) (h
     (Qeq_le (Fsum_mul_const_right hcd ha (2 * N + 1))) ?_
   exact Fsum_le_congr (fun j _ => corner_bound ρ w hρd hρ0 hwd hw h2ρ j (2 * N + 1))
 
+/-- `(a·c) + c ≈ (a+1)·c`. -/
+theorem Qadd_const_mul (a : Int) (c : Q) :
+    Qeq (add (mul (⟨a, 1⟩ : Q) c) c) (mul (⟨a + 1, 1⟩ : Q) c) := by
+  simp only [Qeq, add, mul]; push_cast; ring_uor
+
+/-- A constant finite sum: `Σ_{i≤M} c = (M+1)·c`. -/
+theorem Fsum_const_eq (c : Q) (hcd : 0 < c.den) (M : Nat) :
+    Qeq (Fsum (fun _ => c) M) (mul (⟨(M : Int) + 1, 1⟩ : Q) c) := by
+  induction M with
+  | zero =>
+    show Qeq c (mul (⟨((0 : Nat) : Int) + 1, 1⟩ : Q) c)
+    simp only [Qeq, mul]; push_cast; ring_uor
+  | succ M ih =>
+    refine Qeq_trans (add_den_pos (Qmul_den_pos Nat.one_pos hcd) hcd)
+      (Qadd_congr ih (Qeq_refl c)) ?_
+    simp only [Qeq, add, mul]; push_cast; ring_uor
+
+/-- **Geometric `4ʲ` sum bound**: `Σ_{j≤k} 4ʲ ≤ 4^{k+1}`. -/
+theorem pow4_sum_le : ∀ k, Qle (Fsum (fun j => (⟨(4 : Int) ^ j, 1⟩ : Q)) k) (⟨(4 : Int) ^ (k + 1), 1⟩ : Q)
+  | 0 => by decide
+  | (k + 1) => by
+    have hnn : (0 : Int) ≤ (4 : Int) ^ (k + 1) := by
+      have h : (4 : Int) ^ (k + 1) = (((4 : Nat) ^ (k + 1) : Nat) : Int) := by push_cast; ring_uor
+      rw [h]; exact Int.ofNat_nonneg _
+    have hp : (4 : Int) ^ (k + 1 + 1) = 4 * (4 : Int) ^ (k + 1) := by rw [Int.pow_succ]; ring_uor
+    refine Qle_trans (add_den_pos Nat.one_pos Nat.one_pos)
+      (Qadd_le_add (pow4_sum_le k) (Qle_refl _)) ?_
+    show Qle (add (⟨(4 : Int) ^ (k + 1), 1⟩ : Q) (⟨(4 : Int) ^ (k + 1), 1⟩ : Q))
+      (⟨(4 : Int) ^ (k + 1 + 1), 1⟩ : Q)
+    simp only [Qle, add]
+    rw [hp]
+    generalize (4 : Int) ^ (k + 1) = A at hnn ⊢
+    push_cast
+    omega
+
 end UOR.Bridge.F1Square.Analysis

@@ -990,3 +990,6 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Qzero_le_loc
 #print axioms Analysis.sq_le_four_pow
 #print axioms Analysis.corner_sum_bound
+#print axioms Analysis.Qadd_const_mul
+#print axioms Analysis.Fsum_const_eq
+#print axioms Analysis.pow4_sum_le
