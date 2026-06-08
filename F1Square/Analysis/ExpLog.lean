@@ -1855,6 +1855,44 @@ theorem formal_doubling (k : Nat) :
     have h00 : acoef 0 = ⟨0, 1⟩ := by decide
     rw [h00]; decide
 
+/-- `0·x = 0`. -/
+theorem mul_left_zero (x : Q) : Qeq (mul ⟨0, 1⟩ x) ⟨0, 1⟩ := by simp [Qeq, mul]
+
+/-- `x·0 = 0`. -/
+theorem mul_right_zero (x : Q) : Qeq (mul x ⟨0, 1⟩) ⟨0, 1⟩ := by simp [Qeq, mul]
+
+/-- **Eval bridge, the structural identity**: since `b(0)=0`, the formal composition evaluates as
+    `eval(a∘b, w, M) = Σ_{m≤M} a(m)·eval(bᵐ, w, M)` — the inner sum extends to `M` because `(bᵐ)_k`
+    vanishes for `k<m`, then the triangular double sum is swapped. -/
+theorem peval_fcomp_swap (a b : Nat → Q) (ha : ∀ i, 0 < (a i).den) (hb : ∀ i, 0 < (b i).den)
+    (hb0 : Qeq (b 0) ⟨0, 1⟩) (w : Q) (hwd : 0 < w.den) (M : Nat) :
+    Qeq (peval (fcomp a b) w M) (Fsum (fun m => mul (a m) (peval (fpow b m) w M)) M) := by
+  have hg : ∀ m k, 0 < (mul (mul (a m) (fpow b m k)) (qpow w k)).den :=
+    fun m k => Qmul_den_pos (Qmul_den_pos (ha m) (fpow_den_pos hb m k)) (qpow_den_pos hwd k)
+  -- each outer term, rewritten as a length-`M` inner sum over `m`
+  have hrow : ∀ k, k ≤ M → Qeq (mul (fcomp a b k) (qpow w k))
+      (Fsum (fun m => mul (mul (a m) (fpow b m k)) (qpow w k)) M) := by
+    intro k hk
+    refine Qeq_trans (Fsum_den_pos (fun m => hg m k) k)
+      (Fsum_mul_const_right (qpow_den_pos hwd k)
+        (fun m => Qmul_den_pos (ha m) (fpow_den_pos hb m k)) k) ?_
+    refine Fsum_extend_zero (fun m => hg m k) hk (fun m hm1 _ => ?_)
+    have hv : Qeq (fpow b m k) ⟨0, 1⟩ := fpow_vanish hb hb0 m k (by omega)
+    exact Qeq_trans (Qmul_den_pos (Qmul_den_pos (ha m) Nat.one_pos) (qpow_den_pos hwd k))
+      (Qmul_congr (Qmul_congr (Qeq_refl _) hv) (Qeq_refl _))
+      (Qeq_trans (Qmul_den_pos Nat.one_pos (qpow_den_pos hwd k))
+        (Qmul_congr (mul_right_zero (a m)) (Qeq_refl _)) (mul_left_zero (qpow w k)))
+  -- assemble: congr → swap → pull a(m) out
+  refine Qeq_trans (Fsum_den_pos (fun k => Fsum_den_pos (fun m => hg m k) M) M)
+    (Fsum_congr_le (k := M) (fun k hk => hrow k hk)) ?_
+  refine Qeq_trans (Fsum_den_pos (fun m => Fsum_den_pos (fun k => hg m k) M) M)
+    (Fsum_swap (fun k m => hg m k) M M) ?_
+  refine Fsum_congr (fun m => ?_) M
+  exact Qeq_trans (Fsum_den_pos (fun k => Qmul_den_pos (ha m)
+      (Qmul_den_pos (fpow_den_pos hb m k) (qpow_den_pos hwd k))) M)
+    (Fsum_congr (fun k => Qmul_assoc (a m) (fpow b m k) (qpow w k)) M)
+    (Fsum_mul_left (ha m) (fun k => Qmul_den_pos (fpow_den_pos hb m k) (qpow_den_pos hwd k)) M)
+
 /-- **The composed-series evaluation IS twice the artanh sum** (formal_doubling, evaluated): the formal
     series `artanh∘kdbl`, evaluated at `w` and truncated at `2N+1`, equals `2·artSum w N`. This carries
     `formal_doubling` to the analytic `artSum` side; combined with the composition eval bridge

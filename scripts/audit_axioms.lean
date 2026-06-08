@@ -915,3 +915,6 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.peval_congr
 #print axioms Analysis.peval_smul
 #print axioms Analysis.dcomp_artSum
+#print axioms Analysis.mul_left_zero
+#print axioms Analysis.mul_right_zero
+#print axioms Analysis.peval_fcomp_swap
