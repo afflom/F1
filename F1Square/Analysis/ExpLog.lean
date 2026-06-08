@@ -395,6 +395,19 @@ def peval (c : Nat → Q) (w : Q) (N : Nat) : Q := Fsum (fun k => mul (c k) (qpo
 theorem peval_den_pos {c : Nat → Q} {w : Q} (hc : ∀ k, 0 < (c k).den) (hwd : 0 < w.den) (N : Nat) :
     0 < (peval c w N).den := Fsum_den_pos (fun k => Qmul_den_pos (hc k) (qpow_den_pos hwd k)) N
 
+/-- **Eval congruence**: coefficientwise-equal series evaluate equally. -/
+theorem peval_congr {a b : Nat → Q} (h : ∀ k, Qeq (a k) (b k)) (w : Q) (M : Nat) :
+    Qeq (peval a w M) (peval b w M) :=
+  Fsum_congr (fun k => Qmul_congr (h k) (Qeq_refl _)) M
+
+/-- **Eval scalar-linearity**: `eval(c·a) = c·eval(a)`. -/
+theorem peval_smul (c : Q) (hcd : 0 < c.den) (a : Nat → Q) (ha : ∀ k, 0 < (a k).den)
+    (w : Q) (hwd : 0 < w.den) (M : Nat) :
+    Qeq (peval (fun k => mul c (a k)) w M) (mul c (peval a w M)) :=
+  Qeq_trans (Fsum_den_pos (fun k => Qmul_den_pos hcd (Qmul_den_pos (ha k) (qpow_den_pos hwd k))) M)
+    (Fsum_congr (fun k => Qmul_assoc c (a k) (qpow w k)) M)
+    (Fsum_mul_left hcd (fun k => Qmul_den_pos (ha k) (qpow_den_pos hwd k)) M)
+
 /-- **The target side**: the geometric-coefficient evaluation is `2·(Σ_{k≤N} wᵏ) − 1`. With
     `gPow_telescope` this gives `peval dgeom w N · (1−w) → (1+w)` — the closed form `(1+w)/(1−w)`. -/
 theorem peval_dgeom (w : Q) (hwd : 0 < w.den) :
@@ -1841,5 +1854,17 @@ theorem formal_doubling (k : Nat) :
     show Qeq (acoef 0) (mul ⟨2, 1⟩ (acoef 0))
     have h00 : acoef 0 = ⟨0, 1⟩ := by decide
     rw [h00]; decide
+
+/-- **The composed-series evaluation IS twice the artanh sum** (formal_doubling, evaluated): the formal
+    series `artanh∘kdbl`, evaluated at `w` and truncated at `2N+1`, equals `2·artSum w N`. This carries
+    `formal_doubling` to the analytic `artSum` side; combined with the composition eval bridge
+    (`peval(artanh∘kdbl,w) → Rartanh(2w/(1+w²))`) it gives the real doubling `2 Rartanh w = Rartanh(2w/(1+w²))`. -/
+theorem dcomp_artSum (w : Q) (hwd : 0 < w.den) (N : Nat) :
+    Qeq (peval (fcomp acoef kdbl) w (2 * N + 1)) (mul ⟨2, 1⟩ (artSum w N)) := by
+  refine Qeq_trans (peval_den_pos (fun k => Qmul_den_pos Nat.one_pos (acoef_den k)) hwd _)
+    (peval_congr (fun k => formal_doubling k) w (2 * N + 1)) ?_
+  refine Qeq_trans (Qmul_den_pos Nat.one_pos (peval_den_pos (fun k => acoef_den k) hwd _))
+    (peval_smul ⟨2, 1⟩ Nat.one_pos acoef (fun k => acoef_den k) w hwd (2 * N + 1)) ?_
+  exact Qmul_congr (Qeq_refl _) (peval_acoef_artSum w hwd N)
 
 end UOR.Bridge.F1Square.Analysis

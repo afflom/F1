@@ -912,3 +912,6 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.acoef_even_zero
 #print axioms Analysis.acoef_odd_artTerm
 #print axioms Analysis.peval_acoef_artSum
+#print axioms Analysis.peval_congr
+#print axioms Analysis.peval_smul
+#print axioms Analysis.dcomp_artSum
