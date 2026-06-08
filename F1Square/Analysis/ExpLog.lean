@@ -3411,4 +3411,35 @@ theorem qpow_le_recip {η : Q} (hη0 : 0 ≤ η.num) (hηd : 0 < η.den) (hlt : 
     ≤ (η.den : Int) * ((η.den + M * (η.den - η.num.toNat) : Nat) : Int)
   exact Int.mul_le_mul_of_nonneg_left (by exact_mod_cast hden) (by exact_mod_cast Nat.zero_le η.den)
 
+/-- `2·(2·X) ≈ 4·X`. -/
+theorem Qmul_2_2 (X : Q) : Qeq (mul ⟨2, 1⟩ (mul ⟨2, 1⟩ X)) (mul ⟨4, 1⟩ X) := by
+  simp only [Qeq, mul]; push_cast; ring_uor
+
+/-- `0 ≤ geoSum ρ N` for `0 ≤ ρ`. -/
+theorem geoSum_num_nonneg {ρ : Q} (hρ0 : 0 ≤ ρ.num) : ∀ N, 0 ≤ (geoSum ρ N).num
+  | 0 => qpow_nonneg hρ0 _
+  | (n + 1) => Qadd_num_nonneg_loc (geoSum_num_nonneg hρ0 n) (qpow_nonneg hρ0 _)
+
+/-- **Uniform partial-sum bound**: `|peval kdbl w (2N+1)| ≤ 1` for all `N` (for `ρ ≤ 1/4`, `|w| ≤ ρ`).
+    `|peval| ≤ 2·geoSum ρ N ≤ 4ρ ≤ 1`. This discharges `DN_pow_le`'s `hq1` uniformly in `N`. -/
+theorem peval_kdbl_abs_le_one (ρ w : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num) (hwd : 0 < w.den)
+    (hw : Qle (Qabs w) ρ) (hρ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ρ ρ)))
+    (hρ8 : Qle (mul ⟨4, 1⟩ ρ) ⟨1, 1⟩) (N : Nat) :
+    Qle (Qabs (peval kdbl w (2 * N + 1))) ⟨1, 1⟩ := by
+  have h1 : Qle (Qabs (peval kdbl w (2 * N + 1))) (mul ⟨2, 1⟩ (geoSum ρ N)) :=
+    Qle_trans (peval_den_pos (fun k => Qabs_den_pos (kdbl_den k)) hρd (2 * N + 1))
+      (peval_abs_le_peval_fabs kdbl (fun k => kdbl_den k) w hwd hρd hw (2 * N + 1))
+      (Qeq_le (peval_fabs_kdbl_geoSum ρ hρd N))
+  have hg : Qle (geoSum ρ N) (mul ⟨2, 1⟩ (qpow ρ 1)) :=
+    mul_div2 (geoSum_num_nonneg hρ0 N) (geoSum_den_pos hρd N)
+      (Qsub_den_pos Nat.one_pos (Qmul_den_pos hρd hρd)) (qpow_den_pos hρd 1) hρ2
+      (geoSum_tel_le ρ hρd hρ0 N)
+  refine Qle_trans (Qmul_den_pos Nat.one_pos (geoSum_den_pos hρd N)) h1 ?_
+  refine Qle_trans (Qmul_den_pos Nat.one_pos (Qmul_den_pos Nat.one_pos (qpow_den_pos hρd 1)))
+    (Qmul_le_mul_left (by decide) hg) ?_
+  refine Qle_trans (Qmul_den_pos Nat.one_pos (qpow_den_pos hρd 1))
+    (Qeq_le (Qmul_2_2 (qpow ρ 1))) ?_
+  refine Qle_trans (Qmul_den_pos Nat.one_pos hρd)
+    (Qeq_le (Qmul_congr (Qeq_refl _) (mul_one ρ))) hρ8
+
 end UOR.Bridge.F1Square.Analysis

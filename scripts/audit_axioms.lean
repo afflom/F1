@@ -1014,3 +1014,6 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Qmul_8rearr
 #print axioms Analysis.DN_pow_le
 #print axioms Analysis.qpow_le_recip
+#print axioms Analysis.Qmul_2_2
+#print axioms Analysis.geoSum_num_nonneg
+#print axioms Analysis.peval_kdbl_abs_le_one
