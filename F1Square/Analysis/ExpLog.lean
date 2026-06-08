@@ -3720,4 +3720,44 @@ theorem artSum_depth_recip (u σ : Q) (hud : 0 < u.den) (hσ0 : 0 ≤ σ.num) (h
     (Qmul_le_mul_left (by decide) (qpow_le_recip hσ0 hσd hσlt hn)) ?_
   apply Qeq_le; simp only [Qeq, mul]; push_cast; ring_uor
 
+/-- **D-term ⇒ reciprocal**: `|2·artSum(w,R) − artSum(uval w,R)| ≤ 8ρ.den/(n+1)` for `|w| ≤ ρ < 1/16`,
+    `n+1 ≤ 2R+2`. (Qadd_self + dcomp_artSum + peval_acoef_artSum + DN_recip.) -/
+theorem Dterm_recip (ρ w : Q) (R n : Nat) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num) (hρ1 : Qle ρ ⟨1, 1⟩)
+    (hwd : 0 < w.den) (hw : Qle (Qabs w) ρ) (h2ρ : 0 ≤ (Qsub (⟨1, 1⟩ : Q) (mul ⟨2, 1⟩ ρ)).num)
+    (hρ4 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ⟨2, 1⟩ ρ))) (hρ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ρ ρ)))
+    (hρ8 : Qle (mul ⟨4, 1⟩ ρ) ⟨1, 1⟩) (hlt : (mul ρ ⟨16, 1⟩).num.toNat < (mul ρ ⟨16, 1⟩).den)
+    (hMn : n + 1 ≤ 2 * R + 2) :
+    Qle (Qabs (Qsub (add (artSum w R) (artSum w R)) (artSum (uval w) R)))
+      (⟨((8 * ρ.den : Nat) : Int), n + 1⟩ : Q) := by
+  have huvd := uval_den_pos w hwd
+  have ha2 : Qeq (add (artSum w R) (artSum w R)) (peval (fcomp acoef kdbl) w (2 * R + 1)) :=
+    Qeq_trans (Qmul_den_pos Nat.one_pos (artSum_den_pos hwd R)) (Qadd_self (artSum w R))
+      (Qeq_symm (dcomp_artSum w hwd R))
+  have hb2 : Qeq (artSum (uval w) R) (peval acoef (uval w) (2 * R + 1)) :=
+    Qeq_symm (peval_acoef_artSum (uval w) huvd R)
+  refine Qle_trans (Qabs_den_pos (Qsub_den_pos
+      (peval_den_pos (fun k => Fsum_den_pos
+        (fun m => Qmul_den_pos (acoef_den m) (fpow_den_pos (fun i => kdbl_den i) m k)) k) hwd _)
+      (peval_den_pos (fun k => acoef_den k) huvd _)))
+    (Qeq_le (Qabs_Qeq (Qsub_congr ha2 hb2))) ?_
+  exact DN_recip ρ w R n hρd hρ0 hρ1 hwd hw h2ρ hρ4 hρ2 hρ8 hlt hMn
+
+/-- **artSum arg-variation (via uval)**: `|artSum(uval w,M) − artSum(uval w',M)| ≤ 8·|w − w'|` for
+    `|uval w|, |uval w'| ≤ σ ≤ 1/2`, `|w|, |w'| ≤ ρ ≤ 1`. (artSum_Lip_le + geoEvenSum_le_two + uval_lip.) -/
+theorem artSum_uval_argdiff (ρ σ w w' : Q) (hρd : 0 < ρ.den) (hρ1 : Qle ρ ⟨1, 1⟩) (hσ0 : 0 ≤ σ.num)
+    (hσd : 0 < σ.den) (hσ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul σ σ))) (hwd : 0 < w.den) (hw'd : 0 < w'.den)
+    (hw : Qle (Qabs w) ρ) (hw' : Qle (Qabs w') ρ) (huσ : Qle (Qabs (uval w)) σ)
+    (hu'σ : Qle (Qabs (uval w')) σ) (M : Nat) :
+    Qle (Qabs (Qsub (artSum (uval w) M) (artSum (uval w') M))) (mul ⟨8, 1⟩ (Qabs (Qsub w w'))) := by
+  refine Qle_trans (Qmul_den_pos (geoEvenSum_den_pos hσd M)
+      (Qabs_den_pos (Qsub_den_pos (uval_den_pos w hwd) (uval_den_pos w' hw'd))))
+    (artSum_Lip_le (uval_den_pos w hwd) (uval_den_pos w' hw'd) hσd huσ hu'σ M) ?_
+  refine Qle_trans (Qmul_den_pos Nat.one_pos
+      (Qabs_den_pos (Qsub_den_pos (uval_den_pos w hwd) (uval_den_pos w' hw'd))))
+    (Qmul_le_mul_right (Qabs_num_nonneg _) (geoEvenSum_le_two hσ0 hσd hσ2 M)) ?_
+  refine Qle_trans (Qmul_den_pos Nat.one_pos (Qmul_den_pos Nat.one_pos
+      (Qabs_den_pos (Qsub_den_pos hwd hw'd))))
+    (Qmul_le_mul_left (by decide) (uval_lip ρ w w' hρd hρ1 hwd hw'd hw hw')) ?_
+  apply Qeq_le; simp only [Qeq, mul]; push_cast; ring_uor
+
 end UOR.Bridge.F1Square.Analysis
