@@ -905,3 +905,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.kdbl_zero
 #print axioms Analysis.fcomp_gcoef_geoEven
 #print axioms Analysis.comp_recip
+#print axioms Analysis.fderiv_inj

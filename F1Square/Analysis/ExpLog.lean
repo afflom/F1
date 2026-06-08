@@ -1721,6 +1721,20 @@ theorem comp_recip (k : Nat) :
   refine Qeq_trans (Qsub_den_pos (fone_den_pos k) Nat.one_pos) (Qsub_congr (Qeq_refl _) hvan) ?_
   exact Qadd_zero_right _
 
+/-- **Antiderivative uniqueness**: equal formal derivatives + equal constant term ⇒ equal series. -/
+theorem fderiv_inj {y z : Nat → Q} (hd : ∀ k, Qeq (fderiv y k) (fderiv z k))
+    (h0 : Qeq (y 0) (z 0)) (k : Nat) : Qeq (y k) (z k) := by
+  cases k with
+  | zero => exact h0
+  | succ n =>
+      have hh := hd n
+      simp only [Qeq, fderiv, mul, Nat.one_mul] at hh
+      push_cast at hh
+      show Qeq (y (n + 1)) (z (n + 1))
+      simp only [Qeq]; push_cast
+      refine Int.eq_of_mul_eq_mul_left (a := (n : Int) + 1) (by omega) ?_
+      rw [← Int.mul_assoc, ← Int.mul_assoc]; exact hh
+
 /-- **The artanh ODE** `(1−t²)·artanh' = 1` at the coefficient level. -/
 theorem artanh_ode (k : Nat) : Qeq (fmul oneMinusSq gcoef k) (fone k) :=
   Qeq_trans (add_den_pos (fmul_den_pos (fun i => fsmono_den Nat.one_pos 0 i) (fun _ => gcoef_den _) k)
