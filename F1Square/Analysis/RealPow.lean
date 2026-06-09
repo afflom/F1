@@ -41,6 +41,105 @@ theorem RexpReal_nsmul (x : Real) : ∀ k, Req (RexpReal (Rnsmul k x)) (Rpow (Re
       Req_trans (RexpReal_add x (Rnsmul k x))
         (Rmul_congr (Req_refl (RexpReal x)) (RexpReal_nsmul x k))
 
+-- ===========================================================================
+-- `Rnonneg` is closed under `Rmul` — the foundational real-multiplication sign fact that the
+-- exponential monotonicity (next) rests on. The `Rmul` reindex `I+1 = 2K(n+1)` is tuned exactly for
+-- it: a product of two samples each `≥ −1/(I+1)` and `≤ K` (in absolute value) is `≥ −K/(I+1) =
+-- −1/(2(n+1)) ≥ −1/(n+1)`. The nonlinear integer core is isolated (`ring_uor` chokes on `.num` casts).
+-- ===========================================================================
+
+/-- The integer core of `Rnonneg_Rmul`: a bilinear lower bound on a box. Given `−dA ≤ A·(2Km)`,
+    `−dB ≤ B·(2Km)`, `A ≤ K·dA`, `B ≤ K·dB` (with `dA,dB,K,m > 0`), the product satisfies
+    `−(dA·dB) ≤ A·B·m`. The minimum of `A·B` over the box `[−1/(2Km),K]²` sits at a corner; the proof
+    cases on the signs of `A,B` and, in each mixed case, multiplies the active `≥ −d` bound by the
+    non-negative factor and divides out `K`. -/
+private theorem mul_lo_core {A B dA dB K m : Int}
+    (hdA : 0 < dA) (hdB : 0 < dB) (hK : 0 < K) (_hm : 0 < m)
+    (h1 : -dA ≤ A * (2 * K * m)) (h2 : -dB ≤ B * (2 * K * m))
+    (h3 : A ≤ K * dA) (h4 : B ≤ K * dB) : -(dA * dB) ≤ A * B * m := by
+  -- The shared "one factor non-negative" argument: if `0 ≤ G`, `−dF ≤ F·(2Km)`, `G ≤ K·dG`, then
+  -- `−(dF·dG) ≤ F·G·m`. (Used with `(F,G,dF,dG) = (A,B,dA,dB)` and `= (B,A,dB,dA)`.)
+  have posarg : ∀ F G dF dG : Int, 0 ≤ G → 0 ≤ dF → 0 < dG →
+      -dF ≤ F * (2 * K * m) → G ≤ K * dG → -(dF * dG) ≤ F * G * m := by
+    intro F G dF dG hG hdF hdG hbnd hGle
+    have s1 := Int.mul_le_mul_of_nonneg_right hbnd hG
+    have s2 := Int.mul_le_mul_of_nonneg_left hGle hdF
+    have e1 : F * (2 * K * m) * G = 2 * K * (F * G * m) := by ring_uor
+    have e2 : (-dF) * G = -(dF * G) := by ring_uor
+    have e3 : dF * (K * dG) = K * (dF * dG) := by ring_uor
+    rw [e1, e2] at s1
+    rw [e3] at s2
+    have s3 : -(K * (dF * dG)) ≤ -(dF * G) := by omega
+    have s4 := Int.le_trans s3 s1
+    have e4 : -(K * (dF * dG)) = K * (-(dF * dG)) := by ring_uor
+    have e5 : 2 * K * (F * G * m) = K * (2 * (F * G * m)) := by ring_uor
+    rw [e4, e5] at s4
+    have hfin : -(dF * dG) ≤ 2 * (F * G * m) := Int.le_of_mul_le_mul_left s4 hK
+    have hY : 0 ≤ dF * dG := Int.mul_nonneg hdF (Int.le_of_lt hdG)
+    omega
+  by_cases hB : 0 ≤ B
+  · exact posarg A B dA dB hB (Int.le_of_lt hdA) hdB h1 h4
+  · by_cases hA : 0 ≤ A
+    · have hsymm := posarg B A dB dA hA (Int.le_of_lt hdB) hdA h2 h3
+      have e : B * A * m = A * B * m := by ring_uor
+      have e' : dB * dA = dA * dB := by ring_uor
+      rw [e, e'] at hsymm; exact hsymm
+    · -- both negative ⇒ `A·B ≥ 0`
+      have hAB : 0 ≤ A * B := by
+        have h := Int.mul_nonneg (by omega : 0 ≤ -A) (by omega : 0 ≤ -B)
+        have e : (-A) * (-B) = A * B := by ring_uor
+        rw [e] at h; exact h
+      have hABm : 0 ≤ A * B * m := Int.mul_nonneg hAB (Int.le_of_lt _hm)
+      have hY : 0 ≤ dA * dB := Int.mul_nonneg (Int.le_of_lt hdA) (Int.le_of_lt hdB)
+      omega
+
+/-- **`Rnonneg` is closed under `Rmul`**: the product of two non-negative reals is non-negative. The
+    `Rmul` reindex `I = Ridx x y n` satisfies `I+1 = 2K(n+1)` (`K = max(xBound x, xBound y)`), so the
+    sample product `(x_I)·(y_I)` — with each factor `≥ −1/(I+1)` and `|·| ≤ K` — is `≥ −1/(n+1)`
+    (`mul_lo_core`). This unblocks the exponential monotonicity. -/
+theorem Rnonneg_Rmul {x y : Real} (hx : Rnonneg x) (hy : Rnonneg y) : Rnonneg (Rmul x y) := by
+  intro n
+  show Qle (neg (Qbound n)) (mul (x.seq (Ridx x y n)) (y.seq (Ridx x y n)))
+  -- abbreviations (no `set`: Mathlib-only)
+  have hIeq : (Ridx x y n + 1 : Nat) = 2 * RmulK x y * (n + 1) := Ridx_succ x y n
+  -- the four integer bounds at index `I = Ridx x y n`
+  have h1 : -((x.seq (Ridx x y n)).den : Int)
+      ≤ (x.seq (Ridx x y n)).num * (2 * (RmulK x y : Int) * ((n + 1 : Nat) : Int)) := by
+    have hh := hx (Ridx x y n)
+    simp only [Qle, neg, Qbound] at hh
+    rw [hIeq] at hh
+    push_cast at hh ⊢
+    omega
+  have h2 : -((y.seq (Ridx x y n)).den : Int)
+      ≤ (y.seq (Ridx x y n)).num * (2 * (RmulK x y : Int) * ((n + 1 : Nat) : Int)) := by
+    have hh := hy (Ridx x y n)
+    simp only [Qle, neg, Qbound] at hh
+    rw [hIeq] at hh
+    push_cast at hh ⊢
+    omega
+  have h3 : (x.seq (Ridx x y n)).num ≤ (RmulK x y : Int) * (x.seq (Ridx x y n)).den := by
+    have hh : Qle (x.seq (Ridx x y n)) ⟨(RmulK x y : Int), 1⟩ :=
+      Qle_trans (Qabs_den_pos (x.den_pos _)) (Qle_self_Qabs _)
+        (canon_bound_le (Nat.le_max_left _ _) _)
+    simp only [Qle] at hh
+    push_cast at hh ⊢
+    omega
+  have h4 : (y.seq (Ridx x y n)).num ≤ (RmulK x y : Int) * (y.seq (Ridx x y n)).den := by
+    have hh : Qle (y.seq (Ridx x y n)) ⟨(RmulK x y : Int), 1⟩ :=
+      Qle_trans (Qabs_den_pos (y.den_pos _)) (Qle_self_Qabs _)
+        (canon_bound_le (Nat.le_max_right _ _) _)
+    simp only [Qle] at hh
+    push_cast at hh ⊢
+    omega
+  have hcore := mul_lo_core (A := (x.seq (Ridx x y n)).num) (B := (y.seq (Ridx x y n)).num)
+    (dA := ((x.seq (Ridx x y n)).den : Int)) (dB := ((y.seq (Ridx x y n)).den : Int))
+    (K := (RmulK x y : Int)) (m := ((n + 1 : Nat) : Int))
+    (by exact_mod_cast x.den_pos _) (by exact_mod_cast y.den_pos _)
+    (by exact_mod_cast RmulK_pos x y) (by exact_mod_cast Nat.succ_pos n) h1 h2 h3 h4
+  simp only [Qle, neg, Qbound, mul]
+  push_cast at hcore ⊢
+  omega
+
 /-- **Real powers, abstract form**: if `exp L ≈ N` then `exp(k·L) ≈ Nᵏ`. With `L = log n` and
     `N = n` (the v0.15.1 gate `Rexp_log_nat_Rlog`), this is `exp(k·log n) ≈ nᵏ`. Decoupled from the
     `Rlog` plumbing so that any logarithm witness `exp L ≈ N` produces its powers — the established

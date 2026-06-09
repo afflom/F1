@@ -1086,3 +1086,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rnsmul_succ
 #print axioms Analysis.RexpReal_nsmul
 #print axioms Analysis.RexpReal_nsmul_eq
+#print axioms Analysis.Rnonneg_Rmul
