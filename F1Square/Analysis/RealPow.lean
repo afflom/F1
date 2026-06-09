@@ -2255,4 +2255,17 @@ theorem dcoef_term_geo (w ρ : Q) (hwd : 0 < w.den) (hρd : 0 < ρ.den) (hρ0 : 
   exact Qle_trans (qpow_den_pos (Qabs_den_pos hwd) (m + 1 + 1)) (Qeq_le (qpow_abs w (m + 1 + 1)))
     (qpow_base_mono (Qabs_den_pos hwd) hρd (Qabs_num_nonneg w) hw (m + 1 + 1))
 
+/-- **The geometric inner bound** `|peval(δ,w,M) − δ_rat(w)| ≤ (1/3)·ρ^{M+1}` (`0 ≤ w`, `|w| ≤ ρ`). -/
+theorem inner_eval_geo (w ρ : Q) (hwd : 0 < w.den) (hwn : 0 ≤ w.num) (hρd : 0 < ρ.den)
+    (hρ0 : 0 ≤ ρ.num) (hw : Qle (Qabs w) ρ) (m : Nat) :
+    Qle (Qabs (Qsub (peval dcoef w (m + 1)) (drat w))) (mul ⟨1, 3⟩ (qpow ρ (m + 1 + 1))) := by
+  refine Qle_trans (Qmul_den_pos (by decide) (Qabs_den_pos (Qmul_den_pos
+    (Qmul_den_pos (by decide) (dcoef_den (m + 1))) (qpow_den_pos hwd (m + 1 + 1)))))
+    (inner_eval_bound w hwd hwn m) ?_
+  refine Qle_trans (Qmul_den_pos (by decide) (Qmul_den_pos (by decide) (qpow_den_pos hρd (m + 1 + 1))))
+    (Qmul_le_mul_left (by decide) (dcoef_term_geo w ρ hwd hρd hρ0 hw m)) ?_
+  refine Qeq_le (Qeq_trans (Qmul_den_pos (by decide) (qpow_den_pos hρd (m + 1 + 1)))
+    (Qmul_assoc3 ⟨1, 9⟩ ⟨3, 1⟩ (qpow ρ (m + 1 + 1)))
+    (Qmul_congr (by decide : Qeq (mul (⟨1, 9⟩ : Q) ⟨3, 1⟩) ⟨1, 3⟩) (Qeq_refl _)))
+
 end UOR.Bridge.F1Square.Analysis
