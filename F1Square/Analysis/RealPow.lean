@@ -1363,4 +1363,70 @@ theorem nine3w_qcomp1 (k : Nat) :
         (fun i => fmul_den_pos dcoef_den dcoef_den i) k)
       (Qmul_congr (Qeq_refl _) (nine3w_dsq k))
 
+/-- **H2** (2nd level, RHS of the double-cleared key identity): `(9+3w)²·Qcomp = 8N² − 6N·8w − 9(8w)²`. -/
+theorem nine3w_qcomp2 (k : Nat) :
+    Qeq (fmul nine3w (fmul nine3w qcomp) k)
+      (Qsub (Qsub (mul ⟨8, 1⟩ (fmul nine3w nine3w k)) (mul ⟨6, 1⟩ (fmul nine3w eightT k)))
+        (mul ⟨9, 1⟩ (fmul eightT eightT k))) := by
+  have hQ1d : ∀ i, 0 < (Qsub (Qsub (mul ⟨8, 1⟩ (nine3w i)) (mul ⟨6, 1⟩ (eightT i)))
+      (mul ⟨9, 1⟩ (fmul dcoef eightT i))).den :=
+    fun i => Qsub_den_pos (Qsub_den_pos (Qmul_den_pos (by decide) (nine3w_den i))
+      (Qmul_den_pos (by decide) (eightT_den i))) (Qmul_den_pos (by decide) (fmul_den_pos dcoef_den eightT_den i))
+  have hAd : ∀ i, 0 < (Qsub (mul ⟨8, 1⟩ (nine3w i)) (mul ⟨6, 1⟩ (eightT i))).den :=
+    fun i => Qsub_den_pos (Qmul_den_pos (by decide) (nine3w_den i)) (Qmul_den_pos (by decide) (eightT_den i))
+  have hBd : ∀ i, 0 < (mul ⟨9, 1⟩ (fmul dcoef eightT i)).den :=
+    fun i => Qmul_den_pos (by decide) (fmul_den_pos dcoef_den eightT_den i)
+  refine Qeq_trans (fmul_den_pos nine3w_den hQ1d k) (fmul_congr_right (fun i => nine3w_qcomp1 i) k) ?_
+  refine Qeq_trans (Qsub_den_pos (fmul_den_pos nine3w_den hAd k) (fmul_den_pos nine3w_den hBd k))
+    (fmul_sub_right nine3w_den hAd hBd k) ?_
+  refine Qsub_congr ?_ ?_
+  · refine Qeq_trans (Qsub_den_pos (fmul_den_pos nine3w_den (fun i => Qmul_den_pos (by decide) (nine3w_den i)) k)
+        (fmul_den_pos nine3w_den (fun i => Qmul_den_pos (by decide) (eightT_den i)) k))
+      (fmul_sub_right nine3w_den (fun i => Qmul_den_pos (by decide) (nine3w_den i))
+        (fun i => Qmul_den_pos (by decide) (eightT_den i)) k) ?_
+    refine Qsub_congr ?_ ?_
+    · exact Qeq_trans (Qmul_den_pos (by decide) (fmul_den_pos nine3w_den nine3w_den k))
+        (fmul_smul_right nine3w nine3w ⟨8, 1⟩ (by decide) nine3w_den nine3w_den k) (Qeq_refl _)
+    · exact Qeq_trans (Qmul_den_pos (by decide) (fmul_den_pos nine3w_den eightT_den k))
+        (fmul_smul_right nine3w eightT ⟨6, 1⟩ (by decide) nine3w_den eightT_den k) (Qeq_refl _)
+  · exact Qeq_trans (Qmul_den_pos (by decide) (fmul_den_pos nine3w_den (fun i => fmul_den_pos dcoef_den eightT_den i) k))
+      (fmul_smul_right nine3w (fmul dcoef eightT) ⟨9, 1⟩ (by decide) nine3w_den
+        (fun i => fmul_den_pos dcoef_den eightT_den i) k)
+      (Qmul_congr (Qeq_refl _) (nine3w_de k))
+
+/-- **★ THE KEY δ-ODE IDENTITY (STEP 2c)** `9·(1−w²)·δ' = 8 − 6δ − 9δ²` (`= 9(1−g²)`). Both sides,
+    cleared by `A²=(9+3w)²`, collapse to `648(1−w²)` (`nine3w_M2` / `nine3w_qcomp2` + `g2_final`); the
+    identity then follows by two `fmul_nine3w_cancel`s. This is the formal `g'(1−w²)=1−g²` geometry. -/
+theorem dcoef_ode (k : Nat) :
+    Qeq (mul ⟨9, 1⟩ (fmul oneMinusSq (fderiv dcoef) k)) (qcomp k) := by
+  have hMd : ∀ i, 0 < (fmul oneMinusSq (fderiv dcoef) i).den :=
+    fun i => fmul_den_pos (fun j => oneMinusSq_den j) (fun j => fderiv_den_pos dcoef_den j) i
+  have hLd : ∀ i, 0 < (mul ⟨9, 1⟩ (fmul oneMinusSq (fderiv dcoef) i)).den :=
+    fun i => Qmul_den_pos (by decide) (hMd i)
+  refine fmul_nine3w_cancel (X := fun i => mul ⟨9, 1⟩ (fmul oneMinusSq (fderiv dcoef) i))
+    (Y := qcomp) hLd qcomp_den (fun m => ?_) k
+  refine fmul_nine3w_cancel
+    (X := fmul nine3w (fun i => mul ⟨9, 1⟩ (fmul oneMinusSq (fderiv dcoef) i)))
+    (Y := fmul nine3w qcomp) (fun i => fmul_den_pos nine3w_den hLd i)
+    (fun i => fmul_den_pos nine3w_den qcomp_den i) (fun j => ?_) m
+  -- goal: fmul nine3w (fmul nine3w L) j ≈ fmul nine3w (fmul nine3w qcomp) j
+  have hLHS : Qeq (fmul nine3w (fmul nine3w (fun i => mul ⟨9, 1⟩ (fmul oneMinusSq (fderiv dcoef) i))) j)
+      (mul ⟨648, 1⟩ (oneMinusSq j)) := by
+    refine Qeq_trans (fmul_den_pos nine3w_den
+      (fun i => Qmul_den_pos (by decide) (fmul_den_pos nine3w_den hMd i)) j)
+      (fmul_congr_right (fun i => fmul_smul_right nine3w (fmul oneMinusSq (fderiv dcoef)) ⟨9, 1⟩
+        (by decide) nine3w_den hMd i) j) ?_
+    refine Qeq_trans (Qmul_den_pos (by decide)
+      (fmul_den_pos nine3w_den (fun i => fmul_den_pos nine3w_den hMd i) j))
+      (fmul_smul_right nine3w (fmul nine3w (fmul oneMinusSq (fderiv dcoef))) ⟨9, 1⟩ (by decide)
+        nine3w_den (fun i => fmul_den_pos nine3w_den hMd i) j) ?_
+    refine Qeq_trans (Qmul_den_pos (by decide) (Qmul_den_pos (by decide) (oneMinusSq_den j)))
+      (Qmul_congr (Qeq_refl _) (nine3w_M2 j)) ?_
+    simp only [Qeq, mul]; push_cast; ring_uor
+  exact Qeq_trans (Qmul_den_pos (by decide) (oneMinusSq_den j)) hLHS
+    (Qeq_trans (Qsub_den_pos (Qsub_den_pos (Qmul_den_pos (by decide) (fmul_den_pos nine3w_den nine3w_den j))
+        (Qmul_den_pos (by decide) (fmul_den_pos nine3w_den eightT_den j)))
+        (Qmul_den_pos (by decide) (fmul_den_pos eightT_den eightT_den j)))
+      (g2_final j) (Qeq_symm (nine3w_qcomp2 j)))
+
 end UOR.Bridge.F1Square.Analysis

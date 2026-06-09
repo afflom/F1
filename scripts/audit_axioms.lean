@@ -1150,3 +1150,5 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.nine3w_qcomp1
 #print axioms Analysis.nine3w_de
 #print axioms Analysis.qcomp_den
+#print axioms Analysis.nine3w_qcomp2
+#print axioms Analysis.dcoef_ode
