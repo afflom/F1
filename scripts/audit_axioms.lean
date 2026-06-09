@@ -1194,3 +1194,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.qpow_two_eq
 #print axioms Analysis.qpow_mul_dist
 #print axioms Analysis.fpow_fabs_dcoef_term
+#print axioms Analysis.peval_dcoef_pow_gap

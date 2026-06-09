@@ -2366,4 +2366,30 @@ theorem fpow_fabs_dcoef_term (ρ : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num) 
     (qpow_mul_dist ⟨2, 1⟩ ρ (by decide) hρd k)
     (Qmul_congr (qpow_two_eq k) (Qeq_refl _))))
 
+/-- **The δ-power Cauchy gap**: `|peval(δᵐ,w,M') − peval(δᵐ,w,M)| ≤ Σ_{M+1}^{M'} (2ρ)ᵏ` for `|w|≤ρ`,
+    `M≤M'` (m-INDEPENDENT). The `peval_kdbl_pow_gap` analog with cleaner constants. -/
+theorem peval_dcoef_pow_gap (ρ w : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num) (hwd : 0 < w.den)
+    (hw : Qle (Qabs w) ρ) (m : Nat) {M M' : Nat} (hMM : M ≤ M') :
+    Qle (Qabs (Qsub (peval (fpow dcoef m) w M') (peval (fpow dcoef m) w M)))
+      (Qsub (Fsum (fun k => qpow (mul ⟨2, 1⟩ ρ) k) M') (Fsum (fun k => qpow (mul ⟨2, 1⟩ ρ) k) M)) :=
+  Fsum_abs_diff_le
+    (fun k => Qmul_den_pos (fpow_den_pos dcoef_den m k) (qpow_den_pos hwd k))
+    (fun k => qpow_den_pos (Qmul_den_pos (by decide) hρd) k)
+    (fun k => Qle_trans (Qmul_den_pos (Qabs_den_pos (fpow_den_pos dcoef_den m k))
+        (Qabs_den_pos (qpow_den_pos hwd k)))
+      (Qeq_le (by rw [Qabs_mul]; exact Qeq_refl _ :
+        Qeq (Qabs (mul (fpow dcoef m k) (qpow w k)))
+          (mul (Qabs (fpow dcoef m k)) (Qabs (qpow w k)))))
+      (Qle_trans (Qmul_den_pos (fpow_den_pos (fun j => fabs_den_pos dcoef_den j) m k)
+          (qpow_den_pos hρd k))
+        (Qmul_le_mul (Qabs_den_pos (fpow_den_pos dcoef_den m k))
+          (fpow_den_pos (fun j => fabs_den_pos dcoef_den j) m k)
+          (Qabs_den_pos (qpow_den_pos hwd k))
+          (Qabs_num_nonneg _) (Qabs_num_nonneg _)
+          (fpow_abs_dom dcoef dcoef_den m k)
+          (Qle_trans (qpow_den_pos (Qabs_den_pos hwd) k) (Qeq_le (qpow_abs w k))
+            (qpow_base_mono (Qabs_den_pos hwd) hρd (Qabs_num_nonneg w) hw k)))
+        (fpow_fabs_dcoef_term ρ hρd hρ0 m k)))
+    hMM
+
 end UOR.Bridge.F1Square.Analysis
