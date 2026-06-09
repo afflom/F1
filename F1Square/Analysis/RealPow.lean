@@ -2209,4 +2209,34 @@ theorem nine3w_peval_dcoef_sub (w : Q) (hwd : 0 < w.den) (hwn : 0 ≤ w.num) (m 
     (Qsub_congr (nine3w_peval_dcoef w hwd m) (drat_rel w hwd hwn)) ?_
   exact Qsub_add_left_cancel (mul ⟨8, 1⟩ w) (mul (mul ⟨3, 1⟩ (dcoef (m + 1))) (qpow w (m + 1 + 1)))
 
+/-- **The inner eval bound** `|peval(δ,w,M) − δ_rat(w)| ≤ (1/9)·|3·δ_M·w^{M+1}|` (`w ≥ 0`): divide the
+    cleared error by `9+3w ≥ 9`. The `q−u` term feeding `per_m_bound_gen` with `u = δ_rat`. -/
+theorem inner_eval_bound (w : Q) (hwd : 0 < w.den) (hwn : 0 ≤ w.num) (m : Nat) :
+    Qle (Qabs (Qsub (peval dcoef w (m + 1)) (drat w)))
+      (mul ⟨1, 9⟩ (Qabs (mul (mul ⟨3, 1⟩ (dcoef (m + 1))) (qpow w (m + 1 + 1))))) := by
+  have h93 : 0 < (add ⟨9, 1⟩ (mul ⟨3, 1⟩ w)).den := add_den_pos Nat.one_pos (Qmul_den_pos (by decide) hwd)
+  have hXd : 0 < (Qsub (peval dcoef w (m + 1)) (drat w)).den :=
+    Qsub_den_pos (peval_den_pos dcoef_den hwd (m + 1)) (drat_den w hwd hwn)
+  have h93num : (0 : Int) ≤ (add ⟨9, 1⟩ (mul ⟨3, 1⟩ w)).num := by
+    have hd : (0 : Int) ≤ (w.den : Int) := Int.ofNat_nonneg _
+    simp only [add, mul]; push_cast; omega
+  have h9le : Qle (⟨9, 1⟩ : Q) (Qabs (add ⟨9, 1⟩ (mul ⟨3, 1⟩ w))) := by
+    refine Qle_trans h93 ?_ (Qeq_le (Qeq_symm (Qabs_of_nonneg h93num)))
+    show Qle (⟨9, 1⟩ : Q) (add ⟨9, 1⟩ (mul ⟨3, 1⟩ w))
+    have hd : (0 : Int) ≤ (w.den : Int) := Int.ofNat_nonneg _
+    simp only [Qle, add, mul]; push_cast; omega
+  -- 9·|X| ≤ |9+3w|·|X| = |(9+3w)·X| = |Y|
+  have h9X : Qle (mul ⟨9, 1⟩ (Qabs (Qsub (peval dcoef w (m + 1)) (drat w))))
+      (Qabs (mul (mul ⟨3, 1⟩ (dcoef (m + 1))) (qpow w (m + 1 + 1)))) := by
+    refine Qle_trans (Qmul_den_pos (Qabs_den_pos h93) (Qabs_den_pos hXd))
+      (Qmul_le_mul_right (Qabs_num_nonneg _) h9le) ?_
+    rw [← Qabs_mul]
+    exact Qeq_le (Qabs_Qeq (nine3w_peval_dcoef_sub w hwd hwn m))
+  -- divide by 9
+  have hXeq : Qeq (Qabs (Qsub (peval dcoef w (m + 1)) (drat w)))
+      (mul ⟨1, 9⟩ (mul ⟨9, 1⟩ (Qabs (Qsub (peval dcoef w (m + 1)) (drat w))))) := by
+    simp only [Qeq, mul]; push_cast; ring_uor
+  exact Qle_trans (Qmul_den_pos (by decide) (Qmul_den_pos (by decide) (Qabs_den_pos hXd)))
+    (Qeq_le hXeq) (Qmul_le_mul_left (by decide) h9X)
+
 end UOR.Bridge.F1Square.Analysis
