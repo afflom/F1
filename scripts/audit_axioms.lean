@@ -1165,3 +1165,6 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.fcomp_shift1
 #print axioms Analysis.fmono1_sq
 #print axioms Analysis.fcomp_shift2
+#print axioms Analysis.fmul_smul_left
+#print axioms Analysis.fcomp_smul
+#print axioms Analysis.fcomp_sub

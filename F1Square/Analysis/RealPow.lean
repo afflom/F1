@@ -1660,4 +1660,34 @@ theorem fcomp_shift2 (b c : Nat → Q) (hb : ∀ i, 0 < (b i).den) (hc : ∀ i, 
     (fcomp_shift1 (fmul (fmono 1) b) c h1b hc hc0 k) ?_
   exact fmul_congr_right (fun j => fcomp_shift1 b c hb hc hc0 j) k
 
+/-- `(c·a)·b = c·(a·b)` (scalar on the left factor of `fmul`). -/
+theorem fmul_smul_left (a b : Nat → Q) (c : Q) (hc : 0 < c.den) (ha : ∀ i, 0 < (a i).den)
+    (hb : ∀ i, 0 < (b i).den) (k : Nat) : Qeq (fmul (fsmul c a) b k) (mul c (fmul a b k)) := by
+  refine Qeq_trans (fmul_den_pos hb (fun i => fsmul_den hc ha i) k)
+    (fmul_comm (fsmul c a) b (fun i => fsmul_den hc ha i) hb k) ?_
+  refine Qeq_trans (Qmul_den_pos hc (fmul_den_pos hb ha k))
+    (fmul_smul_right b a c hc hb ha k) ?_
+  exact Qmul_congr (Qeq_refl _) (fmul_comm b a hb ha k)
+
+/-- `fcomp` pulls out a scalar: `(c·a)∘b = c·(a∘b)`. -/
+theorem fcomp_smul (c : Q) (a b : Nat → Q) (hc : 0 < c.den) (ha : ∀ i, 0 < (a i).den)
+    (hb : ∀ i, 0 < (b i).den) (k : Nat) : Qeq (fcomp (fsmul c a) b k) (mul c (fcomp a b k)) := by
+  show Qeq (Fsum (fun m => mul (fsmul c a m) (fpow b m k)) k)
+    (mul c (Fsum (fun m => mul (a m) (fpow b m k)) k))
+  refine Qeq_trans (Fsum_den_pos (fun m => Qmul_den_pos hc (Qmul_den_pos (ha m) (fpow_den_pos hb m k))) k)
+    (Fsum_congr (fun m => Qmul_assoc c (a m) (fpow b m k)) k) ?_
+  exact Fsum_mul_left hc (fun m => Qmul_den_pos (ha m) (fpow_den_pos hb m k)) k
+
+/-- `fcomp` distributes over subtraction (outer argument). -/
+theorem fcomp_sub {a b c : Nat → Q} (ha : ∀ i, 0 < (a i).den) (hb : ∀ i, 0 < (b i).den)
+    (hc : ∀ i, 0 < (c i).den) (k : Nat) :
+    Qeq (fcomp (fun i => Qsub (a i) (b i)) c k) (Qsub (fcomp a c k) (fcomp b c k)) := by
+  show Qeq (Fsum (fun m => mul (Qsub (a m) (b m)) (fpow c m k)) k)
+    (Qsub (Fsum (fun m => mul (a m) (fpow c m k)) k) (Fsum (fun m => mul (b m) (fpow c m k)) k))
+  refine Qeq_trans (Fsum_den_pos (fun m => Qsub_den_pos (Qmul_den_pos (ha m) (fpow_den_pos hc m k))
+      (Qmul_den_pos (hb m) (fpow_den_pos hc m k))) k)
+    (Fsum_congr (fun m => Qmul_sub_right (a m) (b m) (fpow c m k)) k)
+    (Fsum_sub (fun m => Qmul_den_pos (ha m) (fpow_den_pos hc m k))
+      (fun m => Qmul_den_pos (hb m) (fpow_den_pos hc m k)) k)
+
 end UOR.Bridge.F1Square.Analysis
