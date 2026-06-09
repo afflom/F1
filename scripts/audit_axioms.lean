@@ -1196,3 +1196,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.fpow_fabs_dcoef_term
 #print axioms Analysis.peval_dcoef_pow_gap
 #print axioms Analysis.peval_dcoef_pow_cauchy
+#print axioms Analysis.corner_inner_eq_gen

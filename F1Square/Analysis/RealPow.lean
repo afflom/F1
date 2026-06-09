@@ -2415,4 +2415,22 @@ theorem peval_dcoef_pow_cauchy (ρ w : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.n
     (Qeq_le (Qmul_congr eGap (Qeq_refl _))) ?_
   exact gPow_gap_le (mul ⟨2, 1⟩ ρ) hr0 hrd hMM
 
+/-- The corner's `i`-th term `= (bᵢwⁱ)·(peval(bᵐ,M) − peval(bᵐ,M−i))` (generic; mirrors `corner_inner_eq`). -/
+theorem corner_inner_eq_gen (b : Nat → Q) (hb : ∀ i, 0 < (b i).den) (w : Q) (hwd : 0 < w.den)
+    (m M i : Nat) :
+    Qeq (Qsub (Fsum (fun j => mul (mul (b i) (qpow w i)) (mul (fpow b m j) (qpow w j))) M)
+              (Fsum (fun j => mul (mul (b i) (qpow w i)) (mul (fpow b m j) (qpow w j))) (M - i)))
+      (mul (mul (b i) (qpow w i)) (Qsub (peval (fpow b m) w M) (peval (fpow b m) w (M - i)))) := by
+  have hC : 0 < (mul (b i) (qpow w i)).den := Qmul_den_pos (hb i) (qpow_den_pos hwd i)
+  have hterm : ∀ N, Qeq (Fsum (fun j => mul (mul (b i) (qpow w i)) (mul (fpow b m j) (qpow w j))) N)
+      (mul (mul (b i) (qpow w i)) (peval (fpow b m) w N)) :=
+    fun N => Fsum_mul_left hC
+      (fun j => Qmul_den_pos (fpow_den_pos hb m j) (qpow_den_pos hwd j)) N
+  exact Qeq_trans (Qsub_den_pos
+      (Qmul_den_pos hC (peval_den_pos (fpow_den_pos hb m) hwd M))
+      (Qmul_den_pos hC (peval_den_pos (fpow_den_pos hb m) hwd (M - i))))
+    (Qsub_congr (hterm M) (hterm (M - i)))
+    (Qeq_symm (Qmul_sub_left_loc (mul (b i) (qpow w i))
+      (peval (fpow b m) w M) (peval (fpow b m) w (M - i))))
+
 end UOR.Bridge.F1Square.Analysis
