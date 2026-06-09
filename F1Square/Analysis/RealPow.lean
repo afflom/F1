@@ -728,4 +728,15 @@ theorem Rnonneg_of_Rmul_Pos {x c : Real} (hc : Pos c) (hxc : Rnonneg (Rmul x c))
     (Qinv_den_pos (RL_num_pos hk)))) (neg_den_pos (add_den_pos (Qbound_den_pos _) (Qbound_den_pos p))))
     (Nat.succ_pos _)) h_a (Qadd_le_add hxp_lb (Qle_refl _))
 
+/-- **`x ≥ 1 ⟹ x > 0`** (positivity from the order, witness `m = 3`: `x₃ ≥ 1 − 2/4 = 1/2 > 1/4`). -/
+theorem Pos_of_Rle_one {x : Real} (h : Rle one x) : Pos x := by
+  refine ⟨3, ?_⟩
+  have h3 := h 3
+  have hxd : 0 < (x.seq 3).den := x.den_pos 3
+  show Qlt (Qbound 3) (x.seq 3)
+  simp only [Qlt, Qbound]
+  simp only [Qle, one, ofQ, add] at h3
+  push_cast at h3 ⊢
+  omega
+
 end UOR.Bridge.F1Square.Analysis

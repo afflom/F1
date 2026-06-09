@@ -1109,3 +1109,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.expSum_le_gPow
 #print axioms Analysis.expSum_mul_one_sub_le
 #print axioms Analysis.Rnonneg_of_Rmul_Pos
+#print axioms Analysis.Pos_of_Rle_one
