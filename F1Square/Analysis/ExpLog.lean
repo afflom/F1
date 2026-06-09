@@ -3998,6 +3998,85 @@ theorem tsq_uvalReal_via (Y tY2 uY : Real) (ρ : Q) (hρd : 0 < ρ.den) (hρ1 : 
   show Qeq (mul ⟨4, 1⟩ (mul ⟨2, 1⟩ (add (Qbound n) (Qbound n)))) (⟨16, n + 1⟩ : Q)
   simp only [Qeq, mul, add, Qbound]; push_cast; ring_uor
 
+set_option maxHeartbeats 800000 in
+/-- **`Rartanh` radius-independence**: `Rartanh t` at two radii `ρ, ρ'` (both validly bounding `t` by a common
+    `τ ≤ 1/2`) gives the same real. Per index `n`: with `a = Rartanh_R ρ n`, `b = Rartanh_R ρ' n`, `M = max a b`,
+    split `|artSum(t a)(a) − artSum(t b)(b)| ≤ depth(a→M) + argvar(M) + depth(b→M)` via `artSum_depth_recip`,
+    `artSum_Lip_le`/`geoEvenSum_le_two`, `t.reg`. Resolves the `ρ_B` vs `ρ_{B²}` reindex gap in the log-doubling. -/
+theorem Rartanh_radius_indep (t X X' : Real) (ρ ρ' τ : Q) (hρd : 0 < ρ.den) (hρ'd : 0 < ρ'.den)
+    (hτ0 : 0 ≤ τ.num) (hτd : 0 < τ.den) (hτlt : τ.num.toNat < τ.den)
+    (hτ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul τ τ))) (hbt : ∀ m, Qle (Qabs (t.seq m)) τ)
+    (hXseq : ∀ j, X.seq j = artSum (t.seq (Rartanh_R ρ j)) (Rartanh_R ρ j))
+    (hX'seq : ∀ j, X'.seq j = artSum (t.seq (Rartanh_R ρ' j)) (Rartanh_R ρ' j)) :
+    Req X X' := by
+  have htd : ∀ m, 0 < (t.seq m).den := fun m => t.den_pos m
+  have hRge : ∀ (r : Q), 0 < r.den → ∀ j, j + 1 ≤ Rartanh_R r j := by
+    intro r hrd j; unfold Rartanh_R
+    have hk : 1 ≤ r.den * r.den + 4 * r.den := Nat.le_trans (by omega : 1 ≤ 4 * r.den) (Nat.le_add_left _ _)
+    calc j + 1 = 1 * (j + 1) := by omega
+      _ ≤ (r.den * r.den + 4 * r.den) * (j + 1) := Nat.mul_le_mul_right _ hk
+  refine Req_of_lin_bound (C := 4 * τ.den + 4) ?_
+  intro n
+  rw [hXseq, hX'seq]
+  -- a, b, M and index facts
+  have hage := hRge ρ hρd n
+  have hbge := hRge ρ' hρ'd n
+  have haM : Rartanh_R ρ n ≤ max (Rartanh_R ρ n) (Rartanh_R ρ' n) := Nat.le_max_left _ _
+  have hbM : Rartanh_R ρ' n ≤ max (Rartanh_R ρ n) (Rartanh_R ρ' n) := Nat.le_max_right _ _
+  have hna : n + 1 ≤ 2 * Rartanh_R ρ n + 3 := by omega
+  have hnb : n + 1 ≤ 2 * Rartanh_R ρ' n + 3 := by omega
+  -- term bounds
+  have hT1 : Qle (Qabs (Qsub (artSum (t.seq (Rartanh_R ρ n)) (Rartanh_R ρ n))
+        (artSum (t.seq (Rartanh_R ρ n)) (max (Rartanh_R ρ n) (Rartanh_R ρ' n)))))
+      (⟨2 * (τ.den : Int), n + 1⟩ : Q) := by
+    rw [Qabs_Qsub_comm]
+    exact artSum_depth_recip (t.seq (Rartanh_R ρ n)) τ (htd _) hτ0 hτd (hbt _) hτ2 hτlt haM hna
+  have hT3 : Qle (Qabs (Qsub (artSum (t.seq (Rartanh_R ρ' n)) (max (Rartanh_R ρ n) (Rartanh_R ρ' n)))
+        (artSum (t.seq (Rartanh_R ρ' n)) (Rartanh_R ρ' n)))) (⟨2 * (τ.den : Int), n + 1⟩ : Q) :=
+    artSum_depth_recip (t.seq (Rartanh_R ρ' n)) τ (htd _) hτ0 hτd (hbt _) hτ2 hτlt hbM hnb
+  have hT2 : Qle (Qabs (Qsub (artSum (t.seq (Rartanh_R ρ n)) (max (Rartanh_R ρ n) (Rartanh_R ρ' n)))
+        (artSum (t.seq (Rartanh_R ρ' n)) (max (Rartanh_R ρ n) (Rartanh_R ρ' n))))) (⟨4, n + 1⟩ : Q) := by
+    refine Qle_trans (Qmul_den_pos (geoEvenSum_den_pos hτd _)
+        (Qabs_den_pos (Qsub_den_pos (htd _) (htd _))))
+      (artSum_Lip_le (htd _) (htd _) hτd (hbt _) (hbt _) _) ?_
+    refine Qle_trans (Qmul_den_pos Nat.one_pos (Qabs_den_pos (Qsub_den_pos (htd _) (htd _))))
+      (Qmul_le_mul_right (Qabs_num_nonneg _) (geoEvenSum_le_two hτ0 hτd hτ2 _)) ?_
+    refine Qle_trans (Qmul_den_pos Nat.one_pos (add_den_pos (Qbound_den_pos _) (Qbound_den_pos _)))
+      (Qmul_le_mul_left (by decide) (t.reg (Rartanh_R ρ n) (Rartanh_R ρ' n))) ?_
+    have hRa : Qle (Qbound (Rartanh_R ρ n)) (Qbound n) := by
+      show (1 : Int) * ((n + 1 : Nat) : Int) ≤ 1 * ((Rartanh_R ρ n + 1 : Nat) : Int)
+      rw [Int.one_mul, Int.one_mul]; exact_mod_cast (show n + 1 ≤ Rartanh_R ρ n + 1 by omega)
+    have hRb : Qle (Qbound (Rartanh_R ρ' n)) (Qbound n) := by
+      show (1 : Int) * ((n + 1 : Nat) : Int) ≤ 1 * ((Rartanh_R ρ' n + 1 : Nat) : Int)
+      rw [Int.one_mul, Int.one_mul]; exact_mod_cast (show n + 1 ≤ Rartanh_R ρ' n + 1 by omega)
+    refine Qle_trans (Qmul_den_pos Nat.one_pos (add_den_pos (Qbound_den_pos n) (Qbound_den_pos n)))
+      (Qmul_le_mul_left (by decide) (Qadd_le_add hRa hRb)) ?_
+    apply Qeq_le; show Qeq (mul ⟨2, 1⟩ (add (Qbound n) (Qbound n))) (⟨4, n + 1⟩ : Q)
+    simp only [Qeq, mul, add, Qbound]; push_cast; ring_uor
+  -- combine via two triangles
+  have hP0d : 0 < (artSum (t.seq (Rartanh_R ρ n)) (Rartanh_R ρ n)).den := artSum_den_pos (htd _) _
+  have hP1d : 0 < (artSum (t.seq (Rartanh_R ρ n)) (max (Rartanh_R ρ n) (Rartanh_R ρ' n))).den :=
+    artSum_den_pos (htd _) _
+  have hP2d : 0 < (artSum (t.seq (Rartanh_R ρ' n)) (max (Rartanh_R ρ n) (Rartanh_R ρ' n))).den :=
+    artSum_den_pos (htd _) _
+  have hP3d : 0 < (artSum (t.seq (Rartanh_R ρ' n)) (Rartanh_R ρ' n)).den := artSum_den_pos (htd _) _
+  have hpc : Qle (Qabs (Qsub (artSum (t.seq (Rartanh_R ρ n)) (max (Rartanh_R ρ n) (Rartanh_R ρ' n)))
+        (artSum (t.seq (Rartanh_R ρ' n)) (Rartanh_R ρ' n))))
+      (add (⟨4, n + 1⟩ : Q) (⟨2 * (τ.den : Int), n + 1⟩ : Q)) :=
+    Qle_trans (add_den_pos (Qabs_den_pos (Qsub_den_pos hP1d hP2d))
+        (Qabs_den_pos (Qsub_den_pos hP2d hP3d)))
+      (Qabs_sub_triangle hP1d hP2d hP3d) (Qadd_le_add hT2 hT3)
+  refine Qle_trans (add_den_pos (Qabs_den_pos (Qsub_den_pos hP0d hP1d))
+      (Qabs_den_pos (Qsub_den_pos hP1d hP3d)))
+    (Qabs_sub_triangle hP0d hP1d hP3d) ?_
+  refine Qle_trans (add_den_pos (Nat.succ_pos n) (add_den_pos (Nat.succ_pos n) (Nat.succ_pos n)))
+    (Qadd_le_add hT1 hpc) ?_
+  refine Qle_trans (add_den_pos (Nat.succ_pos n) (Nat.succ_pos n))
+    (Qadd_le_add (Qle_refl _) (Qeq_le (Qadd_same_den_loc 4 (2 * (τ.den : Int)) (n + 1)))) ?_
+  refine Qle_trans (Nat.succ_pos n)
+    (Qeq_le (Qadd_same_den_loc (2 * (τ.den : Int)) (4 + 2 * (τ.den : Int)) (n + 1))) ?_
+  apply Qeq_le; simp only [Qeq]; push_cast; ring_uor
+
 /-- **Log-doubling, algebraic assembly**: for `X = Rartanh t_Y`, `Xdbl = Rartanh(uvalReal t_Y)`,
     `R2 = Rartanh t_{Y²}` (all at the common radius `σ = ρ_{M²}`), given the doubling `Radd X X ≈ Xdbl`
     and `Xdbl ≈ R2` (= `Rartanh_congr` of `(a)`), we get `Radd (c·X) (c·X) ≈ c·R2`, i.e.
