@@ -1199,3 +1199,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.corner_inner_eq_gen
 #print axioms Analysis.Qabs_dcoef_qpow_le
 #print axioms Analysis.dcoef_corner_term
+#print axioms Analysis.dcoef_gcorner_bound

@@ -2483,4 +2483,24 @@ theorem dcoef_corner_term (ρ w : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num) (
     (Qmul_le_mul_right (qpow_nonneg hr0 _) (Qabs_dcoef_qpow_le ρ w hρd hwd hw i i)) ?_
   exact qpow_conv_le ρ hρd hρ0 i M hiM
 
+/-- **The `gcorner` sum bound** `|gcorner δ w m M|·(1−2ρ) ≤ (M+1)·(2ρ)^{M+1}` (`corner_bound` analog). -/
+theorem dcoef_gcorner_bound (ρ w : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num) (hwd : 0 < w.den)
+    (hw : Qle (Qabs w) ρ) (h2ρ : 0 ≤ (Qsub (⟨1, 1⟩ : Q) (mul ⟨2, 1⟩ ρ)).num) (m M : Nat) :
+    Qle (mul (Qabs (gcorner dcoef w m M)) (Qsub ⟨1, 1⟩ (mul ⟨2, 1⟩ ρ)))
+      (Fsum (fun _ => qpow (mul ⟨2, 1⟩ ρ) (M + 1)) M) := by
+  have hgd : ∀ i j, 0 < (mul (mul (dcoef i) (qpow w i)) (mul (fpow dcoef m j) (qpow w j))).den :=
+    fun i j => Qmul_den_pos (Qmul_den_pos (dcoef_den i) (qpow_den_pos hwd i))
+      (Qmul_den_pos (fpow_den_pos dcoef_den m j) (qpow_den_pos hwd j))
+  have hid : ∀ i, 0 < (Qsub
+      (Fsum (fun j => mul (mul (dcoef i) (qpow w i)) (mul (fpow dcoef m j) (qpow w j))) M)
+      (Fsum (fun j => mul (mul (dcoef i) (qpow w i)) (mul (fpow dcoef m j) (qpow w j))) (M - i))).den :=
+    fun i => Qsub_den_pos (Fsum_den_pos (fun j => hgd i j) M) (Fsum_den_pos (fun j => hgd i j) (M - i))
+  have hwd1 : 0 < (Qsub (⟨1, 1⟩ : Q) (mul ⟨2, 1⟩ ρ)).den :=
+    Qsub_den_pos Nat.one_pos (Qmul_den_pos (by decide) hρd)
+  refine Qle_trans (Qmul_den_pos (Fsum_den_pos (fun i => Qabs_den_pos (hid i)) M) hwd1)
+    (Qmul_le_mul_right h2ρ (Fsum_abs_le (fun i => hid i) M)) ?_
+  refine Qle_trans (Fsum_den_pos (fun i => Qmul_den_pos (Qabs_den_pos (hid i)) hwd1) M)
+    (Qeq_le (Fsum_mul_const_right hwd1 (fun i => Qabs_den_pos (hid i)) M)) ?_
+  exact Fsum_le_Fsum_le (fun i hi => dcoef_corner_term ρ w hρd hρ0 hwd hw h2ρ m M i hi)
+
 end UOR.Bridge.F1Square.Analysis
