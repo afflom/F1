@@ -2759,4 +2759,11 @@ theorem exp_block_bound {σ : Real} (hσ : Rnonneg σ) {k n : Nat} (hn : 2 ^ k �
         (RexpReal (Rneg (Rmul σ (Rnsmul k (logN 2 (by omega)))))) :=
   RexpReal_le_of_Rle (Rle_Rneg (Rmul_le_Rmul_left hσ (logN_ge_k_log2 hn)))
 
+/-- **`2ᵏ = exp(k·log 2)`**: the dyadic block count in exponential form (`= (exp(log 2))ᵏ = 2ᵏ`).
+    Combines with `exp(−σ·k·log 2)` to give the block sum `= (exp((1−σ)·log 2))ᵏ = (exp(−θ))ᵏ`. -/
+theorem Rexp_k_log2 (k : Nat) :
+    Req (RexpReal (Rnsmul k (logN 2 (by omega))))
+        (Rpow (ofQ (⟨(2 : Int), 1⟩ : Q) Nat.one_pos) k) :=
+  RexpReal_nsmul_eq (Rexp_logN 2 (by omega)) k
+
 end UOR.Bridge.F1Square.Analysis
