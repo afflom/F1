@@ -2559,4 +2559,79 @@ theorem dcoef_gcorner_bound (ρ w : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num)
     (Qeq_le (Fsum_mul_const_right hwd1 (fun i => Qabs_den_pos (hid i)) M)) ?_
   exact Fsum_le_Fsum_le (fun i hi => dcoef_corner_term ρ w hρd hρ0 hwd hw h2ρ m M i hi)
 
+-- ===========================================================================
+-- **`exp` injectivity** — the reflection-free route to log-multiplicativity (`log(2m)=log2+log m`).
+-- ===========================================================================
+
+/-- `−(−x) ≈ x`. -/
+theorem Rneg_neg (x : Real) : Req (Rneg (Rneg x)) x :=
+  Req_of_seq_Qeq (fun n => by
+    show Qeq (neg (neg (x.seq n))) (x.seq n)
+    simp only [Qeq, neg]; push_cast; ring_uor)
+
+/-- `−(a − b) ≈ b − a`. -/
+theorem Rneg_Rsub (a b : Real) : Req (Rneg (Rsub a b)) (Rsub b a) :=
+  Req_trans (Rneg_Radd a (Rneg b))
+    (Req_trans (Radd_congr (Req_refl _) (Rneg_neg b)) (Radd_comm (Rneg a) b))
+
+/-- **`exp X ≥ 1`** for `X ≥ 0` (`exp X ≥ 1+X ≥ 1`). -/
+theorem RexpReal_ge_one {X : Real} (hX : Rnonneg X) : Rle one (RexpReal X) :=
+  Rle_trans (Rle_self_Radd_right hX) (RexpReal_ge_one_add_nonneg hX)
+
+/-- **`exp X` is positive** for `X ≥ 0`. -/
+theorem Pos_RexpReal {X : Real} (hX : Rnonneg X) : Pos (RexpReal X) :=
+  Pos_of_Rle_one (RexpReal_ge_one hX)
+
+/-- `Pos` respects `≈`. -/
+theorem Pos_congr {a b : Real} (h : Req a b) (ha : Pos a) : Pos b := Pos_mono (Rle_of_Req h) ha
+
+/-- `exp X − exp Y ≈ exp Y·(exp(X−Y) − 1)`. -/
+theorem exp_sub_exp_eq (X Y : Real) :
+    Req (Rsub (RexpReal X) (RexpReal Y))
+      (Rmul (RexpReal Y) (Rsub (RexpReal (Rsub X Y)) one)) := by
+  have hexpX : Req (RexpReal X) (Rmul (RexpReal Y) (RexpReal (Rsub X Y))) :=
+    Req_trans (RexpReal_congr (Req_symm (Radd_Rsub_self Y X))) (RexpReal_add Y (Rsub X Y))
+  refine Req_trans (Rsub_congr hexpX (Req_refl _)) ?_
+  exact Req_symm (Req_trans (Rmul_sub_distrib (RexpReal Y) (RexpReal (Rsub X Y)) one)
+    (Rsub_congr (Req_refl _) (Rmul_one (RexpReal Y))))
+
+/-- `a − (b+c) ≈ (a−b) − c`. -/
+theorem Rsub_Radd_eq (a b c : Real) : Req (Rsub a (Radd b c)) (Rsub (Rsub a b) c) :=
+  Req_trans (Radd_congr (Req_refl a) (Rneg_Radd b c))
+    (Req_symm (Radd_assoc a (Rneg b) (Rneg c)))
+
+/-- `d ≤ exp d − 1` for `d ≥ 0`. -/
+theorem Rle_exp_sub_one {d : Real} (hd : Rnonneg d) : Rle d (Rsub (RexpReal d) one) :=
+  Rle_of_Rnonneg_Rsub (Rnonneg_congr (Rsub_Radd_eq (RexpReal d) one d)
+    (Rnonneg_Rsub_of_Rle (RexpReal_ge_one_add_nonneg hd)))
+
+/-- `z ≤ w·z` for `w ≥ 1`, `z ≥ 0`. -/
+theorem Rle_self_Rmul_left {w z : Real} (hw : Rle one w) (hz : Rnonneg z) : Rle z (Rmul w z) :=
+  Rle_of_Rnonneg_Rsub (Rnonneg_congr
+    (Req_trans (Rmul_sub_distrib_right w one z) (Rsub_congr (Req_refl _) (Rone_mul z)))
+    (Rnonneg_Rmul (Rnonneg_Rsub_of_Rle hw) hz))
+
+/-- **`exp` is strictly monotone** (`Y ≥ 0`): `Y < X ⟹ exp Y < exp X`. -/
+theorem RexpReal_strictmono {X Y : Real} (hY : Rnonneg Y) (h : Pos (Rsub X Y)) :
+    Pos (Rsub (RexpReal X) (RexpReal Y)) := by
+  have h1 : Pos (Rsub (RexpReal (Rsub X Y)) one) :=
+    Pos_mono (Rle_exp_sub_one (Rnonneg_of_Pos h)) h
+  have h2 : Pos (Rmul (RexpReal Y) (Rsub (RexpReal (Rsub X Y)) one)) :=
+    Pos_mono (Rle_self_Rmul_left (RexpReal_ge_one hY) (Rnonneg_of_Pos h1)) h1
+  exact Pos_congr (Req_symm (exp_sub_exp_eq X Y)) h2
+
+/-- **`exp` reflects `≤`** (`Y ≥ 0`): `exp X ≤ exp Y ⟹ X ≤ Y`. -/
+theorem RexpReal_reflects_le {X Y : Real} (hY : Rnonneg Y) (h : Rle (RexpReal X) (RexpReal Y)) :
+    Rle X Y :=
+  Rle_of_Rnonneg_Rsub (Rnonneg_congr (Rneg_Rsub X Y) (Rnonneg_neg_of_not_Pos (fun hP =>
+    not_Pos_of_Rnonneg_neg
+      (Rnonneg_congr (Req_symm (Rneg_Rsub (RexpReal X) (RexpReal Y))) (Rnonneg_Rsub_of_Rle h))
+      (RexpReal_strictmono hY hP))))
+
+/-- **`exp` is injective on non-negatives**: `exp X ≈ exp Y` and `X,Y ≥ 0` give `X ≈ Y`. -/
+theorem RexpReal_inj {X Y : Real} (hX : Rnonneg X) (hY : Rnonneg Y)
+    (h : Req (RexpReal X) (RexpReal Y)) : Req X Y :=
+  Rle_antisymm (RexpReal_reflects_le hY (Rle_of_Req h))
+    (RexpReal_reflects_le hX (Rle_of_Req (Req_symm h)))
+
 end UOR.Bridge.F1Square.Analysis

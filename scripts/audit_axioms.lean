@@ -1205,3 +1205,15 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rnonneg_of_Pos
 #print axioms Analysis.Rnonneg_neg_of_not_Pos
 #print axioms Analysis.not_Pos_of_Rnonneg_neg
+#print axioms Analysis.Rneg_neg
+#print axioms Analysis.Rneg_Rsub
+#print axioms Analysis.RexpReal_ge_one
+#print axioms Analysis.Pos_RexpReal
+#print axioms Analysis.Pos_congr
+#print axioms Analysis.exp_sub_exp_eq
+#print axioms Analysis.Rsub_Radd_eq
+#print axioms Analysis.Rle_exp_sub_one
+#print axioms Analysis.Rle_self_Rmul_left
+#print axioms Analysis.RexpReal_strictmono
+#print axioms Analysis.RexpReal_reflects_le
+#print axioms Analysis.RexpReal_inj
