@@ -1292,3 +1292,9 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.geom_reindex
 #print axioms Analysis.czetaR_facts
 #print axioms Analysis.czetaExp_tail_reindex
+#print axioms Analysis.czetaMidx_mono
+#print axioms Analysis.czetaExp_tail_mono
+#print axioms Analysis.czetaRe_tail_le
+#print axioms Analysis.czetaRe_tail_ge
+#print axioms Analysis.czetaIm_tail_le
+#print axioms Analysis.czetaIm_tail_ge

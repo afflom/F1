@@ -392,6 +392,58 @@ theorem czetaExp_tail_reindex (s : Complex) (hσ : Rnonneg s.re) {τ : Q} (hτn 
   exact Qle_trans (Qmul_den_pos (qpow_den_pos hrd _) (Qinv_den_pos hsub))
     (geoFrom_le _ hrd hr0 hsub _ d) (geom_reindex hrd hr0 hple hsub j)
 
+/-- The reindex exponent `M(j) = (j+1)·r.den²` (`r = 1/(1+τ)`): the dyadic block index that makes the
+    reindexed partial sums `S(2^{M(j)})` Cauchy with rate `1/(j+1)`. -/
+def czetaMidx (τ : Q) (j : Nat) : Nat :=
+  (j + 1) * ((Qinv (add ⟨1, 1⟩ τ)).den * (Qinv (add ⟨1, 1⟩ τ)).den)
+
+theorem czetaMidx_mono {τ : Q} {j k : Nat} (hjk : j ≤ k) : czetaMidx τ j ≤ czetaMidx τ k :=
+  Nat.mul_le_mul_right _ (by omega)
+
+/-- **The reindexed dyadic modulus tail, monotone form**: for `j ≤ k`, `E(2^{M(k)}) − E(2^{M(j)}) ≤ 1/(j+1)`. -/
+theorem czetaExp_tail_mono (s : Complex) (hσ : Rnonneg s.re) {τ : Q} (hτn : 0 < τ.num) (hτd : 0 < τ.den)
+    (hθ : Rle (ofQ τ hτd) (Rmul (Rsub s.re one) (logN 2 (by omega)))) {j k : Nat} (hjk : j ≤ k) :
+    Rle (Rsub (czetaExpSum s (2 ^ czetaMidx τ k)) (czetaExpSum s (2 ^ czetaMidx τ j)))
+        (ofQ ⟨1, j + 1⟩ (Nat.succ_pos j)) := by
+  have hidx : czetaMidx τ k
+      = czetaMidx τ j + (k - j) * ((Qinv (add ⟨1, 1⟩ τ)).den * (Qinv (add ⟨1, 1⟩ τ)).den) := by
+    simp only [czetaMidx]; rw [← Nat.add_mul]; congr 1; omega
+  rw [hidx]
+  exact czetaExp_tail_reindex s hσ hτn hτd hθ j
+    ((k - j) * ((Qinv (add ⟨1, 1⟩ τ)).den * (Qinv (add ⟨1, 1⟩ τ)).den))
+
+/-- **Reindexed real-part partial sums are Cauchy (upper)**: `S_re(2^{M(k)}) − S_re(2^{M(j)}) ≤ 1/(j+1)`. -/
+theorem czetaRe_tail_le (s : Complex) (hσ : Rnonneg s.re) {τ : Q} (hτn : 0 < τ.num) (hτd : 0 < τ.den)
+    (hθ : Rle (ofQ τ hτd) (Rmul (Rsub s.re one) (logN 2 (by omega)))) {j k : Nat} (hjk : j ≤ k) :
+    Rle (Rsub (czetaReSum s (2 ^ czetaMidx τ k)) (czetaReSum s (2 ^ czetaMidx τ j)))
+        (ofQ ⟨1, j + 1⟩ (Nat.succ_pos j)) :=
+  Rle_trans (czeta_re_diff_le s (Nat.pow_le_pow_right (by omega) (czetaMidx_mono hjk)))
+    (czetaExp_tail_mono s hσ hτn hτd hθ hjk)
+
+/-- **Reindexed real-part partial sums are Cauchy (lower)**: `−(S_re(2^{M(k)}) − S_re(2^{M(j)})) ≤ 1/(j+1)`. -/
+theorem czetaRe_tail_ge (s : Complex) (hσ : Rnonneg s.re) {τ : Q} (hτn : 0 < τ.num) (hτd : 0 < τ.den)
+    (hθ : Rle (ofQ τ hτd) (Rmul (Rsub s.re one) (logN 2 (by omega)))) {j k : Nat} (hjk : j ≤ k) :
+    Rle (Rneg (Rsub (czetaReSum s (2 ^ czetaMidx τ k)) (czetaReSum s (2 ^ czetaMidx τ j))))
+        (ofQ ⟨1, j + 1⟩ (Nat.succ_pos j)) :=
+  Rle_trans (Rle_trans (Rle_Rneg (czeta_re_diff_ge s (Nat.pow_le_pow_right (by omega) (czetaMidx_mono hjk))))
+      (Rle_of_Req (Rneg_neg _))) (czetaExp_tail_mono s hσ hτn hτd hθ hjk)
+
+/-- **Reindexed imaginary-part partial sums are Cauchy (upper)**. -/
+theorem czetaIm_tail_le (s : Complex) (hσ : Rnonneg s.re) {τ : Q} (hτn : 0 < τ.num) (hτd : 0 < τ.den)
+    (hθ : Rle (ofQ τ hτd) (Rmul (Rsub s.re one) (logN 2 (by omega)))) {j k : Nat} (hjk : j ≤ k) :
+    Rle (Rsub (czetaImSum s (2 ^ czetaMidx τ k)) (czetaImSum s (2 ^ czetaMidx τ j)))
+        (ofQ ⟨1, j + 1⟩ (Nat.succ_pos j)) :=
+  Rle_trans (czeta_im_diff_le s (Nat.pow_le_pow_right (by omega) (czetaMidx_mono hjk)))
+    (czetaExp_tail_mono s hσ hτn hτd hθ hjk)
+
+/-- **Reindexed imaginary-part partial sums are Cauchy (lower)**. -/
+theorem czetaIm_tail_ge (s : Complex) (hσ : Rnonneg s.re) {τ : Q} (hτn : 0 < τ.num) (hτd : 0 < τ.den)
+    (hθ : Rle (ofQ τ hτd) (Rmul (Rsub s.re one) (logN 2 (by omega)))) {j k : Nat} (hjk : j ≤ k) :
+    Rle (Rneg (Rsub (czetaImSum s (2 ^ czetaMidx τ k)) (czetaImSum s (2 ^ czetaMidx τ j))))
+        (ofQ ⟨1, j + 1⟩ (Nat.succ_pos j)) :=
+  Rle_trans (Rle_trans (Rle_Rneg (czeta_im_diff_ge s (Nat.pow_le_pow_right (by omega) (czetaMidx_mono hjk))))
+      (Rle_of_Req (Rneg_neg _))) (czetaExp_tail_mono s hσ hτn hτd hθ hjk)
+
 /-- **From a real upper bound to a same-index rational bound** (the completeness bridge): if `a − b ≤ c`
     as reals (`c` a rational), then `aₙ − bₙ ≤ c + 2/(n+1)` for every index `n`. Regularity moves the
     comparison index `2m+1` back to `n`; the generalized Archimedean lemma kills the `3/(m+1)` tail. -/
