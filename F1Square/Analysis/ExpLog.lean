@@ -4724,4 +4724,51 @@ theorem dgeom_geom_gap_le (τ g : Q) (hτd : 0 < τ.den) (hτ0 : 0 ≤ τ.num) (
   refine Qeq_trans (Qabs_den_pos (neg_den_pos (Qmul_den_pos Nat.one_pos hPd))) (Qabs_Qeq hkey) ?_
   rw [Qabs_neg]; exact Qabs_of_nonneg h2Pnn
 
+/-- **★ The rational exp identity bound (cleared)**: `|expSum(2·artSum τ partial, M) − g|·(1−τ) ≤ 4·τ^{M+1}`
+    for `g = (1+τ)/(1−τ)` (`g·(1−τ) = 1+τ`), `0 ≤ τ ≤ 1`. So `exp(2·artanh τ) = (1+τ)/(1−τ)` at the rational
+    level. Triangle through `peval dgeom τ M`: corner half (`exp_corner_le` + `peval_dgeom_tail_cleared`) +
+    geometric half (`dgeom_geom_gap_le`). -/
+theorem exp_artanh_rat_cleared (τ g : Q) (hτd : 0 < τ.den) (hτ0 : 0 ≤ τ.num) (hτ1 : Qle τ ⟨1, 1⟩)
+    (hgd : 0 < g.den) (hg : Qeq (mul g (Qsub ⟨1, 1⟩ τ)) (add ⟨1, 1⟩ τ)) (M : Nat) :
+    Qle (mul (Qabs (Qsub (expSum (peval (fun i => mul ⟨2, 1⟩ (acoef i)) τ M) M) g)) (Qsub ⟨1, 1⟩ τ))
+      (mul ⟨4, 1⟩ (qpow τ (M + 1))) := by
+  have hbd : ∀ i, 0 < ((fun i => mul ⟨2, 1⟩ (acoef i)) i).den :=
+    fun i => Qmul_den_pos Nat.one_pos (acoef_den i)
+  have hSd : 0 < (peval (fun i => mul ⟨2, 1⟩ (acoef i)) τ M).den := peval_den_pos hbd hτd M
+  have hEd : 0 < (expSum (peval (fun i => mul ⟨2, 1⟩ (acoef i)) τ M) M).den := expSum_den_pos hSd M
+  have hDd : 0 < (peval dgeom τ M).den := peval_den_pos (fun k => dgeom_den k) hτd M
+  have hDMMd : 0 < (peval dgeom τ (M * M)).den := peval_den_pos (fun k => dgeom_den k) hτd (M * M)
+  have hWd : 0 < (Qsub (⟨1, 1⟩ : Q) τ).den := Qsub_den_pos Nat.one_pos hτd
+  have hPd : 0 < (qpow τ (M + 1)).den := qpow_den_pos hτd (M + 1)
+  have hW0 : 0 ≤ (Qsub (⟨1, 1⟩ : Q) τ).num := by
+    have h := hτ1; simp only [Qle, Qsub, add, neg] at h ⊢; push_cast at h ⊢; omega
+  have hED : Qle (Qabs (Qsub (peval dgeom τ M)
+        (expSum (peval (fun i => mul ⟨2, 1⟩ (acoef i)) τ M) M)))
+      (Qsub (peval dgeom τ (M * M)) (peval dgeom τ M)) :=
+    Qle_congr_left (Qabs_den_pos (Qsub_den_pos
+        (peval_den_pos (fun k => fcomp_den_pos (fun i => ecoef_den i) hbd k) hτd M)
+        (peval_den_pos (fun i => ecoef_den i) hSd M)))
+      (Qabs_Qeq (Qsub_congr (peval_congr (fun k => formal_exp_geom k) τ M)
+        (Qeq_symm (expSum_eq_peval_ecoef (peval (fun i => mul ⟨2, 1⟩ (acoef i)) τ M) hSd M))))
+      (exp_corner_le hτd hτ0 M)
+  have hED' : Qle (Qabs (Qsub (expSum (peval (fun i => mul ⟨2, 1⟩ (acoef i)) τ M) M) (peval dgeom τ M)))
+      (Qsub (peval dgeom τ (M * M)) (peval dgeom τ M)) := by
+    rw [Qabs_Qsub_comm]; exact hED
+  have hbound1 : Qle (mul (Qabs (Qsub (expSum (peval (fun i => mul ⟨2, 1⟩ (acoef i)) τ M) M)
+        (peval dgeom τ M))) (Qsub ⟨1, 1⟩ τ)) (mul ⟨2, 1⟩ (qpow τ (M + 1))) := by
+    refine Qle_trans (Qmul_den_pos (Qsub_den_pos hDMMd hDd) hWd) (Qmul_le_mul_right hW0 hED') ?_
+    refine Qle_trans (Qmul_den_pos Nat.one_pos (Qsub_den_pos hPd (qpow_den_pos hτd (M * M + 1))))
+      (Qeq_le (peval_dgeom_tail_cleared τ hτd M (M * M))) ?_
+    exact Qmul_le_mul_left (by decide) (Qsub_le_self (qpow_nonneg hτ0 (M * M + 1)))
+  refine Qle_trans (Qmul_den_pos (add_den_pos (Qabs_den_pos (Qsub_den_pos hEd hDd))
+      (Qabs_den_pos (Qsub_den_pos hDd hgd))) hWd)
+    (Qmul_le_mul_right hW0 (Qabs_sub_triangle hEd hDd hgd)) ?_
+  refine Qle_trans (add_den_pos (Qmul_den_pos (Qabs_den_pos (Qsub_den_pos hEd hDd)) hWd)
+      (Qmul_den_pos (Qabs_den_pos (Qsub_den_pos hDd hgd)) hWd))
+    (Qeq_le (Qmul_add_right (Qabs (Qsub (expSum (peval (fun i => mul ⟨2, 1⟩ (acoef i)) τ M) M)
+      (peval dgeom τ M))) (Qabs (Qsub (peval dgeom τ M) g)) (Qsub ⟨1, 1⟩ τ))) ?_
+  refine Qle_trans (add_den_pos (Qmul_den_pos Nat.one_pos hPd) (Qmul_den_pos Nat.one_pos hPd))
+    (Qadd_le_add hbound1 (dgeom_geom_gap_le τ g hτd hτ0 hτ1 hgd hg M)) ?_
+  apply Qeq_le; simp only [Qeq, mul, add]; push_cast; ring_uor
+
 end UOR.Bridge.F1Square.Analysis
