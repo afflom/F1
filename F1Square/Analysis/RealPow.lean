@@ -2634,4 +2634,70 @@ theorem RexpReal_inj {X Y : Real} (hX : Rnonneg X) (hY : Rnonneg Y)
   Rle_antisymm (RexpReal_reflects_le hY (Rle_of_Req h))
     (RexpReal_reflects_le hX (Rle_of_Req (Req_symm h)))
 
+-- ===========================================================================
+-- **STEP 4 — log-multiplicativity** `log(2m) = log 2 + log m` via `exp` injectivity, then `log(2ᵏ)=k·log2`.
+-- ===========================================================================
+
+private theorem logN_hMge (n : Nat) (hn : 1 ≤ n) : Qle (⟨1, 1⟩ : Q) ⟨(n : Int), 1⟩ := by
+  have : (1 : Int) ≤ (n : Int) := by exact_mod_cast hn
+  simp only [Qle]; push_cast; omega
+
+private theorem logN_hxpos (n : Nat) (hn : 1 ≤ n) :
+    ∀ k, 0 < ((ofQ (⟨(n : Int), 1⟩ : Q) Nat.one_pos).seq k).num := by
+  have hn1 : (1 : Int) ≤ (n : Int) := by exact_mod_cast hn
+  exact fun _ => by show (0 : Int) < (n : Int); omega
+
+private theorem logN_hhi (n : Nat) :
+    ∀ k, Qle ((ofQ (⟨(n : Int), 1⟩ : Q) Nat.one_pos).seq k) ⟨(n : Int), 1⟩ :=
+  fun _ => Qle_refl _
+
+private theorem logN_hlo (n : Nat) (hn : 1 ≤ n) :
+    ∀ k, Qle (⟨1, 1⟩ : Q) (mul ((ofQ (⟨(n : Int), 1⟩ : Q) Nat.one_pos).seq k) ⟨(n : Int), 1⟩) := by
+  have hn1 : (1 : Int) ≤ (n : Int) := by exact_mod_cast hn
+  have hsq : (1 : Int) ≤ (n : Int) * (n : Int) := by
+    have := Int.mul_le_mul hn1 hn1 (by decide) (by omega); omega
+  exact fun _ => by
+    show Qle (⟨1, 1⟩ : Q) (mul ⟨(n : Int), 1⟩ ⟨(n : Int), 1⟩); simp only [Qle, mul]; push_cast; omega
+
+private theorem logN_htmap (n : Nat) (hn : 1 ≤ n) :
+    ∀ k, 0 ≤ ((ofQ (⟨(n : Int), 1⟩ : Q) Nat.one_pos).seq k).num →
+      0 ≤ (Rlog_seq (ofQ (⟨(n : Int), 1⟩ : Q) Nat.one_pos) k).num := by
+  have hn1 : (1 : Int) ≤ (n : Int) := by exact_mod_cast hn
+  exact fun _ _ => by
+    show (0 : Int) ≤ (tmap (⟨(n : Int), 1⟩ : Q)).num; rw [tmap_nat_num n]; omega
+
+/-- **`log n`** for a natural `n ≥ 1`, as `Rlog (ofQ n)`. -/
+def logN (n : Nat) (hn : 1 ≤ n) : Real :=
+  Rlog (ofQ (⟨(n : Int), 1⟩ : Q) Nat.one_pos) ⟨(n : Int), 1⟩ Nat.one_pos
+    (logN_hMge n hn) (logN_hxpos n hn) (logN_hhi n) (logN_hlo n hn)
+
+/-- **`exp(log n) = n`**. -/
+theorem Rexp_logN (n : Nat) (hn : 1 ≤ n) :
+    Req (RexpReal (logN n hn)) (ofQ (⟨(n : Int), 1⟩ : Q) Nat.one_pos) :=
+  Rexp_log_nat_Rlog n hn (logN_hMge n hn) (logN_hxpos n hn) (logN_hhi n) (logN_hlo n hn)
+
+/-- **`log n ≥ 0`** for `n ≥ 1`. -/
+theorem Rnonneg_logN (n : Nat) (hn : 1 ≤ n) : Rnonneg (logN n hn) :=
+  Rlog_nonneg (ofQ (⟨(n : Int), 1⟩ : Q) Nat.one_pos) ⟨(n : Int), 1⟩ Nat.one_pos
+    (logN_hMge n hn) (logN_hxpos n hn) (logN_hhi n) (logN_hlo n hn) (logN_htmap n hn)
+
+/-- `ofQ(2·m) ≈ ofQ(2m)` (constant-real bridge). -/
+private theorem ofQ_two_mul (m : Nat) :
+    Req (ofQ (mul (⟨2, 1⟩ : Q) ⟨(m : Int), 1⟩) (Qmul_den_pos Nat.one_pos Nat.one_pos))
+      (ofQ (⟨((2 * m : Nat) : Int), 1⟩ : Q) Nat.one_pos) :=
+  Req_of_seq_Qeq (fun _ => by
+    show Qeq (mul (⟨2, 1⟩ : Q) ⟨(m : Int), 1⟩) ⟨((2 * m : Nat) : Int), 1⟩
+    simp only [Qeq, mul]; push_cast; ring_uor)
+
+/-- **`log(2m) = log 2 + log m`** — the keystone, via `exp` injectivity. -/
+theorem logN_mul (m : Nat) (hm : 1 ≤ m) :
+    Req (Radd (logN 2 (by omega)) (logN m hm)) (logN (2 * m) (by omega)) := by
+  have h2m : 1 ≤ 2 * m := by omega
+  refine RexpReal_inj (Rnonneg_Radd (Rnonneg_logN 2 (by omega)) (Rnonneg_logN m hm))
+    (Rnonneg_logN (2 * m) h2m) ?_
+  refine Req_trans (RexpReal_add (logN 2 (by omega)) (logN m hm)) ?_
+  refine Req_trans (Rmul_congr (Rexp_logN 2 (by omega)) (Rexp_logN m hm)) ?_
+  refine Req_trans (Rmul_ofQ_ofQ Nat.one_pos Nat.one_pos) ?_
+  exact Req_trans (ofQ_two_mul m) (Req_symm (Rexp_logN (2 * m) h2m))
+
 end UOR.Bridge.F1Square.Analysis

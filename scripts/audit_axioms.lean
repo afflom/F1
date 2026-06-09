@@ -1217,3 +1217,6 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.RexpReal_strictmono
 #print axioms Analysis.RexpReal_reflects_le
 #print axioms Analysis.RexpReal_inj
+#print axioms Analysis.Rexp_logN
+#print axioms Analysis.Rnonneg_logN
+#print axioms Analysis.logN_mul
