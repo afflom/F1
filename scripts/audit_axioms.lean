@@ -1060,3 +1060,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Fsum_ext_zero
 #print axioms Analysis.peval_mul_no_corner
 #print axioms Analysis.fpow_supp
+#print axioms Analysis.peval_fpow_pow_eq

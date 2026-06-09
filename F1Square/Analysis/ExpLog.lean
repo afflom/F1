@@ -4560,4 +4560,22 @@ theorem fpow_supp {c : Nat → Q} (hc : ∀ i, 0 < (c i).den) (S : Nat)
       · exact Qeq_trans (Qmul_den_pos Nat.one_pos (fpow_den_pos hc m _))
           (Qmul_congr (hcs i (by omega)) (Qeq_refl _)) (mul_left_zero _)
 
+/-- **No-corner power**: for `c` of support `≤ S` and depth `M2 ≥ m·S`, `(peval c t M2)ᵐ ≈ peval (fpow c m) t M2`
+    EXACTLY (the power of the truncation = truncation of the power, no corner). Induction via `peval_mul_no_corner`
+    (corner vanishes: `c` support `≤ S`, `fpow c m` support `≤ m·S`, `M2 ≥ (m+1)·S`) + `fpow_supp`. -/
+theorem peval_fpow_pow_eq {c : Nat → Q} (hc : ∀ i, 0 < (c i).den) {t : Q} (htd : 0 < t.den)
+    (S : Nat) (hcs : ∀ k, S < k → Qeq (c k) ⟨0, 1⟩) :
+    ∀ m M2, m * S ≤ M2 → Qeq (qpow (peval c t M2) m) (peval (fpow c m) t M2)
+  | 0, M2, _ => by
+      show Qeq ⟨1, 1⟩ (peval (fpow c 0) t M2)
+      exact Qeq_symm (peval_fone t htd M2)
+  | (m + 1), M2, hM2 => by
+      have hsm : (m + 1) * S = m * S + S := Nat.succ_mul m S
+      have hIH := peval_fpow_pow_eq hc htd S hcs m M2 (by omega)
+      show Qeq (mul (peval c t M2) (qpow (peval c t M2) m)) (peval (fpow c (m + 1)) t M2)
+      refine Qeq_trans (Qmul_den_pos (peval_den_pos hc htd M2)
+          (peval_den_pos (fpow_den_pos hc m) htd M2)) (Qmul_congr (Qeq_refl _) hIH) ?_
+      exact peval_mul_no_corner c (fpow c m) hc (fpow_den_pos hc m) htd S (m * S) M2
+        hcs (fun k hk => fpow_supp hc S hcs m k hk) (by omega)
+
 end UOR.Bridge.F1Square.Analysis
