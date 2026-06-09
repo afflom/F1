@@ -2335,4 +2335,35 @@ theorem fpow_fabs_dcoef_bound : ∀ m k, Qle (fpow (fabs dcoef) m k) ⟨(2 : Int
       exact Qle_trans (Fsum_den_pos (fun i => by split <;> exact Nat.one_pos) k)
         (Fsum_le_Fsum hterm k) (geoTail_le k)
 
+/-- `qpow ⟨2,1⟩ k = 2ᵏ`. -/
+theorem qpow_two_eq : ∀ k, Qeq (qpow (⟨2, 1⟩ : Q) k) ⟨(2 : Int) ^ k, 1⟩
+  | 0 => by decide
+  | (k + 1) => by
+      show Qeq (mul ⟨2, 1⟩ (qpow ⟨2, 1⟩ k)) ⟨(2 : Int) ^ (k + 1), 1⟩
+      refine Qeq_trans (Qmul_den_pos (by decide) Nat.one_pos)
+        (Qmul_congr (Qeq_refl _) (qpow_two_eq k)) ?_
+      show Qeq (mul ⟨2, 1⟩ ⟨(2 : Int) ^ k, 1⟩) ⟨(2 : Int) ^ (k + 1), 1⟩
+      rw [Int.pow_succ]; simp only [Qeq, mul]; push_cast; ring_uor
+
+/-- `(a·b)ᵏ = aᵏ·bᵏ`. -/
+theorem qpow_mul_dist (a b : Q) (ha : 0 < a.den) (hb : 0 < b.den) :
+    ∀ k, Qeq (qpow (mul a b) k) (mul (qpow a k) (qpow b k))
+  | 0 => by show Qeq (⟨1, 1⟩ : Q) (mul ⟨1, 1⟩ ⟨1, 1⟩); decide
+  | (k + 1) => by
+      show Qeq (mul (mul a b) (qpow (mul a b) k)) (mul (mul a (qpow a k)) (mul b (qpow b k)))
+      refine Qeq_trans (Qmul_den_pos (Qmul_den_pos ha hb)
+        (Qmul_den_pos (qpow_den_pos ha k) (qpow_den_pos hb k)))
+        (Qmul_congr (Qeq_refl _) (qpow_mul_dist a b ha hb k)) ?_
+      exact mul_rearrange a b (qpow a k) (qpow b k)
+
+/-- **The δ-power per-term bound** `fpow(fabs δ) m k · ρᵏ ≤ (2ρ)ᵏ` (m-INDEPENDENT). -/
+theorem fpow_fabs_dcoef_term (ρ : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num) (m k : Nat) :
+    Qle (mul (fpow (fabs dcoef) m k) (qpow ρ k)) (qpow (mul ⟨2, 1⟩ ρ) k) := by
+  refine Qle_trans (Qmul_den_pos Nat.one_pos (qpow_den_pos hρd k))
+    (Qmul_le_mul_right (qpow_nonneg hρ0 k) (fpow_fabs_dcoef_bound m k)) ?_
+  -- mul ⟨2^k,1⟩ (qpow ρ k) = mul (qpow ⟨2,1⟩ k) (qpow ρ k) = qpow (2ρ) k
+  refine Qeq_le (Qeq_symm (Qeq_trans (Qmul_den_pos (qpow_den_pos (by decide) k) (qpow_den_pos hρd k))
+    (qpow_mul_dist ⟨2, 1⟩ ρ (by decide) hρd k)
+    (Qmul_congr (qpow_two_eq k) (Qeq_refl _))))
+
 end UOR.Bridge.F1Square.Analysis
