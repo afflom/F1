@@ -168,4 +168,27 @@ theorem czetaExp_block (s : Complex) (hσ : Rnonneg s.re) (k : Nat) :
   exact czetaExp_block_le s (2 ^ k) _ (2 ^ k)
     (fun i _ => czetaExp_term_le s hσ k (2 ^ k + i + 1) (by omega) (by omega))
 
+/-- The single-step modulus ratio `u = exp(−Re s · log 2)` (so `block(k) ≤ (2u)ᵏ`). -/
+def czetaU (s : Complex) : Real := RexpReal (Rneg (Rmul s.re (logN 2 (by omega))))
+
+/-- `exp(−Re s · k · log 2) ≈ uᵏ`. -/
+theorem czetaExpB_eq_pow (s : Complex) (k : Nat) :
+    Req (RexpReal (Rneg (Rmul s.re (Rnsmul k (logN 2 (by omega)))))) (Rpow (czetaU s) k) :=
+  Req_trans (RexpReal_congr (Req_trans (Rneg_congr (Rmul_Rnsmul s.re (logN 2 (by omega)) k))
+      (Rneg_Rnsmul (Rmul s.re (logN 2 (by omega))) k)))
+    (RexpReal_nsmul (Rneg (Rmul s.re (logN 2 (by omega)))) k)
+
+/-- **The dyadic block as a geometric power**: `E(2ᵏ⁺¹) − E(2ᵏ) ≤ (2u)ᵏ`, `u = exp(−Re s · log 2)`. -/
+theorem czetaExp_block_pow (s : Complex) (hσ : Rnonneg s.re) (k : Nat) :
+    Rle (Rsub (czetaExpSum s (2 ^ (k + 1))) (czetaExpSum s (2 ^ k)))
+        (Rpow (Rmul (ofQ (⟨2, 1⟩ : Q) (by decide)) (czetaU s)) k) := by
+  refine Rle_trans (czetaExp_block s hσ k) (Rle_of_Req ?_)
+  -- Rnsmul(2^k) B ≈ Rmul(ofQ 2^k) B ≈ Rmul(Rpow(ofQ 2) k)(Rpow u k) ≈ Rpow(2u) k
+  refine Req_trans (Rnsmul_eq_Rmul_ofQ _ (2 ^ k)) ?_
+  refine Req_trans (Rmul_congr ?_ (czetaExpB_eq_pow s k)) (Req_symm (Rpow_mul_dist _ _ k))
+  -- ofQ ⟨2^k,1⟩ ≈ Rpow(ofQ 2) k
+  exact Req_symm (Req_trans (Rpow_ofQ (by decide) k)
+    (ofQ_congr (qpow_den_pos (by decide) k) Nat.one_pos
+      (Qeq_trans Nat.one_pos (qpow_two_eq k) (by simp only [Qeq]; push_cast; ring_uor))))
+
 end UOR.Bridge.F1Square.Analysis
