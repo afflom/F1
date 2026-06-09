@@ -325,6 +325,48 @@ theorem Rnonneg_Rsub_of_Rle {a b : Real} (h : Rle a b) : Rnonneg (Rsub b a) := b
     (Qle_trans (neg_den_pos (Qsub_den_pos (a.den_pos _) (b.den_pos _))) (Qneg_le_neg hsub)
       (Qeq_le heq2))
 
+/-- **`a ≤ b` (order) from `b − a ≥ 0` (Bishop)** — the converse of `Rnonneg_Rsub_of_Rle`, by an
+    Archimedean reindex (`Qarch_gen`): `aₙ ≤ bₙ + 2/(n+1) + 6/(m+1)` for every `m` (regularity at
+    `n, 2m+1` for both `a, b`, and `b−a ≥ −1/(m+1)` at index `m`). The standard `a ≤ b ⟺ 0 ≤ b−a`. -/
+theorem Rle_of_Rnonneg_Rsub {a b : Real} (h : Rnonneg (Rsub b a)) : Rle a b := by
+  intro n
+  refine Qarch_gen (C := 2) (a.den_pos n) (add_den_pos (b.den_pos n) (Nat.succ_pos _)) (fun m => ?_)
+  -- a.seq(2m+1) ≤ b.seq(2m+1) + 1/(m+1)
+  have hh : Qle (neg (Qbound m)) (add (b.seq (2 * m + 1)) (neg (a.seq (2 * m + 1)))) := h m
+  have hba : Qle (a.seq (2 * m + 1)) (add (b.seq (2 * m + 1)) (Qbound m)) := by
+    have h1 := Qadd_le_add (Qle_refl (a.seq (2 * m + 1))) hh
+    have heL : Qeq (add (a.seq (2 * m + 1)) (neg (Qbound m)))
+        (add (a.seq (2 * m + 1)) (neg (Qbound m))) := Qeq_refl _
+    have heR : Qeq (add (a.seq (2 * m + 1)) (add (b.seq (2 * m + 1)) (neg (a.seq (2 * m + 1)))))
+        (b.seq (2 * m + 1)) := by simp only [Qeq, add, neg]; push_cast; ring_uor
+    have h2 : Qle (add (a.seq (2 * m + 1)) (neg (Qbound m))) (b.seq (2 * m + 1)) :=
+      Qle_congr_right (add_den_pos (a.den_pos _)
+        (add_den_pos (b.den_pos _) (neg_den_pos (a.den_pos _)))) heR h1
+    have h3 := Qadd_le_add h2 (Qle_refl (Qbound m))
+    refine Qle_trans (add_den_pos (add_den_pos (a.den_pos _) (neg_den_pos (Qbound_den_pos m)))
+      (Qbound_den_pos m)) (Qeq_le ?_) h3
+    simp only [Qeq, add, neg, Qbound]; push_cast; ring_uor
+  have hregA : Qle (a.seq n) (add (a.seq (2 * m + 1)) (add (Qbound n) (Qbound (2 * m + 1)))) :=
+    Qle_add_of_Qabs_sub (a.den_pos n) (a.den_pos _)
+      (add_den_pos (Qbound_den_pos n) (Qbound_den_pos _)) (a.reg n (2 * m + 1))
+  have hregB : Qle (b.seq (2 * m + 1)) (add (b.seq n) (add (Qbound (2 * m + 1)) (Qbound n))) :=
+    Qle_add_of_Qabs_sub (b.den_pos _) (b.den_pos n)
+      (add_den_pos (Qbound_den_pos _) (Qbound_den_pos n)) (b.reg (2 * m + 1) n)
+  -- chain a.seq n ≤ a(2m+1)+ (1/(n+1)+1/(2m+2)) ≤ (b(2m+1)+1/(m+1)) + … ≤ b.seq n + 2/(n+1) + 2/(m+1)
+  have c1 : Qle (a.seq n) (add (add (b.seq (2 * m + 1)) (Qbound m)) (add (Qbound n) (Qbound (2 * m + 1)))) :=
+    Qle_trans (add_den_pos (a.den_pos _) (add_den_pos (Qbound_den_pos n) (Qbound_den_pos _)))
+      hregA (Qadd_le_add hba (Qle_refl _))
+  have c2 : Qle (a.seq n)
+      (add (add (add (b.seq n) (add (Qbound (2 * m + 1)) (Qbound n))) (Qbound m))
+        (add (Qbound n) (Qbound (2 * m + 1)))) :=
+    Qle_trans (add_den_pos (add_den_pos (b.den_pos _) (Qbound_den_pos m))
+        (add_den_pos (Qbound_den_pos n) (Qbound_den_pos _)))
+      c1 (Qadd_le_add (Qadd_le_add hregB (Qle_refl _)) (Qle_refl _))
+  refine Qle_trans (add_den_pos (add_den_pos (add_den_pos (b.den_pos n)
+      (add_den_pos (Qbound_den_pos _) (Qbound_den_pos n))) (Qbound_den_pos m))
+      (add_den_pos (Qbound_den_pos n) (Qbound_den_pos _))) c2 (Qeq_le ?_)
+  simp only [Qeq, add, Qbound]; push_cast; ring_uor
+
 /-- **`a + (x − a) ≈ x`** — the additive cancellation used to read `exp b` off the difference form. -/
 theorem Radd_Rsub_self (a x : Real) : Req (Radd a (Rsub x a)) x :=
   Req_trans (Req_symm (Radd_assoc a x (Rneg a)))
