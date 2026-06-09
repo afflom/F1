@@ -2239,4 +2239,20 @@ theorem inner_eval_bound (w : Q) (hwd : 0 < w.den) (hwn : 0 ≤ w.num) (m : Nat)
   exact Qle_trans (Qmul_den_pos (by decide) (Qmul_den_pos (by decide) (Qabs_den_pos hXd)))
     (Qeq_le hXeq) (Qmul_le_mul_left (by decide) h9X)
 
+/-- **The geometric term bound** `|3·δ_M·w^{M+1}| ≤ 3·ρ^{M+1}` for `|w| ≤ ρ` (`|δ|≤1` + `qpow` monotone). -/
+theorem dcoef_term_geo (w ρ : Q) (hwd : 0 < w.den) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num)
+    (hw : Qle (Qabs w) ρ) (m : Nat) :
+    Qle (Qabs (mul (mul ⟨3, 1⟩ (dcoef (m + 1))) (qpow w (m + 1 + 1))))
+      (mul ⟨3, 1⟩ (qpow ρ (m + 1 + 1))) := by
+  have hQ3 : Qle (Qabs (mul ⟨3, 1⟩ (dcoef (m + 1)))) ⟨3, 1⟩ := by
+    rw [Qabs_mul]
+    refine Qle_trans (Qmul_den_pos (Qabs_den_pos (by decide)) Nat.one_pos)
+      (Qmul_le_mul_left (Qabs_num_nonneg _) (dcoef_abs_le_one (m + 1))) ?_
+    exact (by decide : Qle (mul (Qabs (⟨3, 1⟩ : Q)) ⟨1, 1⟩) ⟨3, 1⟩)
+  rw [Qabs_mul]
+  refine Qmul_le_mul (Qabs_den_pos (Qmul_den_pos (by decide) (dcoef_den (m + 1)))) (by decide)
+    (Qabs_den_pos (qpow_den_pos hwd (m + 1 + 1))) (Qabs_num_nonneg _) (Qabs_num_nonneg _) hQ3 ?_
+  exact Qle_trans (qpow_den_pos (Qabs_den_pos hwd) (m + 1 + 1)) (Qeq_le (qpow_abs w (m + 1 + 1)))
+    (qpow_base_mono (Qabs_den_pos hwd) hρd (Qabs_num_nonneg w) hw (m + 1 + 1))
+
 end UOR.Bridge.F1Square.Analysis
