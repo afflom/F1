@@ -2956,4 +2956,20 @@ theorem Rneg_Rnsmul (x : Real) : ∀ k, Req (Rneg (Rnsmul k x)) (Rnsmul k (Rneg 
   | 0 => Req_of_seq_Qeq (fun _ => by show Qeq (neg (⟨0, 1⟩ : Q)) ⟨0, 1⟩; decide)
   | (k + 1) => Req_trans (Rneg_Radd x (Rnsmul k x)) (Radd_congr (Req_refl _) (Rneg_Rnsmul x k))
 
+/-- `(a·b)·(X·Y) ≈ (a·X)·(b·Y)`. -/
+theorem Rmul_mul_mul (a b X Y : Real) :
+    Req (Rmul (Rmul a b) (Rmul X Y)) (Rmul (Rmul a X) (Rmul b Y)) :=
+  Req_trans (Rmul_assoc a b (Rmul X Y))
+    (Req_trans (Rmul_congr (Req_refl a) (Req_symm (Rmul_assoc b X Y)))
+      (Req_trans (Rmul_congr (Req_refl a) (Rmul_congr (Rmul_comm b X) (Req_refl Y)))
+        (Req_trans (Rmul_congr (Req_refl a) (Rmul_assoc X b Y))
+          (Req_symm (Rmul_assoc a X (Rmul b Y))))))
+
+/-- `(a·b)ᵏ ≈ aᵏ·bᵏ`. -/
+theorem Rpow_mul_dist (a b : Real) : ∀ k, Req (Rpow (Rmul a b) k) (Rmul (Rpow a k) (Rpow b k))
+  | 0 => Req_symm (Rmul_one one)
+  | (k + 1) =>
+      Req_trans (Rmul_congr (Req_refl _) (Rpow_mul_dist a b k))
+        (Rmul_mul_mul a b (Rpow a k) (Rpow b k))
+
 end UOR.Bridge.F1Square.Analysis
