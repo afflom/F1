@@ -1630,4 +1630,34 @@ theorem fcomp_shift1 (b c : Nat → Q) (hb : ∀ i, 0 < (b i).den) (hc : ∀ i, 
   exact Qeq_trans (Fsum_den_pos (fun m => Qmul_den_pos (hb m) (hfp (m + 1) k)) k)
     (Qeq_symm hLHS) (Qeq_symm hRHS)
 
+/-- `t·t = t²` (`fmono 1 · fmono 1 = fmono 2`). -/
+theorem fmono1_sq : ∀ k, Qeq (fmul (fmono 1) (fmono 1) k) (fmono 2 k)
+  | 0 => Qeq_trans Nat.one_pos (fmul_fmono_zero (fun i => fmono_den 1 i) (show (0 : Nat) < 1 by omega)) (by decide)
+  | (m + 1) => by
+      refine Qeq_trans (fmono_den 1 (m + 1 - 1))
+        (fmul_fmono (fun i => fmono_den 1 i) 1 (show 1 ≤ m + 1 by omega)) ?_
+      rw [show m + 1 - 1 = m from by omega]
+      unfold fmono
+      by_cases h : m = 1
+      · subst h; decide
+      · rw [if_neg h, if_neg (show ¬(m + 1 = 2) by omega)]; exact Qeq_refl _
+
+/-- **`fcomp (t²·b) c = c²·(fcomp b c)`** (`c(0)=0`), the degree-2 shift, via `fcomp_shift1` twice. -/
+theorem fcomp_shift2 (b c : Nat → Q) (hb : ∀ i, 0 < (b i).den) (hc : ∀ i, 0 < (c i).den)
+    (hc0 : Qeq (c 0) ⟨0, 1⟩) (k : Nat) :
+    Qeq (fcomp (fmul (fmono 2) b) c k) (fmul c (fmul c (fcomp b c)) k) := by
+  have h1b : ∀ i, 0 < (fmul (fmono 1) b i).den := fun i => fmul_den_pos (fun j => fmono_den 1 j) hb i
+  -- fmul (fmono 2) b ≈ fmul (fmono 1) (fmul (fmono 1) b)
+  have hassoc : ∀ i, Qeq (fmul (fmono 2) b i) (fmul (fmono 1) (fmul (fmono 1) b) i) := by
+    intro i
+    refine Qeq_trans (fmul_den_pos (fun j => fmul_den_pos (fun l => fmono_den 1 l)
+        (fun l => fmono_den 1 l) j) hb i)
+      (fmul_congr_left (fun j => Qeq_symm (fmono1_sq j)) i) ?_
+    exact fmul_assoc (fmono 1) (fmono 1) b (fun j => fmono_den 1 j) (fun j => fmono_den 1 j) hb i
+  refine Qeq_trans (fcomp_den_pos (fun j => fmul_den_pos (fun l => fmono_den 1 l) h1b j) hc k)
+    (fcomp_congr_left hassoc k) ?_
+  refine Qeq_trans (fmul_den_pos hc (fun j => fcomp_den_pos h1b hc j) k)
+    (fcomp_shift1 (fmul (fmono 1) b) c h1b hc hc0 k) ?_
+  exact fmul_congr_right (fun j => fcomp_shift1 b c hb hc hc0 j) k
+
 end UOR.Bridge.F1Square.Analysis

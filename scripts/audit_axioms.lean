@@ -1163,3 +1163,5 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.sacoef_den
 #print axioms Analysis.fderiv_sacoef
 #print axioms Analysis.fcomp_shift1
+#print axioms Analysis.fmono1_sq
+#print axioms Analysis.fcomp_shift2
