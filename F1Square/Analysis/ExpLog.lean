@@ -4494,4 +4494,49 @@ theorem Fsum_ext_zero {f : Nat → Q} (hf : ∀ k, 0 < (f k).den) (a : Nat) :
         (Qadd_congr (Fsum_ext_zero hf a d (fun j hj1 hj2 => hz j hj1 (by omega)))
           (hz (a + d + 1) (by omega) (by omega))) (Qadd_zero_right _)
 
+/-- **`peval_mul` with no corner** (finite support): if `a` has support `≤ Sa`, `b` support `≤ Sb`, and the
+    evaluation depth `M2 ≥ Sa + Sb`, then `peval a · peval b ≈ peval (a*b)` exactly — the high-antidiagonal
+    corner vanishes because every corner term `aᵢ·bⱼ` (with `i+j > M2`) has `i > Sa` or `j > Sb`. -/
+theorem peval_mul_no_corner (a b : Nat → Q) (ha : ∀ i, 0 < (a i).den) (hb : ∀ j, 0 < (b j).den)
+    {t : Q} (htd : 0 < t.den) (Sa Sb M2 : Nat) (hasupp : ∀ k, Sa < k → Qeq (a k) ⟨0, 1⟩)
+    (hbsupp : ∀ k, Sb < k → Qeq (b k) ⟨0, 1⟩) (hM2 : Sa + Sb ≤ M2) :
+    Qeq (mul (peval a t M2) (peval b t M2)) (peval (fmul a b) t M2) := by
+  have hta : ∀ i, 0 < (mul (a i) (qpow t i)).den := fun i => Qmul_den_pos (ha i) (qpow_den_pos htd i)
+  have htb : ∀ j, 0 < (mul (b j) (qpow t j)).den := fun j => Qmul_den_pos (hb j) (qpow_den_pos htd j)
+  have hg : ∀ i j, 0 < (mul (mul (a i) (qpow t i)) (mul (b j) (qpow t j))).den :=
+    fun i j => Qmul_den_pos (hta i) (htb j)
+  have hg0a : ∀ i j, Qeq (a i) ⟨0, 1⟩ →
+      Qeq (mul (mul (a i) (qpow t i)) (mul (b j) (qpow t j))) ⟨0, 1⟩ := by
+    intro i j h
+    have h1 : Qeq (mul (a i) (qpow t i)) ⟨0, 1⟩ :=
+      Qeq_trans (Qmul_den_pos Nat.one_pos (qpow_den_pos htd i)) (Qmul_congr h (Qeq_refl _)) (mul_left_zero _)
+    exact Qeq_trans (Qmul_den_pos Nat.one_pos (htb j)) (Qmul_congr h1 (Qeq_refl _)) (mul_left_zero _)
+  have hg0b : ∀ i j, Qeq (b j) ⟨0, 1⟩ →
+      Qeq (mul (mul (a i) (qpow t i)) (mul (b j) (qpow t j))) ⟨0, 1⟩ := by
+    intro i j h
+    have h1 : Qeq (mul (b j) (qpow t j)) ⟨0, 1⟩ :=
+      Qeq_trans (Qmul_den_pos Nat.one_pos (qpow_den_pos htd j)) (Qmul_congr h (Qeq_refl _)) (mul_left_zero _)
+    exact Qeq_trans (Qmul_den_pos (hta i) Nat.one_pos) (Qmul_congr (Qeq_refl _) h1) (mul_right_zero _)
+  have hcorner : Qeq (Fsum (fun i => Qsub
+      (Fsum (fun j => mul (mul (a i) (qpow t i)) (mul (b j) (qpow t j))) M2)
+      (Fsum (fun j => mul (mul (a i) (qpow t i)) (mul (b j) (qpow t j))) (M2 - i))) M2) ⟨0, 1⟩ := by
+    refine Qeq_trans (Fsum_den_pos (fun _ => Nat.one_pos) M2)
+      (Fsum_congr_le (fun i hi => ?_)) (Fsum_zeros M2)
+    have htail : Qeq (Fsum (fun j => mul (mul (a i) (qpow t i)) (mul (b j) (qpow t j))) M2)
+        (Fsum (fun j => mul (mul (a i) (qpow t i)) (mul (b j) (qpow t j))) (M2 - i)) := by
+      have he : (M2 - i) + i = M2 := Nat.sub_add_cancel hi
+      have hz := Fsum_ext_zero (fun j => hg i j) (M2 - i) i (fun j hj1 _ => by
+        by_cases hiSa : i ≤ Sa
+        · exact hg0b i j (hbsupp j (by omega))
+        · exact hg0a i j (hasupp i (by omega)))
+      rw [he] at hz; exact hz
+    refine Qeq_trans (Qsub_den_pos (Fsum_den_pos (fun j => hg i j) (M2 - i))
+        (Fsum_den_pos (fun j => hg i j) (M2 - i))) (Qsub_congr htail (Qeq_refl _)) ?_
+    simp only [Qeq, Qsub, add, neg]; ring_uor
+  refine Qeq_trans (add_den_pos (peval_den_pos (fun k => fmul_den_pos ha hb k) htd M2)
+      (Fsum_den_pos (fun i => Qsub_den_pos (Fsum_den_pos (fun j => hg i j) M2)
+        (Fsum_den_pos (fun j => hg i j) (M2 - i))) M2)) (peval_mul a b ha hb htd M2) ?_
+  refine Qeq_trans (add_den_pos (peval_den_pos (fun k => fmul_den_pos ha hb k) htd M2) Nat.one_pos)
+    (Qadd_congr (Qeq_refl _) hcorner) (Qadd_zero_right _)
+
 end UOR.Bridge.F1Square.Analysis
