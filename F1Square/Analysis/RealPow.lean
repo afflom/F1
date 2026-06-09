@@ -2981,6 +2981,14 @@ theorem Radd_ofQ_ofQ {a b : Q} (ha : 0 < a.den) (hb : 0 < b.den) :
 theorem ofQ_congr {a b : Q} (ha : 0 < a.den) (hb : 0 < b.den) (h : Qeq a b) :
     Req (ofQ a ha) (ofQ b hb) := Req_of_seq_Qeq (fun _ => h)
 
+/-- `(A−M) + (M−B) ≈ A−B` (telescoping). -/
+theorem Rsub_telescope (A M B : Real) : Req (Radd (Rsub A M) (Rsub M B)) (Rsub A B) :=
+  Req_trans (Radd_assoc A (Rneg M) (Rsub M B))
+    (Radd_congr (Req_refl A)
+      (Req_trans (Req_symm (Radd_assoc (Rneg M) M (Rneg B)))
+        (Req_trans (Radd_congr (Req_trans (Radd_comm (Rneg M) M) (Radd_neg M)) (Req_refl (Rneg B)))
+          (Req_trans (Radd_comm zero (Rneg B)) (Radd_zero (Rneg B))))))
+
 /-- `k·x ≈ ⟨k,1⟩·x` (the natural multiple is the `ofQ`-scalar multiple). -/
 theorem Rnsmul_eq_Rmul_ofQ (x : Real) : ∀ n,
     Req (Rnsmul n x) (Rmul (ofQ (⟨(n : Int), 1⟩ : Q) Nat.one_pos) x)

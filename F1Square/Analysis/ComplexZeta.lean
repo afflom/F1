@@ -249,4 +249,28 @@ theorem czetaExp_block_geo (s : Complex) (hσ : Rnonneg s.re) {τ : Q} (hτn : 0
       (Rnonneg_ofQ hrd hrn) (czetaU_2u_le_of_theta s hτn hτd hθ) k) ?_
   exact Rle_of_Req (Rpow_ofQ hrd k)
 
+/-- The rational geometric partial sum `Σ_{k=j}^{j+d−1} rᵏ` (block-first ordering). -/
+def geoFrom (r : Q) (j : Nat) : Nat → Q
+  | 0 => ⟨0, 1⟩
+  | (d + 1) => add (qpow r (j + d)) (geoFrom r j d)
+
+theorem geoFrom_den_pos (r : Q) (hrd : 0 < r.den) (j : Nat) : ∀ d, 0 < (geoFrom r j d).den
+  | 0 => Nat.one_pos
+  | (d + 1) => add_den_pos (qpow_den_pos hrd (j + d)) (geoFrom_den_pos r hrd j d)
+
+/-- **The dyadic tail telescopes to a geometric partial sum**: `E(2^{j+d}) − E(2ʲ) ≤ ofQ(Σ_{k=j}^{j+d−1} rᵏ)`. -/
+theorem czetaExp_tail (s : Complex) (hσ : Rnonneg s.re) {τ : Q} (hτn : 0 < τ.num) (hτd : 0 < τ.den)
+    (hθ : Rle (ofQ τ hτd) (Rmul (Rsub s.re one) (logN 2 (by omega)))) (j : Nat) : ∀ d,
+    Rle (Rsub (czetaExpSum s (2 ^ (j + d))) (czetaExpSum s (2 ^ j)))
+        (ofQ (geoFrom (Qinv (add ⟨1, 1⟩ τ)) j d)
+          (geoFrom_den_pos _ (Qinv_den_pos (by simp only [add]; push_cast; omega)) j d))
+  | 0 => Rle_of_Req (Radd_neg _)
+  | (d + 1) => by
+      refine Rle_trans (Rle_of_Req (Req_symm
+          (Rsub_telescope (czetaExpSum s (2 ^ (j + d + 1))) (czetaExpSum s (2 ^ (j + d)))
+            (czetaExpSum s (2 ^ j))))) ?_
+      refine Rle_trans (Radd_le_add (czetaExp_block_geo s hσ hτn hτd hθ (j + d))
+          (czetaExp_tail s hσ hτn hτd hθ j d)) ?_
+      exact Rle_of_Req (Radd_ofQ_ofQ _ _)
+
 end UOR.Bridge.F1Square.Analysis
