@@ -1690,4 +1690,46 @@ theorem fcomp_sub {a b c : Nat → Q} (ha : ∀ i, 0 < (a i).den) (hb : ∀ i, 0
     (Fsum_sub (fun m => Qmul_den_pos (ha m) (fpow_den_pos hc m k))
       (fun m => Qmul_den_pos (hb m) (fpow_den_pos hc m k)) k)
 
+/-- `(c·tᵈ)·e = c·(tᵈ·e)` (scaled monomial = scalar times monomial shift). -/
+theorem fmul_fsmono_smul (c : Q) (d : Nat) (e : Nat → Q) (hc : 0 < c.den) (he : ∀ i, 0 < (e i).den)
+    (k : Nat) : Qeq (fmul (fsmono c d) e k) (mul c (fmul (fmono d) e k)) := by
+  by_cases h : d ≤ k
+  · refine Qeq_trans (Qmul_den_pos hc (he (k - d))) (fmul_fsmono hc e he d h) ?_
+    exact Qmul_congr (Qeq_refl _) (Qeq_symm (fmul_fmono he d h))
+  · refine Qeq_trans Nat.one_pos (fmul_fsmono_zero hc e he d (by omega)) ?_
+    refine Qeq_trans (Qmul_den_pos hc Nat.one_pos) ?_
+      (Qeq_symm (Qmul_congr (Qeq_refl c) (fmul_fmono_zero he (show k < d by omega))))
+    simp [Qeq, mul]
+
+/-- The decomposition `(8−6u−9u²)·sacD = 8·sacD − 6·(t·sacD) − 9·(t²·sacD)` (`p2_split` + `fsmono`-smul). -/
+theorem p2_sacD (k : Nat) :
+    Qeq (fmul p2 sacD k)
+      (add (add (mul ⟨8, 1⟩ (sacD k)) (mul ⟨-6, 1⟩ (fmul (fmono 1) sacD k)))
+        (mul ⟨-9, 1⟩ (fmul (fmono 2) sacD k))) := by
+  have hf8 : ∀ i, 0 < (fsmono ⟨8, 1⟩ 0 i).den := fun i => fsmono_den (by decide) 0 i
+  have hf6 : ∀ i, 0 < (fsmono ⟨-6, 1⟩ 1 i).den := fun i => fsmono_den (by decide) 1 i
+  have hf9 : ∀ i, 0 < (fsmono ⟨-9, 1⟩ 2 i).den := fun i => fsmono_den (by decide) 2 i
+  have hinner : ∀ i, 0 < (add (fsmono ⟨8, 1⟩ 0 i) (fsmono ⟨-6, 1⟩ 1 i)).den :=
+    fun i => add_den_pos (hf8 i) (hf6 i)
+  have e0 : Qeq (fmul p2 sacD k)
+      (add (add (fmul (fsmono ⟨8, 1⟩ 0) sacD k) (fmul (fsmono ⟨-6, 1⟩ 1) sacD k))
+        (fmul (fsmono ⟨-9, 1⟩ 2) sacD k)) := by
+    refine Qeq_trans (fmul_den_pos (fun i => add_den_pos (hinner i) (hf9 i)) sacD_den k)
+      (fmul_congr_left p2_split k) ?_
+    refine Qeq_trans (add_den_pos (fmul_den_pos hinner sacD_den k) (fmul_den_pos hf9 sacD_den k))
+      (fmul_add_left hinner hf9 sacD_den k) ?_
+    exact Qadd_congr (fmul_add_left hf8 hf6 sacD_den k) (Qeq_refl _)
+  have h8 : Qeq (fmul (fsmono ⟨8, 1⟩ 0) sacD k) (mul ⟨8, 1⟩ (sacD k)) :=
+    Qeq_trans (Qmul_den_pos (by decide) (fmul_den_pos (fun i => fmono_den 0 i) sacD_den k))
+      (fmul_fsmono_smul ⟨8, 1⟩ 0 sacD (by decide) sacD_den k)
+      (Qmul_congr (Qeq_refl _) (by
+        have h := fmul_fmono sacD_den 0 (Nat.zero_le k); rwa [Nat.sub_zero] at h))
+  have h6 : Qeq (fmul (fsmono ⟨-6, 1⟩ 1) sacD k) (mul ⟨-6, 1⟩ (fmul (fmono 1) sacD k)) :=
+    fmul_fsmono_smul ⟨-6, 1⟩ 1 sacD (by decide) sacD_den k
+  have h9 : Qeq (fmul (fsmono ⟨-9, 1⟩ 2) sacD k) (mul ⟨-9, 1⟩ (fmul (fmono 2) sacD k)) :=
+    fmul_fsmono_smul ⟨-9, 1⟩ 2 sacD (by decide) sacD_den k
+  refine Qeq_trans (add_den_pos (add_den_pos (fmul_den_pos hf8 sacD_den k) (fmul_den_pos hf6 sacD_den k))
+    (fmul_den_pos hf9 sacD_den k)) e0 ?_
+  exact Qadd_congr (Qadd_congr h8 h6) h9
+
 end UOR.Bridge.F1Square.Analysis
