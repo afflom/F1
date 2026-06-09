@@ -1251,3 +1251,9 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.czetaTerm_re_ge
 #print axioms Analysis.czetaTerm_im_le
 #print axioms Analysis.czetaTerm_im_ge
+#print axioms Analysis.Rsub_Radd_left
+#print axioms Analysis.Rneg_zero
+#print axioms Analysis.czeta_re_diff_le_aux
+#print axioms Analysis.czeta_re_diff_le
+#print axioms Analysis.czeta_re_diff_ge_aux
+#print axioms Analysis.czeta_re_diff_ge

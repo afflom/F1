@@ -52,4 +52,61 @@ theorem czetaTerm_im_le (s : Complex) (n : Nat) (hn : 1 ≤ n) :
 theorem czetaTerm_im_ge (s : Complex) (n : Nat) (hn : 1 ≤ n) :
     Rle (Rneg (RexpReal (czetaExpArg s n hn))) ((czetaTerm s n hn).im) := Cexp_im_ge _
 
+/-- The real partial sum `Σ_{n=1}^N Re(n⁻ˢ)`. -/
+def czetaReSum (s : Complex) : Nat → Real
+  | 0 => zero
+  | (n + 1) => Radd (czetaReSum s n) ((czetaTerm s (n + 1) (by omega)).re)
+
+/-- The imaginary partial sum `Σ_{n=1}^N Im(n⁻ˢ)`. -/
+def czetaImSum (s : Complex) : Nat → Real
+  | 0 => zero
+  | (n + 1) => Radd (czetaImSum s n) ((czetaTerm s (n + 1) (by omega)).im)
+
+/-- The modulus partial sum `Σ_{n=1}^N exp(−Re s · log n)` (dominates both components' increments). -/
+def czetaExpSum (s : Complex) : Nat → Real
+  | 0 => zero
+  | (n + 1) => Radd (czetaExpSum s n) (RexpReal (czetaExpArg s (n + 1) (by omega)))
+
+/-- `(a+t) − b ≈ (a−b) + t`. -/
+theorem Rsub_Radd_left (a t b : Real) : Req (Rsub (Radd a t) b) (Radd (Rsub a b) t) :=
+  Req_trans (Radd_assoc a t (Rneg b))
+    (Req_trans (Radd_congr (Req_refl a) (Radd_comm t (Rneg b)))
+      (Req_symm (Radd_assoc a (Rneg b) t)))
+
+/-- `−0 ≈ 0`. -/
+theorem Rneg_zero : Req (Rneg zero) zero :=
+  Req_of_seq_Qeq (fun _ => by show Qeq (neg (⟨0, 1⟩ : Q)) ⟨0, 1⟩; decide)
+
+/-- **Upper tail bound (real part)**, `d`-form: `S_re(N+d) − S_re(N) ≤ E(N+d) − E(N)`. -/
+theorem czeta_re_diff_le_aux (s : Complex) (N : Nat) : ∀ d,
+    Rle (Rsub (czetaReSum s (N + d)) (czetaReSum s N))
+        (Rsub (czetaExpSum s (N + d)) (czetaExpSum s N))
+  | 0 => Rle_of_Req (Req_trans (Radd_neg _) (Req_symm (Radd_neg _)))
+  | (d + 1) =>
+      Rle_trans (Rle_of_Req (Rsub_Radd_left (czetaReSum s (N + d)) _ (czetaReSum s N)))
+        (Rle_trans (Radd_le_add (czeta_re_diff_le_aux s N d) (czetaTerm_re_le s (N + d + 1) (by omega)))
+          (Rle_of_Req (Req_symm (Rsub_Radd_left (czetaExpSum s (N + d)) _ (czetaExpSum s N)))))
+
+/-- **Upper tail bound (real part)**: for `N ≤ M`, `S_re(M) − S_re(N) ≤ E(M) − E(N)`. -/
+theorem czeta_re_diff_le (s : Complex) {N M : Nat} (hNM : N ≤ M) :
+    Rle (Rsub (czetaReSum s M) (czetaReSum s N)) (Rsub (czetaExpSum s M) (czetaExpSum s N)) := by
+  obtain ⟨d, rfl⟩ := Nat.le.dest hNM; exact czeta_re_diff_le_aux s N d
+
+/-- **Lower tail bound (real part)**, `d`-form: `−(E(N+d) − E(N)) ≤ S_re(N+d) − S_re(N)`. -/
+theorem czeta_re_diff_ge_aux (s : Complex) (N : Nat) : ∀ d,
+    Rle (Rneg (Rsub (czetaExpSum s (N + d)) (czetaExpSum s N)))
+        (Rsub (czetaReSum s (N + d)) (czetaReSum s N))
+  | 0 => Rle_of_Req (Req_trans (Rneg_congr (Radd_neg _)) (Req_trans Rneg_zero (Req_symm (Radd_neg _))))
+  | (d + 1) =>
+      Rle_trans (Rle_of_Req (Req_trans
+          (Rneg_congr (Rsub_Radd_left (czetaExpSum s (N + d)) _ (czetaExpSum s N)))
+          (Rneg_Radd (Rsub (czetaExpSum s (N + d)) (czetaExpSum s N)) _)))
+        (Rle_trans (Radd_le_add (czeta_re_diff_ge_aux s N d) (czetaTerm_re_ge s (N + d + 1) (by omega)))
+          (Rle_of_Req (Req_symm (Rsub_Radd_left (czetaReSum s (N + d)) _ (czetaReSum s N)))))
+
+/-- **Lower tail bound (real part)**: for `N ≤ M`, `−(E(M) − E(N)) ≤ S_re(M) − S_re(N)`. -/
+theorem czeta_re_diff_ge (s : Complex) {N M : Nat} (hNM : N ≤ M) :
+    Rle (Rneg (Rsub (czetaExpSum s M) (czetaExpSum s N))) (Rsub (czetaReSum s M) (czetaReSum s N)) := by
+  obtain ⟨d, rfl⟩ := Nat.le.dest hNM; exact czeta_re_diff_ge_aux s N d
+
 end UOR.Bridge.F1Square.Analysis
