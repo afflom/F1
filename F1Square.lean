@@ -62,6 +62,7 @@ import F1Square.Analysis.ComplexMod
 import F1Square.Analysis.ComplexPow
 import F1Square.Analysis.ExpLog
 import F1Square.Analysis.RealPow
+import F1Square.Analysis.ComplexZeta
 import F1Square.Li
 
 open UOR.Primitives

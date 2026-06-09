@@ -1243,3 +1243,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rneg_one_le_Rcos
 #print axioms Analysis.Rsin_le_one
 #print axioms Analysis.Rneg_one_le_Rsin
+#print axioms Analysis.Cexp_re_le
+#print axioms Analysis.Cexp_re_ge
+#print axioms Analysis.Cexp_im_le
+#print axioms Analysis.Cexp_im_ge
