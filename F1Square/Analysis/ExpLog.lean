@@ -4595,4 +4595,23 @@ theorem fpow_mono {c d : Nat → Q} (hcd : ∀ i, 0 < (c i).den) (hdd : ∀ i, 0
       exact Fsum_le_Fsum (fun i => Qmul_le_mul (hcd i) (hdd i) (fpow_den_pos hcd m _) (hc0 i)
         (fpow_num_nonneg hc0 m _) (hle i) (fpow_mono hcd hdd hc0 hle m (k - i))) k
 
+/-- **★ The corner inequality** `(peval b t M)ᵐ ≤ peval (fpow b m) t M2` for `M2 ≥ m·M` (nonneg `b`, `t`).
+    Power of the `M`-truncation ≤ the higher `M2`-truncation of the formal power. Via `truncTo` (so the power
+    is exact, `peval_fpow_pow_eq`) + `fpow_mono` (`truncTo b M ≤ b`) lifted by `peval_mono`. -/
+theorem qpow_peval_le {b : Nat → Q} (hb : ∀ i, 0 < (b i).den) (hb0 : ∀ i, 0 ≤ (b i).num)
+    {t : Q} (htd : 0 < t.den) (ht0 : 0 ≤ t.num) (M m M2 : Nat) (hMM2 : M ≤ M2) (hmM : m * M ≤ M2) :
+    Qle (qpow (peval b t M) m) (peval (fpow b m) t M2) := by
+  have hsupp : ∀ k, M < k → Qeq (truncTo b M k) ⟨0, 1⟩ := by
+    intro k hk; unfold truncTo; rw [if_neg (Nat.not_le.mpr hk)]; exact Qeq_refl _
+  have he : Qeq (peval (truncTo b M) t M2) (peval b t M) := by
+    have h := peval_truncTo hb t htd M (M2 - M)
+    rw [show M + (M2 - M) = M2 from by omega] at h; exact h
+  have hchain : Qeq (qpow (peval b t M) m) (peval (fpow (truncTo b M) m) t M2) :=
+    Qeq_trans (qpow_den_pos (peval_den_pos (truncTo_den hb M) htd M2) m)
+      (qpow_Qeq_loc (Qeq_symm he) m)
+      (peval_fpow_pow_eq (truncTo_den hb M) htd M hsupp m M2 hmM)
+  refine Qle_trans (peval_den_pos (fpow_den_pos (truncTo_den hb M) m) htd M2) (Qeq_le hchain) ?_
+  exact peval_mono (fun k => fpow_mono (truncTo_den hb M) hb (truncTo_nonneg hb0 M)
+    (truncTo_le hb0 M) m k) t ht0 M2
+
 end UOR.Bridge.F1Square.Analysis

@@ -1063,3 +1063,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.peval_fpow_pow_eq
 #print axioms Analysis.truncTo_nonneg
 #print axioms Analysis.fpow_mono
+#print axioms Analysis.qpow_peval_le
