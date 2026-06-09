@@ -2268,4 +2268,71 @@ theorem inner_eval_geo (w ρ : Q) (hwd : 0 < w.den) (hwn : 0 ≤ w.num) (hρd : 
     (Qmul_assoc3 ⟨1, 9⟩ ⟨3, 1⟩ (qpow ρ (m + 1 + 1)))
     (Qmul_congr (by decide : Qeq (mul (⟨1, 9⟩ : Q) ⟨3, 1⟩) ⟨1, 3⟩) (Qeq_refl _)))
 
+-- The **`gcorner` term bound** for `dcoef` (the corner Cauchy estimate): since `δ₀=0` and `|δᵢ|≤1`, the
+-- power coefficients satisfy `fpow(fabs δ) m k ≤ 2ᵏ` (m-INDEPENDENT — cleaner than the doubling's `4ᵐ`).
+
+/-- `Σ_{i=0}^k (i=0 ? 0 : 2^{k−i}) ≤ 2^k` (the `δ₀=0` saving: drop the `i=0` term, `Σ_{i=1}^k 2^{k−i}=2^k−1`). -/
+private theorem geoTail_le : ∀ k,
+    Qle (Fsum (fun i => if i = 0 then (⟨0, 1⟩ : Q) else ⟨(2 : Int) ^ (k - i), 1⟩) k) ⟨(2 : Int) ^ k, 1⟩
+  | 0 => by decide
+  | (k + 1) => by
+      have hgvd : ∀ i, 0 < (if i = 0 then (⟨0, 1⟩ : Q) else ⟨(2 : Int) ^ (k + 1 - i), 1⟩).den := by
+        intro i; split <;> exact Nat.one_pos
+      have hhd : ∀ i, 0 < (if i = k + 1 then (⟨0, 1⟩ : Q) else ⟨(2 : Int) ^ i, 1⟩).den := by
+        intro i; split <;> exact Nat.one_pos
+      have hstep1 : Qeq (Fsum (fun i => if i = 0 then (⟨0, 1⟩ : Q) else ⟨(2 : Int) ^ (k + 1 - i), 1⟩) (k + 1))
+          (Fsum (fun i => if i = k + 1 then (⟨0, 1⟩ : Q) else ⟨(2 : Int) ^ i, 1⟩) (k + 1)) := by
+        refine Qeq_trans (Fsum_den_pos (fun i => by split <;> exact Nat.one_pos) (k + 1))
+          (Fsum_reverse hgvd (k + 1)) ?_
+        exact Fsum_congr_le (fun i _ => by
+          by_cases h : i = k + 1
+          · subst h; rw [Nat.sub_self, if_pos rfl, if_pos rfl]; exact Qeq_refl _
+          · rw [if_neg (show k + 1 - i ≠ 0 by omega), if_neg h,
+              show k + 1 - (k + 1 - i) = i from by omega]; exact Qeq_refl _)
+      have hk : Qeq (Fsum (fun i => if i = k + 1 then (⟨0, 1⟩ : Q) else ⟨(2 : Int) ^ i, 1⟩) k)
+          (⟨(2 : Int) ^ (k + 1) - 1, 1⟩ : Q) :=
+        Qeq_trans (Fsum_den_pos (fun _ => Nat.one_pos) k)
+          (Fsum_congr_le (fun i _ => by rw [if_neg (show i ≠ k + 1 by omega)]; exact Qeq_refl _))
+          (pow2_sum k)
+      have hstep2 : Qeq (Fsum (fun i => if i = k + 1 then (⟨0, 1⟩ : Q) else ⟨(2 : Int) ^ i, 1⟩) (k + 1))
+          (⟨(2 : Int) ^ (k + 1) - 1, 1⟩ : Q) := by
+        show Qeq (add (Fsum (fun i => if i = k + 1 then (⟨0, 1⟩ : Q) else ⟨(2 : Int) ^ i, 1⟩) k)
+          (if k + 1 = k + 1 then (⟨0, 1⟩ : Q) else ⟨(2 : Int) ^ (k + 1), 1⟩)) ⟨(2 : Int) ^ (k + 1) - 1, 1⟩
+        rw [if_pos rfl]
+        exact Qeq_trans (add_den_pos Nat.one_pos Nat.one_pos)
+          (Qadd_congr hk (Qeq_refl _)) (by simp [Qeq, add])
+      refine Qle_trans Nat.one_pos (Qeq_le (Qeq_trans (Fsum_den_pos hhd (k + 1)) hstep1 hstep2)) ?_
+      show Qle (⟨(2 : Int) ^ (k + 1) - 1, 1⟩ : Q) ⟨(2 : Int) ^ (k + 1), 1⟩
+      simp only [Qle]; push_cast; omega
+
+/-- **The `δ`-power term bound**: `fpow(fabs δ) m k ≤ 2ᵏ` (m-INDEPENDENT, via `δ₀=0` + `|δᵢ|≤1`). -/
+theorem fpow_fabs_dcoef_bound : ∀ m k, Qle (fpow (fabs dcoef) m k) ⟨(2 : Int) ^ k, 1⟩
+  | 0, k => by
+      show Qle (fone k) ⟨(2 : Int) ^ k, 1⟩
+      by_cases h : k = 0
+      · subst h; rw [show fone 0 = (⟨1, 1⟩ : Q) from by simp [fone]]; decide
+      · rw [show fone k = (⟨0, 1⟩ : Q) from by simp [fone, h]]
+        show (0 : Int) * 1 ≤ (2 : Int) ^ k * 1
+        have : (0 : Int) ≤ (2 : Int) ^ k := by exact_mod_cast Nat.zero_le (2 ^ k)
+        omega
+  | (m + 1), k => by
+      show Qle (Fsum (fun i => mul (fabs dcoef i) (fpow (fabs dcoef) m (k - i))) k) ⟨(2 : Int) ^ k, 1⟩
+      have hterm : ∀ i, Qle (mul (fabs dcoef i) (fpow (fabs dcoef) m (k - i)))
+          (if i = 0 then (⟨0, 1⟩ : Q) else ⟨(2 : Int) ^ (k - i), 1⟩) := by
+        intro i
+        by_cases h : i = 0
+        · subst h; rw [if_pos rfl]
+          refine Qeq_le (Qeq_trans (Qmul_den_pos Nat.one_pos
+            (fpow_den_pos (fun j => fabs_den_pos dcoef_den j) m (k - 0)))
+            (Qmul_congr (show Qeq (fabs dcoef 0) ⟨0, 1⟩ from by decide) (Qeq_refl _))
+            (by simp [Qeq, mul]))
+        · rw [if_neg h]
+          refine Qle_trans (Qmul_den_pos Nat.one_pos Nat.one_pos)
+            (Qmul_le_mul (fabs_den_pos dcoef_den i) Nat.one_pos
+              (fpow_den_pos (fun j => fabs_den_pos dcoef_den j) m (k - i))
+              (fabs_nonneg dcoef i) (fpow_num_nonneg (fun j => fabs_nonneg dcoef j) m (k - i))
+              (dcoef_abs_le_one i) (fpow_fabs_dcoef_bound m (k - i))) (Qeq_le (Qone_mul _))
+      exact Qle_trans (Fsum_den_pos (fun i => by split <;> exact Nat.one_pos) k)
+        (Fsum_le_Fsum hterm k) (geoTail_le k)
+
 end UOR.Bridge.F1Square.Analysis

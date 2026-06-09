@@ -1190,3 +1190,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.inner_eval_bound
 #print axioms Analysis.dcoef_term_geo
 #print axioms Analysis.inner_eval_geo
+#print axioms Analysis.fpow_fabs_dcoef_bound
