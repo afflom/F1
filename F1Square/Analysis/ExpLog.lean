@@ -4539,4 +4539,25 @@ theorem peval_mul_no_corner (a b : Nat → Q) (ha : ∀ i, 0 < (a i).den) (hb : 
   refine Qeq_trans (add_den_pos (peval_den_pos (fun k => fmul_den_pos ha hb k) htd M2) Nat.one_pos)
     (Qadd_congr (Qeq_refl _) hcorner) (Qadd_zero_right _)
 
+/-- **Support of a formal power**: if `c` has support `≤ S`, then `fpow c m` has support `≤ m·S`
+    (`fpow c m k ≈ 0` for `k > m·S`). By induction on `m` via the `fmul` convolution. -/
+theorem fpow_supp {c : Nat → Q} (hc : ∀ i, 0 < (c i).den) (S : Nat)
+    (hcs : ∀ k, S < k → Qeq (c k) ⟨0, 1⟩) : ∀ m k, m * S < k → Qeq (fpow c m k) ⟨0, 1⟩
+  | 0, k, hk => by
+      have hk0 : k ≠ 0 := by rw [Nat.zero_mul] at hk; omega
+      show Qeq (fone k) ⟨0, 1⟩
+      unfold fone; rw [if_neg hk0]; exact Qeq_refl _
+  | (m + 1), k, hk => by
+      show Qeq (Fsum (fun i => mul (c i) (fpow c m (k - i))) k) ⟨0, 1⟩
+      refine Qeq_trans (Fsum_den_pos (fun _ => Nat.one_pos) k)
+        (Fsum_congr_le (fun i hi => ?_)) (Fsum_zeros k)
+      by_cases hiS : i ≤ S
+      · have hki : m * S < k - i := by
+          have hsm : (m + 1) * S = m * S + S := Nat.succ_mul m S
+          omega
+        exact Qeq_trans (Qmul_den_pos (hc i) Nat.one_pos)
+          (Qmul_congr (Qeq_refl _) (fpow_supp hc S hcs m (k - i) hki)) (mul_right_zero _)
+      · exact Qeq_trans (Qmul_den_pos Nat.one_pos (fpow_den_pos hc m _))
+          (Qmul_congr (hcs i (by omega)) (Qeq_refl _)) (mul_left_zero _)
+
 end UOR.Bridge.F1Square.Analysis
