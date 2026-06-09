@@ -1087,3 +1087,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.RexpReal_nsmul
 #print axioms Analysis.RexpReal_nsmul_eq
 #print axioms Analysis.Rnonneg_Rmul
+#print axioms Analysis.Rnonneg_of_Rle_zero
+#print axioms Analysis.Rnonneg_congr
+#print axioms Analysis.Rhalf_double
+#print axioms Analysis.RexpReal_nonneg
+#print axioms Analysis.RexpReal_sub_one_nonneg
