@@ -1183,3 +1183,5 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.dcoef_abs_le_one
 #print axioms Analysis.drat_den
 #print axioms Analysis.drat_rel
+#print axioms Analysis.peval_nine3w
+#print axioms Analysis.peval_eightT

@@ -2062,4 +2062,50 @@ theorem drat_rel (w : Q) (hwd : 0 < w.den) (hwn : 0 ≤ w.num) :
   simp only [Qeq, mul, add, drat]; push_cast [Int.natAbs_of_nonneg h]
   exact drat_rel_core w.num (w.den : Int)
 
+/-- `peval(9+3w)(w, M) = 9 + 3w` for `M ≥ 1` (the low-degree polynomial evaluates exactly). -/
+theorem peval_nine3w (w : Q) (hwd : 0 < w.den) :
+    ∀ m, Qeq (peval nine3w w (m + 1)) (add ⟨9, 1⟩ (mul ⟨3, 1⟩ w))
+  | 0 => by
+      show Qeq (add (mul (nine3w 0) (qpow w 0)) (mul (nine3w 1) (qpow w 1)))
+        (add ⟨9, 1⟩ (mul ⟨3, 1⟩ w))
+      have e0 : Qeq (mul (nine3w 0) (qpow w 0)) ⟨9, 1⟩ := by
+        show Qeq (mul ⟨9, 1⟩ ⟨1, 1⟩) ⟨9, 1⟩; decide
+      have e1 : Qeq (mul (nine3w 1) (qpow w 1)) (mul ⟨3, 1⟩ w) := by
+        show Qeq (mul ⟨3, 1⟩ (mul w (qpow w 0))) (mul ⟨3, 1⟩ w)
+        refine Qmul_congr (Qeq_refl _) ?_
+        show Qeq (mul w ⟨1, 1⟩) w; simp [Qeq, mul]
+      exact Qeq_trans (add_den_pos Nat.one_pos (Qmul_den_pos (by decide) hwd))
+        (Qadd_congr e0 e1) (Qeq_refl _)
+  | (m + 1) => by
+      show Qeq (add (peval nine3w w (m + 1)) (mul (nine3w (m + 1 + 1)) (qpow w (m + 1 + 1))))
+        (add ⟨9, 1⟩ (mul ⟨3, 1⟩ w))
+      have hz : Qeq (mul (nine3w (m + 1 + 1)) (qpow w (m + 1 + 1))) ⟨0, 1⟩ := by
+        have hn : nine3w (m + 1 + 1) = ⟨0, 1⟩ := by
+          unfold nine3w; rw [if_neg (by omega), if_neg (by omega)]
+        rw [hn]; simp [Qeq, mul]
+      refine Qeq_trans (add_den_pos (add_den_pos Nat.one_pos (Qmul_den_pos (by decide) hwd))
+        Nat.one_pos) (Qadd_congr (peval_nine3w w hwd m) hz) (Qadd_zero_right _)
+
+/-- `peval(8w)(w, M) = 8w` for `M ≥ 1`. -/
+theorem peval_eightT (w : Q) (hwd : 0 < w.den) :
+    ∀ m, Qeq (peval eightT w (m + 1)) (mul ⟨8, 1⟩ w)
+  | 0 => by
+      show Qeq (add (mul (eightT 0) (qpow w 0)) (mul (eightT 1) (qpow w 1))) (mul ⟨8, 1⟩ w)
+      have e0 : Qeq (mul (eightT 0) (qpow w 0)) ⟨0, 1⟩ := by
+        show Qeq (mul ⟨0, 1⟩ (qpow w 0)) ⟨0, 1⟩; simp [Qeq, mul]
+      have e1 : Qeq (mul (eightT 1) (qpow w 1)) (mul ⟨8, 1⟩ w) := by
+        show Qeq (mul ⟨8, 1⟩ (mul w (qpow w 0))) (mul ⟨8, 1⟩ w)
+        refine Qmul_congr (Qeq_refl _) ?_
+        show Qeq (mul w ⟨1, 1⟩) w; simp [Qeq, mul]
+      exact Qeq_trans (add_den_pos Nat.one_pos (Qmul_den_pos (by decide) hwd))
+        (Qadd_congr e0 e1) (Qzero_add _)
+  | (m + 1) => by
+      show Qeq (add (peval eightT w (m + 1)) (mul (eightT (m + 1 + 1)) (qpow w (m + 1 + 1))))
+        (mul ⟨8, 1⟩ w)
+      have hz : Qeq (mul (eightT (m + 1 + 1)) (qpow w (m + 1 + 1))) ⟨0, 1⟩ := by
+        have he : eightT (m + 1 + 1) = ⟨0, 1⟩ := by unfold eightT; rw [if_neg (by omega)]
+        rw [he]; simp [Qeq, mul]
+      refine Qeq_trans (add_den_pos (Qmul_den_pos (by decide) hwd) Nat.one_pos)
+        (Qadd_congr (peval_eightT w hwd m) hz) (Qadd_zero_right _)
+
 end UOR.Bridge.F1Square.Analysis
