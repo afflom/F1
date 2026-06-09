@@ -4118,4 +4118,22 @@ theorem Rlog_sq_via (c tY tY2 : Real) (ρ σ : Q) (hρd : 0 < ρ.den) (hρ0 : 0 
       (Rartanh (uvalReal tY σ hσd hσ1 hbtσ) σ hσ0 hσd hσlt hbur)
       (Rartanh tY2 σ hσ0 hσd hσlt hbtY2) hdbl hcong)
 
+/-- **`Rlog` unfolding handle**: `Rlog x M = Rmul (ofQ 2) (Rartanh t_x ρ_M …)` with `ρ_M = (M−1)/(M+1)`
+    in clean form `⟨M.num − M.den, M.num.toNat + M.den⟩`. Holds by `rfl` (proof irrelevance on the `Prop`
+    arguments). The bridge from `Rlog`'s tactic-mode definition to the `Rmul`/`Rartanh` form `Rlog_sq_via`
+    consumes. -/
+theorem Rlog_eq_Rmul (x : Real) (M : Q) (hMd : 0 < M.den) (hMge : Qle (⟨1, 1⟩ : Q) M)
+    (hxpos : ∀ n, 0 < (x.seq n).num) (hhi : ∀ n, Qle (x.seq n) M)
+    (hlo : ∀ n, Qle (⟨1, 1⟩ : Q) (mul (x.seq n) M)) (hden : ∀ n, 0 < (Rlog_seq x n).den)
+    (hρ0 : 0 ≤ (⟨M.num - (M.den : Int), M.num.toNat + M.den⟩ : Q).num)
+    (hρd : 0 < (⟨M.num - (M.den : Int), M.num.toNat + M.den⟩ : Q).den)
+    (hlt : (⟨M.num - (M.den : Int), M.num.toNat + M.den⟩ : Q).num.toNat
+            < (⟨M.num - (M.den : Int), M.num.toNat + M.den⟩ : Q).den)
+    (hb : ∀ n, Qle (Qabs ((⟨Rlog_seq x, Rlog_regular x hxpos, hden⟩ : Real).seq n))
+            (⟨M.num - (M.den : Int), M.num.toNat + M.den⟩ : Q)) :
+    Rlog x M hMd hMge hxpos hhi hlo
+      = Rmul (ofQ ⟨2, 1⟩ (by decide))
+          (Rartanh ⟨Rlog_seq x, Rlog_regular x hxpos, hden⟩
+            ⟨M.num - (M.den : Int), M.num.toNat + M.den⟩ hρ0 hρd hlt hb) := rfl
+
 end UOR.Bridge.F1Square.Analysis

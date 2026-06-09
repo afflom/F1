@@ -1040,3 +1040,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rlog_double_algebra
 #print axioms Analysis.Rartanh_radius_indep
 #print axioms Analysis.Rlog_sq_via
+#print axioms Analysis.Rlog_eq_Rmul
