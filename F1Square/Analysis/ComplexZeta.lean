@@ -316,4 +316,70 @@ theorem czetaExp_tail (s : Complex) (hσ : Rnonneg s.re) {τ : Q} (hτn : 0 < τ
           (czetaExp_tail s hσ hτn hτd hθ j d)) ?_
       exact Rle_of_Req (Radd_ofQ_ofQ _ _)
 
+/-- **From a real upper bound to a same-index rational bound** (the completeness bridge): if `a − b ≤ c`
+    as reals (`c` a rational), then `aₙ − bₙ ≤ c + 2/(n+1)` for every index `n`. Regularity moves the
+    comparison index `2m+1` back to `n`; the generalized Archimedean lemma kills the `3/(m+1)` tail. -/
+theorem seq_diff_le (a b : Real) (c : Q) (hcd : 0 < c.den)
+    (h : Rle (Rsub a b) (ofQ c hcd)) (n : Nat) :
+    Qle (Qsub (a.seq n) (b.seq n)) (add c ⟨2, n + 1⟩) := by
+  apply Qarch_gen (C := 3) (Qsub_den_pos (a.den_pos n) (b.den_pos n))
+    (add_den_pos hcd (Nat.succ_pos _))
+  intro m
+  have hmid : Qle (Qsub (a.seq (2 * m + 1)) (b.seq (2 * m + 1))) (add c ⟨2, m + 1⟩) := h m
+  have s1 : Qle (a.seq n) (add (a.seq (2 * m + 1)) (add (Qbound n) (Qbound (2 * m + 1)))) :=
+    Qle_add_of_Qabs_sub (a.den_pos n) (a.den_pos _)
+      (add_den_pos (Qbound_den_pos _) (Qbound_den_pos _)) (a.reg n (2 * m + 1))
+  have s2 : Qle (neg (b.seq n)) (add (neg (b.seq (2 * m + 1))) (add (Qbound n) (Qbound (2 * m + 1)))) :=
+    Qle_add_of_Qabs_sub (neg_den_pos (b.den_pos n)) (neg_den_pos (b.den_pos _))
+      (add_den_pos (Qbound_den_pos _) (Qbound_den_pos _))
+      (by rw [Qabs_Qsub_neg]; exact b.reg n (2 * m + 1))
+  have hp1 : Qle (Qsub (a.seq n) (b.seq n))
+      (add (add (a.seq (2 * m + 1)) (add (Qbound n) (Qbound (2 * m + 1))))
+           (add (neg (b.seq (2 * m + 1))) (add (Qbound n) (Qbound (2 * m + 1))))) :=
+    Qadd_le_add s1 s2
+  have hreg : Qeq
+      (add (add (a.seq (2 * m + 1)) (add (Qbound n) (Qbound (2 * m + 1))))
+           (add (neg (b.seq (2 * m + 1))) (add (Qbound n) (Qbound (2 * m + 1)))))
+      (add (Qsub (a.seq (2 * m + 1)) (b.seq (2 * m + 1)))
+           (add (add (Qbound n) (Qbound (2 * m + 1))) (add (Qbound n) (Qbound (2 * m + 1))))) := by
+    simp only [Qeq, Qsub, add, neg, Qbound]; push_cast; ring_uor
+  refine Qle_trans
+    (add_den_pos (add_den_pos (a.den_pos _) (add_den_pos (Qbound_den_pos _) (Qbound_den_pos _)))
+      (add_den_pos (neg_den_pos (b.den_pos _)) (add_den_pos (Qbound_den_pos _) (Qbound_den_pos _))))
+    hp1 ?_
+  refine Qle_trans
+    (add_den_pos (Qsub_den_pos (a.den_pos _) (b.den_pos _))
+      (add_den_pos (add_den_pos (Qbound_den_pos _) (Qbound_den_pos _))
+        (add_den_pos (Qbound_den_pos _) (Qbound_den_pos _))))
+    (Qeq_le hreg) ?_
+  exact Qle_trans
+    (add_den_pos (add_den_pos hcd (Nat.succ_pos _))
+      (add_den_pos (add_den_pos (Qbound_den_pos _) (Qbound_den_pos _))
+        (add_den_pos (Qbound_den_pos _) (Qbound_den_pos _))))
+    (Qadd_le_add hmid (Qle_refl _))
+    (Qeq_le (by simp only [Qeq, add, Qbound]; push_cast; ring_uor))
+
+/-- **The completeness bridge to `RReg`**: a family `X : ℕ → ℝ` whose pairwise real differences are
+    bounded by rationals `c j k ≤ 1/(j+1) + 1/(k+1)` is a regular sequence of reals. -/
+theorem RReg_of_real_bound (X : Nat → Real) (c : Nat → Nat → Q) (hcd : ∀ j k, 0 < (c j k).den)
+    (hcb : ∀ j k, Qle (c j k) (add ⟨1, j + 1⟩ ⟨1, k + 1⟩))
+    (hX : ∀ j k, Rle (Rsub (X j) (X k)) (ofQ (c j k) (hcd j k))) : RReg X := by
+  intro j k n
+  have hjk : Qle (Qsub ((X j).seq n) ((X k).seq n)) (add (c j k) ⟨2, n + 1⟩) :=
+    seq_diff_le (X j) (X k) (c j k) (hcd j k) (hX j k) n
+  have hkj : Qle (Qsub ((X k).seq n) ((X j).seq n)) (add (c k j) ⟨2, n + 1⟩) :=
+    seq_diff_le (X k) (X j) (c k j) (hcd k j) (hX k j) n
+  have hcb' : Qle (c k j) (add ⟨1, j + 1⟩ ⟨1, k + 1⟩) :=
+    Qle_trans (add_den_pos (Nat.succ_pos _) (Nat.succ_pos _)) (hcb k j)
+      (Qeq_le (by simp only [Qeq, add]; push_cast; ring_uor))
+  refine Qabs_le_of_both ?_ ?_
+  · exact Qle_trans (add_den_pos (hcd j k) (Nat.succ_pos _)) hjk
+      (Qadd_le_add (hcb j k) (Qle_refl _))
+  · have hcomm : Qeq (Qsub ((X k).seq n) ((X j).seq n))
+        (neg (Qsub ((X j).seq n) ((X k).seq n))) := by
+      simp only [Qeq, Qsub, add, neg]; push_cast; ring_uor
+    refine Qle_congr_left (Qsub_den_pos ((X k).den_pos n) ((X j).den_pos n)) hcomm ?_
+    exact Qle_trans (add_den_pos (hcd k j) (Nat.succ_pos _)) hkj
+      (Qadd_le_add hcb' (Qle_refl _))
+
 end UOR.Bridge.F1Square.Analysis
