@@ -4614,4 +4614,14 @@ theorem qpow_peval_le {b : Nat → Q} (hb : ∀ i, 0 < (b i).den) (hb0 : ∀ i, 
   exact peval_mono (fun k => fpow_mono (truncTo_den hb M) hb (truncTo_nonneg hb0 M)
     (truncTo_le hb0 M) m k) t ht0 M2
 
+/-- **Extending a finite sum of nonnegatives only grows it**: `Fsum f M ≤ Fsum f (M+d)`. -/
+theorem Fsum_le_extend {f : Nat → Q} (hf : ∀ i, 0 < (f i).den) (hf0 : ∀ i, 0 ≤ (f i).num) (M : Nat) :
+    ∀ d, Qle (Fsum f M) (Fsum f (M + d))
+  | 0 => Qle_refl _
+  | (d + 1) => by
+      rw [Nat.add_succ]
+      show Qle (Fsum f M) (add (Fsum f (M + d)) (f (M + d + 1)))
+      exact Qle_trans (Fsum_den_pos hf (M + d)) (Fsum_le_extend hf hf0 M d)
+        (Qle_add_right_nonneg (hf0 (M + d + 1)))
+
 end UOR.Bridge.F1Square.Analysis
