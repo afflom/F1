@@ -501,4 +501,62 @@ theorem Rlog_nonneg (x : Real) (M : Q) (hMd : 0 < M.den) (hMge : Qle (⟨1, 1⟩
   show Qle (⟨0, 1⟩ : Q) _
   simp only [Qle]; push_cast; omega
 
+-- ===========================================================================
+-- The ζ-term decay bound `|n⁻ˢ| = exp(−σ·log n) ≤ 1/n²` for `σ = Re s ≥ 2` — the analytic content
+-- of the v0.15.2 tail bound. Via the *positive* comparison `2·log n ≤ σ·log n` (clean `Rnonneg_Rmul`),
+-- `Rneg` reversing `≤`, exp monotonicity, and `exp(−2 log n) = (1/n)² = 1/n²`.
+-- ===========================================================================
+
+/-- `−(x + y) ≈ (−x) + (−y)`. -/
+theorem Rneg_Radd (x y : Real) : Req (Rneg (Radd x y)) (Radd (Rneg x) (Rneg y)) :=
+  Req_of_seq_Qeq (fun n => by
+    show Qeq (neg (add (x.seq (2 * n + 1)) (y.seq (2 * n + 1))))
+      (add (neg (x.seq (2 * n + 1))) (neg (y.seq (2 * n + 1))))
+    simp only [Qeq, neg, add]; push_cast; ring_uor)
+
+/-- `1·x ≈ x`. -/
+theorem Rone_mul (x : Real) : Req (Rmul one x) x := Req_trans (Rmul_comm one x) (Rmul_one x)
+
+/-- `2·x ≈ x + x`. -/
+theorem Rmul_two_eq_add (x : Real) : Req (Rmul (ofQ (⟨2, 1⟩ : Q) (by decide)) x) (Radd x x) :=
+  Req_trans
+    (Rmul_congr (Req_of_seq_Qeq (fun _ => by
+      show Qeq (⟨2, 1⟩ : Q) (add (⟨1, 1⟩ : Q) ⟨1, 1⟩); decide)) (Req_refl x))
+    (Req_trans (Rmul_distrib_right one one x) (Radd_congr (Rone_mul x) (Rone_mul x)))
+
+/-- The positive exponent comparison `2·L ≤ σ·L` for `L ≥ 0`, `σ ≥ 2` — the difference `(σ−2)·L` is
+    `≥ 0` (`Rnonneg_Rmul`), so `Rle_of_Rnonneg_Rsub` gives the order. -/
+theorem Rmul_two_le_Rmul {L σ : Real} (hL : Rnonneg L)
+    (hσ : Rle (ofQ (⟨2, 1⟩ : Q) (by decide)) σ) :
+    Rle (Rmul (ofQ (⟨2, 1⟩ : Q) (by decide)) L) (Rmul σ L) :=
+  Rle_of_Rnonneg_Rsub
+    (Rnonneg_congr (Rmul_sub_distrib_right σ (ofQ (⟨2, 1⟩ : Q) (by decide)) L)
+      (Rnonneg_Rmul (Rnonneg_Rsub_of_Rle hσ) hL))
+
+/-- **`exp(−2L) ≈ 1/n²`** given `exp(−L) ≈ 1/n`: `exp(−L−L) ≈ exp(−L)·exp(−L) ≈ (1/n)·(1/n)`. -/
+theorem RexpReal_neg_two_eq {n : Nat} (hn : 0 < n) {L : Real}
+    (hrec : Req (RexpReal (Rneg L)) (ofQ (⟨1, n⟩ : Q) hn)) :
+    Req (RexpReal (Radd (Rneg L) (Rneg L))) (ofQ (⟨1, n * n⟩ : Q) (Nat.mul_pos hn hn)) :=
+  Req_trans (RexpReal_add (Rneg L) (Rneg L))
+    (Req_trans (Rmul_congr hrec hrec)
+      (Req_trans (Rmul_ofQ_ofQ hn hn)
+        (ofQ_respects (Qmul_den_pos hn hn) (Nat.mul_pos hn hn)
+          (by simp only [Qeq, mul]; push_cast; ring_uor))))
+
+/-- **The ζ-term decay bound**: `exp(−σ·L) ≤ 1/n²` for `σ ≥ 2`, given `exp L ≈ n` and `L ≥ 0`. With
+    `L = log n` and `σ = Re s` this is `|n⁻ˢ| ≤ 1/n²`, the summable tail bound for `Czeta` at `Re s ≥ 2`.
+    Route: `−σL ≤ −2L` (`Rneg_le` of the positive `2L ≤ σL`), `exp` monotone, and `exp(−2L) = 1/n²`. -/
+theorem RexpReal_neg_sigma_le {n : Nat} (hn : 0 < n) {L σ : Real}
+    (hexpL : Req (RexpReal L) (ofQ (⟨(n : Int), 1⟩ : Q) Nat.one_pos)) (hLnn : Rnonneg L)
+    (hσ : Rle (ofQ (⟨2, 1⟩ : Q) (by decide)) σ) :
+    Rle (RexpReal (Rneg (Rmul σ L))) (ofQ (⟨1, n * n⟩ : Q) (Nat.mul_pos hn hn)) := by
+  have hrec : Req (RexpReal (Rneg L)) (ofQ (⟨1, n⟩ : Q) hn) := RexpReal_neg_eq_recip n hn hexpL
+  have hmono : Rle (RexpReal (Rneg (Rmul σ L)))
+      (RexpReal (Rneg (Rmul (ofQ (⟨2, 1⟩ : Q) (by decide)) L))) :=
+    RexpReal_le_of_Rle (Rle_Rneg (Rmul_two_le_Rmul hLnn hσ))
+  have halg : Req (RexpReal (Rneg (Rmul (ofQ (⟨2, 1⟩ : Q) (by decide)) L)))
+      (RexpReal (Radd (Rneg L) (Rneg L))) :=
+    RexpReal_congr (Req_trans (Rneg_congr (Rmul_two_eq_add L)) (Rneg_Radd L L))
+  exact Rle_trans hmono (Rle_of_Req (Req_trans halg (RexpReal_neg_two_eq hn hrec)))
+
 end UOR.Bridge.F1Square.Analysis
