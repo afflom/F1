@@ -1555,4 +1555,79 @@ theorem fderiv_sacoef (k : Nat) : Qeq (fderiv sacoef k) (sacD k) := by
   rw [hs]; simp only [Qeq, mul]; push_cast
   exact fderiv_sacoef_core (k : Int) (sacD k).num ((sacD k).den : Int)
 
+-- ===========================================================================
+-- STEP 2e — the **monomial-shift composition law** `fcomp (tᵈ·b) c = cᵈ·(fcomp b c)` (`c(0)=0`).
+-- The `d=1` case via the `fcomp_chain` double-sum (extend → `Fsum_mul_left` → `Fsum_swap`); general `d`
+-- by iteration. The enabler for the composed ODE `qcomp·(sacD∘δ)=9` (avoids general `fcomp_fmul`).
+-- ===========================================================================
+
+/-- **`fcomp (t·b) c = c·(fcomp b c)`** (`c(0)=0`), the degree-1 monomial-shift composition law. -/
+theorem fcomp_shift1 (b c : Nat → Q) (hb : ∀ i, 0 < (b i).den) (hc : ∀ i, 0 < (c i).den)
+    (hc0 : Qeq (c 0) ⟨0, 1⟩) (k : Nat) :
+    Qeq (fcomp (fmul (fmono 1) b) c k) (fmul c (fcomp b c) k) := by
+  have hbc : ∀ i, 0 < (fcomp b c i).den := fun i => fcomp_den_pos hb hc i
+  have hfp : ∀ m i, 0 < (fpow c m i).den := fun m i => fpow_den_pos hc m i
+  have hFb : ∀ i, 0 < (fmul (fmono 1) b i).den := fun i => fmul_den_pos (fun j => fmono_den 1 j) hb i
+  -- RHS = middle = Σ_m b_m (c^{m+1})_k
+  have hRHS : Qeq (fmul c (fcomp b c) k) (Fsum (fun m => mul (b m) (fpow c (m + 1) k)) k) := by
+    show Qeq (Fsum (fun i => mul (c i) (fcomp b c (k - i))) k)
+      (Fsum (fun m => mul (b m) (fpow c (m + 1) k)) k)
+    have stepA : Qeq (Fsum (fun i => mul (c i) (fcomp b c (k - i))) k)
+        (Fsum (fun i => Fsum (fun m => mul (c i) (mul (b m) (fpow c m (k - i)))) k) k) := by
+      refine Fsum_congr_le (k := k) (fun i hi => ?_)
+      have hext : Qeq (fcomp b c (k - i)) (Fsum (fun m => mul (b m) (fpow c m (k - i))) k) :=
+        Fsum_extend_zero (fun m => Qmul_den_pos (hb m) (hfp m (k - i))) (by omega)
+          (fun m hm1 _ => Qeq_trans (Qmul_den_pos (hb m) Nat.one_pos)
+            (Qmul_congr (Qeq_refl _) (fpow_vanish hc hc0 m (k - i) hm1)) (by simp [Qeq, mul]))
+      refine Qeq_trans (Qmul_den_pos (hc i) (Fsum_den_pos (fun m => Qmul_den_pos (hb m) (hfp m (k - i))) k))
+        (Qmul_congr (Qeq_refl _) hext) ?_
+      exact Qeq_symm (Fsum_mul_left (hc i) (fun m => Qmul_den_pos (hb m) (hfp m (k - i))) k)
+    have stepB : Qeq (Fsum (fun i => Fsum (fun m => mul (c i) (mul (b m) (fpow c m (k - i)))) k) k)
+        (Fsum (fun m => Fsum (fun i => mul (c i) (mul (b m) (fpow c m (k - i)))) k) k) :=
+      Fsum_swap (fun i m => Qmul_den_pos (hc i) (Qmul_den_pos (hb m) (hfp m (k - i)))) k k
+    have stepC : Qeq (Fsum (fun m => Fsum (fun i => mul (c i) (mul (b m) (fpow c m (k - i)))) k) k)
+        (Fsum (fun m => mul (b m) (fpow c (m + 1) k)) k) := by
+      refine Fsum_congr (fun m => ?_) k
+      have hrw : Qeq (Fsum (fun i => mul (c i) (mul (b m) (fpow c m (k - i)))) k)
+          (Fsum (fun i => mul (b m) (mul (c i) (fpow c m (k - i)))) k) :=
+        Fsum_congr (fun i => by simp only [Qeq, mul]; push_cast; ring_uor) k
+      refine Qeq_trans (Fsum_den_pos (fun i => Qmul_den_pos (hb m) (Qmul_den_pos (hc i) (hfp m (k - i)))) k) hrw ?_
+      exact Fsum_mul_left (hb m) (fun i => Qmul_den_pos (hc i) (hfp m (k - i))) k
+    exact Qeq_trans (Fsum_den_pos (fun i => Fsum_den_pos
+        (fun m => Qmul_den_pos (hc i) (Qmul_den_pos (hb m) (hfp m (k - i)))) k) k) stepA
+      (Qeq_trans (Fsum_den_pos (fun m => Fsum_den_pos
+        (fun i => Qmul_den_pos (hc i) (Qmul_den_pos (hb m) (hfp m (k - i)))) k) k) stepB stepC)
+  -- LHS = middle
+  have hGF : ∀ m, Qeq (mul (b m) (fpow c (m + 1) k))
+      (mul (fmul (fmono 1) b (m + 1)) (fpow c (m + 1) k)) :=
+    fun m => Qmul_congr (Qeq_symm (by
+      have h := fmul_fmono (c := b) hb 1 (show 1 ≤ m + 1 by omega)
+      rwa [show m + 1 - 1 = m from by omega] at h)) (Qeq_refl _)
+  have hF0 : Qeq (mul (fmul (fmono 1) b 0) (fpow c 0 k)) ⟨0, 1⟩ :=
+    Qeq_trans (Qmul_den_pos Nat.one_pos (hfp 0 k))
+      (Qmul_congr (fmul_fmono_zero hb (show (0 : Nat) < 1 by omega)) (Qeq_refl _)) (by simp [Qeq, mul])
+  have hFk1 : Qeq (mul (fmul (fmono 1) b (k + 1)) (fpow c (k + 1) k)) ⟨0, 1⟩ :=
+    Qeq_trans (Qmul_den_pos (hFb (k + 1)) Nat.one_pos)
+      (Qmul_congr (Qeq_refl _) (fpow_vanish hc hc0 (k + 1) k (by omega))) (by simp [Qeq, mul])
+  have hLHS : Qeq (Fsum (fun m => mul (b m) (fpow c (m + 1) k)) k)
+      (fcomp (fmul (fmono 1) b) c k) := by
+    show Qeq (Fsum (fun m => mul (b m) (fpow c (m + 1) k)) k)
+      (Fsum (fun m => mul (fmul (fmono 1) b m) (fpow c m k)) k)
+    refine Qeq_trans (Fsum_den_pos (fun m => Qmul_den_pos (hFb (m + 1)) (hfp (m + 1) k)) k)
+      (Fsum_congr hGF k) ?_
+    refine Qeq_trans (Qsub_den_pos (Fsum_den_pos (fun m => Qmul_den_pos (hFb m) (hfp m k)) (k + 1))
+      (Qmul_den_pos (hFb 0) (hfp 0 k)))
+      (Fsum_shift (fun m => Qmul_den_pos (hFb m) (hfp m k)) k) ?_
+    -- Qsub (Fsum F (k+1)) (F 0) ≈ Fsum F (k+1) ≈ Fsum F k
+    refine Qeq_trans (Fsum_den_pos (fun m => Qmul_den_pos (hFb m) (hfp m k)) (k + 1))
+      (Qeq_trans (Qsub_den_pos (Fsum_den_pos (fun m => Qmul_den_pos (hFb m) (hfp m k)) (k + 1)) Nat.one_pos)
+        (Qsub_congr (Qeq_refl _) hF0) (by simp [Qeq, Qsub, add, neg])) ?_
+    show Qeq (add (Fsum (fun m => mul (fmul (fmono 1) b m) (fpow c m k)) k)
+        (mul (fmul (fmono 1) b (k + 1)) (fpow c (k + 1) k)))
+      (Fsum (fun m => mul (fmul (fmono 1) b m) (fpow c m k)) k)
+    exact Qeq_trans (add_den_pos (Fsum_den_pos (fun m => Qmul_den_pos (hFb m) (hfp m k)) k) Nat.one_pos)
+      (Qadd_congr (Qeq_refl _) hFk1) (Qadd_zero_right _)
+  exact Qeq_trans (Fsum_den_pos (fun m => Qmul_den_pos (hb m) (hfp (m + 1) k)) k)
+    (Qeq_symm hLHS) (Qeq_symm hRHS)
+
 end UOR.Bridge.F1Square.Analysis
