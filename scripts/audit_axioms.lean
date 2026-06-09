@@ -1066,3 +1066,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.qpow_peval_le
 #print axioms Analysis.Fsum_le_extend
 #print axioms Analysis.exp_corner_le
+#print axioms Analysis.dgeom_geom_gap_le

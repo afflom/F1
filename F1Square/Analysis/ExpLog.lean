@@ -4697,4 +4697,31 @@ theorem exp_corner_le {t : Q} (htd : 0 < t.den) (ht0 : 0 ≤ t.num) (M : Nat) :
         (peval_den_pos (fpow_den_pos hbd m) htd (M * M))) M) (peval_den_pos (fun k => dgeom_den k) htd M))
     (Qeq_le (Qsub_congr (Qeq_refl _) hfM)) (Qsub_le_sub hfMM)
 
+/-- **Geometric-limit gap, cleared**: `|peval dgeom t M − g|·(1−t) = 2·t^{M+1}` when `g·(1−t) = 1+t`
+    (i.e. `g = (1+t)/(1−t)`). Half of the rational exp identity bound. -/
+theorem dgeom_geom_gap_le (τ g : Q) (hτd : 0 < τ.den) (hτ0 : 0 ≤ τ.num) (hτ1 : Qle τ ⟨1, 1⟩)
+    (hgd : 0 < g.den) (hg : Qeq (mul g (Qsub ⟨1, 1⟩ τ)) (add ⟨1, 1⟩ τ)) (M : Nat) :
+    Qle (mul (Qabs (Qsub (peval dgeom τ M) g)) (Qsub ⟨1, 1⟩ τ)) (mul ⟨2, 1⟩ (qpow τ (M + 1))) := by
+  have hDd : 0 < (peval dgeom τ M).den := peval_den_pos (fun k => dgeom_den k) hτd M
+  have hWd : 0 < (Qsub (⟨1, 1⟩ : Q) τ).den := Qsub_den_pos Nat.one_pos hτd
+  have hPd : 0 < (qpow τ (M + 1)).den := qpow_den_pos hτd (M + 1)
+  have hW0 : 0 ≤ (Qsub (⟨1, 1⟩ : Q) τ).num := by
+    have h := hτ1; simp only [Qle, Qsub, add, neg] at h ⊢; push_cast at h ⊢; omega
+  have h2Pnn : 0 ≤ (mul ⟨2, 1⟩ (qpow τ (M + 1))).num := Qmul_num_nonneg (by decide) (qpow_nonneg hτ0 (M + 1))
+  have hSgd : 0 < (Qsub (peval dgeom τ M) g).den := Qsub_den_pos hDd hgd
+  have hkey : Qeq (mul (Qsub (peval dgeom τ M) g) (Qsub ⟨1, 1⟩ τ))
+      (neg (mul ⟨2, 1⟩ (qpow τ (M + 1)))) := by
+    refine Qeq_trans (Qsub_den_pos (Qmul_den_pos hDd hWd) (Qmul_den_pos hgd hWd))
+      (Qmul_sub_right (peval dgeom τ M) g (Qsub ⟨1, 1⟩ τ)) ?_
+    refine Qeq_trans (Qsub_den_pos (Qsub_den_pos (add_den_pos Nat.one_pos hτd)
+        (Qmul_den_pos Nat.one_pos hPd)) (add_den_pos Nat.one_pos hτd))
+      (Qsub_congr (peval_dgeom_mul_cleared τ hτd M) hg) ?_
+    simp only [Qeq, Qsub, add, neg, mul]; push_cast; ring_uor
+  have e1 : Qeq (mul (Qabs (Qsub (peval dgeom τ M) g)) (Qsub ⟨1, 1⟩ τ))
+      (Qabs (mul (Qsub (peval dgeom τ M) g) (Qsub ⟨1, 1⟩ τ))) := by
+    rw [Qabs_mul]; exact Qmul_congr (Qeq_refl _) (Qeq_symm (Qabs_of_nonneg hW0))
+  refine Qeq_le (Qeq_trans (Qabs_den_pos (Qmul_den_pos hSgd hWd)) e1 ?_)
+  refine Qeq_trans (Qabs_den_pos (neg_den_pos (Qmul_den_pos Nat.one_pos hPd))) (Qabs_Qeq hkey) ?_
+  rw [Qabs_neg]; exact Qabs_of_nonneg h2Pnn
+
 end UOR.Bridge.F1Square.Analysis
