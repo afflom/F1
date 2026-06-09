@@ -109,4 +109,34 @@ theorem czeta_re_diff_ge (s : Complex) {N M : Nat} (hNM : N ≤ M) :
     Rle (Rneg (Rsub (czetaExpSum s M) (czetaExpSum s N))) (Rsub (czetaReSum s M) (czetaReSum s N)) := by
   obtain ⟨d, rfl⟩ := Nat.le.dest hNM; exact czeta_re_diff_ge_aux s N d
 
+/-- **Upper tail bound (imaginary part)**, `d`-form. -/
+theorem czeta_im_diff_le_aux (s : Complex) (N : Nat) : ∀ d,
+    Rle (Rsub (czetaImSum s (N + d)) (czetaImSum s N))
+        (Rsub (czetaExpSum s (N + d)) (czetaExpSum s N))
+  | 0 => Rle_of_Req (Req_trans (Radd_neg _) (Req_symm (Radd_neg _)))
+  | (d + 1) =>
+      Rle_trans (Rle_of_Req (Rsub_Radd_left (czetaImSum s (N + d)) _ (czetaImSum s N)))
+        (Rle_trans (Radd_le_add (czeta_im_diff_le_aux s N d) (czetaTerm_im_le s (N + d + 1) (by omega)))
+          (Rle_of_Req (Req_symm (Rsub_Radd_left (czetaExpSum s (N + d)) _ (czetaExpSum s N)))))
+
+theorem czeta_im_diff_le (s : Complex) {N M : Nat} (hNM : N ≤ M) :
+    Rle (Rsub (czetaImSum s M) (czetaImSum s N)) (Rsub (czetaExpSum s M) (czetaExpSum s N)) := by
+  obtain ⟨d, rfl⟩ := Nat.le.dest hNM; exact czeta_im_diff_le_aux s N d
+
+/-- **Lower tail bound (imaginary part)**, `d`-form. -/
+theorem czeta_im_diff_ge_aux (s : Complex) (N : Nat) : ∀ d,
+    Rle (Rneg (Rsub (czetaExpSum s (N + d)) (czetaExpSum s N)))
+        (Rsub (czetaImSum s (N + d)) (czetaImSum s N))
+  | 0 => Rle_of_Req (Req_trans (Rneg_congr (Radd_neg _)) (Req_trans Rneg_zero (Req_symm (Radd_neg _))))
+  | (d + 1) =>
+      Rle_trans (Rle_of_Req (Req_trans
+          (Rneg_congr (Rsub_Radd_left (czetaExpSum s (N + d)) _ (czetaExpSum s N)))
+          (Rneg_Radd (Rsub (czetaExpSum s (N + d)) (czetaExpSum s N)) _)))
+        (Rle_trans (Radd_le_add (czeta_im_diff_ge_aux s N d) (czetaTerm_im_ge s (N + d + 1) (by omega)))
+          (Rle_of_Req (Req_symm (Rsub_Radd_left (czetaImSum s (N + d)) _ (czetaImSum s N)))))
+
+theorem czeta_im_diff_ge (s : Complex) {N M : Nat} (hNM : N ≤ M) :
+    Rle (Rneg (Rsub (czetaExpSum s M) (czetaExpSum s N))) (Rsub (czetaImSum s M) (czetaImSum s N)) := by
+  obtain ⟨d, rfl⟩ := Nat.le.dest hNM; exact czeta_im_diff_ge_aux s N d
+
 end UOR.Bridge.F1Square.Analysis
