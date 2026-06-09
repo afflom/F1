@@ -2897,4 +2897,33 @@ theorem Rexp_neg_le_ratio {θ : Real} {τ : Q} (hτn : 0 < τ.num) (hτd : 0 < �
   exact Rle_recip (by simp only [add]; push_cast; omega) (add_den_pos (by decide) hτd)
     hab (RexpReal_nonneg _) hda
 
+/-- `(−y)² ≈ y²`. -/
+theorem Rneg_sq (y : Real) : Req (Rmul (Rneg y) (Rneg y)) (Rmul y y) :=
+  Req_trans (Rmul_neg_left y (Rneg y))
+    (Req_trans (Rneg_congr (Rmul_neg_right y y)) (Rneg_neg (Rmul y y)))
+
+/-- `cos x ≤ 1`. -/
+theorem Rcos_le_one (x : Real) : Rle (Rcos x) one :=
+  Rle_of_Rmul_self_le Rnonneg_one
+    (Rle_trans (Rcos_sq_le_one x) (Rle_of_Req (Req_symm (Rmul_one one))))
+
+/-- `−1 ≤ cos x`. -/
+theorem Rneg_one_le_Rcos (x : Real) : Rle (Rneg one) (Rcos x) :=
+  Rle_trans (Rle_Rneg (Rle_of_Rmul_self_le Rnonneg_one
+      (Rle_trans (Rle_of_Req (Rneg_sq (Rcos x)))
+        (Rle_trans (Rcos_sq_le_one x) (Rle_of_Req (Req_symm (Rmul_one one)))))))
+    (Rle_of_Req (Rneg_neg (Rcos x)))
+
+/-- `sin x ≤ 1`. -/
+theorem Rsin_le_one (x : Real) : Rle (Rsin x) one :=
+  Rle_of_Rmul_self_le Rnonneg_one
+    (Rle_trans (Rsin_sq_le_one x) (Rle_of_Req (Req_symm (Rmul_one one))))
+
+/-- `−1 ≤ sin x`. -/
+theorem Rneg_one_le_Rsin (x : Real) : Rle (Rneg one) (Rsin x) :=
+  Rle_trans (Rle_Rneg (Rle_of_Rmul_self_le Rnonneg_one
+      (Rle_trans (Rle_of_Req (Rneg_sq (Rsin x)))
+        (Rle_trans (Rsin_sq_le_one x) (Rle_of_Req (Req_symm (Rmul_one one)))))))
+    (Rle_of_Req (Rneg_neg (Rsin x)))
+
 end UOR.Bridge.F1Square.Analysis

@@ -1238,3 +1238,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Pos_Rmul
 #print axioms Analysis.Rmul_sub_add_self
 #print axioms Analysis.Rle_of_Rmul_self_le
+#print axioms Analysis.Rneg_sq
+#print axioms Analysis.Rcos_le_one
+#print axioms Analysis.Rneg_one_le_Rcos
+#print axioms Analysis.Rsin_le_one
+#print axioms Analysis.Rneg_one_le_Rsin
