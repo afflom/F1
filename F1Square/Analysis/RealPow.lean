@@ -1147,4 +1147,68 @@ theorem nine3w_dderiv (k : Nat) :
       (fmul_den_pos (fun i => threeFone_den i) dcoef_den k)) hrw ?_
   exact Qsub_congr (dcoef_deriv_rel k) h3
 
+/-- `(9+3w)·δ² = δ·8w` (`nine3w·δ² = δ·eightT`, via `fmul_swap_left` + `dcoef_rel`). -/
+theorem nine3w_dsq (k : Nat) :
+    Qeq (fmul nine3w (fmul dcoef dcoef) k) (fmul dcoef eightT k) := by
+  refine Qeq_trans (fmul_den_pos dcoef_den (fun i => fmul_den_pos nine3w_den dcoef_den i) k)
+    (fmul_swap_left nine3w dcoef dcoef nine3w_den dcoef_den dcoef_den k) ?_
+  exact fmul_congr_right (fun i => dcoef_rel i) k
+
+/-- `8w = 8·t¹` as a scaled monomial. -/
+theorem eightT_eq_fsmono (k : Nat) : Qeq (eightT k) (fsmono ⟨8, 1⟩ 1 k) := by
+  unfold eightT fsmono; by_cases h : k = 1 <;> simp only [if_pos, if_neg, h] <;> decide
+
+-- The three δ-free polynomial products feeding the collapse `648(1−w²)` (STEP 2c, post-`A²`-clearing).
+
+/-- `(8w)² = 64w²`. -/
+theorem eightT_sq_val (j : Nat) : Qeq (fmul eightT eightT j) ⟨(if j = 2 then 64 else 0 : Int), 1⟩ := by
+  have e1 : Qeq (fmul eightT eightT j) (fmul (fsmono ⟨8, 1⟩ 1) eightT j) :=
+    fmul_congr_left eightT_eq_fsmono j
+  refine Qeq_trans (fmul_den_pos (fun i => fsmono_den (by decide) 1 i) eightT_den j) e1 ?_
+  match j with
+  | 0 => exact Qeq_trans Nat.one_pos (fmul_fsmono_zero (by decide) eightT eightT_den 1 (by omega)) (by decide)
+  | (n + 1) =>
+      refine Qeq_trans (Qmul_den_pos (by decide) (eightT_den n))
+        (fmul_fsmono (c := ⟨8, 1⟩) (by decide) eightT eightT_den 1 (by omega)) ?_
+      match n with
+      | 1 => decide
+      | 0 => decide
+      | (m + 2) =>
+          have he : eightT (m + 2) = ⟨0, 1⟩ := by unfold eightT; rw [if_neg (by omega)]
+          rw [he]; simp only [Qeq, mul]; split <;> omega
+
+/-- `(9+3w)² = 81 + 54w + 9w²`. -/
+theorem nine3w_sq_val (j : Nat) :
+    Qeq (fmul nine3w nine3w j) ⟨(if j = 0 then 81 else if j = 1 then 54 else if j = 2 then 9 else 0 : Int), 1⟩ := by
+  match j with
+  | 0 => exact Qeq_trans (Qmul_den_pos (by decide) (nine3w_den 0)) (nine3w_eval0 nine3w nine3w_den) (by decide)
+  | (n + 1) =>
+      refine Qeq_trans (add_den_pos (Qmul_den_pos (by decide) (nine3w_den (n + 1)))
+        (Qmul_den_pos (by decide) (nine3w_den n))) (nine3w_eval_succ nine3w nine3w_den n) ?_
+      match n with
+      | 0 => decide
+      | 1 => decide
+      | (m + 2) =>
+          have h1 : nine3w (m + 2 + 1) = ⟨0, 1⟩ := by
+            unfold nine3w; rw [if_neg (by omega), if_neg (by omega)]
+          have h2 : nine3w (m + 2) = ⟨0, 1⟩ := by
+            unfold nine3w; rw [if_neg (by omega), if_neg (by omega)]
+          rw [h1, h2]; simp only [Qeq, add, mul]; split <;> omega
+
+/-- `(9+3w)·8w = 72w + 24w²`. -/
+theorem nine3w_eightT_val (j : Nat) :
+    Qeq (fmul nine3w eightT j) ⟨(if j = 1 then 72 else if j = 2 then 24 else 0 : Int), 1⟩ := by
+  match j with
+  | 0 => exact Qeq_trans (Qmul_den_pos (by decide) (eightT_den 0)) (nine3w_eval0 eightT eightT_den) (by decide)
+  | (n + 1) =>
+      refine Qeq_trans (add_den_pos (Qmul_den_pos (by decide) (eightT_den (n + 1)))
+        (Qmul_den_pos (by decide) (eightT_den n))) (nine3w_eval_succ eightT eightT_den n) ?_
+      match n with
+      | 0 => decide
+      | 1 => decide
+      | (m + 2) =>
+          have h1 : eightT (m + 2 + 1) = ⟨0, 1⟩ := by unfold eightT; rw [if_neg (by omega)]
+          have h2 : eightT (m + 2) = ⟨0, 1⟩ := by unfold eightT; rw [if_neg (by omega)]
+          rw [h1, h2]; simp only [Qeq, add, mul]; split <;> omega
+
 end UOR.Bridge.F1Square.Analysis
