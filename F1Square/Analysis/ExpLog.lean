@@ -4968,53 +4968,60 @@ theorem two_gPow_le (τ K : Q) (M' : Nat) (hτd : 0 < τ.den) (hτ0 : 0 ≤ τ.n
     (Qmul_num_nonneg (by decide) (gPow_num_nonneg hτ0 N)) (Qmul_den_pos Nat.one_pos hgd) hWd hKd hK0 hKF haF
   exact Qle_trans (Qmul_den_pos hKd (by decide)) hdiv hM2
 
-/-- The artanh factor `artanh τ` as a real, for a constant rational argument `τ` (`0 ≤ τ < 1`). -/
-def RartanhConst (τ : Q) (hτd : 0 < τ.den) (hτ0 : 0 ≤ τ.num) (hτlt : τ.num.toNat < τ.den) : Real :=
-  Rartanh (ofQ τ hτd) τ hτ0 hτd hτlt (fun _ => Qeq_le (Qabs_of_nonneg hτ0))
+/-- The artanh factor `artanh τ` as a real, for a constant rational argument `τ`, taken with **any** valid
+    convergence radius `ρ ≥ |τ|` (`0 ≤ ρ < 1`). Generalizing the radius (rather than forcing `ρ = τ`) is what
+    lets `exp(log n)` below match the *literal* `Rlog` term, whose radius `ρ_M` is deliberately smaller. -/
+def RartanhConst (τ ρ : Q) (hτd : 0 < τ.den) (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den)
+    (hρlt : ρ.num.toNat < ρ.den) (hb : Qle (Qabs τ) ρ) : Real :=
+  Rartanh (ofQ τ hτd) ρ hρ0 hρd hρlt (fun _ => hb)
 
-/-- `2·artanh τ` as a real (`= log((1+τ)/(1−τ))`), for a constant rational argument. -/
-def TwoArtanhConst (τ : Q) (hτd : 0 < τ.den) (hτ0 : 0 ≤ τ.num) (hτlt : τ.num.toNat < τ.den) : Real :=
-  Rmul (ofQ ⟨2, 1⟩ (by decide)) (RartanhConst τ hτd hτ0 hτlt)
+/-- `2·artanh τ` as a real (`= log((1+τ)/(1−τ))`), for a constant rational argument at radius `ρ ≥ |τ|`. -/
+def TwoArtanhConst (τ ρ : Q) (hτd : 0 < τ.den) (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den)
+    (hρlt : ρ.num.toNat < ρ.den) (hb : Qle (Qabs τ) ρ) : Real :=
+  Rmul (ofQ ⟨2, 1⟩ (by decide)) (RartanhConst τ ρ hτd hρ0 hρd hρlt hb)
 
-/-- **The exp/artanh real identity**: `exp(2·artanh τ) = (1+τ)/(1−τ)` for a constant rational `τ` (`0 ≤ τ < 1`).
-    Instantiates the abstract reconciliation `Rexp_two_artanh_via` at `X = TwoArtanhConst τ`, whose diagonal
-    `X.seq m = 2·artSum τ Dₘ = peval(2acoef) τ (2Dₘ+1)` (`peval_twoacoef_artSum`); the depth `Dₘ = Rartanh_R τ (Ridx … m)`
-    grows past `m` (`Ridx_ge` + `Rartanh_R ≥ ·+1`), and the magnitudes are `≤ M'` (`two_gPow_le`). -/
-theorem Rexp_two_artanh_ofQ (τ g K : Q) (M' L C : Nat)
+/-- **The exp/artanh real identity**: `exp(2·artanh τ) = (1+τ)/(1−τ)` for a constant rational `τ` (`0 ≤ τ < 1`),
+    at **any** valid radius `ρ ≥ |τ|`. Instantiates the abstract reconciliation `Rexp_two_artanh_via` at
+    `X = TwoArtanhConst τ ρ`, whose diagonal `X.seq m = 2·artSum τ Dₘ = peval(2acoef) τ (2Dₘ+1)`
+    (`peval_twoacoef_artSum`); the depth `Dₘ = Rartanh_R ρ (Ridx … m)` grows past `m` (`Ridx_ge` +
+    `Rartanh_R ≥ ·+1`), and the magnitudes are `≤ M'` (`two_gPow_le`). The radius `ρ` enters only through the
+    depth `ψ`, which `Rexp_two_artanh_via` already abstracts — so no `ρ²≤½` smallness is needed. -/
+theorem Rexp_two_artanh_ofQ (τ ρ g K : Q) (M' L C : Nat)
     (hτd : 0 < τ.den) (hτ0 : 0 ≤ τ.num) (hτ1 : Qle τ ⟨1, 1⟩) (hτlt : τ.num.toNat < τ.den)
+    (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den) (hρlt : ρ.num.toNat < ρ.den) (hb : Qle (Qabs τ) ρ)
     (hgd : 0 < g.den) (hg : Qeq (mul g (Qsub ⟨1, 1⟩ τ)) (add ⟨1, 1⟩ τ))
     (hKd : 0 < K.den) (hK0 : 0 ≤ K.num) (hKF : Qle (⟨1, 1⟩ : Q) (mul K (Qsub ⟨1, 1⟩ τ)))
     (hL : L = (expM_U M' (2 * M')).num.toNat) (hM2 : Qle (mul K ⟨2, 1⟩) ⟨(M' : Int), 1⟩)
     (hBC : ∀ j, Qle (add (mul ⟨(L : Int), 1⟩ (mul K (mul ⟨2, 1⟩ (⟨(τ.den : Int), j + 1⟩ : Q))))
         (mul K (mul ⟨4, 1⟩ (⟨(τ.den : Int), j + 1⟩ : Q)))) (⟨(C : Int), j + 1⟩ : Q)) :
-    Req (RexpReal (TwoArtanhConst τ hτd hτ0 hτlt)) (ofQ g hgd) := by
+    Req (RexpReal (TwoArtanhConst τ ρ hτd hρ0 hρd hρlt hb)) (ofQ g hgd) := by
   have htwd : ∀ k, 0 < ((fun i => mul ⟨2, 1⟩ (acoef i)) k).den :=
     fun k => Qmul_den_pos Nat.one_pos (acoef_den k)
   have hmag := two_gPow_le τ K M' hτd hτ0 hKd hK0 hKF hM2
   -- the artanh-depth at diagonal index m
-  refine Rexp_two_artanh_via (TwoArtanhConst τ hτd hτ0 hτlt) τ g K M' L C
-    (fun m => 2 * Rartanh_R τ (Ridx (ofQ ⟨2, 1⟩ (by decide)) (RartanhConst τ hτd hτ0 hτlt) m) + 1)
+  refine Rexp_two_artanh_via (TwoArtanhConst τ ρ hτd hρ0 hρd hρlt hb) τ g K M' L C
+    (fun m => 2 * Rartanh_R ρ (Ridx (ofQ ⟨2, 1⟩ (by decide)) (RartanhConst τ ρ hτd hρ0 hρd hρlt hb) m) + 1)
     hτd hτ0 hτ1 hτlt hgd hg hKd hK0 hKF hL ?_ ?_ ?_ ?_ hBC
-  · -- hψ : m ≤ 2·Rartanh_R τ (Ridx … m) + 1
+  · -- hψ : m ≤ 2·Rartanh_R ρ (Ridx … m) + 1
     intro m
-    show m ≤ 2 * Rartanh_R τ (Ridx (ofQ ⟨2, 1⟩ (by decide)) (RartanhConst τ hτd hτ0 hτlt) m) + 1
-    have hc : 0 < τ.den * τ.den + 4 * τ.den :=
-      Nat.add_pos_right _ (Nat.mul_pos (by decide) hτd)
-    have h2 : ∀ k, k + 1 ≤ Rartanh_R τ k := fun k => by unfold Rartanh_R; exact Nat.le_mul_of_pos_left _ hc
-    have h1 := Ridx_ge (ofQ ⟨2, 1⟩ (by decide)) (RartanhConst τ hτd hτ0 hτlt) m
-    have h3 := h2 (Ridx (ofQ ⟨2, 1⟩ (by decide)) (RartanhConst τ hτd hτ0 hτlt) m)
+    show m ≤ 2 * Rartanh_R ρ (Ridx (ofQ ⟨2, 1⟩ (by decide)) (RartanhConst τ ρ hτd hρ0 hρd hρlt hb) m) + 1
+    have hc : 0 < ρ.den * ρ.den + 4 * ρ.den :=
+      Nat.add_pos_right _ (Nat.mul_pos (by decide) hρd)
+    have h2 : ∀ k, k + 1 ≤ Rartanh_R ρ k := fun k => by unfold Rartanh_R; exact Nat.le_mul_of_pos_left _ hc
+    have h1 := Ridx_ge (ofQ ⟨2, 1⟩ (by decide)) (RartanhConst τ ρ hτd hρ0 hρd hρlt hb) m
+    have h3 := h2 (Ridx (ofQ ⟨2, 1⟩ (by decide)) (RartanhConst τ ρ hτd hρ0 hρd hρlt hb) m)
     omega
-  · -- hXseq : X.seq (R_j) ≈ peval(2acoef) τ (2·Rartanh_R τ (Ridx … R_j) + 1)
+  · -- hXseq : X.seq (R_j) ≈ peval(2acoef) τ (2·Rartanh_R ρ (Ridx … R_j) + 1)
     intro j
     exact Qeq_symm (peval_twoacoef_artSum τ hτd
-      (Rartanh_R τ (Ridx (ofQ ⟨2, 1⟩ (by decide)) (RartanhConst τ hτd hτ0 hτlt)
-        (RexpReal_R (TwoArtanhConst τ hτd hτ0 hτlt) j))))
+      (Rartanh_R ρ (Ridx (ofQ ⟨2, 1⟩ (by decide)) (RartanhConst τ ρ hτd hρ0 hρd hρlt hb)
+        (RexpReal_R (TwoArtanhConst τ ρ hτd hρ0 hρd hρlt hb) j))))
   · -- hXb : |X.seq m| ≤ M'
     intro m
     exact Qle_congr_left
       (Qabs_den_pos (peval_den_pos htwd hτd _))
       (Qabs_Qeq (peval_twoacoef_artSum τ hτd
-        (Rartanh_R τ (Ridx (ofQ ⟨2, 1⟩ (by decide)) (RartanhConst τ hτd hτ0 hτlt) m))))
+        (Rartanh_R ρ (Ridx (ofQ ⟨2, 1⟩ (by decide)) (RartanhConst τ ρ hτd hρ0 hρd hρlt hb) m))))
       (Qle_trans (Qmul_den_pos Nat.one_pos (gPow_den_pos hτd _))
         (peval_twoacoef_abs_le_gpow τ hτd hτ0 _) (hmag _))
   · -- hpb : |peval(2acoef) τ N| ≤ M'
@@ -5031,31 +5038,67 @@ theorem tmap_nat_num (n : Nat) : (tmap (⟨(n : Int), 1⟩ : Q)).num = (n : Int)
   unfold tmap mul Qsub add neg Qinv; push_cast; omega
 
 /-- **`exp(log n) = n`** (the v0.15.1 ζ-convergence gate). Since `log n = 2·artanh((n−1)/(n+1))` (the constructive
-    definition of `Rlog`), this is `RexpReal (TwoArtanhConst (tmap n)) ≈ n`. Instantiates `Rexp_two_artanh_ofQ` at
-    `τ = tmap n = (n−1)/(n+1)`, `g = n`, `K = (n+1)/2`, `M' = n+1`; the closed forms `1−τ = 2/(n+1)`, `g·(1−τ) = 1+τ`,
-    `K·(1−τ) = 1` are pure `tmap`-arithmetic (`tmap_nat_den`/`num`). -/
+    definition of `Rlog`), this is `RexpReal (TwoArtanhConst (tmap n) (tmap n)) ≈ n`. Instantiates `Rexp_two_artanh_ofQ`
+    at `τ = ρ = tmap n = (n−1)/(n+1)`, `g = n`, `K = (n+1)/2`, `M' = n+1`; the closed forms `1−τ = 2/(n+1)`,
+    `g·(1−τ) = 1+τ`, `K·(1−τ) = 1` are pure `tmap`-arithmetic (`tmap_nat_den`/`num`). -/
 theorem Rexp_log_nat (n : Nat) (hn : 1 ≤ n)
     (hτd : 0 < (tmap (⟨(n : Int), 1⟩ : Q)).den) (hτ0 : 0 ≤ (tmap (⟨(n : Int), 1⟩ : Q)).num)
     (hτlt : (tmap (⟨(n : Int), 1⟩ : Q)).num.toNat < (tmap (⟨(n : Int), 1⟩ : Q)).den) :
-    Req (RexpReal (TwoArtanhConst (tmap (⟨(n : Int), 1⟩ : Q)) hτd hτ0 hτlt))
+    Req (RexpReal (TwoArtanhConst (tmap (⟨(n : Int), 1⟩ : Q)) (tmap ⟨(n : Int), 1⟩)
+        hτd hτ0 hτd hτlt (Qeq_le (Qabs_of_nonneg hτ0))))
       (ofQ (⟨(n : Int), 1⟩ : Q) Nat.one_pos) := by
-  refine Rexp_two_artanh_ofQ (tmap (⟨(n : Int), 1⟩ : Q)) ⟨(n : Int), 1⟩ ⟨(n : Int) + 1, 2⟩
-    (n + 1) ((expM_U (n + 1) (2 * (n + 1))).num.toNat) ((n + 1) * (n + 1) * ((expM_U (n + 1) (2 * (n + 1))).num.toNat + 2))
-    hτd hτ0 ?_ hτlt Nat.one_pos ?_ (by decide : (0 : Nat) < 2) ?_ ?_ rfl ?_ ?_
-  · -- hτ1 : τ ≤ 1
+  refine Rexp_two_artanh_ofQ (tmap (⟨(n : Int), 1⟩ : Q)) (tmap ⟨(n : Int), 1⟩) ⟨(n : Int), 1⟩ ⟨(n : Int) + 1, 2⟩
+    (n + 1) ((expM_U (n + 1) (2 * (n + 1))).num.toNat)
+    ((n + 1) * (n + 1) * ((expM_U (n + 1) (2 * (n + 1))).num.toNat + 2))
+    hτd hτ0 ?_ hτlt hτ0 hτd hτlt (Qeq_le (Qabs_of_nonneg hτ0)) Nat.one_pos ?_ (by decide : (0:Nat) < 2) ?_ ?_ rfl ?_ ?_
+  · simp only [Qle]; rw [tmap_nat_num n, tmap_nat_den n]; push_cast; omega
+  · simp only [Qeq, mul, Qsub, add, neg]; rw [tmap_nat_num n, tmap_nat_den n]; push_cast; ring_uor
+  · simp only [Qle]; push_cast; omega
+  · refine Qeq_le ?_
+    simp only [Qeq, mul, Qsub, add, neg]; rw [tmap_nat_num n, tmap_nat_den n]; push_cast; ring_uor
+  · simp only [Qle, mul]; push_cast; omega
+  · intro j; refine Qeq_le ?_
+    simp only [Qeq, add, mul]; rw [tmap_nat_den n]; push_cast; ring_uor
+
+/-- **`exp(log n) = n` for the *literal* `Rlog` term** — the strengthened ζ-convergence gate. `Rlog (ofQ n)`
+    is built with the smaller convergence radius `ρ_M = (n−1)/(n+1)` on the artanh argument; because the
+    radius enters only through the depth reindex (absorbed by `Rexp_two_artanh_via`), the radius-general
+    `Rexp_two_artanh_ofQ` applies at `ρ = ρ_M` directly, and `Rlog (ofQ n) = TwoArtanhConst (tmap n) ρ_M` by
+    `rfl` (defeq: both reduce to `Rmul (ofQ 2) (Rartanh (const tmap n) ρ_M …)`, the constant-sequence
+    arguments being definitionally equal). No `ρ²≤½` smallness is needed — the earlier scoping caveat is
+    discharged. -/
+theorem Rexp_log_nat_Rlog (n : Nat) (hn : 1 ≤ n) (hMge : Qle (⟨1, 1⟩ : Q) ⟨(n : Int), 1⟩)
+    (hxpos : ∀ k, 0 < ((ofQ (⟨(n : Int), 1⟩ : Q) Nat.one_pos).seq k).num)
+    (hhi : ∀ k, Qle ((ofQ (⟨(n : Int), 1⟩ : Q) Nat.one_pos).seq k) ⟨(n : Int), 1⟩)
+    (hlo : ∀ k, Qle (⟨1, 1⟩ : Q) (mul ((ofQ (⟨(n : Int), 1⟩ : Q) Nat.one_pos).seq k) ⟨(n : Int), 1⟩)) :
+    Req (RexpReal (Rlog (ofQ (⟨(n : Int), 1⟩ : Q) Nat.one_pos) ⟨(n : Int), 1⟩ Nat.one_pos hMge hxpos hhi hlo))
+      (ofQ (⟨(n : Int), 1⟩ : Q) Nat.one_pos) := by
+  have hτd : 0 < (tmap (⟨(n : Int), 1⟩ : Q)).den := by rw [tmap_nat_den n]; omega
+  have hτ0 : 0 ≤ (tmap (⟨(n : Int), 1⟩ : Q)).num := by rw [tmap_nat_num n]; omega
+  have hτlt : (tmap (⟨(n : Int), 1⟩ : Q)).num.toNat < (tmap (⟨(n : Int), 1⟩ : Q)).den := by
+    rw [tmap_nat_num n, tmap_nat_den n]; omega
+  have hρ0 : 0 ≤ (⟨(n : Int) - 1, n + 1⟩ : Q).num := by show (0 : Int) ≤ (n : Int) - 1; omega
+  have hρd : 0 < (⟨(n : Int) - 1, n + 1⟩ : Q).den := Nat.succ_pos n
+  have hρlt : (⟨(n : Int) - 1, n + 1⟩ : Q).num.toNat < (⟨(n : Int) - 1, n + 1⟩ : Q).den := by
+    show ((n : Int) - 1).toNat < n + 1; omega
+  have htle : Qle (tmap (⟨(n : Int), 1⟩ : Q)) ⟨(n : Int) - 1, n + 1⟩ := by
     simp only [Qle]; rw [tmap_nat_num n, tmap_nat_den n]; push_cast; omega
-  · -- hg : n·(1−τ) = 1+τ
+  have hb : Qle (Qabs (tmap (⟨(n : Int), 1⟩ : Q))) ⟨(n : Int) - 1, n + 1⟩ :=
+    Qle_trans hτd (Qeq_le (Qabs_of_nonneg hτ0)) htle
+  have hbridge : Rlog (ofQ (⟨(n : Int), 1⟩ : Q) Nat.one_pos) ⟨(n : Int), 1⟩ Nat.one_pos hMge hxpos hhi hlo
+      = TwoArtanhConst (tmap (⟨(n : Int), 1⟩ : Q)) ⟨(n : Int) - 1, n + 1⟩ hτd hρ0 hρd hρlt hb := rfl
+  rw [hbridge]
+  refine Rexp_two_artanh_ofQ (tmap (⟨(n : Int), 1⟩ : Q)) ⟨(n : Int) - 1, n + 1⟩ ⟨(n : Int), 1⟩ ⟨(n : Int) + 1, 2⟩
+    (n + 1) ((expM_U (n + 1) (2 * (n + 1))).num.toNat)
+    ((n + 1) * (n + 1) * ((expM_U (n + 1) (2 * (n + 1))).num.toNat + 2))
+    hτd hτ0 ?_ hτlt hρ0 hρd hρlt hb Nat.one_pos ?_ (by decide : (0:Nat) < 2) ?_ ?_ rfl ?_ ?_
+  · simp only [Qle]; rw [tmap_nat_num n, tmap_nat_den n]; push_cast; omega
+  · simp only [Qeq, mul, Qsub, add, neg]; rw [tmap_nat_num n, tmap_nat_den n]; push_cast; ring_uor
+  · simp only [Qle]; push_cast; omega
+  · refine Qeq_le ?_
     simp only [Qeq, mul, Qsub, add, neg]; rw [tmap_nat_num n, tmap_nat_den n]; push_cast; ring_uor
-  · -- hK0 : 0 ≤ (n+1)
-    simp only [Qle]; push_cast; omega
-  · -- hKF : 1 ≤ K·(1−τ)  (= 1 exactly)
-    refine Qeq_le ?_
-    simp only [Qeq, mul, Qsub, add, neg]; rw [tmap_nat_num n, tmap_nat_den n]; push_cast; ring_uor
-  · -- hM2 : K·2 ≤ M'
-    simp only [Qle, mul]; push_cast; omega
-  · -- hBC
-    intro j
-    refine Qeq_le ?_
+  · simp only [Qle, mul]; push_cast; omega
+  · intro j; refine Qeq_le ?_
     simp only [Qeq, add, mul]; rw [tmap_nat_den n]; push_cast; ring_uor
 
 end UOR.Bridge.F1Square.Analysis

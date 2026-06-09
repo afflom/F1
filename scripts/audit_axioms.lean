@@ -1079,3 +1079,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.tmap_nat_den
 #print axioms Analysis.tmap_nat_num
 #print axioms Analysis.Rexp_log_nat
+#print axioms Analysis.Rexp_log_nat_Rlog

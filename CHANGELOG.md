@@ -20,18 +20,17 @@ All notable changes to this project are documented here. The format is based on
   matching the artanh inner depth to the exp outer depth via `peval_twoacoef_cauchy` + `expSum_Lip_le`/
   `LipS_le_U`, plus the `exp_artanh_recip` tail), with the argument-magnitude bounds `peval_twoacoef_abs_le_gpow`
   and `two_gPow_le`, and the clearing-division helper `mul_div_gen`.
-- **`exp(log n) = n`** (`F1Square/Analysis/ExpLog.lean`) — `Rexp_log_nat`: `RexpReal (TwoArtanhConst (tmap n))
-  ≈ n`. Since `log n = 2·artanh((n−1)/(n+1))` is the constructive definition of `Rlog`, this is `exp∘log = id`
-  on the naturals. Instantiates the base identity at `τ = tmap n = (n−1)/(n+1)`, `g = n`, `K = (n+1)/2`; the
-  closed forms `1−τ = 2/(n+1)`, `g·(1−τ) = 1+τ`, `K·(1−τ) = 1` are pure `tmap`-arithmetic (`tmap_nat_den`/`num`).
+- **`exp(log n) = n` for the *literal* `Rlog` term** (`F1Square/Analysis/ExpLog.lean`) — `Rexp_log_nat_Rlog`:
+  `RexpReal (Rlog (ofQ n) …) ≈ n`, where `Rlog (ofQ n)` is the actual constructive logarithm
+  `2·artanh((n−1)/(n+1))`. The base construction `RartanhConst`/`TwoArtanhConst`/`Rexp_two_artanh_ofQ` is
+  **radius-general** (the convergence radius enters only through the depth reindex, which `Rexp_two_artanh_via`
+  abstracts), so it applies directly at `Rlog`'s own smaller radius `ρ_M = (n−1)/(n+1)`, and
+  `Rlog (ofQ n) = TwoArtanhConst (tmap n) ρ_M` holds by `rfl` (definitional equality of the constant-sequence
+  artanh arguments). No `τ²≤½` smallness is needed. (`Rexp_log_nat` gives the same at the convenience radius
+  `ρ = τ`.) The `tmap`-arithmetic (`1−τ = 2/(n+1)`, `g·(1−τ) = 1+τ`, `K·(1−τ) = 1`) is pure ℚ (`tmap_nat_den`/`num`).
 - **Why it matters.** This closes the discovered dependency of stage A: `Σ n^{-s}` converges because
   `|n^{-s}| = n^{-Re s}`, i.e. `exp(log n) = n`. The honesty gate is met — the identity closes **axiom-clean**
   (`{propext, Quot.sound}` only), so the ζ-complex tail (v0.15.2) need not ship its convergence as an interface.
-- **Scope (honest).** `Rexp_log_nat` is stated for `TwoArtanhConst (tmap n)` — which *is* `log n` by the
-  constructive definition `log n = 2·artanh((n−1)/(n+1))`, but takes the argument value `τ = tmap n` as the
-  artanh radius. Identifying it with the *literal* `Rlog (ofQ n)` term (whose radius `ρ_M` is deliberately
-  smaller) needs a radius reconciliation valid for `τ` up to `1` — deferred to v0.15.2 (the existing
-  `Rartanh_radius_indep`/`Rartanh_congr` assume `τ² ≤ ½`, which `tmap n` violates for `n ≥ 6`), never faked.
 - **The crux stays `none`; RH is open.** `liPositivityHolds`/`hodgeIndexHolds` remain `none`.
 
 ## [0.15.0] - 2026-06-08
