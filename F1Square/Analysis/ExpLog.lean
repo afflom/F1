@@ -4783,4 +4783,61 @@ theorem mul_div_gen {a B F K : Q} (ha : 0 ≤ a.num) (had : 0 < a.den) (hFd : 0 
     (Qle_trans (Qmul_den_pos had (Qmul_den_pos hKd hFd)) h1 (Qeq_le h2))
     (Qmul_le_mul_left hK0 hab)
 
+/-- Scalar factors out of a finite sum: `Σ c·hₖ ≈ c·(Σ hₖ)`. -/
+theorem Fsum_smul (c : Q) (h : Nat → Q) (hcd : 0 < c.den) (hh : ∀ i, 0 < (h i).den) :
+    ∀ N, Qeq (Fsum (fun k => mul c (h k)) N) (mul c (Fsum h N))
+  | 0 => Qeq_refl _
+  | (N + 1) => by
+      show Qeq (add (Fsum (fun k => mul c (h k)) N) (mul c (h (N + 1))))
+        (mul c (add (Fsum h N) (h (N + 1))))
+      refine Qeq_trans (add_den_pos (Qmul_den_pos hcd (Fsum_den_pos hh N)) (Qmul_den_pos hcd (hh (N + 1))))
+        (Qadd_congr (Fsum_smul c h hcd hh N) (Qeq_refl _)) ?_
+      simp only [Qeq, mul, add]; push_cast; ring_uor
+
+/-- **`peval(2·acoef)` Cauchy, cleared**: `|peval (2·acoef) τ b − peval (2·acoef) τ a|·(1−τ) ≤ 2·τ^{a+1}`
+    for `a ≤ b`, `0 ≤ τ ≤ 1`. The exp-argument convergence used to match the artanh inner-depth to the exp
+    outer-depth in the real reconciliation. Via `Fsum_abs_diff_le` (`|2·acoefₖ|≤2`) + `gPow_gap_le`. -/
+theorem peval_twoacoef_cauchy (τ : Q) (hτd : 0 < τ.den) (hτ0 : 0 ≤ τ.num) (hτ1 : Qle τ ⟨1, 1⟩)
+    {a b : Nat} (hab : a ≤ b) :
+    Qle (mul (Qabs (Qsub (peval (fun i => mul ⟨2, 1⟩ (acoef i)) τ b)
+        (peval (fun i => mul ⟨2, 1⟩ (acoef i)) τ a))) (Qsub ⟨1, 1⟩ τ)) (mul ⟨2, 1⟩ (qpow τ (a + 1))) := by
+  have hbd : ∀ i, 0 < ((fun i => mul ⟨2, 1⟩ (acoef i)) i).den :=
+    fun i => Qmul_den_pos Nat.one_pos (acoef_den i)
+  have hgd : ∀ k, 0 < (mul ⟨2, 1⟩ (qpow τ k)).den := fun k => Qmul_den_pos Nat.one_pos (qpow_den_pos hτd k)
+  have hWd : 0 < (Qsub (⟨1, 1⟩ : Q) τ).den := Qsub_den_pos Nat.one_pos hτd
+  have hW0 : 0 ≤ (Qsub (⟨1, 1⟩ : Q) τ).num := by
+    have h := hτ1; simp only [Qle, Qsub, add, neg] at h ⊢; push_cast at h ⊢; omega
+  have hgb : 0 < (gPow τ b).den := gPow_den_pos hτd b
+  have hga : 0 < (gPow τ a).den := gPow_den_pos hτd a
+  have hfg : ∀ k, Qle (Qabs (mul (mul ⟨2, 1⟩ (acoef k)) (qpow τ k))) (mul ⟨2, 1⟩ (qpow τ k)) := by
+    intro k
+    have h2a : Qle (Qabs (mul ⟨2, 1⟩ (acoef k))) ⟨2, 1⟩ := by
+      rw [Qabs_mul, show Qabs (⟨2, 1⟩ : Q) = ⟨2, 1⟩ from rfl]
+      refine Qle_trans (Qmul_den_pos Nat.one_pos Nat.one_pos) (Qmul_le_mul_left (by decide)
+        (Qle_trans (acoef_den k) (Qeq_le (Qabs_of_nonneg (acoef_num_nonneg k))) (acoef_le_one k))) ?_
+      exact Qeq_le (mul_one ⟨2, 1⟩)
+    rw [Qabs_mul]
+    refine Qle_trans (Qmul_den_pos Nat.one_pos (Qabs_den_pos (qpow_den_pos hτd k)))
+      (Qmul_le_mul_right (Qabs_num_nonneg _) h2a) ?_
+    exact Qmul_le_mul_left (by decide) (Qeq_le (Qabs_of_nonneg (qpow_nonneg hτ0 k)))
+  have hdiff := Fsum_abs_diff_le (f := fun k => mul (mul ⟨2, 1⟩ (acoef k)) (qpow τ k))
+    (g := fun k => mul ⟨2, 1⟩ (qpow τ k)) (fun k => Qmul_den_pos (hbd k) (qpow_den_pos hτd k))
+    hgd hfg hab
+  have hFsumg : ∀ N, Qeq (Fsum (fun k => mul ⟨2, 1⟩ (qpow τ k)) N) (mul ⟨2, 1⟩ (gPow τ N)) := fun N =>
+    Qeq_trans (Qmul_den_pos Nat.one_pos (Fsum_den_pos (fun k => qpow_den_pos hτd k) N))
+      (Fsum_smul ⟨2, 1⟩ (fun k => qpow τ k) Nat.one_pos (fun k => qpow_den_pos hτd k) N)
+      (Qmul_congr (Qeq_refl _) (gPow_eq_Fsum τ N))
+  have hstep23 : Qeq (mul (Qsub (Fsum (fun k => mul ⟨2, 1⟩ (qpow τ k)) b)
+        (Fsum (fun k => mul ⟨2, 1⟩ (qpow τ k)) a)) (Qsub ⟨1, 1⟩ τ))
+      (mul ⟨2, 1⟩ (mul (Qsub (gPow τ b) (gPow τ a)) (Qsub ⟨1, 1⟩ τ))) :=
+    Qeq_trans (Qmul_den_pos (Qmul_den_pos Nat.one_pos (Qsub_den_pos hgb hga)) hWd)
+      (Qmul_congr (Qeq_trans (Qsub_den_pos (Qmul_den_pos Nat.one_pos hgb) (Qmul_den_pos Nat.one_pos hga))
+        (Qsub_congr (hFsumg b) (hFsumg a))
+        (Qeq_symm (Qmul_sub_distrib ⟨2, 1⟩ (gPow τ b) (gPow τ a)))) (Qeq_refl _))
+      (Qmul_assoc ⟨2, 1⟩ (Qsub (gPow τ b) (gPow τ a)) (Qsub ⟨1, 1⟩ τ))
+  refine Qle_trans (Qmul_den_pos (Qsub_den_pos (Fsum_den_pos hgd b) (Fsum_den_pos hgd a)) hWd)
+    (Qmul_le_mul_right hW0 hdiff) ?_
+  refine Qle_trans (Qmul_den_pos Nat.one_pos (Qmul_den_pos (Qsub_den_pos hgb hga) hWd)) (Qeq_le hstep23) ?_
+  exact Qmul_le_mul_left (by decide) (gPow_gap_le τ hτ0 hτd hab)
+
 end UOR.Bridge.F1Square.Analysis
