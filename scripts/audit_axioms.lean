@@ -1041,3 +1041,5 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rartanh_radius_indep
 #print axioms Analysis.Rlog_sq_via
 #print axioms Analysis.Rlog_eq_Rmul
+#print axioms Analysis.Rlog_tbound
+#print axioms Analysis.Rlog_radius_facts

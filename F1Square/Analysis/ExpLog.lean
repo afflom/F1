@@ -4118,6 +4118,44 @@ theorem Rlog_sq_via (c tY tY2 : Real) (ρ σ : Q) (hρd : 0 < ρ.den) (hρ0 : 0 
       (Rartanh (uvalReal tY σ hσd hσ1 hbtσ) σ hσ0 hσd hσlt hbur)
       (Rartanh tY2 σ hσ0 hσd hσlt hbtY2) hdbl hcong)
 
+/-- **`Rlog` `t`-bound**: `|tmap(x.seq k)| ≤ ρ_M = (M−1)/(M+1)` for `x ≤ M`, `x·M ≥ 1` (at every index `k`).
+    The bound on `Rlog`'s internal `t`-real (`= Rlog`'s internal `hb`, extracted and generalized for reuse). -/
+theorem Rlog_tbound (x : Real) (M : Q) (hMd : 0 < M.den) (hMn : 0 ≤ M.num)
+    (hM1 : 0 < (add M ⟨1, 1⟩).num) (hhi : ∀ n, Qle (x.seq n) M)
+    (hlo : ∀ n, Qle (⟨1, 1⟩ : Q) (mul (x.seq n) M)) (hxpos : ∀ n, 0 < (x.seq n).num) :
+    ∀ k, Qle (Qabs (tmap (x.seq k))) (⟨M.num - (M.den : Int), M.num.toNat + M.den⟩ : Q) := by
+  intro k
+  have hq1 : 0 < (add (x.seq k) ⟨1, 1⟩).num := by
+    have := hxpos k; have h2 := Int.ofNat_nonneg (x.seq k).den
+    show 0 < (x.seq k).num * 1 + 1 * ((x.seq k).den : Int); omega
+  exact Qle_trans (show 0 < (tmap M).den from
+      Qmul_den_pos (Qsub_den_pos hMd Nat.one_pos) (Qinv_den_pos hM1))
+    (tmap_abs_le (x.den_pos _) hMd hq1 hM1 (hhi k) (hlo k))
+    (Qeq_le (tmap_M_eq hMd hMn))
+
+/-- **`Rlog` radius facts**: for `M ≥ 1`, the `M`-derivable validity of `ρ_M = ⟨M.num−M.den, M.num.toNat+M.den⟩`
+    (`= (M−1)/(M+1)`): `M.num ≥ 0`, `M+1 > 0`, `ρ_M.num ≥ 0`, `ρ_M.den > 0`, `ρ_M.num.toNat < ρ_M.den`, `ρ_M ≤ 1`.
+    Exactly `Rlog`'s internal radius bookkeeping, packaged. -/
+theorem Rlog_radius_facts (M : Q) (hMd : 0 < M.den) (hMge : Qle (⟨1, 1⟩ : Q) M) :
+    0 ≤ M.num ∧ 0 < (add M ⟨1, 1⟩).num ∧
+    0 ≤ (⟨M.num - (M.den : Int), M.num.toNat + M.den⟩ : Q).num ∧
+    0 < (⟨M.num - (M.den : Int), M.num.toNat + M.den⟩ : Q).den ∧
+    (⟨M.num - (M.den : Int), M.num.toNat + M.den⟩ : Q).num.toNat
+      < (⟨M.num - (M.den : Int), M.num.toNat + M.den⟩ : Q).den ∧
+    Qle (⟨M.num - (M.den : Int), M.num.toNat + M.den⟩ : Q) ⟨1, 1⟩ := by
+  have hMge' : (1 : Int) * (M.den : Int) ≤ M.num * 1 := hMge
+  have hMn : 0 ≤ M.num := by omega
+  have h1 : ((M.num.toNat : Nat) : Int) = M.num := Int.toNat_of_nonneg hMn
+  refine ⟨hMn, by show 0 < M.num * 1 + 1 * (M.den : Int); omega, by show 0 ≤ M.num - (M.den : Int); omega,
+    by show 0 < M.num.toNat + M.den; omega, ?_, ?_⟩
+  · show (M.num - (M.den : Int)).toNat < M.num.toNat + M.den
+    have h2 : ((M.num - (M.den : Int)).toNat : Int) = M.num - (M.den : Int) := Int.toNat_of_nonneg (by omega)
+    have : ((M.num - (M.den : Int)).toNat : Int) < ((M.num.toNat + M.den : Nat) : Int) := by
+      push_cast [h1, h2]; omega
+    exact_mod_cast this
+  · show (M.num - (M.den : Int)) * ((1 : Nat) : Int) ≤ (1 : Int) * ((M.num.toNat + M.den : Nat) : Int)
+    push_cast [h1]; omega
+
 /-- **`Rlog` unfolding handle**: `Rlog x M = Rmul (ofQ 2) (Rartanh t_x ρ_M …)` with `ρ_M = (M−1)/(M+1)`
     in clean form `⟨M.num − M.den, M.num.toNat + M.den⟩`. Holds by `rfl` (proof irrelevance on the `Prop`
     arguments). The bridge from `Rlog`'s tactic-mode definition to the `Rmul`/`Rartanh` form `Rlog_sq_via`
