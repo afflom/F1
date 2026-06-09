@@ -504,4 +504,35 @@ example :
       ∧ f1SquareStatus.liPositivityHolds = none :=
   ⟨Analysis.RexpReal_add, rfl⟩
 
+/-- Elaboration-checked witness binding the v0.15.1 ζ-convergence gate `exp∘log = id`: the power-series
+    composition identity **`exp(2·artanh τ) = (1+τ)/(1−τ)`** (`Rexp_two_artanh_ofQ`, the roadmap's
+    research-grade base identity) and its corollary **`exp(log n) = n`** (`Rexp_log_nat`) — since
+    `log n = 2·artanh((n−1)/(n+1))` is the constructive definition of `Rlog`. Built from scratch by
+    composing the exp factorial series with the artanh geometric series (the corner bound `exp_corner_le`,
+    the rational identity `exp_artanh_rat_cleared`, and the diagonal reconciliation `Rexp_two_artanh_via`),
+    choice-free and `sorry`-free. This unlocks `|n⁻ˢ| = n⁻ᴿᵉˢ` for the ζ-complex tail (v0.15.2); the crux
+    stays open — `liPositivityHolds = none`.
+
+    Two bindings: the general theorem `Rexp_log_nat` (for every `n ≥ 1`, with the obviously-satisfiable
+    `tmap n` side-conditions), and a concrete, fully-closed instance `exp(log 2) = 2` whose side-conditions
+    are `decide`-checked — so the result is demonstrably non-vacuous. -/
+example :
+    (∀ (n : Nat), 1 ≤ n →
+      ∀ (hd : 0 < (Analysis.tmap (⟨(n : Int), 1⟩ : Analysis.Q)).den)
+        (h0 : 0 ≤ (Analysis.tmap (⟨(n : Int), 1⟩ : Analysis.Q)).num)
+        (hl : (Analysis.tmap (⟨(n : Int), 1⟩ : Analysis.Q)).num.toNat
+          < (Analysis.tmap (⟨(n : Int), 1⟩ : Analysis.Q)).den),
+        Analysis.Req (Analysis.RexpReal (Analysis.TwoArtanhConst (Analysis.tmap ⟨(n : Int), 1⟩) hd h0 hl))
+          (Analysis.ofQ (⟨(n : Int), 1⟩ : Analysis.Q) Nat.one_pos))
+      ∧ f1SquareStatus.liPositivityHolds = none :=
+  ⟨fun n hn hd h0 hl => Analysis.Rexp_log_nat n hn hd h0 hl, rfl⟩
+
+/-- A concrete, fully-closed instance of the ζ-convergence gate: `exp(log 2) = 2`
+    (`exp(2·artanh(1/3)) = 2`), every side-condition `decide`-checked — the gate is non-vacuous. -/
+example :
+    Analysis.Req (Analysis.RexpReal (Analysis.TwoArtanhConst (Analysis.tmap (⟨(2 : Int), 1⟩ : Analysis.Q))
+        (by decide) (by decide) (by decide)))
+      (Analysis.ofQ (⟨(2 : Int), 1⟩ : Analysis.Q) Nat.one_pos) :=
+  Analysis.Rexp_log_nat 2 (by decide) (by decide) (by decide) (by decide)
+
 end UOR.Bridge.F1Square

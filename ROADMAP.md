@@ -63,11 +63,17 @@ composition** (compose the exp factorial series with the artanh geometric series
 (1+w)/(1−w)`), a from-scratch build of its own. It is scoped as its own release so the shipped exponential
 core is not held hostage to it.
 
-- **v0.15.1 — `exp∘log = id` (the power-series composition gate).** Build `exp(log x) ≈ x` (equivalently
-  `exp(2·artanh w) = (1+w)/(1−w)`). `log` multiplicativity `log(ab) = log a + log b` (artanh addition formula
-  + `RexpReal_add`) reduces it to a base identity, but that base needs the composition. Research-grade in this
-  from-scratch setting; **honesty gate** — if it does not close axiom-clean, the ζ-complex tail (v0.15.2) ships
-  its convergence as a documented interface, never faked.
+- **v0.15.1 — `exp∘log = id` (the power-series composition gate) [shipped].** Built `exp(2·artanh w) =
+  (1+w)/(1−w)` from scratch as a genuine power-series composition (`Rexp_two_artanh_ofQ`), and its corollary
+  `exp(log n) = n` (`Rexp_log_nat`, since `log n = 2·artanh((n−1)/(n+1))` by construction). The honesty gate is
+  met — the identity closes **axiom-clean** (`{propext, Quot.sound}`), so the ζ-complex tail (v0.15.2) need not
+  ship its convergence as an interface. **Scope note (for v0.15.2):** `Rexp_log_nat` is stated for
+  `TwoArtanhConst (tmap n)`, which *is* `log n` by the constructive definition `log n = 2·artanh((n−1)/(n+1))`
+  but uses the argument value `τ = tmap n` itself as the artanh radius; identifying it with the *literal*
+  `Rlog (ofQ n)` term (whose radius `ρ_M` is deliberately smaller) requires a radius reconciliation valid for
+  `τ` up to `1` — **not** a trivial application of `Rartanh_radius_indep`/`Rartanh_congr`, whose error bounds
+  assume `τ² ≤ ½` (violated by `tmap n` for `n ≥ 6`). That reconciliation, and lifting to real exponents
+  `c·log n`, are v0.15.2.
 - **v0.15.2 — real powers `nᶜ` + `Analysis/ZetaC.lean`.** `exp(c·log n) = nᶜ` (v0.15.1 + `RexpReal_add`), the
   tail bound `|n^{-s}| = n^{-Re s}` (uses `|cos|,|sin| ≤ 1`, shipped), and `Czeta s` for `Re(s) > 1` as
   `Σ n^{-s}` with a rigorous complex tail, mirroring `Zeta.lean`. **De-hedges:** "ζ only at integer `s ≥ 2`"

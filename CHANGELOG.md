@@ -4,6 +4,36 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html), starting at `v0.0.1`.
 
+## [0.15.1] - 2026-06-09
+
+### Added — the ζ-convergence gate `exp∘log = id` via genuine power-series composition (pure Lean 4, no Mathlib, no `sorry`)
+- **`exp(2·artanh τ) = (1+τ)/(1−τ)` at the real level** (`F1Square/Analysis/ExpLog.lean`) —
+  `Rexp_two_artanh_ofQ`: `RexpReal (TwoArtanhConst τ) ≈ (1+τ)/(1−τ)` for a constant rational `τ` (`0 ≤ τ < 1`).
+  This is the roadmap's **research-grade base identity** (v0.15.1), built from scratch as a power-series
+  composition — the elementary squeeze `1 + log x ≤ exp(log x) ≤ 1/(1−log x)` never pins equality, so the
+  exp factorial series is composed with the artanh geometric series directly. The analytic core: the
+  composition **corner bound** `exp_corner_le` (via finite-support truncation `truncTo`, the no-corner power
+  `peval_fpow_pow_eq`, and the corner inequality `qpow_peval_le`), the formal-ODE identity `formal_exp_geom`
+  (`fcomp ecoef (2·acoef) = dgeom`, by multiplicative-ODE uniqueness `fderiv_mul_inj`), the geometric closed
+  form (`dgeom_geom_gap_le`), and the **rational identity** `exp_artanh_rat_cleared`. Lifted to the reals by
+  the **diagonal reconciliation** `Rexp_two_artanh_via` (mirrors `RexpReal_congr`: a Lipschitz `P_match`
+  matching the artanh inner depth to the exp outer depth via `peval_twoacoef_cauchy` + `expSum_Lip_le`/
+  `LipS_le_U`, plus the `exp_artanh_recip` tail), with the argument-magnitude bounds `peval_twoacoef_abs_le_gpow`
+  and `two_gPow_le`, and the clearing-division helper `mul_div_gen`.
+- **`exp(log n) = n`** (`F1Square/Analysis/ExpLog.lean`) — `Rexp_log_nat`: `RexpReal (TwoArtanhConst (tmap n))
+  ≈ n`. Since `log n = 2·artanh((n−1)/(n+1))` is the constructive definition of `Rlog`, this is `exp∘log = id`
+  on the naturals. Instantiates the base identity at `τ = tmap n = (n−1)/(n+1)`, `g = n`, `K = (n+1)/2`; the
+  closed forms `1−τ = 2/(n+1)`, `g·(1−τ) = 1+τ`, `K·(1−τ) = 1` are pure `tmap`-arithmetic (`tmap_nat_den`/`num`).
+- **Why it matters.** This closes the discovered dependency of stage A: `Σ n^{-s}` converges because
+  `|n^{-s}| = n^{-Re s}`, i.e. `exp(log n) = n`. The honesty gate is met — the identity closes **axiom-clean**
+  (`{propext, Quot.sound}` only), so the ζ-complex tail (v0.15.2) need not ship its convergence as an interface.
+- **Scope (honest).** `Rexp_log_nat` is stated for `TwoArtanhConst (tmap n)` — which *is* `log n` by the
+  constructive definition `log n = 2·artanh((n−1)/(n+1))`, but takes the argument value `τ = tmap n` as the
+  artanh radius. Identifying it with the *literal* `Rlog (ofQ n)` term (whose radius `ρ_M` is deliberately
+  smaller) needs a radius reconciliation valid for `τ` up to `1` — deferred to v0.15.2 (the existing
+  `Rartanh_radius_indep`/`Rartanh_congr` assume `τ² ≤ ½`, which `tmap n` violates for `n ≥ 6`), never faked.
+- **The crux stays `none`; RH is open.** `liPositivityHolds`/`hodgeIndexHolds` remain `none`.
+
 ## [0.15.0] - 2026-06-08
 
 ### Added — the complex analytic engine (stage A, exponential core): `exp` is a homomorphism, `nˢ` and its modulus (pure Lean 4, no Mathlib, no `sorry`)
