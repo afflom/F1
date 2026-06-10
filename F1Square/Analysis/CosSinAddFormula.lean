@@ -712,4 +712,41 @@ theorem cosAdd_decay_le {a b : Q} {M : Nat} (had : 0 < a.den) (hbd : 0 < b.den)
   exact Qadd_le_add (sinConv_abs_le had hbd ha hb (2 * K + 1))
     (Qadd_le_add (cornerSin_le had hbd ha hb K hK) (cornerMertens2 had hbd ha hb 0 K hK))
 
+-- ===========================================================================
+-- The **Real reconciliation** → `Rcos_add`. De-reindex the `Rmul` diagonals to the natural product
+-- form (mirroring `Rcos_sq_diag_le`), then reconcile to a common deep depth and apply `cosAdd_decay_le`.
+-- ===========================================================================
+
+/-- **`cos·cos` diagonal de-reindex** (two-variable analog of `Rcos_sq_diag_le`): `(Rmul (Rcos a)(Rcos b)).seq n`
+    is within `(xBound(cos a)+xBound(cos b))/(n+1)` of the natural diagonal `RaltReal_seq a 0 n · RaltReal_seq b 0 n`.
+    `Qprod_diff_le` splits into the two factor drifts, each bounded by `RaltReal_diag_le` (the reindex `≥ n`). -/
+theorem cosMul_diag_le (a b : Real) (n : Nat) :
+    Qle (Qabs (Qsub ((Rmul (Rcos a) (Rcos b)).seq n)
+        (mul (RaltReal_seq a 0 n) (RaltReal_seq b 0 n))))
+      (mul (Qbound n) ⟨(xBound (Rcos a) + xBound (Rcos b) : Int), 1⟩) := by
+  have hJ : n ≤ Ridx (Rcos a) (Rcos b) n := Ridx_ge (Rcos a) (Rcos b) n
+  have hAd : 0 < (RaltReal_seq a 0 (Ridx (Rcos a) (Rcos b) n)).den := (Rcos a).den_pos _
+  have hBd : 0 < (RaltReal_seq b 0 (Ridx (Rcos a) (Rcos b) n)).den := (Rcos b).den_pos _
+  have hA'd : 0 < (RaltReal_seq a 0 n).den := (Rcos a).den_pos n
+  have hB'd : 0 < (RaltReal_seq b 0 n).den := (Rcos b).den_pos n
+  show Qle (Qabs (Qsub (mul (RaltReal_seq a 0 (Ridx (Rcos a) (Rcos b) n))
+        (RaltReal_seq b 0 (Ridx (Rcos a) (Rcos b) n)))
+      (mul (RaltReal_seq a 0 n) (RaltReal_seq b 0 n))))
+    (mul (Qbound n) ⟨(xBound (Rcos a) + xBound (Rcos b) : Int), 1⟩)
+  refine Qle_trans (add_den_pos (Qmul_den_pos (Qabs_den_pos hBd) (Qabs_den_pos (Qsub_den_pos hAd hA'd)))
+      (Qmul_den_pos (Qabs_den_pos hA'd) (Qabs_den_pos (Qsub_den_pos hBd hB'd))))
+    (Qprod_diff_le (RaltReal_seq a 0 (Ridx (Rcos a) (Rcos b) n))
+      (RaltReal_seq a 0 n) (RaltReal_seq b 0 (Ridx (Rcos a) (Rcos b) n))
+      (RaltReal_seq b 0 n) hAd hA'd hBd hB'd) ?_
+  refine Qle_trans (add_den_pos (Qmul_den_pos Nat.one_pos (Qbound_den_pos n))
+      (Qmul_den_pos Nat.one_pos (Qbound_den_pos n)))
+    (Qadd_le_add
+      (Qmul_le_mul (Qabs_den_pos hBd) Nat.one_pos (Qabs_den_pos (Qsub_den_pos hAd hA'd))
+        (Qabs_num_nonneg _) (Int.ofNat_nonneg _) (canon_bound (Rcos b) _)
+        (by rw [Qabs_Qsub_comm]; exact RaltReal_diag_le a 0 hJ))
+      (Qmul_le_mul (Qabs_den_pos hA'd) Nat.one_pos (Qabs_den_pos (Qsub_den_pos hBd hB'd))
+        (Qabs_num_nonneg _) (Int.ofNat_nonneg _) (canon_bound (Rcos a) n)
+        (by rw [Qabs_Qsub_comm]; exact RaltReal_diag_le b 0 hJ)))
+    (Qeq_le (by simp only [Qeq, add, mul, Qbound]; push_cast; ring_uor))
+
 end UOR.Bridge.F1Square.Analysis
