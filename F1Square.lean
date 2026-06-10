@@ -72,6 +72,7 @@ import F1Square.Analysis.LiOne
 import F1Square.Analysis.ZetaTwo
 import F1Square.Analysis.GammaOne
 import F1Square.Analysis.LambdaTwo
+import F1Square.Analysis.ComplexInv
 import F1Square.Analysis.EulerMaclaurin
 
 open UOR.Primitives

@@ -1480,3 +1480,6 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Qmul_Qinv_sub_one
 #print axioms Analysis.Rmul_Rinv_perpoint
 #print axioms Analysis.Rmul_Rinv_self
+
+-- ComplexInv (the complex reciprocal 1/z = z̄/|z|²; prereq for 1/(s−1) and the Γ place).
+#print axioms Analysis.Cmul_Cinv
