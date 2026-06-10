@@ -22,6 +22,7 @@ Pure Lean 4, no Mathlib, no `sorry`/`native_decide`, choice-free.
 
 import F1Square.Analysis.RealPow
 import F1Square.Analysis.ComplexZeta
+import F1Square.Analysis.GammaAccel
 
 namespace UOR.Bridge.F1Square.Analysis
 
@@ -157,6 +158,45 @@ theorem deltaLog_lower (p : Nat) (hp : 1 ≤ p) :
     Rle (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p)) (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp)) :=
   RexpReal_reflects_le (Rnonneg_Rsub_of_Rle (logN_mono hp (Nat.le_succ p)))
     (Rle_trans (Rexp_recip_le p hp) (Rle_of_Req (Req_symm (expDelta_eq p hp))))
+
+-- ===========================================================================
+-- **Tight upper bound for `2·artanh(1/(2p+1)) = log(p+1) − log p`** — the small-argument artanh whose
+-- fast-converging series gives a *tight* rational ceiling for the consecutive-log difference `δ`. The
+-- coarse `deltaLog_upper` (`δ ≤ 1/p`) overestimates each `δ` by `Θ(1/p²)`, which accumulates to a
+-- `Θ(1)` offset across a length-`N` log sum — fatal for the `γ₁` numeric. The artanh bound's overshoot
+-- is `Θ(1/p⁵)` (summably tiny), so the accumulated log bound stays within the `γ₁ ≤ −0.0445` budget.
+-- ===========================================================================
+
+/-- **`2·artanh(1/(2p+1)) ≤ 2·(artSum(1/(2p+1), T) + tail)`** (`p ≥ 1`), `tail = 1/((2p+1)^{2T+1}·4p(p+1))`,
+    uniformly in the artanh depth `T` — the `Rlog2c_le` pattern at the variable small base `1/(2p+1)`. The
+    `γ₁`-numeric input once paired with the identity `δ = log(p+1) − log p = 2·artanh(1/(2p+1))`. -/
+theorem twoArtanhRecip_le (p T : Nat) (hp : 1 ≤ p) :
+    Rle (TwoArtanhConst (⟨1, 2 * p + 1⟩ : Q) ⟨1, 2 * p + 1⟩ (Nat.succ_pos _)
+          (by show (0 : Int) ≤ 1; decide) (Nat.succ_pos _)
+          (by show (1 : Int).toNat < 2 * p + 1; omega) (Qle_refl _))
+        (ofQ (mul (⟨2, 1⟩ : Q) (add (artSum (⟨1, 2 * p + 1⟩ : Q) T)
+              ⟨1, npow (2 * p + 1) (2 * T + 1) * (4 * p * (p + 1))⟩))
+          (Qmul_den_pos (by decide) (add_den_pos (artSum_den_pos (Nat.succ_pos _) T)
+            (Nat.mul_pos (npow_pos (Nat.succ_pos _) _)
+              (Nat.mul_pos (Nat.mul_pos (by decide) hp) (Nat.succ_pos _)))))) := by
+  have htaild : 0 < npow (2 * p + 1) (2 * T + 1) * (4 * p * (p + 1)) :=
+    Nat.mul_pos (npow_pos (Nat.succ_pos _) _)
+      (Nat.mul_pos (Nat.mul_pos (by decide) hp) (Nat.succ_pos _))
+  have hWn : 0 < (Qsub (⟨1, 1⟩ : Q) (mul ⟨1, 2 * p + 1⟩ ⟨1, 2 * p + 1⟩)).num := by
+    show 0 < (add (⟨1, 1⟩ : Q) (neg (mul ⟨1, 2 * p + 1⟩ ⟨1, 2 * p + 1⟩))).num
+    simp only [add, neg, mul]
+    have h9 : ((9 : Nat) : Int) ≤ (((2 * p + 1) * (2 * p + 1) : Nat) : Int) :=
+      by exact_mod_cast Nat.mul_le_mul (show 3 ≤ 2 * p + 1 by omega) (show 3 ≤ 2 * p + 1 by omega)
+    push_cast at h9 ⊢; omega
+  unfold TwoArtanhConst RartanhConst
+  apply Rmul_ofQ_le (by decide) (by decide)
+    (add_den_pos (artSum_den_pos (Nat.succ_pos _) T) htaild)
+  intro m
+  show Qle (artSum ((ofQ (⟨1, 2 * p + 1⟩ : Q) (Nat.succ_pos _)).seq (Rartanh_R ⟨1, 2 * p + 1⟩ m))
+      (Rartanh_R ⟨1, 2 * p + 1⟩ m))
+    (add (artSum (⟨1, 2 * p + 1⟩ : Q) T) ⟨1, npow (2 * p + 1) (2 * T + 1) * (4 * p * (p + 1))⟩)
+  exact artSum_le_value (by show (0 : Int) ≤ 1; decide) (Nat.succ_pos _) htaild hWn T
+    (deltaTail_eq p T) (Rartanh_R ⟨1, 2 * p + 1⟩ m)
 
 -- ===========================================================================
 -- Real-algebra helpers for the per-step bound on `d = (ln m)/m − ½((ln m)² − (ln(m−1))²)`.

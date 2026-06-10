@@ -684,6 +684,40 @@ theorem Rlog2c_le :
     (by show 0 < (Qsub (⟨1, 1⟩ : Q) (mul ⟨1, 3⟩ ⟨1, 3⟩)).num; decide) 8 (log_tail_eq 8)
     (Rartanh_R ⟨1, 3⟩ m)
 
+-- ===========================================================================
+-- A **generic tight upper bound for `2·artanh(1/(2p+1))`** — the small-argument artanh that equals
+-- the consecutive-log difference `log(p+1) − log p` (the `γ₁`-numeric input). Mirrors `Rlog2c_le`
+-- but at the variable base `1/(2p+1)`, with the geometric tail in closed form. Because the argument
+-- `1/(2p+1)` is *small* (unlike the direct `log k = 2·artanh((k−1)/(k+1))`, whose argument → 1), the
+-- artanh series converges fast and a shallow depth `T` already gives a tight rational bound.
+-- ===========================================================================
+
+/-- The cleared `Int` polynomial identity behind `deltaTail_eq` — stated over genuine `Int` variables
+    (so `ring_uor` sees clean atoms, not `Nat.cast`s), namely `(2P+1)² − 1 = 4P(P+1)` scaled by the
+    common `N·(2P+1)²` factor. -/
+private theorem deltaTail_int (P N : Int) :
+    1 * (1 * ((2 * P + 1) * (2 * P + 1)) + -1) * (N * ((2 * P + 1) * (2 * P + 1)))
+      = 1 * (N * (4 * P * (P + 1)) * (1 * ((2 * P + 1) * (2 * P + 1)))) := by ring_uor
+
+/-- The geometric-tail identity for base `1/(2p+1)`: using `(2p+1)² − 1 = 4p(p+1)` (no `Nat` subtraction),
+    `(1 / ((2p+1)^{2T+1}·4p(p+1)))·(1 − 1/(2p+1)²) = (1/(2p+1))^{2T+3}`. -/
+theorem deltaTail_eq (p T : Nat) :
+    Qeq (mul (⟨1, npow (2 * p + 1) (2 * T + 1) * (4 * p * (p + 1))⟩ : Q)
+          (Qsub ⟨1, 1⟩ (mul ⟨1, 2 * p + 1⟩ ⟨1, 2 * p + 1⟩)))
+        (qpow (⟨1, 2 * p + 1⟩ : Q) (2 * T + 3)) := by
+  rw [qpow_one_den]
+  have hnp : npow (2 * p + 1) (2 * T + 3)
+      = npow (2 * p + 1) (2 * T + 1) * ((2 * p + 1) * (2 * p + 1)) := by
+    rw [show 2 * T + 3 = (2 * T + 1) + 2 from by omega, npow_add]
+    congr 1
+    show npow (2 * p + 1) 2 = (2 * p + 1) * (2 * p + 1)
+    simp only [npow_succ, npow, Nat.mul_one]
+  rw [hnp]
+  generalize npow (2 * p + 1) (2 * T + 1) = N
+  simp only [Qeq, mul, Qsub, add, neg]
+  push_cast
+  exact deltaTail_int p N
+
 /-- Each artanh term is monotone in the base. -/
 theorem artTerm_base_mono {a b : Q} (ha0 : 0 ≤ a.num) (had : 0 < a.den) (hbd : 0 < b.den)
     (hab : Qle a b) (n : Nat) : Qle (artTerm a n) (artTerm b n) := by

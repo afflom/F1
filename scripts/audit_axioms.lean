@@ -562,6 +562,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.artSum_le_value
 #print axioms Analysis.log_tail_eq
 #print axioms Analysis.Rlog2c_le
+#print axioms Analysis.deltaTail_eq
 #print axioms Analysis.artTerm_base_mono
 #print axioms Analysis.artSum_base_mono
 #print axioms Analysis.Rpi_seq_lb
@@ -1350,6 +1351,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.lnSum_mono
 #print axioms Analysis.logN_four_ge_one
 #print axioms Analysis.logN_ge_one
+#print axioms Analysis.twoArtanhRecip_le
 #print axioms Analysis.deltaLog_upper
 #print axioms Analysis.expDelta_eq
 #print axioms Analysis.expRecip_le
