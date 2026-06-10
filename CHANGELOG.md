@@ -12,6 +12,10 @@ All notable changes to this project are documented here. The format is based on
   `spf n` (least `d ≥ 2` dividing `n`) and a prime-power test (strip `spf` to `1`). Everything is
   computable, so the defining values hold by reduction: `Λ(1) = 0`, `Λ(2) = Λ(4) = Λ(8) = log 2`,
   `Λ(3) = Λ(9) = log 3`, `Λ(6) = 0`; and `Λ ≥ 0` everywhere (`vonMangoldt_nonneg`).
+- **`spf` is proved to be the least PRIME factor** — `spf_dvd` (it divides `n`), `spf_two_le` (`≥ 2`),
+  and `spf_prime` (its only divisors are `1` and itself), via the fuel-sufficient search specification
+  `spfFrom_spec`. So `Λ` is genuinely the von Mangoldt function (not a table matching at sampled
+  points): `vonMangoldt_prime` gives `Λ(p) = log p` for **every** prime `p`.
 - **The explicit-formula prime side** — `primeSide h N = Σ_{n=2}^N Λ(n)·h(log n)`, the prime side
   `Σ_p Σ_k log p · h(k·log p)` reindexed through `k·log p = log(pᵏ) = log n`. A finite sum, hence a
   genuine constructive real with **no convergence hypothesis**; `primeSide_stable` proves it is constant

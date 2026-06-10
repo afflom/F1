@@ -1323,6 +1323,10 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.spfFrom_ge_one
 #print axioms Analysis.one_le_spf
 #print axioms Analysis.two_le_of_isPrimePow
+#print axioms Analysis.spf_dvd
+#print axioms Analysis.spf_two_le
+#print axioms Analysis.spf_prime
+#print axioms Analysis.vonMangoldt_prime
 #print axioms Analysis.vonMangoldt_one
 #print axioms Analysis.vonMangoldt_two
 #print axioms Analysis.vonMangoldt_three
