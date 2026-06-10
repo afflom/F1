@@ -600,4 +600,24 @@ example :
     ⟨Analysis.czetaRe_cauchy_full s hσ hτn hτd hθ j N N' hN hN',
      Analysis.czetaIm_cauchy_full s hσ hτn hτd hθ j N N' hN hN'⟩, rfl⟩
 
+/-- Elaboration-checked witness that ζ(s) is **canonical** — independent of the convergence witness `τ`.
+    For any complex `s` with `Re s > 1` and any *two* rational witnesses `τ₁, τ₂`, `Czeta` yields `≈`-equal
+    real and imaginary parts (`Czeta_re/im_canonical`): both are the limit of the same full partial-sum
+    sequence, so the limit is unique. Hence `ζ(s)` is a well-defined function of `s` alone on `Re s > 1`
+    (not an artifact of the dyadic anchoring), with the crux still open. -/
+example :
+    (∀ (s : Analysis.Complex) (hσ : Analysis.Rnonneg s.re) (τ₁ τ₂ : Analysis.Q)
+        (hτn₁ : 0 < τ₁.num) (hτd₁ : 0 < τ₁.den)
+        (hθ₁ : Analysis.Rle (Analysis.ofQ τ₁ hτd₁)
+          (Analysis.Rmul (Analysis.Rsub s.re Analysis.one) (Analysis.logN 2 (by omega))))
+        (hτn₂ : 0 < τ₂.num) (hτd₂ : 0 < τ₂.den)
+        (hθ₂ : Analysis.Rle (Analysis.ofQ τ₂ hτd₂)
+          (Analysis.Rmul (Analysis.Rsub s.re Analysis.one) (Analysis.logN 2 (by omega)))),
+        Analysis.Req (Analysis.Czeta s hσ hτn₁ hτd₁ hθ₁).re (Analysis.Czeta s hσ hτn₂ hτd₂ hθ₂).re
+          ∧ Analysis.Req (Analysis.Czeta s hσ hτn₁ hτd₁ hθ₁).im (Analysis.Czeta s hσ hτn₂ hτd₂ hθ₂).im)
+    ∧ f1SquareStatus.liPositivityHolds = none :=
+  ⟨fun s hσ τ₁ τ₂ hτn₁ hτd₁ hθ₁ hτn₂ hτd₂ hθ₂ =>
+    ⟨Analysis.Czeta_re_canonical s hσ hτn₁ hτd₁ hθ₁ hτn₂ hτd₂ hθ₂,
+     Analysis.Czeta_im_canonical s hσ hτn₁ hτd₁ hθ₁ hτn₂ hτd₂ hθ₂⟩, rfl⟩
+
 end UOR.Bridge.F1Square

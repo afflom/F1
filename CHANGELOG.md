@@ -30,7 +30,19 @@ All notable changes to this project are documented here. The format is based on
     (pairwise real differences `≤ 1/(j+1)+1/(k+1)` ⟹ a regular sequence of reals), feeding Bishop's `Rlim`.
   - **the Cauchy partial sums** — `czetaRe_RReg` / `czetaIm_RReg`: the reindexed real/imaginary partial sums
     are regular sequences of reals (the four two-sided tail bounds `czetaRe/Im_tail_le/ge`, case-split on `j ≤ k`).
-- **`F1Square.lean` witness** binding `Czeta_re_tendsTo` / `Czeta_im_tendsTo` for all complex `s` with `Re s > 1`.
+- **Non-vacuity** — `czeta_two_theta` + a fully-closed `F1Square.lean` instance: `ζ(2) = Σ 1/n²` is built as
+  `Czeta` and its partial sums converge (the `Re s > 1` hypothesis is satisfiable, `τ = 1/2 ≤ log 2`).
+- **Full-sequence convergence** (not just the dyadic subsequence) — `czetaExp_mono` (E monotone),
+  `czetaExp_tail_full` / `czetaRe`,`czetaIm_tail_full(_neg)` (the tail bound for *arbitrary* `N ≥ 2^{M(j)}`),
+  `czetaRe`/`czetaIm_cauchy_full` (the **whole** partial-sum sequence is uniformly Cauchy: `|S(N) − S(N')| ≤
+  2/(j+1)` for all `N, N' ≥ 2^{M(j)}`), and `czetaRe`/`czetaIm_full_tendsTo` (`|S(N) − ζ(s)| ≤ 3/(k+1)`). So
+  `Σ_{n=1}^N n⁻ˢ` converges as a genuine series for every `N`, not merely along `2^{M(k)}`.
+- **Canonicity** — `Czeta_re_canonical` / `Czeta_im_canonical`: `ζ(s)` is independent of the convergence
+  witness `τ` (any two witnesses give `≈`-equal values — both are the limit of the same full sequence, via
+  `RTendsTo_to_Rle` and the real-level Archimedean `Req_of_Rle_ofQ_all`). So `ζ(s)` is a well-defined function
+  of `s` alone on `Re s > 1`.
+- **`F1Square.lean` witnesses** binding `Czeta_re/im_tendsTo`, the concrete `ζ(2)`, the full-sequence Cauchy
+  property, and canonicity — all for complex `s` with `Re s > 1`.
 - Choice-free throughout (`{propext, Quot.sound}` only), `sorry`-free, `#print axioms`-audited at every commit.
 
 ### Unchanged — the honesty audit
