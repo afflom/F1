@@ -1375,6 +1375,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Usum_tail_le
 #print axioms Analysis.gSeq_diff_le
 #print axioms Analysis.logN_2_le_one
+#print axioms Analysis.logN_le_block
+#print axioms Analysis.gSeq_step_ge_block
 
 -- ZetaTwo (the ζ(2) ≥ 1.63 lower bracket; v0.16.0, for Pos λ₂).
 #print axioms Analysis.zeta_ge_partial

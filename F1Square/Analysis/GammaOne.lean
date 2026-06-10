@@ -432,4 +432,30 @@ theorem gSeq_diff_le (N : Nat) (hN : 1 ≤ N) (d : Nat) :
           (Qsub_den_pos (Nat.mul_pos (by decide) hN) (Nat.mul_pos (by decide) (by omega)))) :=
   Rle_trans (gSeq_diff_le_U N d) (Rle_ofQ_ofQ _ _ (Usum_tail_le N hN d))
 
+/-- **Block log cap** `log(j+2) ≤ a+2` whenever `j+2 ≤ 2^{a+2}` (so `log(j+2) ≤ log(2^{a+2}) =
+    (a+2)·log 2 ≤ a+2`). The per-block bound on the `logN` factor of the lower gap. -/
+theorem logN_le_block (a j : Nat) (hj : j + 2 ≤ 2 ^ (a + 2)) :
+    Rle (logN (j + 2) (by omega)) (ofQ (⟨(a + 2 : Int), 1⟩ : Q) Nat.one_pos) := by
+  refine Rle_trans (logN_mono (by omega) hj) ?_
+  refine Rle_trans (Rle_of_Req (logN_pow_two (a + 2))) ?_
+  refine Rle_trans (Rle_of_Req (Rnsmul_eq_Rmul_ofQ (logN 2 (by omega)) (a + 2))) ?_
+  refine Rle_trans (Rmul_le_Rmul_left
+    (Rnonneg_ofQ Nat.one_pos (Int.ofNat_nonneg (a + 2))) logN_2_le_one) ?_
+  exact Rle_of_Req (Req_trans (Rmul_ofQ_ofQ Nat.one_pos (by decide))
+    (ofQ_congr _ _ (by simp only [mul, Qeq]; push_cast; ring_uor)))
+
+/-- **Per-step block lower bound** `gSeq(j+1) − gSeq j ≥ −(a+2)/((j+1)(j+2))` for `j+2 ≤ 2^{a+2}`
+    (the `logN` factor capped by `a+2` via `logN_le_block`). -/
+theorem gSeq_step_ge_block (a j : Nat) (hj : j + 2 ≤ 2 ^ (a + 2)) :
+    Rle (Rneg (ofQ (⟨(a + 2 : Int), (j + 1) * (j + 2)⟩ : Q)
+        (Nat.mul_pos (Nat.succ_pos j) (by omega))))
+      (Rsub (gSeq (j + 1)) (gSeq j)) := by
+  refine Rle_trans (Rle_Rneg ?_) (gSeq_step_ge j)
+  -- Rmul (logN(j+2)) (ofQ 1/((j+1)(j+2))) ≤ ofQ (a+2)/((j+1)(j+2))
+  refine Rle_trans (Rmul_le_Rmul_right
+    (Rnonneg_ofQ (Nat.mul_pos (Nat.succ_pos j) (by omega)) (by show (0 : Int) ≤ 1; decide))
+    (logN_le_block a j hj)) ?_
+  exact Rle_of_Req (Req_trans (Rmul_ofQ_ofQ Nat.one_pos (Nat.mul_pos (Nat.succ_pos j) (by omega)))
+    (ofQ_congr _ _ (by simp only [mul, Qeq]; push_cast; ring_uor)))
+
 end UOR.Bridge.F1Square.Analysis
