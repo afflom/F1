@@ -1215,4 +1215,31 @@ theorem Rgamma1_le_gSeq {N : Nat} (hN : 1 ≤ N) (hN256 : N ≤ 256) :
     (Rsub_le_of_le_add (Rle_trans hanchor (Rle_of_Req (Req_symm hzB))))) ?_
   exact Rle_of_Req (Radd_zero _)
 
+-- ===========================================================================
+-- **`γ₁ ≤ −0.0445`** — the numeric gate to `Pos λ₂`. With `γ₁ ≤ g(200) + 1/400` (`Rgamma1_le_gSeq`)
+-- and `g(200) ≤ ofQ(gBound 2 10⁶ 200)` (`gSeq_le_gBound`), the bound reduces to one big-integer
+-- comparison `gBound 2 10⁶ 200 + 1/400 ≤ −445/10000`, discharged by a kernel `decide` (≈ −0.0512,
+-- margin ≈ 0.007; depth `T = 2`, denominator `D = 10⁶`). Axiom-free.
+-- ===========================================================================
+
+set_option maxRecDepth 20000 in
+/-- The numeric heart: `gBound 2 10⁶ 200 + 1/400 ≤ −445/10000` — a single big-integer comparison
+    (kernel `decide`, no `native_decide`). -/
+theorem gBound200_le_neg :
+    Qle (add (gBound 2 1000000 200) (⟨1, 2 * 200⟩ : Q)) (⟨-445, 10000⟩ : Q) := by decide
+
+/-- **`γ₁ ≤ −0.0445`** (`= −445/10000`) — the first Stieltjes constant's numeric upper bound, the gate to
+    `Pos λ₂` (`λ₂ = 1 + γ − γ² − 2γ₁ − log 4π + ¾ζ(2)`, where `−2γ₁ ≥ 0.089`). Chains the constructive
+    `Rgamma1 = Rlim gSeqDyadic` to `g(200) + 1/400` (`Rgamma1_le_gSeq`), then to `ofQ(gBound 2 10⁶ 200)`
+    (`gSeq_le_gBound`, the tight artanh-telescope log bounds at fixed denominator), then the numeric
+    `gBound200_le_neg`. -/
+theorem Rgamma1_le_neg445 : Rle Rgamma1 (ofQ (⟨-445, 10000⟩ : Q) (by decide)) := by
+  refine Rle_trans (Rgamma1_le_gSeq (show 1 ≤ 200 by decide) (show 200 ≤ 256 by decide)) ?_
+  refine Rle_trans (Radd_le_add (gSeq_le_gBound 2 1000000 200 (by decide) (by decide))
+    (Rle_refl _)) ?_
+  have hgbd : 0 < (gBound 2 1000000 200).den := gBound_den_pos 2 1000000 200 (by decide)
+  have h200 : 0 < (⟨1, 2 * 200⟩ : Q).den := Nat.mul_pos (by decide) (by decide)
+  refine Rle_trans (Rle_of_Req (Radd_ofQ_ofQ hgbd h200)) ?_
+  exact Rle_ofQ_ofQ (add_den_pos hgbd h200) (by decide) gBound200_le_neg
+
 end UOR.Bridge.F1Square.Analysis
