@@ -303,4 +303,26 @@ theorem gSeq_step_eq (j : Nat) :
   --   = Rsub (lnOver(j+2)) (Rsub X Y)  (defeq)
   exact Radd_congr hAC (Rsub_Rneg_Rneg _ _)
 
+/-- **`(a − b) + (b − c) ≈ a − c`** — the telescoping split for the gap induction. -/
+theorem Rsub_split (a b c : Real) : Req (Radd (Rsub a b) (Rsub b c)) (Rsub a c) := by
+  refine Req_trans (Req_symm (Radd_assoc (Rsub a b) b (Rneg c))) ?_
+  refine Radd_congr ?_ (Req_refl _)
+  refine Req_trans (Radd_assoc a (Rneg b) b) ?_
+  exact Req_trans (Radd_congr (Req_refl a) (Req_trans (Radd_comm (Rneg b) b) (Radd_neg b)))
+    (Radd_zero a)
+
+/-- **Per-step gSeq upper bound** `gSeq(j+1) − gSeq j ≤ 1/(2(j+1)²)`. -/
+theorem gSeq_step_le (j : Nat) :
+    Rle (Rsub (gSeq (j + 1)) (gSeq j))
+      (ofQ (⟨1, 2 * (j + 1) * (j + 1)⟩ : Q)
+        (Nat.mul_pos (Nat.mul_pos (by decide) (Nat.succ_pos j)) (Nat.succ_pos j))) :=
+  Rle_trans (Rle_of_Req (gSeq_step_eq j)) (dStep_le (j + 1) (Nat.succ_pos j))
+
+/-- **Per-step gSeq lower bound** `gSeq(j+1) − gSeq j ≥ −log(j+2)/((j+1)(j+2))`. -/
+theorem gSeq_step_ge (j : Nat) :
+    Rle (Rneg (Rmul (logN (j + 2) (Nat.succ_pos (j + 1)))
+        (ofQ (⟨1, (j + 1) * (j + 2)⟩ : Q) (Nat.mul_pos (Nat.succ_pos j) (Nat.succ_pos (j + 1))))))
+      (Rsub (gSeq (j + 1)) (gSeq j)) :=
+  Rle_trans (dStep_ge (j + 1) (Nat.succ_pos j)) (Rle_of_Req (Req_symm (gSeq_step_eq j)))
+
 end UOR.Bridge.F1Square.Analysis

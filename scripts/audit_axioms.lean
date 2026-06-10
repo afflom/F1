@@ -1364,6 +1364,9 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.dStep_ge
 #print axioms Analysis.Rsub_Rneg_Rneg
 #print axioms Analysis.gSeq_step_eq
+#print axioms Analysis.Rsub_split
+#print axioms Analysis.gSeq_step_le
+#print axioms Analysis.gSeq_step_ge
 
 -- ZetaTwo (the ζ(2) ≥ 1.63 lower bracket; v0.16.0, for Pos λ₂).
 #print axioms Analysis.zeta_ge_partial
