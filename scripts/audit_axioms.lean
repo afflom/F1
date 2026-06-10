@@ -1333,3 +1333,10 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.vonMangoldt_nonneg
 #print axioms Analysis.primeSide_stable
 #print axioms Analysis.primeTerm_zero_of_h
+
+-- LiOne (the Bombieri–Lagarias n=1 decomposition λ₁ = λ₁^arith + λ₁^∞; v0.15.3).
+#print axioms Analysis.Rhalf_Radd
+#print axioms Analysis.Rhalf_Rneg
+#print axioms Analysis.Rhalf_two
+#print axioms Analysis.Rlambda1_decomposition
+#print axioms Analysis.li_decomposition_realized
