@@ -315,6 +315,23 @@ theorem Rhalf_congr {x y : Real} (h : Req x y) : Req (Rhalf x) (Rhalf y) := fun 
   Qle_trans (Qabs_den_pos (Qsub_den_pos (x.den_pos n) (y.den_pos n)))
     (Qabs_half_le (x.den_pos n) (y.den_pos n)) (h n)
 
+/-- `Rhalf` is monotone: `x ≤ y ⟹ ½x ≤ ½y`. -/
+theorem Rhalf_le_Rhalf {x y : Real} (h : Rle x y) : Rle (Rhalf x) (Rhalf y) := by
+  intro n
+  show Qle (mul (⟨1, 2⟩ : Q) (x.seq n)) (add (mul (⟨1, 2⟩ : Q) (y.seq n)) ⟨2, n + 1⟩)
+  have h1 : Qle (mul (⟨1, 2⟩ : Q) (x.seq n)) (mul (⟨1, 2⟩ : Q) (add (y.seq n) ⟨2, n + 1⟩)) :=
+    Qmul_le_mul_left (by decide) (h n)
+  have heq : Qeq (mul (⟨1, 2⟩ : Q) (add (y.seq n) ⟨2, n + 1⟩))
+      (add (mul (⟨1, 2⟩ : Q) (y.seq n)) ⟨1, n + 1⟩) := by
+    simp only [Qeq, mul, add]; push_cast; ring_uor
+  have h12 : Qle (⟨1, n + 1⟩ : Q) ⟨2, n + 1⟩ := by simp only [Qle]; push_cast; omega
+  have hb : Qle (add (mul (⟨1, 2⟩ : Q) (y.seq n)) (⟨1, n + 1⟩ : Q))
+      (add (mul (⟨1, 2⟩ : Q) (y.seq n)) ⟨2, n + 1⟩) :=
+    Qadd_le_add (Qle_refl _) h12
+  exact Qle_trans (Qmul_den_pos (by decide) (add_den_pos (y.den_pos n) (Nat.succ_pos n))) h1
+    (Qle_trans (add_den_pos (Qmul_den_pos (by decide) (y.den_pos n)) (Nat.succ_pos n))
+      (Qeq_le heq) hb)
+
 /-- **`exp` is non-negative**: `exp t ≥ 0` for every real `t`, because `exp t ≈ (exp(t/2))²` and a
     square is non-negative (`Rnonneg_Rmul_self`). Holds for all `t` (no sign hypothesis). -/
 theorem RexpReal_nonneg (t : Real) : Rnonneg (RexpReal t) := by

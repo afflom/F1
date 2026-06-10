@@ -220,4 +220,22 @@ theorem dStep_le_half_sq (p : Nat) (hp : 1 ≤ p) :
   refine Req_trans (Req_symm (half_combine (logN (p + 1) (Nat.succ_pos p)) (logN p hp))) ?_
   exact Radd_comm _ _
 
+/-- **`d_{p+1} ≤ 1/(2p²)`** — the numeric upper bound (`½δ² ≤ ½(1/p)²`, `δ ≤ 1/p`). -/
+theorem dStep_le (p : Nat) (hp : 1 ≤ p) :
+    Rle (dStep p hp) (ofQ (⟨1, 2 * p * p⟩ : Q) (Nat.mul_pos (Nat.mul_pos (by decide) hp) hp)) := by
+  have hδnn : Rnonneg (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp)) :=
+    Rnonneg_Rsub_of_Rle (logN_mono hp (Nat.le_succ p))
+  have hδle : Rle (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp)) (ofQ (⟨1, p⟩ : Q) hp) :=
+    deltaLog_upper p hp
+  have hpp : 0 < p := hp
+  have hofqnn : Rnonneg (ofQ (⟨1, p⟩ : Q) hp) := Rnonneg_ofQ hpp (by show (0 : Int) ≤ 1; decide)
+  have hsq : Rle (Rmul (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
+                       (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp)))
+                 (Rmul (ofQ (⟨1, p⟩ : Q) hp) (ofQ (⟨1, p⟩ : Q) hp)) :=
+    Rle_trans (Rmul_le_Rmul_left hδnn hδle) (Rmul_le_Rmul_right hofqnn hδle)
+  refine Rle_trans (dStep_le_half_sq p hp) ?_
+  refine Rle_trans (Rhalf_le_Rhalf hsq) (Rle_of_Req ?_)
+  refine Req_trans (Rhalf_congr (Rmul_ofQ_ofQ hpp hpp)) ?_
+  apply Req_of_seq_Qeq; intro n; simp only [Rhalf, ofQ, mul, Qeq]; push_cast; ring_uor
+
 end UOR.Bridge.F1Square.Analysis
