@@ -1467,3 +1467,11 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rneg_Rneg
 #print axioms Analysis.parab_gen
 #print axioms Analysis.Rlambda2_pos
+
+-- EulerMaclaurin (the deterministic EM correction-term data; v0.16.0 goal B foundation).
+#print axioms Analysis.Cpoch_zero
+#print axioms Analysis.Cpoch_succ
+#print axioms Analysis.emCoeff_den_pos
+#print axioms Analysis.emCoeff_one
+#print axioms Analysis.emCoeff_two
+#print axioms Analysis.emCoeff_three
