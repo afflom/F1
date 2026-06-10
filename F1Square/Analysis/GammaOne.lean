@@ -708,4 +708,64 @@ theorem gamma_pair_le {j k : Nat} (hjk : j ≤ k) :
     (Qsub_unit_le (2 * 2 ^ gammaMidx j) (2 * (2 ^ gammaMidx j + d)))
     (Qunit_le (succ_le_two_pow_midx j))
 
+/-- `c₁/a − c₂/b ≤ c₁/a` when `c₂ ≥ 0` (subtracting a nonnegative; difference `c₂·a² ≥ 0`). -/
+theorem Qsub_le_left (c₁ c₂ : Int) (hc₂ : 0 ≤ c₂) (a b : Nat) :
+    Qle (Qsub (⟨c₁, a⟩ : Q) ⟨c₂, b⟩) ⟨c₁, a⟩ := by
+  simp only [Qle, Qsub, add, neg]; push_cast
+  have ha : (0 : Int) ≤ (a : Int) := Int.ofNat_nonneg a
+  have key : c₁ * ((a : Int) * (b : Int)) - (c₁ * (b : Int) + -c₂ * (a : Int)) * (a : Int)
+      = c₂ * ((a : Int) * (a : Int)) := by ring_uor
+  have h1 : (0 : Int) ≤ c₂ * ((a : Int) * (a : Int)) := Int.mul_nonneg hc₂ (Int.mul_nonneg ha ha)
+  omega
+
+/-- `(2·M(j)+6)/2^{M(j)} ≤ 1/(j+1)` — the lower-tail anchor bound, directly from `gamma_domination`. -/
+theorem gamma_T_le (j : Nat) :
+    Qle (⟨(2 * gammaMidx j + 6 : Int), 2 ^ gammaMidx j⟩ : Q) ⟨1, j + 1⟩ := by
+  simp only [Qle, gammaMidx]; push_cast
+  have hcast : (((j + 1) * (4 * j + 22) : Nat) : Int) ≤ ((2 ^ (2 * j + 8) : Nat) : Int) := by
+    exact_mod_cast gamma_domination j
+  push_cast at hcast
+  have key : (2 * (2 * (j : Int) + 8) + 6) * ((j : Int) + 1) = ((j : Int) + 1) * (4 * (j : Int) + 22) := by
+    ring_uor
+  omega
+
+/-- **Pairwise Cauchy (lower)**: for `j ≤ k`, `gSeqDyadic k − gSeqDyadic j ≥ −1/(j+1)`. -/
+theorem gamma_pair_ge {j k : Nat} (hjk : j ≤ k) :
+    Rle (Rneg (ofQ (⟨1, j + 1⟩ : Q) (Nat.succ_pos j))) (Rsub (gSeqDyadic k) (gSeqDyadic j)) := by
+  simp only [gSeqDyadic]
+  obtain ⟨e, he⟩ := Nat.le.dest (gammaMidx_mono hjk)
+  rw [← he]
+  refine Rle_trans (Rle_Rneg ?_) (gSeq_diff_ge_outer (gammaMidx j) e)
+  have hmid1 : 0 < (Qsub (⟨(2 * gammaMidx j + 6 : Int), 2 ^ gammaMidx j⟩ : Q)
+      ⟨(2 * (gammaMidx j + e) + 6 : Int), 2 ^ (gammaMidx j + e)⟩).den :=
+    Qsub_den_pos (Nat.pos_pow_of_pos _ (by decide)) (Nat.pos_pow_of_pos _ (by decide))
+  have hmid2 : 0 < (⟨(2 * gammaMidx j + 6 : Int), 2 ^ gammaMidx j⟩ : Q).den :=
+    Nat.pos_pow_of_pos _ (by decide)
+  exact Rle_trans (Rle_ofQ_ofQ (Wsum_den_pos (gammaMidx j) e) hmid1 (Wsum_tail_le (gammaMidx j) e))
+    (Rle_trans (Rle_ofQ_ofQ hmid1 hmid2
+      (Qsub_le_left _ (2 * (gammaMidx j + e) + 6) (by omega) _ _))
+      (Rle_ofQ_ofQ hmid2 (Nat.succ_pos j) (gamma_T_le j)))
+
+/-- **The reindexed sequence is regular** (`RReg`): pairwise `|gSeqDyadic j − gSeqDyadic k| ≤
+    1/(j+1) + 1/(k+1)`, from the two pairwise Cauchy bounds. The input to Bishop's `Rlim`. -/
+theorem gSeqDyadic_RReg : RReg gSeqDyadic := by
+  refine RReg_of_real_bound _ (fun j k => add ⟨1, j + 1⟩ ⟨1, k + 1⟩)
+    (fun j k => add_den_pos (Nat.succ_pos _) (Nat.succ_pos _)) (fun j k => Qle_refl _) ?_
+  intro j k
+  rcases Nat.le_total j k with hjk | hkj
+  · exact Rle_trans (Rle_of_Req (Req_symm (Rneg_Rsub (gSeqDyadic k) (gSeqDyadic j))))
+      (Rle_trans (Rle_trans (Rle_Rneg (gamma_pair_ge hjk)) (Rle_of_Req (Rneg_neg _)))
+        (Rle_ofQ_ofQ (Nat.succ_pos _) (add_den_pos (Nat.succ_pos _) (Nat.succ_pos _))
+          (Qle_self_add (by show (0 : Int) ≤ 1; decide))))
+  · exact Rle_trans (gamma_pair_le hkj)
+      (Rle_ofQ_ofQ (Nat.succ_pos _) (add_den_pos (Nat.succ_pos _) (Nat.succ_pos _))
+        (Qle_trans (b := add ⟨1, k + 1⟩ ⟨1, j + 1⟩)
+          (add_den_pos (Nat.succ_pos _) (Nat.succ_pos _))
+          (Qle_self_add (p := ⟨1, j + 1⟩) (by show (0 : Int) ≤ 1; decide))
+          (Qeq_le (by simp only [Qeq, add]; push_cast; ring_uor))))
+
+/-- **The first Stieltjes constant `γ₁`**, as a genuine constructive real: the Bishop limit of the
+    reindexed defining sequence `gSeq(2^{2j+8})`. `γ₁ ≈ −0.07282`. -/
+def Rgamma1 : Real := Rlim gSeqDyadic gSeqDyadic_RReg
+
 end UOR.Bridge.F1Square.Analysis
