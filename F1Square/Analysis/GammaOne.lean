@@ -277,6 +277,23 @@ theorem Rnonneg_RartanhConst (τ ρ : Q) (hτd : 0 < τ.den) (hρ0 : 0 ≤ ρ.nu
     Int.mul_nonneg hnum (by omega)
   simp only [Qle, neg, Qbound]; push_cast; omega
 
+/-- **`ofQ(artSum τ T) ≤ artanh τ`** (partial sum ≤ limit, `τ ≥ 0`) — valid for any depth `T` within the
+    base reindex `Rartanh_R ρ 0 = ρ.den²+4ρ.den` (so `T ≤ that` ⟹ every diagonal depth `≥ T`, and
+    `artSum` is monotone in depth). The tight log *lower* bound's artanh input. -/
+theorem ofQ_artSum_le_RartanhConst (τ ρ : Q) (hτd : 0 < τ.den) (hρ0 : 0 ≤ ρ.num)
+    (hρd : 0 < ρ.den) (hρlt : ρ.num.toNat < ρ.den) (hb : Qle (Qabs τ) ρ) (hτ0 : 0 ≤ τ.num)
+    (T : Nat) (hT : T ≤ ρ.den * ρ.den + 4 * ρ.den) :
+    Rle (ofQ (artSum τ T) (artSum_den_pos hτd T)) (RartanhConst τ ρ hτd hρ0 hρd hρlt hb) := by
+  intro n
+  show Qle (artSum τ T) (add (artSum τ (Rartanh_R ρ n)) ⟨2, n + 1⟩)
+  have hge : T ≤ Rartanh_R ρ n := by
+    unfold Rartanh_R
+    have h1 : ρ.den * ρ.den + 4 * ρ.den ≤ (ρ.den * ρ.den + 4 * ρ.den) * (n + 1) :=
+      Nat.le_mul_of_pos_right _ (Nat.succ_pos n)
+    omega
+  exact Qle_trans (artSum_den_pos hτd (Rartanh_R ρ n)) (artSum_mono hτ0 hτd hge)
+    (Qle_self_add (p := (⟨2, n + 1⟩ : Q)) (by show (0 : Int) ≤ 2; decide))
+
 /-- **`log(p+1) − log p = 2·artanh(1/(2p+1))`** (`p ≥ 1`) — pinned by `exp` injectivity on non-negatives:
     both sides are `≥ 0` and exponentiate to `(p+1)/p` (`expDelta_eq` and `Rexp_twoArtanhRecip`). -/
 theorem deltaLog_eq_twoArtanh (p : Nat) (hp : 1 ≤ p) :
@@ -308,6 +325,28 @@ theorem deltaLog_upper_tight (p T : Nat) (hp : 1 ≤ p) :
         (ofQ (dPlusQ T p) (dPlusQ_den_pos T p hp)) :=
   Rle_trans (Rle_of_Req (deltaLog_eq_twoArtanh p hp)) (twoArtanhRecip_le p T hp)
 
+/-- The depth-`T` rational `δ`-floor at step `p` (`= 2·artSum(1/(2p+1),T)`, no tail — the artanh partial
+    sum *under*-estimates), the RHS value of `deltaLog_lower_tight p T`. -/
+def dMinusQ (T p : Nat) : Q := mul (⟨2, 1⟩ : Q) (artSum (⟨1, 2 * p + 1⟩ : Q) T)
+
+theorem dMinusQ_den_pos (T p : Nat) : 0 < (dMinusQ T p).den :=
+  Qmul_den_pos (by decide) (artSum_den_pos (Nat.succ_pos _) T)
+
+/-- **Tight lower bound on the consecutive-log difference**: `log(p+1) − log p ≥ dMinusQ T p`
+    (`= 2·artSum(1/(2p+1),T)`, `p ≥ 1`, depth `T ≤ (2p+1)²+4(2p+1)`) — `deltaLog_eq_twoArtanh` with the
+    partial-sum lower bound `ofQ_artSum_le_RartanhConst`. The `½log²` lower-bound input. -/
+theorem deltaLog_lower_tight (p T : Nat) (hp : 1 ≤ p)
+    (hT : T ≤ (2 * p + 1) * (2 * p + 1) + 4 * (2 * p + 1)) :
+    Rle (ofQ (dMinusQ T p) (dMinusQ_den_pos T p))
+        (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp)) := by
+  refine Rle_trans (Rle_of_Req (Req_symm (Rmul_ofQ_ofQ (by decide)
+    (artSum_den_pos (Nat.succ_pos _) T)))) ?_
+  refine Rle_trans (Rmul_le_Rmul_left (Rnonneg_ofQ (by decide) (by show (0 : Int) ≤ 2; decide))
+    (ofQ_artSum_le_RartanhConst (⟨1, 2 * p + 1⟩ : Q) ⟨1, 2 * p + 1⟩ (Nat.succ_pos _)
+      (by show (0 : Int) ≤ 1; decide) (Nat.succ_pos _)
+      (by show (1 : Int).toNat < 2 * p + 1; omega) (Qle_refl _) (by show (0 : Int) ≤ 1; decide) T hT)) ?_
+  exact Rle_of_Req (Req_symm (deltaLog_eq_twoArtanh p hp))
+
 -- ===========================================================================
 -- **Fixed-denominator round-up** — the key to a *feasible* final `decide`. Accumulating the per-step
 -- `δ` bounds with honest `Qadd` multiplies denominators (`∏(2p+1)^{2T+1}`, astronomical). Rounding each
@@ -333,6 +372,20 @@ theorem qRoundUp_ge (q : Q) (hqd : 0 < q.den) (D : Nat) : Qle q (qRoundUp q D) :
   rw [key]; omega
 
 theorem qRoundUp_den_pos (q : Q) (D : Nat) (hD : 0 < D) : 0 < (qRoundUp q D).den := hD
+
+/-- Round `q` *down* to denominator `D`: `⌊q·D⌋/D` via `(q.num·D) ediv q.den` (a safe floor). -/
+def qRoundDown (q : Q) (D : Nat) : Q := ⟨q.num * (D : Int) / (q.den : Int), D⟩
+
+/-- **`qRoundDown q D ≤ q`** — the round-down is dominated (`q.den > 0`): `⌊a/b⌋·b = a − a%b ≤ a`
+    (`Int.ediv_add_emod` + `0 ≤ a%b`). -/
+theorem qRoundDown_le (q : Q) (hqd : 0 < q.den) (D : Nat) : Qle (qRoundDown q D) q := by
+  show (q.num * (D : Int) / (q.den : Int)) * (q.den : Int) ≤ q.num * (D : Int)
+  have hb : (0 : Int) < (q.den : Int) := by exact_mod_cast hqd
+  have hdm := Int.ediv_add_emod (q.num * (D : Int)) (q.den : Int)
+  have hmnn := Int.emod_nonneg (q.num * (D : Int)) (by omega : (q.den : Int) ≠ 0)
+  rw [Int.mul_comm (q.num * (D : Int) / (q.den : Int)) (q.den : Int)]; omega
+
+theorem qRoundDown_den_pos (q : Q) (D : Nat) (hD : 0 < D) : 0 < (qRoundDown q D).den := hD
 
 -- ===========================================================================
 -- **Per-term tight log upper bound, accumulated at fixed denominator `D`.** `logBound T D k` is a
@@ -370,6 +423,39 @@ theorem logN_le_logBound (T D : Nat) (hD : 0 < D) :
     refine Rle_trans (Rle_of_Req (Radd_ofQ_ofQ hb1 hb2)) ?_
     exact Rle_ofQ_ofQ hadd (logBound_den_pos T D hD (k + 1))
       (qRoundUp_ge (add (logBound T D k) (dPlusQ T (k + 1))) hadd D)
+
+/-- `logLowBound T D k` is a rational *lower* bound for `log(k+1)`, at fixed denominator `D` (round down). -/
+def logLowBound (T D : Nat) : Nat → Q
+  | 0 => ⟨0, D⟩
+  | (k + 1) => qRoundDown (add (logLowBound T D k) (dMinusQ T (k + 1))) D
+
+theorem logLowBound_den_pos (T D : Nat) (hD : 0 < D) : ∀ k, 0 < (logLowBound T D k).den
+  | 0 => hD
+  | (_ + 1) => hD
+
+/-- **`ofQ(logLowBound T D k) ≤ log(k+1)`** — the accumulated per-term log *lower* bound (`depth T ≤ 21`),
+    via `deltaLog_lower_tight` at each step (`Radd_le_add` + round-down). The `½log²` lower-bound input. -/
+theorem logN_ge_logLowBound (T D : Nat) (hD : 0 < D) (hT : T ≤ 21) :
+    ∀ k, Rle (ofQ (logLowBound T D k) (logLowBound_den_pos T D hD k)) (logN (k + 1) (Nat.succ_pos k)) := by
+  intro k
+  induction k with
+  | zero =>
+    have h0 : Req (ofQ (logLowBound T D 0) (logLowBound_den_pos T D hD 0)) zero :=
+      Req_of_seq_Qeq (fun n => by show Qeq (⟨0, D⟩ : Q) ⟨0, 1⟩; simp only [Qeq]; push_cast; ring_uor)
+    exact Rle_of_Req (Req_trans h0 (Req_symm logN_one))
+  | succ k ih =>
+    have hlk := logLowBound_den_pos T D hD k
+    have hmk := dMinusQ_den_pos T (k + 1)
+    have hadd := add_den_pos hlk hmk
+    have hT' : T ≤ (2 * (k + 1) + 1) * (2 * (k + 1) + 1) + 4 * (2 * (k + 1) + 1) := by
+      have h3 : 3 ≤ 2 * (k + 1) + 1 := by omega
+      have hsq : 9 ≤ (2 * (k + 1) + 1) * (2 * (k + 1) + 1) := Nat.mul_le_mul h3 h3
+      omega
+    refine Rle_trans (Rle_ofQ_ofQ (logLowBound_den_pos T D hD (k + 1)) hadd
+      (qRoundDown_le (add (logLowBound T D k) (dMinusQ T (k + 1))) hadd D)) ?_
+    refine Rle_trans (Rle_of_Req (Req_symm (Radd_ofQ_ofQ hlk hmk))) ?_
+    refine Rle_trans (Radd_le_add ih (deltaLog_lower_tight (k + 1) T (Nat.succ_pos k) hT')) ?_
+    exact Rle_of_Req (Radd_Rsub_self (logN (k + 1) (Nat.succ_pos k)) (logN (k + 2) (Nat.succ_pos (k + 1))))
 
 /-- `lnSumBound T D k` is a rational upper bound for `lnSum k = Σ_{i=1}^k (log i)/i`, at fixed
     denominator `D` (each new term `(log(k+1))/(k+1) ≤ logBound k · 1/(k+1)`, then round up). -/
