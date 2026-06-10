@@ -749,4 +749,150 @@ theorem cosMul_diag_le (a b : Real) (n : Nat) :
         (by rw [Qabs_Qsub_comm]; exact RaltReal_diag_le b 0 hJ)))
     (Qeq_le (by simp only [Qeq, add, mul, Qbound]; push_cast; ring_uor))
 
+/-- **Product drift of two real samples**: `|a.seq i·b.seq j − a.seq i'·b.seq j'| ≤ 2(xBound a+xBound b)/(n+1)`
+    (for all four indices `≥ n`). `Qprod_diff_le` + `xreg_n_le` (regularity) + `canon_bound`. -/
+theorem xprod_drift (a b : Real) {n i j i' j' : Nat} (hi : n ≤ i) (hj : n ≤ j)
+    (hi' : n ≤ i') (hj' : n ≤ j') :
+    Qle (Qabs (Qsub (mul (a.seq i) (b.seq j)) (mul (a.seq i') (b.seq j'))))
+      ⟨(2 * (xBound a + xBound b) : Int), n + 1⟩ := by
+  refine Qle_trans (add_den_pos (Qmul_den_pos (Qabs_den_pos (b.den_pos j))
+      (Qabs_den_pos (Qsub_den_pos (a.den_pos i) (a.den_pos i'))))
+      (Qmul_den_pos (Qabs_den_pos (a.den_pos i')) (Qabs_den_pos (Qsub_den_pos (b.den_pos j) (b.den_pos j')))))
+    (Qprod_diff_le (a.seq i) (a.seq i') (b.seq j) (b.seq j')
+      (a.den_pos i) (a.den_pos i') (b.den_pos j) (b.den_pos j')) ?_
+  refine Qle_trans (add_den_pos (Qmul_den_pos Nat.one_pos (Nat.succ_pos n))
+      (Qmul_den_pos Nat.one_pos (Nat.succ_pos n)))
+    (Qadd_le_add
+      (Qmul_le_mul (Qabs_den_pos (b.den_pos j)) Nat.one_pos
+        (Qabs_den_pos (Qsub_den_pos (a.den_pos i) (a.den_pos i'))) (Qabs_num_nonneg _)
+        (Int.ofNat_nonneg _) (canon_bound b j) (xreg_n_le a hi hi'))
+      (Qmul_le_mul (Qabs_den_pos (a.den_pos i')) Nat.one_pos
+        (Qabs_den_pos (Qsub_den_pos (b.den_pos j) (b.den_pos j'))) (Qabs_num_nonneg _)
+        (Int.ofNat_nonneg _) (canon_bound a i') (xreg_n_le b hj hj')))
+    (Qeq_le (by simp only [Qeq, add, mul, Qbound]; push_cast; ring_uor))
+
+/-- **Product drift of two alt-series diagonals**: `|RaltReal_seq a 1 i·RaltReal_seq b 1 j −
+    RaltReal_seq a 1 n·RaltReal_seq b 1 n| ≤ (Ua+Ub)/(n+1)` (for `n ≤ i,j`), where `Ux` is the uniform
+    `expM_U`-bound. `Qprod_diff_le` + `RaltReal_diag_le` (the diagonal regularity) + `altSum_abs_le_U`. -/
+theorem altProd_drift (a b : Real) {n i j : Nat} (hi : n ≤ i) (hj : n ≤ j) :
+    Qle (Qabs (Qsub (mul (RaltReal_seq a 1 i) (RaltReal_seq b 1 j))
+        (mul (RaltReal_seq a 1 n) (RaltReal_seq b 1 n))))
+      ⟨((expM_U (xBound a * xBound a) (2 * (xBound a * xBound a))).num.toNat
+        + (expM_U (xBound b * xBound b) (2 * (xBound b * xBound b))).num.toNat : Int), n + 1⟩ := by
+  have hUa : ∀ k, Qle (Qabs (RaltReal_seq a 1 k))
+      ⟨((expM_U (xBound a * xBound a) (2 * (xBound a * xBound a))).num.toNat : Int), 1⟩ := fun k =>
+    Qle_trans (expM_U_den_pos _ _) (altSum_abs_le_U (a.den_pos _) (canon_bound a _) 1 _)
+      (Q_le_num_toNat _ (expM_U_num_nonneg _ _) (expM_U_den_pos _ _))
+  have hUb : ∀ k, Qle (Qabs (RaltReal_seq b 1 k))
+      ⟨((expM_U (xBound b * xBound b) (2 * (xBound b * xBound b))).num.toNat : Int), 1⟩ := fun k =>
+    Qle_trans (expM_U_den_pos _ _) (altSum_abs_le_U (b.den_pos _) (canon_bound b _) 1 _)
+      (Q_le_num_toNat _ (expM_U_num_nonneg _ _) (expM_U_den_pos _ _))
+  refine Qle_trans (add_den_pos
+      (Qmul_den_pos (Qabs_den_pos ((RsinAux b).den_pos j))
+        (Qabs_den_pos (Qsub_den_pos ((RsinAux a).den_pos i) ((RsinAux a).den_pos n))))
+      (Qmul_den_pos (Qabs_den_pos ((RsinAux a).den_pos n))
+        (Qabs_den_pos (Qsub_den_pos ((RsinAux b).den_pos j) ((RsinAux b).den_pos n)))))
+    (Qprod_diff_le (RaltReal_seq a 1 i) (RaltReal_seq a 1 n) (RaltReal_seq b 1 j) (RaltReal_seq b 1 n)
+      ((RsinAux a).den_pos i) ((RsinAux a).den_pos n) ((RsinAux b).den_pos j) ((RsinAux b).den_pos n)) ?_
+  refine Qle_trans (add_den_pos (Qmul_den_pos Nat.one_pos (Nat.succ_pos n))
+      (Qmul_den_pos Nat.one_pos (Nat.succ_pos n)))
+    (Qadd_le_add
+      (Qmul_le_mul (Qabs_den_pos ((RsinAux b).den_pos j)) Nat.one_pos
+        (Qabs_den_pos (Qsub_den_pos ((RsinAux a).den_pos i) ((RsinAux a).den_pos n)))
+        (Qabs_num_nonneg _) (Int.ofNat_nonneg _) (hUb j)
+        (by rw [Qabs_Qsub_comm]; exact RaltReal_diag_le a 1 hi))
+      (Qmul_le_mul (Qabs_den_pos ((RsinAux a).den_pos n)) Nat.one_pos
+        (Qabs_den_pos (Qsub_den_pos ((RsinAux b).den_pos j) ((RsinAux b).den_pos n)))
+        (Qabs_num_nonneg _) (Int.ofNat_nonneg _) (hUa n)
+        (by rw [Qabs_Qsub_comm]; exact RaltReal_diag_le b 1 hj)))
+    (Qeq_le (by simp only [Qeq, add, mul, Qbound]; push_cast; ring_uor))
+
+/-- **`sin·sin` diagonal de-reindex** (two-variable analog of `Rsin_sq_diag_le`): `(Rmul (Rsin a)(Rsin b)).seq n`
+    is within `C/(n+1)` of the natural diagonal `(a.seq R_a·b.seq R_b)·(RaltReal_seq a 1 n·RaltReal_seq b 1 n)`
+    (`R_x = RaltReal_R x n`). `Rsin = Rmul x (RsinAux x)` is doubly reindexed; rearrange (`Qmul4_rearrange`)
+    then `Qprod_diff_le` splits into the `x`-factor drift (`xprod_drift`) and the alt-series drift (`altProd_drift`). -/
+theorem sinMul_diag_le (a b : Real) (n : Nat) :
+    Qle (Qabs (Qsub ((Rmul (Rsin a) (Rsin b)).seq n)
+        (mul (mul (a.seq (RaltReal_R a n)) (b.seq (RaltReal_R b n)))
+          (mul (RaltReal_seq a 1 n) (RaltReal_seq b 1 n)))))
+      ⟨((expM_U (xBound a * xBound a) (2 * (xBound a * xBound a))).num.toNat
+          * (expM_U (xBound b * xBound b) (2 * (xBound b * xBound b))).num.toNat
+          * (2 * (xBound a + xBound b))
+        + xBound a * xBound b
+          * ((expM_U (xBound a * xBound a) (2 * (xBound a * xBound a))).num.toNat
+            + (expM_U (xBound b * xBound b) (2 * (xBound b * xBound b))).num.toNat) : Int), n + 1⟩ := by
+  have hUa : ∀ k, Qle (Qabs (RaltReal_seq a 1 k))
+      ⟨((expM_U (xBound a * xBound a) (2 * (xBound a * xBound a))).num.toNat : Int), 1⟩ := fun k =>
+    Qle_trans (expM_U_den_pos _ _) (altSum_abs_le_U (a.den_pos _) (canon_bound a _) 1 _)
+      (Q_le_num_toNat _ (expM_U_num_nonneg _ _) (expM_U_den_pos _ _))
+  have hUb : ∀ k, Qle (Qabs (RaltReal_seq b 1 k))
+      ⟨((expM_U (xBound b * xBound b) (2 * (xBound b * xBound b))).num.toNat : Int), 1⟩ := fun k =>
+    Qle_trans (expM_U_den_pos _ _) (altSum_abs_le_U (b.den_pos _) (canon_bound b _) 1 _)
+      (Q_le_num_toNat _ (expM_U_num_nonneg _ _) (expM_U_den_pos _ _))
+  have hnJ : n ≤ Ridx (Rsin a) (Rsin b) n := Ridx_ge _ _ n
+  have hnKa : n ≤ Ridx a (RsinAux a) (Ridx (Rsin a) (Rsin b) n) :=
+    Nat.le_trans hnJ (Ridx_ge a (RsinAux a) _)
+  have hnKb : n ≤ Ridx b (RsinAux b) (Ridx (Rsin a) (Rsin b) n) :=
+    Nat.le_trans hnJ (Ridx_ge b (RsinAux b) _)
+  have hnRa : n ≤ RaltReal_R a n := n_le_RaltReal_R a n
+  have hnRb : n ≤ RaltReal_R b n := n_le_RaltReal_R b n
+  -- den abbreviations for the four factors
+  have hAKa : 0 < (a.seq (Ridx a (RsinAux a) (Ridx (Rsin a) (Rsin b) n))).den := a.den_pos _
+  have hBKb : 0 < (b.seq (Ridx b (RsinAux b) (Ridx (Rsin a) (Rsin b) n))).den := b.den_pos _
+  have hPa : 0 < (RaltReal_seq a 1 (Ridx a (RsinAux a) (Ridx (Rsin a) (Rsin b) n))).den := (RsinAux a).den_pos _
+  have hPb : 0 < (RaltReal_seq b 1 (Ridx b (RsinAux b) (Ridx (Rsin a) (Rsin b) n))).den := (RsinAux b).den_pos _
+  have hA'd : 0 < (a.seq (RaltReal_R a n)).den := a.den_pos _
+  have hB'd : 0 < (b.seq (RaltReal_R b n)).den := b.den_pos _
+  have hPa'd : 0 < (RaltReal_seq a 1 n).den := (RsinAux a).den_pos n
+  have hPb'd : 0 < (RaltReal_seq b 1 n).den := (RsinAux b).den_pos n
+  -- |Q| ≤ Ua·Ub, |P'| ≤ xBa·xBb
+  have hQ : Qle (Qabs (mul (RaltReal_seq a 1 (Ridx a (RsinAux a) (Ridx (Rsin a) (Rsin b) n)))
+        (RaltReal_seq b 1 (Ridx b (RsinAux b) (Ridx (Rsin a) (Rsin b) n)))))
+      ⟨((expM_U (xBound a * xBound a) (2 * (xBound a * xBound a))).num.toNat
+        * (expM_U (xBound b * xBound b) (2 * (xBound b * xBound b))).num.toNat : Int), 1⟩ := by
+    rw [Qabs_mul]
+    exact Qle_trans (Qmul_den_pos Nat.one_pos Nat.one_pos)
+      (Qmul_le_mul (Qabs_den_pos hPa) Nat.one_pos (Qabs_den_pos hPb) (Qabs_num_nonneg _)
+        (Qabs_num_nonneg _) (hUa _) (hUb _)) (Qeq_le (by simp only [Qeq, mul]))
+  have hP' : Qle (Qabs (mul (a.seq (RaltReal_R a n)) (b.seq (RaltReal_R b n))))
+      ⟨(xBound a * xBound b : Int), 1⟩ := by
+    rw [Qabs_mul]
+    exact Qle_trans (Qmul_den_pos Nat.one_pos Nat.one_pos)
+      (Qmul_le_mul (Qabs_den_pos hA'd) Nat.one_pos (Qabs_den_pos hB'd) (Qabs_num_nonneg _)
+        (Qabs_num_nonneg _) (canon_bound a _) (canon_bound b _))
+      (Qeq_le (by simp only [Qeq, mul]))
+  -- unfold and rearrange the nested product, then `Qprod_diff_le`.
+  show Qle (Qabs (Qsub
+      (mul (mul (a.seq (Ridx a (RsinAux a) (Ridx (Rsin a) (Rsin b) n)))
+                (RaltReal_seq a 1 (Ridx a (RsinAux a) (Ridx (Rsin a) (Rsin b) n))))
+           (mul (b.seq (Ridx b (RsinAux b) (Ridx (Rsin a) (Rsin b) n)))
+                (RaltReal_seq b 1 (Ridx b (RsinAux b) (Ridx (Rsin a) (Rsin b) n)))))
+      (mul (mul (a.seq (RaltReal_R a n)) (b.seq (RaltReal_R b n)))
+        (mul (RaltReal_seq a 1 n) (RaltReal_seq b 1 n))))) _
+  refine Qle_congr_left (Qabs_den_pos (Qsub_den_pos (Qmul_den_pos (Qmul_den_pos hAKa hBKb)
+        (Qmul_den_pos hPa hPb)) (Qmul_den_pos (Qmul_den_pos hA'd hB'd) (Qmul_den_pos hPa'd hPb'd))))
+    (Qeq_symm (Qabs_Qeq (QsubCongr (Qmul4_rearrange _ _ _ _) (Qeq_refl _)))) ?_
+  refine Qle_trans (add_den_pos (Qmul_den_pos (Qabs_den_pos (Qmul_den_pos hPa hPb))
+      (Qabs_den_pos (Qsub_den_pos (Qmul_den_pos hAKa hBKb) (Qmul_den_pos hA'd hB'd))))
+      (Qmul_den_pos (Qabs_den_pos (Qmul_den_pos hA'd hB'd))
+        (Qabs_den_pos (Qsub_den_pos (Qmul_den_pos hPa hPb) (Qmul_den_pos hPa'd hPb'd)))))
+    (Qprod_diff_le (mul (a.seq (Ridx a (RsinAux a) (Ridx (Rsin a) (Rsin b) n)))
+        (b.seq (Ridx b (RsinAux b) (Ridx (Rsin a) (Rsin b) n))))
+      (mul (a.seq (RaltReal_R a n)) (b.seq (RaltReal_R b n)))
+      (mul (RaltReal_seq a 1 (Ridx a (RsinAux a) (Ridx (Rsin a) (Rsin b) n)))
+        (RaltReal_seq b 1 (Ridx b (RsinAux b) (Ridx (Rsin a) (Rsin b) n))))
+      (mul (RaltReal_seq a 1 n) (RaltReal_seq b 1 n))
+      (Qmul_den_pos hAKa hBKb) (Qmul_den_pos hA'd hB'd) (Qmul_den_pos hPa hPb)
+      (Qmul_den_pos hPa'd hPb'd)) ?_
+  refine Qle_trans (add_den_pos (Qmul_den_pos Nat.one_pos (Nat.succ_pos n))
+      (Qmul_den_pos Nat.one_pos (Nat.succ_pos n)))
+    (Qadd_le_add
+      (Qmul_le_mul (Qabs_den_pos (Qmul_den_pos hPa hPb)) Nat.one_pos
+        (Qabs_den_pos (Qsub_den_pos (Qmul_den_pos hAKa hBKb) (Qmul_den_pos hA'd hB'd)))
+        (Qabs_num_nonneg _) (Int.ofNat_nonneg _) hQ (xprod_drift a b hnKa hnKb hnRa hnRb))
+      (Qmul_le_mul (Qabs_den_pos (Qmul_den_pos hA'd hB'd)) Nat.one_pos
+        (Qabs_den_pos (Qsub_den_pos (Qmul_den_pos hPa hPb) (Qmul_den_pos hPa'd hPb'd)))
+        (Qabs_num_nonneg _) (Int.ofNat_nonneg _) hP' (altProd_drift a b hnKa hnKb)))
+    (Qeq_le (by simp only [Qeq, add, mul]; push_cast; ring_uor))
+
 end UOR.Bridge.F1Square.Analysis
