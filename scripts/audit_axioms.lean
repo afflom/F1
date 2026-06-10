@@ -1462,3 +1462,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rhalf_two
 #print axioms Analysis.Rlambda1_decomposition
 #print axioms Analysis.li_decomposition_realized
+
+-- LambdaTwo (Pos λ₂; v0.16.0 stage-B capstone).
+#print axioms Analysis.Rneg_Rneg
+#print axioms Analysis.parab_gen
+#print axioms Analysis.Rlambda2_pos

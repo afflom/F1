@@ -70,6 +70,7 @@ import F1Square.Li
 import F1Square.Analysis.LiOne
 import F1Square.Analysis.ZetaTwo
 import F1Square.Analysis.GammaOne
+import F1Square.Analysis.LambdaTwo
 
 open UOR.Primitives
 
