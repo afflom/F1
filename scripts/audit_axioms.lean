@@ -1311,3 +1311,10 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.czetaIm_tail_full_neg
 #print axioms Analysis.czetaRe_cauchy_full
 #print axioms Analysis.czetaIm_cauchy_full
+#print axioms Analysis.RTendsTo_to_Rle
+#print axioms Analysis.RTendsTo_to_Rle_lower
+#print axioms Analysis.Req_of_Rle_ofQ_all
+#print axioms Analysis.czetaRe_full_tendsTo
+#print axioms Analysis.czetaIm_full_tendsTo
+#print axioms Analysis.Czeta_re_canonical
+#print axioms Analysis.Czeta_im_canonical

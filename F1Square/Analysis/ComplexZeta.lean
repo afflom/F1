@@ -631,6 +631,52 @@ theorem czetaIm_RReg (s : Complex) (hσ : Rnonneg s.re) {τ : Q} (hτn : 0 < τ.
     exact Rle_ofQ_ofQ (Nat.succ_pos _) _
       (Qle_self_add_left (by show (0 : Int) ≤ 1; decide) (Nat.succ_pos _) (Nat.succ_pos _))
 
+/-- **`RTendsTo` gives a real-level rate bound**: if `X → L` then `X k − L ≤ 2/(k+1)` as reals. The
+    `.seq`-level modulus (read at `2n+1`) lands inside the real comparison's `2/(n+1)` slack. -/
+theorem RTendsTo_to_Rle {X : Nat → Real} {L : Real} (h : RTendsTo X L) (k : Nat) :
+    Rle (Rsub (X k) L) (ofQ ⟨2, k + 1⟩ (Nat.succ_pos k)) := by
+  intro n
+  refine Qle_trans (Qabs_den_pos (Qsub_den_pos ((X k).den_pos _) (L.den_pos _)))
+    (Qle_self_Qabs (Qsub ((X k).seq (2 * n + 1)) (L.seq (2 * n + 1)))) ?_
+  refine Qle_trans (add_den_pos (Nat.succ_pos _) (Nat.succ_pos _)) (h k (2 * n + 1)) ?_
+  exact Qadd_le_add (Qle_refl _)
+    (by show (2 : Int) * ((n + 1 : Nat) : Int) ≤ 2 * ((2 * n + 1 + 1 : Nat) : Int); push_cast; omega)
+
+/-- The companion lower bound `L − X k ≤ 2/(k+1)`. -/
+theorem RTendsTo_to_Rle_lower {X : Nat → Real} {L : Real} (h : RTendsTo X L) (k : Nat) :
+    Rle (Rsub L (X k)) (ofQ ⟨2, k + 1⟩ (Nat.succ_pos k)) := by
+  intro n
+  refine Qle_trans (Qabs_den_pos (Qsub_den_pos (L.den_pos _) ((X k).den_pos _)))
+    (Qle_self_Qabs (Qsub (L.seq (2 * n + 1)) ((X k).seq (2 * n + 1)))) ?_
+  rw [Qabs_Qsub_comm]
+  refine Qle_trans (add_den_pos (Nat.succ_pos _) (Nat.succ_pos _)) (h k (2 * n + 1)) ?_
+  exact Qadd_le_add (Qle_refl _)
+    (by show (2 : Int) * ((n + 1 : Nat) : Int) ≤ 2 * ((2 * n + 1 + 1 : Nat) : Int); push_cast; omega)
+
+/-- **Real-level Archimedean ⟹ `≈`**: if `a − b ≤ C/(k+1)` and `b − a ≤ C/(k+1)` (as reals) for every
+    `k`, then `a ≈ b`. The vanishing real bound forces Bishop equality (`seq_diff_le` lands the bound at
+    each index, the generalized Archimedean lemma kills the `k`-tail, `Req_of_lin_bound` closes). -/
+theorem Req_of_Rle_ofQ_all {a b : Real} {C : Nat}
+    (hab : ∀ k, Rle (Rsub a b) (ofQ ⟨(C : Int), k + 1⟩ (Nat.succ_pos k)))
+    (hba : ∀ k, Rle (Rsub b a) (ofQ ⟨(C : Int), k + 1⟩ (Nat.succ_pos k))) : Req a b := by
+  apply Req_of_lin_bound (C := 2)
+  intro n
+  have hub : Qle (Qsub (a.seq n) (b.seq n)) ⟨2, n + 1⟩ := by
+    apply Qarch_gen (C := C) (Qsub_den_pos (a.den_pos n) (b.den_pos n)) (Nat.succ_pos n)
+    intro k
+    exact Qle_trans (add_den_pos (Nat.succ_pos _) (Nat.succ_pos _))
+      (seq_diff_le a b ⟨(C : Int), k + 1⟩ (Nat.succ_pos k) (hab k) n)
+      (Qeq_le (by simp only [Qeq, add]; push_cast; ring_uor))
+  have hlb : Qle (Qsub (b.seq n) (a.seq n)) ⟨2, n + 1⟩ := by
+    apply Qarch_gen (C := C) (Qsub_den_pos (b.den_pos n) (a.den_pos n)) (Nat.succ_pos n)
+    intro k
+    exact Qle_trans (add_den_pos (Nat.succ_pos _) (Nat.succ_pos _))
+      (seq_diff_le b a ⟨(C : Int), k + 1⟩ (Nat.succ_pos k) (hba k) n)
+      (Qeq_le (by simp only [Qeq, add]; push_cast; ring_uor))
+  refine Qabs_le_of_both hub
+    (Qle_congr_left (Qsub_den_pos (b.den_pos n) (a.den_pos n))
+      (by simp only [Qeq, Qsub, add, neg]; push_cast; ring_uor) hlb)
+
 /-- **The Riemann zeta function `ζ(s) = Σ_{n≥1} n⁻ˢ` for `Re s > 1`** — a genuine constructive complex
     number. `Re s > 1` is witnessed by a rational `τ > 0` with `τ ≤ (Re s − 1)·log 2` (so the dyadic
     ratio `2^{1−Re s} < 1`); the real and imaginary parts are Bishop diagonal limits of the reindexed
@@ -665,5 +711,106 @@ theorem Czeta_im_tendsTo (s : Complex) (hσ : Rnonneg s.re) {τ : Q} (hτn : 0 <
     (hθ : Rle (ofQ τ hτd) (Rmul (Rsub s.re one) (logN 2 (by omega)))) :
     RTendsTo (fun j => czetaImSum s (2 ^ czetaMidx τ j)) (Czeta s hσ hτn hτd hθ).im :=
   Rlim_tendsTo _ (czetaIm_RReg s hσ hτn hτd hθ)
+
+/-- **The full real partial-sum sequence converges to `Re ζ(s)`** (not just the dyadic subsequence): for
+    *every* `N ≥ 2^{M(k)}`, `|S_re(N) − Re ζ(s)| ≤ 3/(k+1)`. Triangle through the dyadic anchor:
+    `1/(k+1)` (tail) + `2/(k+1)` (subsequence limit). -/
+theorem czetaRe_full_tendsTo (s : Complex) (hσ : Rnonneg s.re) {τ : Q} (hτn : 0 < τ.num) (hτd : 0 < τ.den)
+    (hθ : Rle (ofQ τ hτd) (Rmul (Rsub s.re one) (logN 2 (by omega)))) (k N : Nat)
+    (hN : 2 ^ czetaMidx τ k ≤ N) :
+    Rle (Rsub (czetaReSum s N) (Czeta s hσ hτn hτd hθ).re) (ofQ ⟨3, k + 1⟩ (Nat.succ_pos k))
+      ∧ Rle (Rsub (Czeta s hσ hτn hτd hθ).re (czetaReSum s N)) (ofQ ⟨3, k + 1⟩ (Nat.succ_pos k)) := by
+  refine ⟨?_, ?_⟩
+  · refine Rle_trans (Rle_of_Req (Req_symm (Rsub_telescope (czetaReSum s N)
+        (czetaReSum s (2 ^ czetaMidx τ k)) (Czeta s hσ hτn hτd hθ).re))) ?_
+    refine Rle_trans (Radd_le_add (czetaRe_tail_full s hσ hτn hτd hθ k N hN)
+        (RTendsTo_to_Rle (Czeta_re_tendsTo s hσ hτn hτd hθ) k)) ?_
+    exact Rle_of_Req (Req_trans (Radd_ofQ_ofQ _ _)
+      (ofQ_congr _ _ (by simp only [Qeq, add]; push_cast; ring_uor)))
+  · refine Rle_trans (Rle_of_Req (Req_symm (Rsub_telescope (Czeta s hσ hτn hτd hθ).re
+        (czetaReSum s (2 ^ czetaMidx τ k)) (czetaReSum s N)))) ?_
+    refine Rle_trans (Radd_le_add (RTendsTo_to_Rle_lower (Czeta_re_tendsTo s hσ hτn hτd hθ) k)
+        (Rle_trans (Rle_of_Req (Req_symm (Rneg_Rsub (czetaReSum s N) (czetaReSum s (2 ^ czetaMidx τ k)))))
+          (czetaRe_tail_full_neg s hσ hτn hτd hθ k N hN))) ?_
+    exact Rle_of_Req (Req_trans (Radd_ofQ_ofQ _ _)
+      (ofQ_congr _ _ (by simp only [Qeq, add]; push_cast; ring_uor)))
+
+/-- **The full imaginary partial-sum sequence converges to `Im ζ(s)`**: `|S_im(N) − Im ζ(s)| ≤ 3/(k+1)`
+    for every `N ≥ 2^{M(k)}`. -/
+theorem czetaIm_full_tendsTo (s : Complex) (hσ : Rnonneg s.re) {τ : Q} (hτn : 0 < τ.num) (hτd : 0 < τ.den)
+    (hθ : Rle (ofQ τ hτd) (Rmul (Rsub s.re one) (logN 2 (by omega)))) (k N : Nat)
+    (hN : 2 ^ czetaMidx τ k ≤ N) :
+    Rle (Rsub (czetaImSum s N) (Czeta s hσ hτn hτd hθ).im) (ofQ ⟨3, k + 1⟩ (Nat.succ_pos k))
+      ∧ Rle (Rsub (Czeta s hσ hτn hτd hθ).im (czetaImSum s N)) (ofQ ⟨3, k + 1⟩ (Nat.succ_pos k)) := by
+  refine ⟨?_, ?_⟩
+  · refine Rle_trans (Rle_of_Req (Req_symm (Rsub_telescope (czetaImSum s N)
+        (czetaImSum s (2 ^ czetaMidx τ k)) (Czeta s hσ hτn hτd hθ).im))) ?_
+    refine Rle_trans (Radd_le_add (czetaIm_tail_full s hσ hτn hτd hθ k N hN)
+        (RTendsTo_to_Rle (Czeta_im_tendsTo s hσ hτn hτd hθ) k)) ?_
+    exact Rle_of_Req (Req_trans (Radd_ofQ_ofQ _ _)
+      (ofQ_congr _ _ (by simp only [Qeq, add]; push_cast; ring_uor)))
+  · refine Rle_trans (Rle_of_Req (Req_symm (Rsub_telescope (Czeta s hσ hτn hτd hθ).im
+        (czetaImSum s (2 ^ czetaMidx τ k)) (czetaImSum s N)))) ?_
+    refine Rle_trans (Radd_le_add (RTendsTo_to_Rle_lower (Czeta_im_tendsTo s hσ hτn hτd hθ) k)
+        (Rle_trans (Rle_of_Req (Req_symm (Rneg_Rsub (czetaImSum s N) (czetaImSum s (2 ^ czetaMidx τ k)))))
+          (czetaIm_tail_full_neg s hσ hτn hτd hθ k N hN))) ?_
+    exact Rle_of_Req (Req_trans (Radd_ofQ_ofQ _ _)
+      (ofQ_congr _ _ (by simp only [Qeq, add]; push_cast; ring_uor)))
+
+/-- **Canonicity (real part)**: `ζ(s)` does not depend on the convergence witness `τ`. Any two witnesses
+    `τ₁, τ₂` of `Re s > 1` give `≈`-equal real parts — both are the limit of the *same* full partial-sum
+    sequence (compared at `N = max(2^{M₁(k)}, 2^{M₂(k)})`), so the limit is unique. -/
+theorem Czeta_re_canonical (s : Complex) (hσ : Rnonneg s.re) {τ₁ τ₂ : Q}
+    (hτn₁ : 0 < τ₁.num) (hτd₁ : 0 < τ₁.den)
+    (hθ₁ : Rle (ofQ τ₁ hτd₁) (Rmul (Rsub s.re one) (logN 2 (by omega))))
+    (hτn₂ : 0 < τ₂.num) (hτd₂ : 0 < τ₂.den)
+    (hθ₂ : Rle (ofQ τ₂ hτd₂) (Rmul (Rsub s.re one) (logN 2 (by omega)))) :
+    Req (Czeta s hσ hτn₁ hτd₁ hθ₁).re (Czeta s hσ hτn₂ hτd₂ hθ₂).re := by
+  apply Req_of_Rle_ofQ_all (C := 6)
+  · intro k
+    refine Rle_trans (Rle_of_Req (Req_symm (Rsub_telescope (Czeta s hσ hτn₁ hτd₁ hθ₁).re
+        (czetaReSum s (max (2 ^ czetaMidx τ₁ k) (2 ^ czetaMidx τ₂ k)))
+        (Czeta s hσ hτn₂ hτd₂ hθ₂).re))) ?_
+    refine Rle_trans (Radd_le_add
+        (czetaRe_full_tendsTo s hσ hτn₁ hτd₁ hθ₁ k _ (Nat.le_max_left _ _)).2
+        (czetaRe_full_tendsTo s hσ hτn₂ hτd₂ hθ₂ k _ (Nat.le_max_right _ _)).1) ?_
+    exact Rle_of_Req (Req_trans (Radd_ofQ_ofQ _ _)
+      (ofQ_congr _ _ (by simp only [Qeq, add]; push_cast; ring_uor)))
+  · intro k
+    refine Rle_trans (Rle_of_Req (Req_symm (Rsub_telescope (Czeta s hσ hτn₂ hτd₂ hθ₂).re
+        (czetaReSum s (max (2 ^ czetaMidx τ₁ k) (2 ^ czetaMidx τ₂ k)))
+        (Czeta s hσ hτn₁ hτd₁ hθ₁).re))) ?_
+    refine Rle_trans (Radd_le_add
+        (czetaRe_full_tendsTo s hσ hτn₂ hτd₂ hθ₂ k _ (Nat.le_max_right _ _)).2
+        (czetaRe_full_tendsTo s hσ hτn₁ hτd₁ hθ₁ k _ (Nat.le_max_left _ _)).1) ?_
+    exact Rle_of_Req (Req_trans (Radd_ofQ_ofQ _ _)
+      (ofQ_congr _ _ (by simp only [Qeq, add]; push_cast; ring_uor)))
+
+/-- **Canonicity (imaginary part)**: `Im ζ(s)` is independent of the witness `τ`. -/
+theorem Czeta_im_canonical (s : Complex) (hσ : Rnonneg s.re) {τ₁ τ₂ : Q}
+    (hτn₁ : 0 < τ₁.num) (hτd₁ : 0 < τ₁.den)
+    (hθ₁ : Rle (ofQ τ₁ hτd₁) (Rmul (Rsub s.re one) (logN 2 (by omega))))
+    (hτn₂ : 0 < τ₂.num) (hτd₂ : 0 < τ₂.den)
+    (hθ₂ : Rle (ofQ τ₂ hτd₂) (Rmul (Rsub s.re one) (logN 2 (by omega)))) :
+    Req (Czeta s hσ hτn₁ hτd₁ hθ₁).im (Czeta s hσ hτn₂ hτd₂ hθ₂).im := by
+  apply Req_of_Rle_ofQ_all (C := 6)
+  · intro k
+    refine Rle_trans (Rle_of_Req (Req_symm (Rsub_telescope (Czeta s hσ hτn₁ hτd₁ hθ₁).im
+        (czetaImSum s (max (2 ^ czetaMidx τ₁ k) (2 ^ czetaMidx τ₂ k)))
+        (Czeta s hσ hτn₂ hτd₂ hθ₂).im))) ?_
+    refine Rle_trans (Radd_le_add
+        (czetaIm_full_tendsTo s hσ hτn₁ hτd₁ hθ₁ k _ (Nat.le_max_left _ _)).2
+        (czetaIm_full_tendsTo s hσ hτn₂ hτd₂ hθ₂ k _ (Nat.le_max_right _ _)).1) ?_
+    exact Rle_of_Req (Req_trans (Radd_ofQ_ofQ _ _)
+      (ofQ_congr _ _ (by simp only [Qeq, add]; push_cast; ring_uor)))
+  · intro k
+    refine Rle_trans (Rle_of_Req (Req_symm (Rsub_telescope (Czeta s hσ hτn₂ hτd₂ hθ₂).im
+        (czetaImSum s (max (2 ^ czetaMidx τ₁ k) (2 ^ czetaMidx τ₂ k)))
+        (Czeta s hσ hτn₁ hτd₁ hθ₁).im))) ?_
+    refine Rle_trans (Radd_le_add
+        (czetaIm_full_tendsTo s hσ hτn₂ hτd₂ hθ₂ k _ (Nat.le_max_right _ _)).2
+        (czetaIm_full_tendsTo s hσ hτn₁ hτd₁ hθ₁ k _ (Nat.le_max_left _ _)).1) ?_
+    exact Rle_of_Req (Req_trans (Radd_ofQ_ofQ _ _)
+      (ofQ_congr _ _ (by simp only [Qeq, add]; push_cast; ring_uor)))
 
 end UOR.Bridge.F1Square.Analysis
