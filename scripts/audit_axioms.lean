@@ -1497,3 +1497,9 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.bernPoly_two_at_one
 #print axioms Analysis.bernPoly_two_form
 #print axioms Analysis.bernPoly_two_abs_le
+
+-- EtaFunction (η(s) = Σ(−1)^{n−1}n⁻ˢ; the integration-free critical-strip route, ζ = η/(1−2^{1−s})).
+#print axioms Analysis.czEtaSum_zero
+#print axioms Analysis.czEtaSum_succ
+#print axioms Analysis.czEtaTerm_even
+#print axioms Analysis.czEtaTerm_odd

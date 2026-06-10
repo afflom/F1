@@ -75,6 +75,7 @@ import F1Square.Analysis.GammaOne
 import F1Square.Analysis.LambdaTwo
 import F1Square.Analysis.ComplexInv
 import F1Square.Analysis.EulerMaclaurin
+import F1Square.Analysis.EtaFunction
 
 open UOR.Primitives
 
