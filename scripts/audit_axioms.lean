@@ -1338,6 +1338,11 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.primeSide_stable
 #print axioms Analysis.primeTerm_zero_of_h
 
+-- GammaOne (the first Stieltjes constant γ₁ substrate: (ln k)/k, S(N), g(N); v0.16.0).
+#print axioms Analysis.lnOver_nonneg
+#print axioms Analysis.lnSum_step
+#print axioms Analysis.lnSum_mono
+
 -- ZetaTwo (the ζ(2) ≥ 1.63 lower bracket; v0.16.0, for Pos λ₂).
 #print axioms Analysis.zeta_ge_partial
 #print axioms Analysis.zetaSum_two_70_ge

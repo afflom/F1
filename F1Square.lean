@@ -69,6 +69,7 @@ import F1Square.Analysis.Mangoldt
 import F1Square.Li
 import F1Square.Analysis.LiOne
 import F1Square.Analysis.ZetaTwo
+import F1Square.Analysis.GammaOne
 
 open UOR.Primitives
 
