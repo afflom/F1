@@ -1338,6 +1338,17 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.primeSide_stable
 #print axioms Analysis.primeTerm_zero_of_h
 
+-- Bernoulli (exact rational Bernoulli numbers; v0.16.0 foundation for Euler–Maclaurin).
+#print axioms Analysis.bernTable_den_pos
+#print axioms Analysis.bernoulli_den_pos
+#print axioms Analysis.bernoulli_zero
+#print axioms Analysis.bernoulli_one
+#print axioms Analysis.bernoulli_two
+#print axioms Analysis.bernoulli_three
+#print axioms Analysis.bernoulli_four
+#print axioms Analysis.bernoulli_five
+#print axioms Analysis.bernoulli_six
+
 -- LiOne (the Bombieri–Lagarias n=1 decomposition λ₁ = λ₁^arith + λ₁^∞; v0.15.3).
 #print axioms Analysis.Rhalf_Radd
 #print axioms Analysis.Rhalf_Rneg
