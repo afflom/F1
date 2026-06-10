@@ -646,4 +646,70 @@ theorem cornerSin_factored {a b : Q} (had : 0 < a.den) (hbd : 0 < b.den) (N : Na
         (Fsum (fun j => mul (altTerm a 1 i) (altTerm b 1 j)) (N - i))))) N)
     (Fsum_mul_left habd hsubd N)
 
+/-- `|a·b| ≤ M²` (for `|a|,|b| ≤ M`). -/
+theorem Qabs_mul_le_MM {a b : Q} {M : Nat} (had : 0 < a.den) (hbd : 0 < b.den)
+    (ha : Qle (Qabs a) ⟨(M : Int), 1⟩) (hb : Qle (Qabs b) ⟨(M : Int), 1⟩) :
+    Qle (Qabs (mul a b)) (⟨(M * M : Int), 1⟩ : Q) := by
+  rw [Qabs_mul]
+  exact Qle_trans (Qmul_den_pos Nat.one_pos Nat.one_pos)
+    (Qmul_le_mul (Qabs_den_pos had) Nat.one_pos (Qabs_den_pos hbd) (Qabs_num_nonneg _)
+      (Qabs_num_nonneg _) ha hb) (Qeq_le (MM_eq M))
+
+/-- **Bound on the `sin·sin` corner**: `|cornerSin(2K+1)| ≤ M²·(Mertens bound)` (via `cornerSin_factored`
+    + `cornerMertens2` at `off = 1`), which `→ 0` as `K → ∞`. -/
+theorem cornerSin_le {a b : Q} {M : Nat} (had : 0 < a.den) (hbd : 0 < b.den)
+    (ha : Qle (Qabs a) ⟨(M : Int), 1⟩) (hb : Qle (Qabs b) ⟨(M : Int), 1⟩) (K : Nat)
+    (hK : 2 * (M * M) ≤ K + 2) :
+    Qle (Qabs (cornerSin a b (2 * K + 1)))
+      (mul (⟨(M * M : Int), 1⟩ : Q)
+        (add (mul (expM_U (M * M) (2 * (M * M))) ⟨(4 * npow (M * M) (K + 2) : Int), fct (K + 2)⟩)
+          (mul ⟨(2 * npow (M * M) (K + 1) : Int), fct (K + 1)⟩ (expM_U (M * M) (2 * (M * M)))))) := by
+  have haltd : ∀ i j, 0 < (mul (altTerm a 1 i) (altTerm b 1 j)).den :=
+    fun i j => Qmul_den_pos (altTerm_den_pos had 1 i) (altTerm_den_pos hbd 1 j)
+  have hcornerd : 0 < (Fsum (fun i => Qsub (Fsum (fun j => mul (altTerm a 1 i) (altTerm b 1 j)) (2 * K + 1))
+      (Fsum (fun j => mul (altTerm a 1 i) (altTerm b 1 j)) (2 * K + 1 - i))) (2 * K + 1)).den :=
+    Fsum_den_pos (fun i => Qsub_den_pos (Fsum_den_pos (fun j => haltd i j) _)
+      (Fsum_den_pos (fun j => haltd i j) _)) _
+  refine Qle_congr_left (Qabs_den_pos (Qmul_den_pos (Qmul_den_pos had hbd) hcornerd))
+    (Qeq_symm (Qabs_Qeq (cornerSin_factored had hbd (2 * K + 1)))) ?_
+  rw [Qabs_mul]
+  exact Qmul_le_mul (Qabs_den_pos (Qmul_den_pos had hbd)) Nat.one_pos (Qabs_den_pos hcornerd)
+    (Qabs_num_nonneg _) (Qabs_num_nonneg _) (Qabs_mul_le_MM had hbd ha hb)
+    (cornerMertens2 had hbd ha hb 1 K hK)
+
+/-- **The assembled decay bound** at `N = 2K+1`: `|altSum(a+b,0,2K+1) − (Σcos a·Σcos b − Σsin a·Σsin b)|`
+    is `≤` the sum of the three vanishing bounds (`sinConv_abs_le` + `cornerSin_le` + `cornerMertens2`),
+    each `→ 0` as `K → ∞`. The residual identity (`cosAdd_resid_eq`) + triangle inequality. This is the
+    `Q`-level statement of `cos(a+b) = cos a cos b − sin a sin b` with an explicit modulus of convergence. -/
+theorem cosAdd_decay_le {a b : Q} {M : Nat} (had : 0 < a.den) (hbd : 0 < b.den)
+    (ha : Qle (Qabs a) ⟨(M : Int), 1⟩) (hb : Qle (Qabs b) ⟨(M : Int), 1⟩) (K : Nat)
+    (hK : 2 * (M * M) ≤ K + 2) :
+    Qle (Qabs (Qsub (altSum (add a b) 0 (2 * K + 1))
+          (Qsub (mul (altSum a 0 (2 * K + 1)) (altSum b 0 (2 * K + 1)))
+                (mul (Fsum (sinTerm a) (2 * K + 1)) (Fsum (sinTerm b) (2 * K + 1))))))
+      (add (mul (⟨(M * M : Int), 1⟩ : Q) (expTerm (add (⟨(M * M : Int), 1⟩ : Q) ⟨(M * M : Int), 1⟩) (2 * K + 1)))
+        (add (mul (⟨(M * M : Int), 1⟩ : Q)
+              (add (mul (expM_U (M * M) (2 * (M * M))) ⟨(4 * npow (M * M) (K + 2) : Int), fct (K + 2)⟩)
+                (mul ⟨(2 * npow (M * M) (K + 1) : Int), fct (K + 1)⟩ (expM_U (M * M) (2 * (M * M))))))
+          (add (mul (expM_U (M * M) (2 * (M * M))) ⟨(4 * npow (M * M) (K + 2) : Int), fct (K + 2)⟩)
+            (mul ⟨(2 * npow (M * M) (K + 1) : Int), fct (K + 1)⟩ (expM_U (M * M) (2 * (M * M))))))) := by
+  have hsd : 0 < (sinConv a b (2 * K + 1)).den := sinConv_den_pos had hbd _
+  have hccd : 0 < (cornerCos a b (2 * K + 1)).den :=
+    Fsum_den_pos (fun i => Qsub_den_pos
+      (Fsum_den_pos (fun j => Qmul_den_pos (altTerm_den_pos had 0 i) (altTerm_den_pos hbd 0 j)) _)
+      (Fsum_den_pos (fun j => Qmul_den_pos (altTerm_den_pos had 0 i) (altTerm_den_pos hbd 0 j)) _)) _
+  have hcsd : 0 < (cornerSin a b (2 * K + 1)).den :=
+    Fsum_den_pos (fun i => Qsub_den_pos
+      (Fsum_den_pos (fun j => Qmul_den_pos (sinTerm_den_pos had i) (sinTerm_den_pos hbd j)) _)
+      (Fsum_den_pos (fun j => Qmul_den_pos (sinTerm_den_pos had i) (sinTerm_den_pos hbd j)) _)) _
+  refine Qle_trans (Qabs_den_pos (add_den_pos hsd (Qsub_den_pos hcsd hccd)))
+    (Qeq_le (Qabs_Qeq (cosAdd_resid_eq had hbd (2 * K)))) ?_
+  refine Qle_trans (add_den_pos (Qabs_den_pos hsd) (add_den_pos (Qabs_den_pos hcsd)
+      (Qabs_den_pos (neg_den_pos hccd))))
+    (Qabs_add3_le (sinConv a b (2 * K + 1)) (cornerSin a b (2 * K + 1))
+      (neg (cornerCos a b (2 * K + 1))) hsd hcsd (neg_den_pos hccd)) ?_
+  rw [Qabs_neg]
+  exact Qadd_le_add (sinConv_abs_le had hbd ha hb (2 * K + 1))
+    (Qadd_le_add (cornerSin_le had hbd ha hb K hK) (cornerMertens2 had hbd ha hb 0 K hK))
+
 end UOR.Bridge.F1Square.Analysis
