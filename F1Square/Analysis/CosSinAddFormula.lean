@@ -499,4 +499,58 @@ theorem altSum_add_eq {a b : Q} (had : 0 < a.den) (hbd : 0 < b.den) :
           (Qsub_den_pos (hCd (N + 2)) (hSd (N + 1))))
         (Qadd_congr ih hstep) (Qadd_sub_sub _ _ _ _)
 
+-- ===========================================================================
+-- The **residual identity** `altSum(a+b) − (cos·cos − sin·sin partials) = sinConv N − corner_cos + corner_sin`,
+-- whose RHS is a sum of terms that each `→ 0` (the gateway to the `Real` reconciliation).
+-- ===========================================================================
+
+/-- The `cos·cos` Cauchy-product corner at depth `N`. -/
+def cornerCos (a b : Q) (N : Nat) : Q :=
+  Fsum (fun i => Qsub (Fsum (fun j => mul (altTerm a 0 i) (altTerm b 0 j)) N)
+    (Fsum (fun j => mul (altTerm a 0 i) (altTerm b 0 j)) (N - i))) N
+
+/-- The `sin·sin` Cauchy-product corner at depth `N`. -/
+def cornerSin (a b : Q) (N : Nat) : Q :=
+  Fsum (fun i => Qsub (Fsum (fun j => mul (sinTerm a i) (sinTerm b j)) N)
+    (Fsum (fun j => mul (sinTerm a i) (sinTerm b j)) (N - i))) N
+
+/-- `(C−Sp) − ((C+cc) − ((Sp+sN)+cs)) ≈ sN + (cs−cc)`. -/
+private theorem resid_rearrange (C Sp sN cc cs : Q) :
+    Qeq (Qsub (Qsub C Sp) (Qsub (add C cc) (add (add Sp sN) cs)))
+        (add sN (Qsub cs cc)) := by
+  simp only [Qeq, Qsub, add, neg]; push_cast
+  generalize C.num = cn; generalize (C.den : Int) = cd
+  generalize Sp.num = spn; generalize (Sp.den : Int) = spd
+  generalize sN.num = snn; generalize (sN.den : Int) = snd
+  generalize cc.num = ccn; generalize (cc.den : Int) = ccd
+  generalize cs.num = csn; generalize (cs.den : Int) = csd
+  ring_uor
+
+/-- **The residual identity**: `altSum(a+b,0,N+1) − (Σcos a · Σcos b − Σsin a · Σsin b) =
+    sinConv(N+1) + (cornerSin − cornerCos)`. Exact combination of `altSum_add_eq`, `cosCauchy_eq`,
+    `sinCauchy_eq` (using `Σ_{≤N+1}sinConv − Σ_{≤N}sinConv = sinConv(N+1)`). Every term on the RHS
+    `→ 0` (`cornerMertens2`, `sinConv_abs_le`), so `cos(a+b) = cos a cos b − sin a sin b` in the limit. -/
+theorem cosAdd_resid_eq {a b : Q} (had : 0 < a.den) (hbd : 0 < b.den) (N : Nat) :
+    Qeq (Qsub (altSum (add a b) 0 (N + 1))
+          (Qsub (mul (altSum a 0 (N + 1)) (altSum b 0 (N + 1)))
+                (mul (Fsum (sinTerm a) (N + 1)) (Fsum (sinTerm b) (N + 1)))))
+        (add (sinConv a b (N + 1)) (Qsub (cornerSin a b (N + 1)) (cornerCos a b (N + 1)))) := by
+  have hCd : ∀ m, 0 < (cosConv a b m).den := fun m => cosConv_den_pos had hbd m
+  have hSd : ∀ m, 0 < (sinConv a b m).den := fun m => sinConv_den_pos had hbd m
+  have hccd : 0 < (cornerCos a b (N + 1)).den :=
+    Fsum_den_pos (fun i => Qsub_den_pos
+      (Fsum_den_pos (fun j => Qmul_den_pos (altTerm_den_pos had 0 i) (altTerm_den_pos hbd 0 j)) _)
+      (Fsum_den_pos (fun j => Qmul_den_pos (altTerm_den_pos had 0 i) (altTerm_den_pos hbd 0 j)) _)) _
+  have hcsd : 0 < (cornerSin a b (N + 1)).den :=
+    Fsum_den_pos (fun i => Qsub_den_pos
+      (Fsum_den_pos (fun j => Qmul_den_pos (sinTerm_den_pos had i) (sinTerm_den_pos hbd j)) _)
+      (Fsum_den_pos (fun j => Qmul_den_pos (sinTerm_den_pos had i) (sinTerm_den_pos hbd j)) _)) _
+  refine Qeq_trans (Qsub_den_pos (Qsub_den_pos (Fsum_den_pos hCd (N + 1)) (Fsum_den_pos hSd N))
+      (Qsub_den_pos (add_den_pos (Fsum_den_pos hCd (N + 1)) hccd)
+        (add_den_pos (Fsum_den_pos hSd (N + 1)) hcsd)))
+    (QsubCongr (altSum_add_eq had hbd N) (QsubCongr (cosCauchy_eq had hbd (N + 1))
+      (sinCauchy_eq had hbd (N + 1)))) ?_
+  exact resid_rearrange (Fsum (cosConv a b) (N + 1)) (Fsum (sinConv a b) N)
+    (sinConv a b (N + 1)) (cornerCos a b (N + 1)) (cornerSin a b (N + 1))
+
 end UOR.Bridge.F1Square.Analysis
