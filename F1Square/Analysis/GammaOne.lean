@@ -491,8 +491,66 @@ theorem lnSum_le_lnSumBound (T D : Nat) (hD : 0 < D) :
       (qRoundUp_ge (add (lnSumBound T D k) (mul (logBound T D k) ⟨1, k + 1⟩)) hadd D)
 
 -- ===========================================================================
--- Real-algebra helpers for the per-step bound on `d = (ln m)/m − ½((ln m)² − (ln(m−1))²)`.
+-- **Assembled `g(N)` upper bound** `gSeq N ≤ ofQ(gBound)` — the upper `lnSum` bound minus the lower
+-- `½log²` bound, both rational at fixed `D`. The single rational that the `γ₁ ≤ −0.0445` numeric checks.
 -- ===========================================================================
+
+/-- `½·ofQ(q) = ofQ(q/2)` (`Rhalf` is pointwise `·½`). -/
+theorem Rhalf_ofQ (q : Q) (hd : 0 < q.den) :
+    Req (Rhalf (ofQ q hd)) (ofQ (mul (⟨1, 2⟩ : Q) q) (Qmul_den_pos (by decide) hd)) :=
+  Req_of_seq_Qeq (fun _ => Qeq_refl _)
+
+/-- `−ofQ(q) = ofQ(−q)`. -/
+theorem Rneg_ofQ (q : Q) (hd : 0 < q.den) :
+    Req (Rneg (ofQ q hd)) (ofQ (neg q) (by exact hd)) :=
+  Req_of_seq_Qeq (fun _ => Qeq_refl _)
+
+theorem dMinusQ_num_nonneg (T p : Nat) : 0 ≤ (dMinusQ T p).num :=
+  Int.mul_nonneg (by decide)
+    (artSum_nonneg (by show (0 : Int) ≤ 1; decide) (Nat.succ_pos _) T)
+
+theorem logLowBound_num_nonneg (T D : Nat) : ∀ k, 0 ≤ (logLowBound T D k).num
+  | 0 => by show (0 : Int) ≤ 0; decide
+  | (k + 1) => by
+    show 0 ≤ (add (logLowBound T D k) (dMinusQ T (k + 1))).num * (D : Int) / _
+    refine Int.ediv_nonneg (Int.mul_nonneg ?_ (Int.ofNat_nonneg _)) (Int.ofNat_nonneg _)
+    show (0 : Int) ≤ (logLowBound T D k).num * _ + (dMinusQ T (k + 1)).num * _
+    exact Int.add_nonneg (Int.mul_nonneg (logLowBound_num_nonneg T D k) (Int.ofNat_nonneg _))
+      (Int.mul_nonneg (dMinusQ_num_nonneg T (k + 1)) (Int.ofNat_nonneg _))
+
+/-- The assembled rational upper bound for `g(N) = lnSum(N+1) − ½(log(N+1))²`: the upper `lnSum` bound
+    minus the lower `½log²` bound (from `logLowBound`), at fixed denominator `D`, depth `T ≤ 21`. -/
+def gBound (T D N : Nat) : Q :=
+  Qsub (lnSumBound T D (N + 1))
+    (mul (⟨1, 2⟩ : Q) (mul (logLowBound T D N) (logLowBound T D N)))
+
+theorem gBound_den_pos (T D N : Nat) (hD : 0 < D) : 0 < (gBound T D N).den :=
+  Qsub_den_pos (lnSumBound_den_pos T D hD (N + 1))
+    (Qmul_den_pos (by decide) (Qmul_den_pos (logLowBound_den_pos T D hD N)
+      (logLowBound_den_pos T D hD N)))
+
+/-- **`g(N) ≤ ofQ(gBound T D N)`** — `g(N) = lnSum(N+1) − ½(log(N+1))²` bounded above by the upper
+    `lnSum` bound minus the lower `½log²` bound (`logN_ge_logLowBound`, squared monotonically), at fixed
+    denominator `D`, artanh depth `T ≤ 21`. The rational fed to the `γ₁ ≤ −0.0445` numeric. -/
+theorem gSeq_le_gBound (T D N : Nat) (hD : 0 < D) (hT : T ≤ 21) :
+    Rle (gSeq N) (ofQ (gBound T D N) (gBound_den_pos T D N hD)) := by
+  have hLLd := logLowBound_den_pos T D hD N
+  have hUd := lnSumBound_den_pos T D hD (N + 1)
+  have hlow := logN_ge_logLowBound T D hD hT N
+  have hlownn : Rnonneg (ofQ (logLowBound T D N) hLLd) := Rnonneg_ofQ hLLd (logLowBound_num_nonneg T D N)
+  have hlognn : Rnonneg (logN (N + 1) (Nat.succ_pos N)) := Rnonneg_logN _ _
+  -- `LL² ≤ log²` and halve
+  have hhalf : Rle (Rhalf (Rmul (ofQ (logLowBound T D N) hLLd) (ofQ (logLowBound T D N) hLLd)))
+      (Rhalf (Rmul (logN (N + 1) (Nat.succ_pos N)) (logN (N + 1) (Nat.succ_pos N)))) :=
+    Rhalf_le_Rhalf (Rle_trans (Rmul_le_Rmul_right hlownn hlow) (Rmul_le_Rmul_left hlognn hlow))
+  -- `g(N) = lnSum(N+1) − ½log² ≤ ofQ(U) − ½LL²`
+  refine Rle_trans (Rsub_le_sub (lnSum_le_lnSumBound T D hD (N + 1)) hhalf) ?_
+  -- collapse the RHS reals to one `ofQ`
+  have hsqd : 0 < (mul (logLowBound T D N) (logLowBound T D N)).den := Qmul_den_pos hLLd hLLd
+  refine Rle_of_Req (Req_trans (Radd_congr (Req_refl _) (Req_trans (Rneg_congr
+    (Req_trans (Rhalf_congr (Rmul_ofQ_ofQ hLLd hLLd)) (Rhalf_ofQ _ hsqd)))
+    (Rneg_ofQ _ (Qmul_den_pos (by decide) hsqd)))) ?_)
+  exact Radd_ofQ_ofQ hUd (by exact Qmul_den_pos (by decide) hsqd)
 
 /-- The linear identity `(a + b) + (a − b) ≈ a + a`. -/
 theorem addsub_linear (a b : Real) : Req (Radd (Radd a b) (Rsub a b)) (Radd a a) :=

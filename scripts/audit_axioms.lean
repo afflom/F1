@@ -1370,6 +1370,12 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.qRoundDown_den_pos
 #print axioms Analysis.logLowBound_den_pos
 #print axioms Analysis.logN_ge_logLowBound
+#print axioms Analysis.Rhalf_ofQ
+#print axioms Analysis.Rneg_ofQ
+#print axioms Analysis.dMinusQ_num_nonneg
+#print axioms Analysis.logLowBound_num_nonneg
+#print axioms Analysis.gBound_den_pos
+#print axioms Analysis.gSeq_le_gBound
 #print axioms Analysis.deltaLog_upper
 #print axioms Analysis.expDelta_eq
 #print axioms Analysis.expRecip_le
