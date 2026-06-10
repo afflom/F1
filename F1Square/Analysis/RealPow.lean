@@ -297,6 +297,24 @@ theorem Rhalf_double (t : Real) : Req (Radd (Rhalf t) (Rhalf t)) t := by
       (Qeq_le (by simp only [Qeq, add, Qbound]; push_cast; ring_uor))
   exact Qle_trans (add_den_pos (Qbound_den_pos _) (Qbound_den_pos _)) (t.reg (2 * n + 1) n) hb
 
+/-- `½·(a + b) ≈ ½·a + ½·b` (`Rhalf` distributes over `+`; pointwise, no reindex). -/
+theorem Rhalf_Radd (a b : Real) : Req (Rhalf (Radd a b)) (Radd (Rhalf a) (Rhalf b)) := by
+  apply Req_of_seq_Qeq; intro n; simp only [Rhalf, Radd, mul, add, Qeq]; push_cast; ring_uor
+
+/-- `½·(−a) ≈ −(½·a)`. -/
+theorem Rhalf_Rneg (a : Real) : Req (Rhalf (Rneg a)) (Rneg (Rhalf a)) := by
+  apply Req_of_seq_Qeq; intro n; simp only [Rhalf, Rneg, mul, neg, Qeq]; push_cast; ring_uor
+
+/-- `½·(a − b) ≈ ½·a − ½·b`. -/
+theorem Rhalf_Rsub (a b : Real) : Req (Rhalf (Rsub a b)) (Rsub (Rhalf a) (Rhalf b)) := by
+  apply Req_of_seq_Qeq; intro n
+  simp only [Rhalf, Rsub, Radd, Rneg, mul, add, neg, Qeq]; push_cast; ring_uor
+
+/-- `Rhalf` respects `≈` (it scales by `½` with no reindex). -/
+theorem Rhalf_congr {x y : Real} (h : Req x y) : Req (Rhalf x) (Rhalf y) := fun n =>
+  Qle_trans (Qabs_den_pos (Qsub_den_pos (x.den_pos n) (y.den_pos n)))
+    (Qabs_half_le (x.den_pos n) (y.den_pos n)) (h n)
+
 /-- **`exp` is non-negative**: `exp t ≥ 0` for every real `t`, because `exp t ≈ (exp(t/2))²` and a
     square is non-negative (`Rnonneg_Rmul_self`). Holds for all `t` (no sign hypothesis). -/
 theorem RexpReal_nonneg (t : Real) : Rnonneg (RexpReal t) := by

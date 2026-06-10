@@ -157,4 +157,67 @@ theorem deltaLog_lower (p : Nat) (hp : 1 ≤ p) :
   RexpReal_reflects_le (Rnonneg_Rsub_of_Rle (logN_mono hp (Nat.le_succ p)))
     (Rle_trans (Rexp_recip_le p hp) (Rle_of_Req (Req_symm (expDelta_eq p hp))))
 
+-- ===========================================================================
+-- Real-algebra helpers for the per-step bound on `d = (ln m)/m − ½((ln m)² − (ln(m−1))²)`.
+-- ===========================================================================
+
+/-- The linear identity `(a + b) + (a − b) ≈ a + a`. -/
+theorem addsub_linear (a b : Real) : Req (Radd (Radd a b) (Rsub a b)) (Radd a a) :=
+  Req_trans (Radd_swap a b a (Rneg b))
+    (Req_trans (Radd_congr (Req_refl _) (Radd_neg b)) (Radd_zero _))
+
+/-- The quadratic identity `(a² − b²) + (a − b)² ≈ (a − b)·(a + a)` ( = `2aδ`, `δ = a − b`). -/
+theorem sq_diff_identity (a b : Real) :
+    Req (Radd (Rsub (Rmul a a) (Rmul b b)) (Rmul (Rsub a b) (Rsub a b)))
+        (Rmul (Rsub a b) (Radd a a)) := by
+  refine Req_trans (Radd_congr (Req_symm (Rmul_sub_add_self a b)) (Req_refl _)) ?_
+  refine Req_trans (Req_symm (Rmul_distrib (Rsub a b) (Radd a b) (Rsub a b))) ?_
+  exact Rmul_congr (Req_refl _) (addsub_linear a b)
+
+/-- `x − y ≤ z` from `x ≤ z + y`. -/
+theorem Rsub_le_of_le_add {x y z : Real} (h : Rle x (Radd z y)) : Rle (Rsub x y) z :=
+  Rle_trans (Rsub_le_sub h (Rle_refl y))
+    (Rle_of_Req (Req_trans (Radd_assoc z y (Rneg y))
+      (Req_trans (Radd_congr (Req_refl z) (Radd_neg y)) (Radd_zero z))))
+
+/-- **`½a² − ½b² + ½(a−b)² ≈ a·(a−b)`** (`= aδ`). The combined `½`-identity. -/
+theorem half_combine (a b : Real) :
+    Req (Radd (Rsub (Rhalf (Rmul a a)) (Rhalf (Rmul b b))) (Rhalf (Rmul (Rsub a b) (Rsub a b))))
+        (Rmul a (Rsub a b)) := by
+  refine Req_trans (Radd_congr (Req_symm (Rhalf_Rsub (Rmul a a) (Rmul b b))) (Req_refl _)) ?_
+  refine Req_trans
+    (Req_symm (Rhalf_Radd (Rsub (Rmul a a) (Rmul b b)) (Rmul (Rsub a b) (Rsub a b)))) ?_
+  refine Req_trans (Rhalf_congr (sq_diff_identity a b)) ?_
+  refine Req_trans (Rhalf_congr (Rmul_distrib (Rsub a b) a a)) ?_
+  refine Req_trans (Rhalf_Radd (Rmul (Rsub a b) a) (Rmul (Rsub a b) a)) ?_
+  exact Req_trans (Rhalf_double (Rmul (Rsub a b) a)) (Rmul_comm (Rsub a b) a)
+
+-- ===========================================================================
+-- The per-step `d = g(p+1) − g(p) = (ln(p+1))/(p+1) − ½((ln(p+1))² − (ln p)²)` and its bounds.
+-- ===========================================================================
+
+/-- The per-step difference `d_{p+1} = g(p+1) − g(p)` (`p ≥ 1`). -/
+def dStep (p : Nat) (hp : 1 ≤ p) : Real :=
+  Rsub (lnOver (p + 1) (Nat.succ_pos p))
+    (Rsub (Rhalf (Rmul (logN (p + 1) (Nat.succ_pos p)) (logN (p + 1) (Nat.succ_pos p))))
+          (Rhalf (Rmul (logN p hp) (logN p hp))))
+
+/-- **`d_{p+1} ≤ ½·δ²`** (`δ = log(p+1) − log p`): the half of the upper |d| bound (with `½δ² ≤
+    1/(2p²)`). Since `d = lnOver(p+1) − (½L²−½L'²)` and `lnOver(p+1) = L·(1/(p+1)) ≤ L·δ`
+    (`δ ≥ 1/(p+1)`), and `½L²−½L'²+½δ² = L·δ`. -/
+theorem dStep_le_half_sq (p : Nat) (hp : 1 ≤ p) :
+    Rle (dStep p hp)
+      (Rhalf (Rmul (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
+                   (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp)))) := by
+  have ha : Rnonneg (logN (p + 1) (Nat.succ_pos p)) := Rnonneg_logN (p + 1) (Nat.succ_pos p)
+  -- lnOver(p+1) = L·(1/(p+1)) ≤ L·δ
+  have hle : Rle (lnOver (p + 1) (Nat.succ_pos p))
+      (Rmul (logN (p + 1) (Nat.succ_pos p))
+        (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))) :=
+    Rmul_le_Rmul_left ha (deltaLog_lower p hp)
+  apply Rsub_le_of_le_add
+  refine Rle_trans hle (Rle_of_Req ?_)
+  refine Req_trans (Req_symm (half_combine (logN (p + 1) (Nat.succ_pos p)) (logN p hp))) ?_
+  exact Radd_comm _ _
+
 end UOR.Bridge.F1Square.Analysis

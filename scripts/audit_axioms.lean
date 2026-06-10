@@ -1090,6 +1090,10 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rnonneg_of_Rle_zero
 #print axioms Analysis.Rnonneg_congr
 #print axioms Analysis.Rhalf_double
+#print axioms Analysis.Rhalf_Radd
+#print axioms Analysis.Rhalf_Rneg
+#print axioms Analysis.Rhalf_Rsub
+#print axioms Analysis.Rhalf_congr
 #print axioms Analysis.RexpReal_nonneg
 #print axioms Analysis.RexpReal_sub_one_nonneg
 #print axioms Analysis.Rnonneg_Rsub_of_Rle
@@ -1349,6 +1353,11 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.expRecip_le
 #print axioms Analysis.Rexp_recip_le
 #print axioms Analysis.deltaLog_lower
+#print axioms Analysis.addsub_linear
+#print axioms Analysis.sq_diff_identity
+#print axioms Analysis.Rsub_le_of_le_add
+#print axioms Analysis.half_combine
+#print axioms Analysis.dStep_le_half_sq
 
 -- ZetaTwo (the ζ(2) ≥ 1.63 lower bracket; v0.16.0, for Pos λ₂).
 #print axioms Analysis.zeta_ge_partial
@@ -1377,8 +1386,6 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.bernoulli_six
 
 -- LiOne (the Bombieri–Lagarias n=1 decomposition λ₁ = λ₁^arith + λ₁^∞; v0.15.3).
-#print axioms Analysis.Rhalf_Radd
-#print axioms Analysis.Rhalf_Rneg
 #print axioms Analysis.Rhalf_two
 #print axioms Analysis.Rlambda1_decomposition
 #print axioms Analysis.li_decomposition_realized

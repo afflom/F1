@@ -39,16 +39,6 @@ namespace UOR.Bridge.F1Square.Analysis
 -- reindex both sides identically).
 -- ===========================================================================
 
-/-- `½·(a + b) ≈ ½·a + ½·b`. -/
-theorem Rhalf_Radd (a b : Real) : Req (Rhalf (Radd a b)) (Radd (Rhalf a) (Rhalf b)) := by
-  apply Req_of_seq_Qeq; intro n
-  simp only [Rhalf, Radd, mul, add, Qeq]; push_cast; ring_uor
-
-/-- `½·(−a) ≈ −(½·a)`. -/
-theorem Rhalf_Rneg (a : Real) : Req (Rhalf (Rneg a)) (Rneg (Rhalf a)) := by
-  apply Req_of_seq_Qeq; intro n
-  simp only [Rhalf, Rneg, mul, neg, Qeq]; push_cast; ring_uor
-
 /-- `½·2 ≈ 1`. -/
 theorem Rhalf_two : Req (Rhalf (ofQ ⟨2, 1⟩ (by decide))) one := by
   apply Req_of_seq_Qeq; intro n
