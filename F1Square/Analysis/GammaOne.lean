@@ -21,6 +21,7 @@ Pure Lean 4, no Mathlib, no `sorry`/`native_decide`, choice-free.
 -/
 
 import F1Square.Analysis.RealPow
+import F1Square.Analysis.ComplexZeta
 
 namespace UOR.Bridge.F1Square.Analysis
 
@@ -661,5 +662,50 @@ theorem gamma_domination (j : Nat) : (j + 1) * (4 * j + 22) ≤ 2 ^ (2 * j + 8) 
   have h4 : (2 : Nat) ^ j * 2 ^ (j + 8) = 2 ^ (2 * j + 8) := by
     rw [← Nat.pow_add]; congr 1; omega
   omega
+
+-- ===========================================================================
+-- The reindexed sequence `gSeqDyadic j = gSeq(2^{2j+8})` and its pairwise Cauchy bounds → RReg → Rlim.
+-- ===========================================================================
+
+/-- The dyadic reindex exponent `M(j) = 2j+8`. -/
+def gammaMidx (j : Nat) : Nat := 2 * j + 8
+
+theorem gammaMidx_mono {j k : Nat} (h : j ≤ k) : gammaMidx j ≤ gammaMidx k := by
+  simp only [gammaMidx]; omega
+
+/-- The reindexed partial-`γ₁` sequence `gSeq(2^{M(j)})`. -/
+def gSeqDyadic (j : Nat) : Real := gSeq (2 ^ gammaMidx j)
+
+/-- `1/a ≤ 1/b` when `b ≤ a`. -/
+theorem Qunit_le {a b : Nat} (h : b ≤ a) : Qle (⟨1, a⟩ : Q) ⟨1, b⟩ := by
+  simp only [Qle]; push_cast; omega
+
+/-- `1/a − 1/b ≤ 1/a` (the subtracted term is nonnegative; difference `a² ≥ 0`). -/
+theorem Qsub_unit_le (a b : Nat) : Qle (Qsub (⟨1, a⟩ : Q) ⟨1, b⟩) ⟨1, a⟩ := by
+  simp only [Qle, Qsub, add, neg]; push_cast
+  have ha : (0 : Int) ≤ (a : Int) := Int.ofNat_nonneg a
+  have key : (1 : Int) * ((a : Int) * (b : Int)) - (1 * (b : Int) + -1 * (a : Int)) * (a : Int)
+      = (a : Int) * (a : Int) := by ring_uor
+  have h1 : (0 : Int) ≤ (a : Int) * (a : Int) := Int.mul_nonneg ha ha
+  omega
+
+/-- `j+1 ≤ 2·2^{M(j)}` (from the domination — the reindex is far enough out). -/
+theorem succ_le_two_pow_midx (j : Nat) : j + 1 ≤ 2 * 2 ^ gammaMidx j := by
+  have hd := gamma_domination j
+  have hle : j + 1 ≤ (j + 1) * (4 * j + 22) := Nat.le_mul_of_pos_right _ (by omega)
+  simp only [gammaMidx]; omega
+
+/-- **Pairwise Cauchy (upper)**: for `j ≤ k`, `gSeqDyadic k − gSeqDyadic j ≤ 1/(j+1)`. -/
+theorem gamma_pair_le {j k : Nat} (hjk : j ≤ k) :
+    Rle (Rsub (gSeqDyadic k) (gSeqDyadic j)) (ofQ (⟨1, j + 1⟩ : Q) (Nat.succ_pos j)) := by
+  simp only [gSeqDyadic]
+  have hpow : 2 ^ gammaMidx j ≤ 2 ^ gammaMidx k :=
+    Nat.pow_le_pow_right (by omega) (gammaMidx_mono hjk)
+  obtain ⟨d, hd⟩ := Nat.le.dest hpow
+  rw [← hd]
+  refine Rle_trans (gSeq_diff_le (2 ^ gammaMidx j) Nat.one_le_two_pow d) (Rle_ofQ_ofQ _ _ ?_)
+  exact Qle_trans (Nat.mul_pos (by decide) (Nat.pos_pow_of_pos _ (by decide)))
+    (Qsub_unit_le (2 * 2 ^ gammaMidx j) (2 * (2 ^ gammaMidx j + d)))
+    (Qunit_le (succ_le_two_pow_midx j))
 
 end UOR.Bridge.F1Square.Analysis
