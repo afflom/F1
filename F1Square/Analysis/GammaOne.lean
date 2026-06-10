@@ -785,4 +785,44 @@ theorem Rle_of_Rsub_le_all {a b : Real} {C : Nat}
       (Qeq_le (by simp only [Qeq, add]; push_cast; ring_uor))
   exact Qle_add_of_Qsub_le (a.den_pos n) (b.den_pos n) (Nat.succ_pos n) hub
 
+/-- `x − y ≤ z ⟹ x ≤ y + z` (real). -/
+theorem Rle_add_of_Rsub_le {x y z : Real} (h : Rle (Rsub x y) z) : Rle x (Radd y z) := by
+  have heq : Req (Radd (Rsub x y) y) x :=
+    Req_trans (Radd_assoc x (Rneg y) y)
+      (Req_trans (Radd_congr (Req_refl x) (Req_trans (Radd_comm (Rneg y) y) (Radd_neg y)))
+        (Radd_zero x))
+  exact Rle_trans (Rle_of_Req (Req_symm heq))
+    (Rle_trans (Radd_le_add h (Rle_refl y)) (Rle_of_Req (Radd_comm z y)))
+
+/-- **`gSeq M ≤ gSeq N + 1/(2N)`** for `M ≥ N ≥ 1` (the upper gap bound, collapsed to a single anchor). -/
+theorem gSeq_le_anchor {N M : Nat} (hN : 1 ≤ N) (hNM : N ≤ M) :
+    Rle (gSeq M) (Radd (gSeq N) (ofQ (⟨1, 2 * N⟩ : Q) (Nat.mul_pos (by decide) hN))) := by
+  obtain ⟨d, rfl⟩ := Nat.le.dest hNM
+  exact Rle_add_of_Rsub_le
+    (Rle_trans (gSeq_diff_le N hN d) (Rle_ofQ_ofQ _ _ (Qsub_unit_le (2 * N) (2 * (N + d)))))
+
+/-- **`γ₁ ≤ gSeq N + 1/(2N)`** for any small `N ∈ [1, 256]`: each reindexed term `gSeqDyadic k`
+    (`= gSeq(2^{2k+8})`, with `2^{2k+8} ≥ 256 ≥ N`) is `≤ gSeq N + 1/(2N)`, so the limit is too
+    (one-sided Archimedean via the `RTendsTo` rate `2/(k+1)`). -/
+theorem Rgamma1_le_gSeq {N : Nat} (hN : 1 ≤ N) (hN256 : N ≤ 256) :
+    Rle Rgamma1 (Radd (gSeq N) (ofQ (⟨1, 2 * N⟩ : Q) (Nat.mul_pos (by decide) hN))) := by
+  apply Rle_of_Rsub_le_all (C := 2)
+  intro k
+  have hN2k : N ≤ 2 ^ (2 * k + 8) := by
+    have h8 : (2 : Nat) ^ 8 ≤ 2 ^ (2 * k + 8) := Nat.pow_le_pow_right (by omega) (by omega)
+    have : (256 : Nat) = 2 ^ 8 := by decide
+    omega
+  have htend : Rle (Rsub Rgamma1 (gSeqDyadic k)) (ofQ (⟨2, k + 1⟩ : Q) (Nat.succ_pos k)) :=
+    RTendsTo_to_Rle_lower (Rlim_tendsTo gSeqDyadic gSeqDyadic_RReg) k
+  have hanchor : Rle (gSeqDyadic k)
+      (Radd (gSeq N) (ofQ (⟨1, 2 * N⟩ : Q) (Nat.mul_pos (by decide) hN))) :=
+    gSeq_le_anchor hN hN2k
+  have hzB : Req (Radd zero (Radd (gSeq N) (ofQ (⟨1, 2 * N⟩ : Q) (Nat.mul_pos (by decide) hN))))
+      (Radd (gSeq N) (ofQ (⟨1, 2 * N⟩ : Q) (Nat.mul_pos (by decide) hN))) :=
+    Req_trans (Radd_comm zero _) (Radd_zero _)
+  refine Rle_trans (Rle_of_Req (Req_symm (Rsub_split Rgamma1 (gSeqDyadic k) _))) ?_
+  refine Rle_trans (Radd_le_add htend
+    (Rsub_le_of_le_add (Rle_trans hanchor (Rle_of_Req (Req_symm hzB))))) ?_
+  exact Rle_of_Req (Radd_zero _)
+
 end UOR.Bridge.F1Square.Analysis
