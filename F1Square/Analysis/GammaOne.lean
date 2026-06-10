@@ -325,4 +325,97 @@ theorem gSeq_step_ge (j : Nat) :
       (Rsub (gSeq (j + 1)) (gSeq j)) :=
   Rle_trans (dStep_ge (j + 1) (Nat.succ_pos j)) (Rle_of_Req (Req_symm (gSeq_step_eq j)))
 
+-- ===========================================================================
+-- The UPPER gap bound `gSeq(N+d) − gSeq N ≤ 1/(2N)` (clean rational telescoping).
+-- ===========================================================================
+
+/-- Rational partial sum `Σ_{p≤j} 1/(2p²)` of the per-step upper bounds. -/
+def Usum : Nat → Q
+  | 0 => ⟨0, 1⟩
+  | (j + 1) => add (Usum j) ⟨1, 2 * (j + 1) * (j + 1)⟩
+
+theorem Usum_den_pos : ∀ j, 0 < (Usum j).den
+  | 0 => by decide
+  | (j + 1) => add_den_pos (Usum_den_pos j)
+      (Nat.mul_pos (Nat.mul_pos (by decide) (Nat.succ_pos j)) (Nat.succ_pos j))
+
+/-- `a + (x − y) ≈ (x + a) − y` on ℚ (general, so `ring_uor` sees only the three atoms). -/
+theorem Qadd_Qsub_comm (a x y : Q) : Qeq (add a (Qsub x y)) (Qsub (add x a) y) := by
+  simp only [Qsub, add, neg, Qeq]; push_cast; ring_uor
+
+/-- **Upper gap bound, U-form** (`d`-induction): `gSeq(N+d) − gSeq N ≤ Usum(N+d) − Usum N`.
+    Each step adds exactly the per-step bound `1/(2(N+d+1)²)` (`gSeq_step_le`); the `Rsub_split`
+    telescopes and the combine is a pure rational rearrangement (`Radd_ofQ_ofQ` + `ofQ_congr`). -/
+theorem gSeq_diff_le_U (N : Nat) (d : Nat) :
+    Rle (Rsub (gSeq (N + d)) (gSeq N))
+        (ofQ (Qsub (Usum (N + d)) (Usum N))
+          (Qsub_den_pos (Usum_den_pos (N + d)) (Usum_den_pos N))) := by
+  induction d with
+  | zero =>
+      simp only [Nat.add_zero]
+      apply Rle_of_Req
+      refine Req_trans (Radd_neg (gSeq N)) (Req_symm ?_)
+      apply Req_of_seq_Qeq; intro n
+      simp only [ofQ, zero, Qsub, add, neg, Qeq]; push_cast; ring_uor
+  | succ d ih =>
+      exact Rle_trans
+        (Rle_of_Req (Req_symm (Rsub_split (gSeq (N + d + 1)) (gSeq (N + d)) (gSeq N))))
+        (Rle_trans
+          (Radd_le_add (gSeq_step_le (N + d)) ih)
+          (Rle_of_Req (Req_trans
+            (Radd_ofQ_ofQ _ _)
+            (ofQ_congr _ _ (Qadd_Qsub_comm _ (Usum (N + d)) (Usum N))))))
+
+/-- Telescoping sum on ℚ: `(p − q) + (r − p) ≈ r − q`. -/
+theorem Qadd_Qsub_telescope (p q r : Q) : Qeq (add (Qsub p q) (Qsub r p)) (Qsub r q) := by
+  simp only [Qsub, add, neg, Qeq]; push_cast; ring_uor
+
+/-- **Per-step telescoping inequality** `1/(2(m+1)²) ≤ 1/(2m) − 1/(2(m+1))` (the difference is
+    `4(m+1) ≥ 0`). -/
+theorem Usum_step_ineq (m : Nat) :
+    Qle (⟨1, 2 * (m + 1) * (m + 1)⟩ : Q) (Qsub (⟨1, 2 * m⟩ : Q) ⟨1, 2 * (m + 1)⟩) := by
+  simp only [Qle, Qsub, add, neg]
+  push_cast
+  have key : (1 * (2 * ((m : Int) + 1)) + (-1) * (2 * (m : Int))) * (2 * ((m : Int) + 1) * ((m : Int) + 1))
+      - 1 * (2 * (m : Int) * (2 * ((m : Int) + 1))) = 4 * (m : Int) + 4 := by ring_uor
+  have hm : (0 : Int) ≤ (m : Int) := Int.ofNat_nonneg m
+  omega
+
+/-- **Rational telescoping tail bound** `Usum(N+d) − Usum N ≤ 1/(2N) − 1/(2(N+d))` (for `N ≥ 1`). -/
+theorem Usum_tail_le (N : Nat) (hN : 1 ≤ N) (d : Nat) :
+    Qle (Qsub (Usum (N + d)) (Usum N)) (Qsub (⟨1, 2 * N⟩ : Q) ⟨1, 2 * (N + d)⟩) := by
+  induction d with
+  | zero =>
+      simp only [Nat.add_zero]
+      apply Qeq_le
+      simp only [Qsub, add, neg, Qeq]; push_cast; ring_uor
+  | succ d ih =>
+      -- den-positivity abbreviations
+      have hA : 0 < (⟨1, 2 * ((N + d) + 1) * ((N + d) + 1)⟩ : Q).den :=
+        Nat.mul_pos (Nat.mul_pos (by decide) (Nat.succ_pos (N + d))) (Nat.succ_pos (N + d))
+      have hC : 0 < (Qsub (⟨1, 2 * N⟩ : Q) ⟨1, 2 * (N + d)⟩).den :=
+        Qsub_den_pos (Nat.mul_pos (by decide) hN) (Nat.mul_pos (by decide) (by omega))
+      have hD : 0 < (Qsub (⟨1, 2 * (N + d)⟩ : Q) ⟨1, 2 * (N + d + 1)⟩).den :=
+        Qsub_den_pos (Nat.mul_pos (by decide) (by omega)) (Nat.mul_pos (by decide) (by omega))
+      have hB : 0 < (Qsub (Usum (N + d)) (Usum N)).den :=
+        Qsub_den_pos (Usum_den_pos (N + d)) (Usum_den_pos N)
+      -- step: A + (1/(2N) − 1/(2(N+d))) ≤ 1/(2N) − 1/(2(N+d+1))
+      have hstep : Qle (add (⟨1, 2 * ((N + d) + 1) * ((N + d) + 1)⟩ : Q)
+            (Qsub (⟨1, 2 * N⟩ : Q) ⟨1, 2 * (N + d)⟩))
+          (Qsub (⟨1, 2 * N⟩ : Q) ⟨1, 2 * (N + d + 1)⟩) :=
+        Qle_trans (add_den_pos hD hC)
+          (Qadd_le_add (Usum_step_ineq (N + d)) (Qle_refl _))
+          (Qeq_le (Qadd_Qsub_telescope _ _ _))
+      -- assemble: LHS ≈ A + (Usum(N+d) − Usum N) ≤ A + (1/(2N) − 1/(2(N+d))) ≤ target
+      exact Qle_trans (add_den_pos hA hB)
+        (Qeq_le (Qeq_symm (Qadd_Qsub_comm _ (Usum (N + d)) (Usum N))))
+        (Qle_trans (add_den_pos hA hC) (Qadd_le_add (Qle_refl _) ih) hstep)
+
+/-- **The UPPER gap bound** `gSeq(N+d) − gSeq N ≤ 1/(2N) − 1/(2(N+d)) ≤ 1/(2N)` (for `N ≥ 1`). -/
+theorem gSeq_diff_le (N : Nat) (hN : 1 ≤ N) (d : Nat) :
+    Rle (Rsub (gSeq (N + d)) (gSeq N))
+        (ofQ (Qsub (⟨1, 2 * N⟩ : Q) ⟨1, 2 * (N + d)⟩)
+          (Qsub_den_pos (Nat.mul_pos (by decide) hN) (Nat.mul_pos (by decide) (by omega)))) :=
+  Rle_trans (gSeq_diff_le_U N d) (Rle_ofQ_ofQ _ _ (Usum_tail_le N hN d))
+
 end UOR.Bridge.F1Square.Analysis
