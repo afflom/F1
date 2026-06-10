@@ -51,4 +51,28 @@ theorem lnSum_mono {a b : Nat} (hab : a ≤ b) : Rle (lnSum a) (lnSum b) := by
 def gSeq (j : Nat) : Real :=
   Rsub (lnSum (j + 1)) (Rhalf (Rmul (logN (j + 1) (by omega)) (logN (j + 1) (by omega))))
 
+-- ===========================================================================
+-- `log k ≥ 1` for `k ≥ 4` — a prerequisite for the `g`-decreasing (upper-bound) half.
+-- ===========================================================================
+
+/-- **`log 4 ≥ 1`** — `log 4 = 2·log 2 ≥ 2·½ = 1` (`logN_pow_two` + `logN_2_ge_half`). -/
+theorem logN_four_ge_one : Rle (ofQ (⟨1, 1⟩ : Q) (by decide)) (logN 4 (by omega)) := by
+  have h4 : Req (logN 4 (by omega)) (Rnsmul 2 (logN 2 (by omega))) :=
+    Req_trans (logN_eq_of_eq (show (4 : Nat) = 2 ^ 2 from rfl) (by omega) (by omega))
+      (logN_pow_two 2)
+  -- ofQ 1 ≈ (½ + (½ + 0)) ≤ (log 2 + (log 2 + 0)) = Rnsmul 2 (log 2)
+  have hhalf := logN_2_ge_half
+  have hmono : Rle (Radd (ofQ (⟨1, 2⟩ : Q) (by decide)) (Radd (ofQ (⟨1, 2⟩ : Q) (by decide)) zero))
+      (Rnsmul 2 (logN 2 (by omega))) :=
+    Radd_le_add hhalf (Radd_le_add hhalf (Rle_refl zero))
+  have hsum : Req (Radd (ofQ (⟨1, 2⟩ : Q) (by decide)) (Radd (ofQ (⟨1, 2⟩ : Q) (by decide)) zero))
+      (ofQ (⟨1, 1⟩ : Q) (by decide)) := by
+    refine Req_trans (Radd_congr (Req_refl _) (Radd_zero _)) ?_
+    apply Req_of_seq_Qeq; intro n; simp only [Qeq, Radd, ofQ, add]; decide
+  exact Rle_trans (Rle_of_Req (Req_symm hsum)) (Rle_trans hmono (Rle_of_Req (Req_symm h4)))
+
+/-- **`log k ≥ 1` for `k ≥ 4`** (`log 4 ≥ 1` and `log` monotone). -/
+theorem logN_ge_one {k : Nat} (hk : 4 ≤ k) : Rle (ofQ (⟨1, 1⟩ : Q) (by decide)) (logN k (by omega)) :=
+  Rle_trans logN_four_ge_one (logN_mono (by omega) hk)
+
 end UOR.Bridge.F1Square.Analysis
