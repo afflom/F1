@@ -936,4 +936,73 @@ theorem sinMul_diag_le (a b : Real) (n : Nat) :
         (Qabs_num_nonneg _) (Int.ofNat_nonneg _) hP' (altProd_drift a b hnKa hnKb)))
     (Qeq_le (by simp only [Qeq, add, mul]; push_cast; ring_uor))
 
+/-- **Single-variable off-diagonal reconcile to a deep literal reference.** The natural cos/sin
+    diagonal `RaltReal_seq x off (2N+1) = altSum (x.seq R) off R` (`R = RaltReal_R x (2N+1)`) is within
+    `(Uₓ·4·xBound x + 1)/(N+1)` of the deep-reference partial sum `altSum (x.seq s) off (2K+1)` (any
+    `s ≥ N`, any deep `2K+1 ≥ R`). Triangle through `altSum (x.seq s) off R`: the **arg-change** part
+    (`altSum_Lip_le`, `LipS ≤ Uₓ`, squared regularity `xsq_diff_n_le`) and the **depth-change** part
+    (`altSum_trunc_bound`, `RaltReal_trunc_le`). The two-variable analog of `RaltReal_diag_le`, but to a
+    *common literal* depth (so both `a` and `b` can be reconciled to the single `2K+1` that `cosAdd_decay_5`
+    consumes). -/
+theorem altDiag_to_deep (x : Real) (off N s K : Nat) (hNs : N ≤ s)
+    (hdeep : RaltReal_R x (2 * N + 1) ≤ 2 * K + 1) :
+    Qle (Qabs (Qsub (RaltReal_seq x off (2 * N + 1)) (altSum (x.seq s) off (2 * K + 1))))
+      ⟨((expM_U (xBound x * xBound x) (2 * (xBound x * xBound x))).num.toNat * (4 * xBound x) + 1 : Int),
+        N + 1⟩ := by
+  have hNR : N ≤ RaltReal_R x (2 * N + 1) :=
+    Nat.le_trans (by omega) (n_le_RaltReal_R x (2 * N + 1))
+  have h2M : 2 * (xBound x * xBound x) ≤ RaltReal_R x (2 * N + 1) := by unfold RaltReal_R; omega
+  show Qle (Qabs (Qsub (altSum (x.seq (RaltReal_R x (2 * N + 1))) off (RaltReal_R x (2 * N + 1)))
+      (altSum (x.seq s) off (2 * K + 1))))
+    ⟨((expM_U (xBound x * xBound x) (2 * (xBound x * xBound x))).num.toNat * (4 * xBound x) + 1 : Int), N + 1⟩
+  have htri := Qabs_sub_triangle
+    (a := altSum (x.seq (RaltReal_R x (2 * N + 1))) off (RaltReal_R x (2 * N + 1)))
+    (b := altSum (x.seq s) off (RaltReal_R x (2 * N + 1)))
+    (c := altSum (x.seq s) off (2 * K + 1))
+    (altSum_den_pos (x.den_pos _) off _) (altSum_den_pos (x.den_pos _) off _)
+    (altSum_den_pos (x.den_pos _) off _)
+  -- arg-change (Lipschitz) part
+  have hLip : Qle (Qabs (Qsub (altSum (x.seq (RaltReal_R x (2 * N + 1))) off (RaltReal_R x (2 * N + 1)))
+        (altSum (x.seq s) off (RaltReal_R x (2 * N + 1)))))
+      ⟨((expM_U (xBound x * xBound x) (2 * (xBound x * xBound x))).num.toNat * (4 * xBound x) : Int), N + 1⟩ := by
+    have hLS := altSum_Lip_le (x.den_pos (RaltReal_R x (2 * N + 1))) (x.den_pos s)
+      (canon_bound x (RaltReal_R x (2 * N + 1))) (canon_bound x s) off (RaltReal_R x (2 * N + 1))
+    have hCle : Qle (LipS (xBound x * xBound x) (RaltReal_R x (2 * N + 1)))
+        ⟨((expM_U (xBound x * xBound x) (2 * (xBound x * xBound x))).num.toNat : Int), 1⟩ :=
+      Qle_trans (expM_U_den_pos _ _) (LipS_le_U (xBound x * xBound x) (RaltReal_R x (2 * N + 1)))
+        (Qle_toNat (expM_U_num_nonneg _ _) (expM_U_den_pos _ _))
+    have hneg : Qle (Qabs (Qsub (neg (mul (x.seq (RaltReal_R x (2 * N + 1))) (x.seq (RaltReal_R x (2 * N + 1)))))
+          (neg (mul (x.seq s) (x.seq s))))) ⟨(4 * xBound x : Nat), N + 1⟩ := by
+      have hqe : Qeq (Qsub (neg (mul (x.seq (RaltReal_R x (2 * N + 1))) (x.seq (RaltReal_R x (2 * N + 1)))))
+            (neg (mul (x.seq s) (x.seq s))))
+          (neg (Qsub (mul (x.seq (RaltReal_R x (2 * N + 1))) (x.seq (RaltReal_R x (2 * N + 1))))
+            (mul (x.seq s) (x.seq s)))) := by
+        simp only [Qeq, Qsub, neg, mul, add]; push_cast; ring_uor
+      have h1 := Qabs_Qeq hqe
+      rw [Qabs_neg] at h1
+      exact Qle_trans (Qabs_den_pos (Qsub_den_pos
+          (Nat.mul_pos (x.den_pos _) (x.den_pos _)) (Nat.mul_pos (x.den_pos _) (x.den_pos _))))
+        (Qeq_le h1) (xsq_diff_n_le x hNR hNs)
+    refine Qle_trans (Qmul_den_pos (LipS_den_pos _ _) (Qabs_den_pos (Qsub_den_pos
+        (Nat.mul_pos (x.den_pos _) (x.den_pos _)) (Nat.mul_pos (x.den_pos _) (x.den_pos _))))) hLS ?_
+    refine Qle_trans (Qmul_den_pos Nat.one_pos (Qabs_den_pos (Qsub_den_pos
+        (Nat.mul_pos (x.den_pos _) (x.den_pos _)) (Nat.mul_pos (x.den_pos _) (x.den_pos _)))))
+      (Qmul_le_mul_right (Qabs_num_nonneg _) hCle) ?_
+    refine Qle_trans (Qmul_den_pos Nat.one_pos (Nat.succ_pos N))
+      (Qmul_le_mul_left (Int.ofNat_nonneg _) hneg) ?_
+    exact Qeq_le (by simp only [Qeq, mul]; push_cast; ring_uor)
+  -- depth-change (truncation) part
+  have hTr : Qle (Qabs (Qsub (altSum (x.seq s) off (RaltReal_R x (2 * N + 1)))
+        (altSum (x.seq s) off (2 * K + 1)))) ⟨1, N + 1⟩ := by
+    rw [Qabs_Qsub_comm]
+    refine Qle_trans (fct_pos _) (altSum_trunc_bound (x.den_pos s) (canon_bound x s) off
+      (a := RaltReal_R x (2 * N + 1)) (b := 2 * K + 1) (Nat.le_trans h2M (Nat.le_add_right _ 2)) hdeep) ?_
+    exact Qle_trans (Nat.succ_pos _) (RaltReal_trunc_le x (2 * N + 1))
+      (Q_den_mono (by decide) (by omega))
+  refine Qle_trans (add_den_pos (Qabs_den_pos (Qsub_den_pos (altSum_den_pos (x.den_pos _) off _)
+      (altSum_den_pos (x.den_pos _) off _))) (Qabs_den_pos (Qsub_den_pos (altSum_den_pos (x.den_pos _) off _)
+      (altSum_den_pos (x.den_pos _) off _)))) htri ?_
+  refine Qle_trans (add_den_pos (Nat.succ_pos N) (Nat.succ_pos N)) (Qadd_le_add hLip hTr) ?_
+  exact Qeq_le (by simp only [Qeq, add]; push_cast; ring_uor)
+
 end UOR.Bridge.F1Square.Analysis
