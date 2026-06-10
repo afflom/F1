@@ -2296,7 +2296,7 @@ theorem inner_eval_bound (w : Q) (hwd : 0 < w.den) (hwn : 0 ≤ w.num) (m : Nat)
     (Qeq_le hXeq) (Qmul_le_mul_left (by decide) h9X)
 
 /-- **The geometric term bound** `|3·δ_M·w^{M+1}| ≤ 3·ρ^{M+1}` for `|w| ≤ ρ` (`|δ|≤1` + `qpow` monotone). -/
-theorem dcoef_term_geo (w ρ : Q) (hwd : 0 < w.den) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num)
+theorem dcoef_term_geo (w ρ : Q) (hwd : 0 < w.den) (hρd : 0 < ρ.den) (_hρ0 : 0 ≤ ρ.num)
     (hw : Qle (Qabs w) ρ) (m : Nat) :
     Qle (Qabs (mul (mul ⟨3, 1⟩ (dcoef (m + 1))) (qpow w (m + 1 + 1))))
       (mul ⟨3, 1⟩ (qpow ρ (m + 1 + 1))) := by

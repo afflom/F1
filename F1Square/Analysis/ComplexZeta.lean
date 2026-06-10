@@ -421,11 +421,11 @@ theorem czetaExp_mono (s : Complex) {N M : Nat} (hNM : N ≤ M) :
   | zero => exact Rle_refl _
   | succ d ih => exact Rle_trans ih (Rle_self_Radd_right (RexpReal_nonneg _))
 
-/-- **The reindexed modulus tail for *arbitrary* `N ≥ 2^{M(j)}`** (not just dyadic): `E(N) − E(2^{M(j)}) ≤
-    1/(j+1)`. `E(N) ≤ E(2^{M(j)+N})` (monotone, `N < 2ᴺ`) and the dyadic tail caps the latter. -/
+/-- **The reindexed modulus tail for *every* `N`** (not just dyadic): `E(N) − E(2^{M(j)}) ≤ 1/(j+1)`.
+    `E(N) ≤ E(2^{M(j)+N})` (monotone, `N < 2ᴺ`) and the dyadic tail caps the latter; for `N < 2^{M(j)}` the
+    difference is even `≤ 0`. -/
 theorem czetaExp_tail_full (s : Complex) (hσ : Rnonneg s.re) {τ : Q} (hτn : 0 < τ.num) (hτd : 0 < τ.den)
-    (hθ : Rle (ofQ τ hτd) (Rmul (Rsub s.re one) (logN 2 (by omega)))) (j N : Nat)
-    (hN : 2 ^ czetaMidx τ j ≤ N) :
+    (hθ : Rle (ofQ τ hτd) (Rmul (Rsub s.re one) (logN 2 (by omega)))) (j N : Nat) :
     Rle (Rsub (czetaExpSum s N) (czetaExpSum s (2 ^ czetaMidx τ j))) (ofQ ⟨1, j + 1⟩ (Nat.succ_pos j)) := by
   have hNle : N ≤ 2 ^ (czetaMidx τ j + N) := by
     have key : ∀ m, m < 2 ^ m := by
@@ -443,7 +443,7 @@ theorem czetaRe_tail_full (s : Complex) (hσ : Rnonneg s.re) {τ : Q} (hτn : 0 
     (hθ : Rle (ofQ τ hτd) (Rmul (Rsub s.re one) (logN 2 (by omega)))) (j N : Nat)
     (hN : 2 ^ czetaMidx τ j ≤ N) :
     Rle (Rsub (czetaReSum s N) (czetaReSum s (2 ^ czetaMidx τ j))) (ofQ ⟨1, j + 1⟩ (Nat.succ_pos j)) :=
-  Rle_trans (czeta_re_diff_le s hN) (czetaExp_tail_full s hσ hτn hτd hθ j N hN)
+  Rle_trans (czeta_re_diff_le s hN) (czetaExp_tail_full s hσ hτn hτd hθ j N)
 
 /-- Real-part tail for arbitrary `N ≥ 2^{M(j)}` (lower). -/
 theorem czetaRe_tail_full_neg (s : Complex) (hσ : Rnonneg s.re) {τ : Q} (hτn : 0 < τ.num) (hτd : 0 < τ.den)
@@ -451,14 +451,14 @@ theorem czetaRe_tail_full_neg (s : Complex) (hσ : Rnonneg s.re) {τ : Q} (hτn 
     (hN : 2 ^ czetaMidx τ j ≤ N) :
     Rle (Rneg (Rsub (czetaReSum s N) (czetaReSum s (2 ^ czetaMidx τ j)))) (ofQ ⟨1, j + 1⟩ (Nat.succ_pos j)) :=
   Rle_trans (Rle_trans (Rle_Rneg (czeta_re_diff_ge s hN)) (Rle_of_Req (Rneg_neg _)))
-    (czetaExp_tail_full s hσ hτn hτd hθ j N hN)
+    (czetaExp_tail_full s hσ hτn hτd hθ j N)
 
 /-- Imaginary-part tail for arbitrary `N ≥ 2^{M(j)}` (upper). -/
 theorem czetaIm_tail_full (s : Complex) (hσ : Rnonneg s.re) {τ : Q} (hτn : 0 < τ.num) (hτd : 0 < τ.den)
     (hθ : Rle (ofQ τ hτd) (Rmul (Rsub s.re one) (logN 2 (by omega)))) (j N : Nat)
     (hN : 2 ^ czetaMidx τ j ≤ N) :
     Rle (Rsub (czetaImSum s N) (czetaImSum s (2 ^ czetaMidx τ j))) (ofQ ⟨1, j + 1⟩ (Nat.succ_pos j)) :=
-  Rle_trans (czeta_im_diff_le s hN) (czetaExp_tail_full s hσ hτn hτd hθ j N hN)
+  Rle_trans (czeta_im_diff_le s hN) (czetaExp_tail_full s hσ hτn hτd hθ j N)
 
 /-- Imaginary-part tail for arbitrary `N ≥ 2^{M(j)}` (lower). -/
 theorem czetaIm_tail_full_neg (s : Complex) (hσ : Rnonneg s.re) {τ : Q} (hτn : 0 < τ.num) (hτd : 0 < τ.den)
@@ -466,7 +466,7 @@ theorem czetaIm_tail_full_neg (s : Complex) (hσ : Rnonneg s.re) {τ : Q} (hτn 
     (hN : 2 ^ czetaMidx τ j ≤ N) :
     Rle (Rneg (Rsub (czetaImSum s N) (czetaImSum s (2 ^ czetaMidx τ j)))) (ofQ ⟨1, j + 1⟩ (Nat.succ_pos j)) :=
   Rle_trans (Rle_trans (Rle_Rneg (czeta_im_diff_ge s hN)) (Rle_of_Req (Rneg_neg _)))
-    (czetaExp_tail_full s hσ hτn hτd hθ j N hN)
+    (czetaExp_tail_full s hσ hτn hτd hθ j N)
 
 /-- **The full real partial-sum sequence is uniformly Cauchy** (not just the dyadic subsequence): for
     *all* `N, N' ≥ 2^{M(j)}`, `|S_re(N) − S_re(N')| ≤ 2/(j+1)`. So `Σ_{n} Re(n⁻ˢ)` converges as a genuine

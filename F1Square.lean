@@ -544,6 +544,7 @@ example :
   Analysis.Rexp_log_nat_Rlog 2 (by decide) Analysis.Rlog_two_ok.2.1 Analysis.Rlog_two_ok.2.2.1
     Analysis.Rlog_two_ok.2.2.2.1 Analysis.Rlog_two_ok.2.2.2.2
 
+set_option linter.unusedVariables false in
 /-- Elaboration-checked witness binding the v0.15.2 keystone: **the Riemann zeta function `ζ(s) = Σ_{n≥1} n⁻ˢ`
     for *complex* `s` with `Re s > 1`** is a genuine constructive complex number (`Czeta`), and its partial
     sums converge to it with an explicit rate. For any `s` with `Re s ≥ 0` and a rational witness `τ > 0` of
@@ -551,7 +552,9 @@ example :
     reindexed partial sums `Σ_{n<2^{M(k)}} Re/Im(n⁻ˢ)` converge to `Re/Im ζ(s)` with the canonical Bishop
     rate `2/(k+1)` (`Czeta_re_tendsTo`, `Czeta_im_tendsTo`) — the rigorous complex geometric tail. This is ζ
     in its *full* convergent half-plane `Re s > 1` (not merely integer `s ≥ 2`); the analytic continuation to
-    the critical strip — where RH lives — is not built, and the crux stays open (`liPositivityHolds = none`). -/
+    the critical strip — where RH lives — is not built, and the crux stays open (`liPositivityHolds = none`).
+    (The `Re s > 1` witness hypotheses are proof-scaffolding — semantically required for convergence but not
+    syntactically present in the conclusion — so the unused-binder linter is disabled for these examples.) -/
 example :
     (∀ (s : Analysis.Complex) (hσ : Analysis.Rnonneg s.re) (τ : Analysis.Q)
         (hτn : 0 < τ.num) (hτd : 0 < τ.den)
@@ -580,6 +583,7 @@ example :
   ⟨Analysis.Czeta_re_tendsTo ⟨Analysis.ofQ (⟨2, 1⟩ : Analysis.Q) (by decide), Analysis.zero⟩
       (Analysis.Rnonneg_ofQ (by decide) (by decide)) (by decide) (by decide) Analysis.czeta_two_theta, rfl⟩
 
+set_option linter.unusedVariables false in
 /-- Elaboration-checked witness that ζ(s) converges as a **genuine series** — not merely along the dyadic
     subsequence. For any complex `s` with `Re s > 1` (witness `τ`), the *full* real and imaginary partial-sum
     sequences are uniformly Cauchy: for *every* `N, N' ≥ 2^{M(j)}`, `|S(N) − S(N')| ≤ 2/(j+1)`
@@ -600,6 +604,7 @@ example :
     ⟨Analysis.czetaRe_cauchy_full s hσ hτn hτd hθ j N N' hN hN',
      Analysis.czetaIm_cauchy_full s hσ hτn hτd hθ j N N' hN hN'⟩, rfl⟩
 
+set_option linter.unusedVariables false in
 /-- Elaboration-checked witness that ζ(s) is **canonical** — independent of the convergence witness `τ`.
     For any complex `s` with `Re s > 1` and any *two* rational witnesses `τ₁, τ₂`, `Czeta` yields `≈`-equal
     real and imaginary parts (`Czeta_re/im_canonical`): both are the limit of the same full partial-sum
