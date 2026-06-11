@@ -1615,4 +1615,39 @@ theorem scCauchy_eq {a b : Q} (had : 0 < a.den) (hbd : 0 < b.den) (N : Nat) :
   rw [altSum_eq_Fsum]
   exact fsum_cauchy (sinTerm_den_pos had) (altTerm_den_pos hbd 0) N
 
+/-- `(Cs+Sc) − ((Cs+cs)+(Sc+sc)) ≈ −(cs+sc)`. -/
+private theorem sinResid_rearrange (Cs Sc cs sc : Q) :
+    Qeq (Qsub (add Cs Sc) (add (add Cs cs) (add Sc sc))) (neg (add cs sc)) := by
+  simp only [Qeq, Qsub, add, neg]; push_cast; ring_uor
+
+/-- **The `sin(a+b)` residual identity**: `sin(a+b) − (cos a·sin b + sin a·cos b)` (partial sums) equals
+    `−(corner_cs + corner_sc)` — the two high Mertens corners. (Both cross-Cauchy products contribute
+    their diagonal to `sin(a+b)`, so the residual is *just* the corners — no extra top-diagonal, unlike
+    `cos(a+b)` whose subtraction left a `sinConv` tail.) -/
+theorem sinAdd_resid_eq {a b : Q} (had : 0 < a.den) (hbd : 0 < b.den) (N : Nat) :
+    Qeq (Qsub (Fsum (sinTerm (add a b)) N)
+        (add (mul (altSum a 0 N) (Fsum (sinTerm b) N)) (mul (Fsum (sinTerm a) N) (altSum b 0 N))))
+      (neg (add
+        (Fsum (fun i => Qsub (Fsum (fun j => mul (altTerm a 0 i) (sinTerm b j)) N)
+          (Fsum (fun j => mul (altTerm a 0 i) (sinTerm b j)) (N - i))) N)
+        (Fsum (fun i => Qsub (Fsum (fun j => mul (sinTerm a i) (altTerm b 0 j)) N)
+          (Fsum (fun j => mul (sinTerm a i) (altTerm b 0 j)) (N - i))) N))) := by
+  have hCsd : 0 < (Fsum (csConv a b) N).den := Fsum_den_pos (csConv_den_pos had hbd) N
+  have hScd : 0 < (Fsum (scConv a b) N).den := Fsum_den_pos (scConv_den_pos had hbd) N
+  have hccd : 0 < (Fsum (fun i => Qsub (Fsum (fun j => mul (altTerm a 0 i) (sinTerm b j)) N)
+      (Fsum (fun j => mul (altTerm a 0 i) (sinTerm b j)) (N - i))) N).den :=
+    Fsum_den_pos (fun i => Qsub_den_pos
+      (Fsum_den_pos (fun j => Qmul_den_pos (altTerm_den_pos had 0 i) (sinTerm_den_pos hbd j)) N)
+      (Fsum_den_pos (fun j => Qmul_den_pos (altTerm_den_pos had 0 i) (sinTerm_den_pos hbd j)) (N - i))) N
+  have hscd : 0 < (Fsum (fun i => Qsub (Fsum (fun j => mul (sinTerm a i) (altTerm b 0 j)) N)
+      (Fsum (fun j => mul (sinTerm a i) (altTerm b 0 j)) (N - i))) N).den :=
+    Fsum_den_pos (fun i => Qsub_den_pos
+      (Fsum_den_pos (fun j => Qmul_den_pos (sinTerm_den_pos had i) (altTerm_den_pos hbd 0 j)) N)
+      (Fsum_den_pos (fun j => Qmul_den_pos (sinTerm_den_pos had i) (altTerm_den_pos hbd 0 j)) (N - i))) N
+  refine Qeq_trans (Qsub_den_pos (add_den_pos hCsd hScd)
+      (add_den_pos (add_den_pos hCsd hccd) (add_den_pos hScd hscd)))
+    (QsubCongr (sinAdd_partial_eq had hbd N)
+      (Qadd_congr (csCauchy_eq had hbd N) (scCauchy_eq had hbd N))) ?_
+  exact sinResid_rearrange _ _ _ _
+
 end UOR.Bridge.F1Square.Analysis
