@@ -1551,3 +1551,6 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.binTermD_scaled_eq
 #print axioms Analysis.addPow_div_diag
 #print axioms Analysis.Fsum_parity_split_odd
+#print axioms Analysis.altPairMixed_eq
+#print axioms Analysis.scPair_eq
+#print axioms Analysis.csPair_eq

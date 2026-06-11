@@ -1402,6 +1402,92 @@ theorem addPow_div_diag {a b : Q} (had : 0 < a.den) (hbd : 0 < b.den) (d : Nat) 
       (Fsum_congr_le (fun i hi => binTermD_scaled_eq d (by omega : i ≤ d)))
   exact Qeq_trans (Qmul_den_pos hcd (Fsum_den_pos hbtd _)) h1 h2
 
+/-- **Mixed-offset paired alternating-term identity**: the product of the `off1`-shifted `j`-th term of
+    `a` and the `off2`-shifted `(m−j)`-th term of `b` equals `(−1)ᵐ·a^{2j}·b^{2(m−j)}/((2j+off1)!·(2(m−j)+off2)!)`.
+    (Generalizes `altPair_eq` to independent offsets — the `sin·cos` cross-diagonal needs `off1=1, off2=0`.) -/
+theorem altPairMixed_eq {a b : Q} (had : 0 < a.den) (hbd : 0 < b.den) {j m : Nat} (hjm : j ≤ m)
+    (off1 off2 : Nat) :
+    Qeq (mul (altTerm a off1 j) (altTerm b off2 (m - j)))
+        (mul (qpow (⟨-1, 1⟩ : Q) m)
+          (mul (mul (qpow a (2 * j)) (qpow b (2 * (m - j))))
+            ⟨1, fct (2 * j + off1) * fct (2 * (m - j) + off2)⟩)) := by
+  have hP1 : 0 < (qpow (neg (mul a a)) j).den := qpow_den_pos (Nat.mul_pos had had) j
+  have hP2 : 0 < (qpow (neg (mul b b)) (m - j)).den := qpow_den_pos (Nat.mul_pos hbd hbd) (m - j)
+  have hF1 : 0 < (⟨1, fct (2 * j + off1)⟩ : Q).den := fct_pos _
+  have hF2 : 0 < (⟨1, fct (2 * (m - j) + off2)⟩ : Q).den := fct_pos _
+  have hSm : 0 < (qpow (⟨-1, 1⟩ : Q) m).den := qpow_den_pos (by decide) m
+  have hA : 0 < (qpow a (2 * j)).den := qpow_den_pos had (2 * j)
+  have hB : 0 < (qpow b (2 * (m - j))).den := qpow_den_pos hbd (2 * (m - j))
+  simp only [altTerm]
+  refine Qeq_trans (Qmul_den_pos (Qmul_den_pos hP1 hP2) (Qmul_den_pos hF1 hF2))
+    (Qmul4_rearrange _ _ _ _) ?_
+  refine Qeq_trans (Qmul_den_pos (Qmul_den_pos hSm (Qmul_den_pos hA hB))
+      (Nat.mul_pos (fct_pos _) (fct_pos _) :
+        0 < (⟨1, fct (2 * j + off1) * fct (2 * (m - j) + off2)⟩ : Q).den))
+    (Qmul_congr (negsq_pair had hbd hjm) (mul_inv_dens _ _)) ?_
+  exact Qeq_symm (Qmul_assoc3 _ _ _)
+
+/-- **The `sin·cos` cross-diagonal term** `sinTermⱼ(a)·cosT_{m−j}(b) ≈ (−1)ᵐ·pairTermD(2m+1, 2j+1)`. -/
+theorem scPair_eq {a b : Q} (had : 0 < a.den) (hbd : 0 < b.den) {j m : Nat} (hjm : j ≤ m) :
+    Qeq (mul (sinTerm a j) (altTerm b 0 (m - j)))
+        (mul (qpow (⟨-1, 1⟩ : Q) m) (pairTermD a b (2 * m + 1) (2 * j + 1))) := by
+  have hr : 2 * m + 1 - (2 * j + 1) = 2 * (m - j) := by omega
+  have hstep : Qeq (mul (sinTerm a j) (altTerm b 0 (m - j)))
+      (mul a (mul (qpow (⟨-1, 1⟩ : Q) m)
+        (mul (mul (qpow a (2 * j)) (qpow b (2 * (m - j))))
+          ⟨1, fct (2 * j + 1) * fct (2 * (m - j) + 0)⟩))) := by
+    show Qeq (mul (mul a (altTerm a 1 j)) (altTerm b 0 (m - j))) _
+    refine Qeq_trans (Qmul_den_pos had (Qmul_den_pos (altTerm_den_pos had 1 j) (altTerm_den_pos hbd 0 _)))
+      (Qeq_symm (Qmul_assoc3 a (altTerm a 1 j) (altTerm b 0 (m - j)))) ?_
+    exact Qmul_congr (Qeq_refl _) (altPairMixed_eq had hbd hjm 1 0)
+  refine Qeq_trans (Qmul_den_pos had (Qmul_den_pos (qpow_den_pos (by decide) m)
+      (Qmul_den_pos (Qmul_den_pos (qpow_den_pos had _) (qpow_den_pos hbd _))
+        (Nat.mul_pos (fct_pos _) (fct_pos _))))) hstep ?_
+  simp only [pairTermD, hr, qpow_succ, Nat.add_zero]
+  simp only [Qeq, mul]
+  generalize a.num = an; generalize (a.den : Int) = ad
+  generalize (qpow a (2 * j)).num = aA; generalize ((qpow a (2 * j)).den : Int) = aD
+  generalize (qpow b (2 * (m - j))).num = bB; generalize ((qpow b (2 * (m - j))).den : Int) = bD
+  generalize (qpow (⟨-1, 1⟩ : Q) m).num = sn; generalize ((qpow (⟨-1, 1⟩ : Q) m).den : Int) = sd
+  push_cast
+  generalize ((fct (2 * j + 1) : Nat) : Int) = f1
+  generalize ((fct (2 * (m - j)) : Nat) : Int) = f2
+  ring_uor
+
+/-- **The `cos·sin` cross-diagonal term** `cosTermⱼ(a)·sinT_{m−j}(b) ≈ (−1)ᵐ·pairTermD(2m+1, 2j)`. -/
+theorem csPair_eq {a b : Q} (had : 0 < a.den) (hbd : 0 < b.den) {j m : Nat} (hjm : j ≤ m) :
+    Qeq (mul (altTerm a 0 j) (sinTerm b (m - j)))
+        (mul (qpow (⟨-1, 1⟩ : Q) m) (pairTermD a b (2 * m + 1) (2 * j))) := by
+  have hr : 2 * m + 1 - 2 * j = 2 * (m - j) + 1 := by omega
+  have hstep : Qeq (mul (altTerm a 0 j) (sinTerm b (m - j)))
+      (mul b (mul (qpow (⟨-1, 1⟩ : Q) m)
+        (mul (mul (qpow a (2 * j)) (qpow b (2 * (m - j))))
+          ⟨1, fct (2 * j + 0) * fct (2 * (m - j) + 1)⟩))) := by
+    show Qeq (mul (altTerm a 0 j) (mul b (altTerm b 1 (m - j)))) _
+    refine Qeq_trans (Qmul_den_pos hbd
+        (Qmul_den_pos (altTerm_den_pos had 0 j) (altTerm_den_pos hbd 1 (m - j)))) ?_ ?_
+    · refine Qeq_trans (Qmul_den_pos (Qmul_den_pos (altTerm_den_pos had 0 j) hbd)
+          (altTerm_den_pos hbd 1 (m - j)))
+        (Qmul_assoc3 (altTerm a 0 j) b (altTerm b 1 (m - j))) ?_
+      refine Qeq_trans (Qmul_den_pos (Qmul_den_pos hbd (altTerm_den_pos had 0 j))
+          (altTerm_den_pos hbd 1 (m - j)))
+        (Qmul_congr (Qmul_swap (altTerm a 0 j) b) (Qeq_refl _)) ?_
+      exact Qeq_symm (Qmul_assoc3 b (altTerm a 0 j) (altTerm b 1 (m - j)))
+    · exact Qmul_congr (Qeq_refl _) (altPairMixed_eq had hbd hjm 0 1)
+  refine Qeq_trans (Qmul_den_pos hbd (Qmul_den_pos (qpow_den_pos (by decide) m)
+      (Qmul_den_pos (Qmul_den_pos (qpow_den_pos had _) (qpow_den_pos hbd _))
+        (Nat.mul_pos (fct_pos _) (fct_pos _))))) hstep ?_
+  simp only [pairTermD, hr, qpow_succ, Nat.add_zero]
+  simp only [Qeq, mul]
+  generalize b.num = bn; generalize (b.den : Int) = bd
+  generalize (qpow a (2 * j)).num = aA; generalize ((qpow a (2 * j)).den : Int) = aD
+  generalize (qpow b (2 * (m - j))).num = bB; generalize ((qpow b (2 * (m - j))).den : Int) = bD
+  generalize (qpow (⟨-1, 1⟩ : Q) m).num = sn; generalize ((qpow (⟨-1, 1⟩ : Q) m).den : Int) = sd
+  push_cast
+  generalize ((fct (2 * j) : Nat) : Int) = f1
+  generalize ((fct (2 * (m - j) + 1) : Nat) : Int) = f2
+  ring_uor
+
 /-- **Odd-degree parity split**: `Σ_{p=0}^{2m+1} a(p) = Σ_{j=0}^{m} a(2j) + Σ_{j=0}^{m} a(2j+1)`. -/
 theorem Fsum_parity_split_odd (a : Nat → Q) (ha : ∀ i, 0 < (a i).den) :
     ∀ m, Qeq (Fsum a (2 * m + 1))
