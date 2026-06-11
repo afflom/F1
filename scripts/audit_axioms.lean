@@ -1636,3 +1636,6 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.deltaLogNat_sum_telescope
 #print axioms Analysis.RsumRange_mono
 #print axioms Analysis.RsumRange_smul
+#print axioms Analysis.Vconst_den_pos
+#print axioms Analysis.Vconst_num_nonneg
+#print axioms Analysis.Vterm_block_le

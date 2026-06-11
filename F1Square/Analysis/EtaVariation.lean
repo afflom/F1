@@ -2032,15 +2032,41 @@ theorem cpowNeg_diff_im_tail (s : Complex) {sb T : Q} (hsbd : 0 < sb.den) (hTd :
 -- The δ ≤ 1 comes from δ ≤ 1/n ≤ 1/2 (deltaLogNat_le_recip, n ≥ 2).  b ∈ [−Tδ,Tδ] derived as in the smallness setup.
 -- Construct C existentially (its exact value is immaterial — only that it is a fixed rational ≥ 0).
 
-theorem Vterm_le_A_delta (s : Complex) {sb T : Q} (hsbd : 0 < sb.den) (hsb0 : 0 ≤ sb.num)
+/-- The fixed per-term variation constant `C = 4·sb + 3·T² + (1+3T²)·T` (depends only on the s-bounds). -/
+def Vconst (sb T : Q) : Q :=
+  add (add (mul (⟨4, 1⟩ : Q) sb) (mul (⟨3, 1⟩ : Q) (mul T T)))
+      (mul (add (⟨1, 1⟩ : Q) (mul (⟨3, 1⟩ : Q) (mul T T))) T)
+
+theorem Vconst_den_pos {sb T : Q} (hsbd : 0 < sb.den) (hTd : 0 < T.den) : 0 < (Vconst sb T).den := by
+  unfold Vconst
+  exact add_den_pos (add_den_pos (Qmul_den_pos (by decide) hsbd)
+      (Qmul_den_pos (by decide) (Qmul_den_pos hTd hTd)))
+    (Qmul_den_pos (add_den_pos (by decide) (Qmul_den_pos (by decide) (Qmul_den_pos hTd hTd))) hTd)
+
+theorem Vconst_num_nonneg {sb T : Q} (hsb0 : 0 ≤ sb.num) (hT0 : 0 ≤ T.num) : 0 ≤ (Vconst sb T).num := by
+  have hTT : (0 : Int) ≤ T.num * T.num := Int.mul_nonneg hT0 hT0
+  unfold Vconst
+  simp only [add, mul]
+  push_cast
+  refine Int.add_nonneg ?_ ?_
+  · refine Int.mul_nonneg ?_ (Int.ofNat_nonneg _)
+    refine Int.add_nonneg ?_ ?_
+    · exact Int.mul_nonneg (Int.mul_nonneg (by decide) hsb0) (Int.ofNat_nonneg _)
+    · exact Int.mul_nonneg (Int.mul_nonneg (by decide) hTT) (Int.ofNat_nonneg _)
+  · refine Int.mul_nonneg ?_ (Int.ofNat_nonneg _)
+    refine Int.mul_nonneg ?_ hT0
+    refine Int.add_nonneg ?_ ?_
+    · exact Int.mul_nonneg (by decide) (Int.ofNat_nonneg _)
+    · exact Int.mul_nonneg (Int.mul_nonneg (by decide) hTT) (Int.ofNat_nonneg _)
+
+theorem Vterm_le_A_delta (s : Complex) {sb T : Q} (hsbd : 0 < sb.den) (_hsb0 : 0 ≤ sb.num)
     (hTd : 0 < T.den)
     (hT0 : 0 ≤ T.num) (hσ : Rnonneg s.re) (hsb : Rle s.re (ofQ sb hsbd))
     (hT1 : Rle (Rneg (ofQ T hTd)) s.im) (hT2 : Rle s.im (ofQ T hTd))
     (n : Nat) (hn : 2 ≤ n) :
-    ∃ (C : Q) (hCd : 0 < C.den) (_hCn : 0 ≤ C.num),
       Rle (Vterm s n hn (Rmul (ofQ T hTd) (deltaLogNat n hn)))
         (Rmul (RexpReal (Rmul (Rneg s.re) (RlogNat n hn)))
-          (Rmul (ofQ C hCd) (deltaLogNat n hn))) := by
+          (Rmul (ofQ (Vconst sb T) (Vconst_den_pos hsbd hTd)) (deltaLogNat n hn))) := by
   -- abbreviations
   let δ := deltaLogNat n hn
   let b := Rmul (Rneg s.im) δ
@@ -2177,27 +2203,11 @@ theorem Vterm_le_A_delta (s : Complex) {sb T : Q} (hsbd : 0 < sb.den) (hsb0 : 0 
         (Rmul_congr (Radd_ofQ_ofQ hCud hCmd) (Req_refl δ))
     exact Rle_trans hsum (Rle_of_Req e)
   -- =============== Lift through A = exp(...) ≥ 0 ===============
-  refine ⟨C, hCd, ?_, ?_⟩
-  · -- 0 ≤ C.num
-    show 0 ≤ C.num
-    have hTT : (0 : Int) ≤ T.num * T.num := Int.mul_nonneg hT0 hT0
-    simp only [C, Cu, Cm, add, mul]
-    push_cast
-    refine Int.add_nonneg ?_ ?_
-    · refine Int.mul_nonneg ?_ (Int.ofNat_nonneg _)
-      refine Int.add_nonneg ?_ ?_
-      · exact Int.mul_nonneg (Int.mul_nonneg (by decide) hsb0) (Int.ofNat_nonneg _)
-      · exact Int.mul_nonneg (Int.mul_nonneg (by decide) hTT) (Int.ofNat_nonneg _)
-    · refine Int.mul_nonneg ?_ (Int.ofNat_nonneg _)
-      refine Int.mul_nonneg ?_ hT0
-      refine Int.add_nonneg ?_ ?_
-      · exact Int.mul_nonneg (by decide) (Int.ofNat_nonneg _)
-      · exact Int.mul_nonneg (Int.mul_nonneg (by decide) hTT) (Int.ofNat_nonneg _)
-  · -- Vterm s n hn Td is defeq to Rmul A (Radd U M)
-    show Rle (Rmul A (Radd (Radd (Rmul four d) (Rmul three (Rmul b b)))
-          (Rmul (Radd one (Rmul three (Rmul b b))) Td)))
-        (Rmul A (Rmul (ofQ C hCd) δ))
-    exact Rmul_le_Rmul_left (RexpReal_nonneg _) hUM
+  -- Vterm s n hn Td is defeq to Rmul A (Radd U M); C := add Cu Cm is defeq Vconst sb T
+  show Rle (Rmul A (Radd (Radd (Rmul four d) (Rmul three (Rmul b b)))
+        (Rmul (Radd one (Rmul three (Rmul b b))) Td)))
+      (Rmul A (Rmul (ofQ C hCd) δ))
+  exact Rmul_le_Rmul_left (RexpReal_nonneg _) hUM
 
 -- ===========================================================================
 -- Step 7b-ii(β-2c) — the η geometric ratio: u = exp(−σ·log2) ≤ 1/(1+τ) < 1 for σ > 0 (Pos s.re).
@@ -2248,16 +2258,15 @@ theorem Vterm_dyadic_le (s : Complex) {sb T : Q} (hsbd : 0 < sb.den) (hsb0 : 0 �
     (hTd : 0 < T.den) (hT0 : 0 ≤ T.num) (hσ : Rnonneg s.re) (hsb : Rle s.re (ofQ sb hsbd))
     (hT1 : Rle (Rneg (ofQ T hTd)) s.im) (hT2 : Rle s.im (ofQ T hTd))
     (k n : Nat) (hn : 2 ≤ n) (hkn : 2 ^ k ≤ n) :
-    ∃ (C : Q) (hCd : 0 < C.den),
       Rle (Vterm s n hn (Rmul (ofQ T hTd) (deltaLogNat n hn)))
         (Rmul (RexpReal (Rneg (Rmul s.re (Rnsmul k (logN 2 (by omega))))))
-          (Rmul (ofQ C hCd) (deltaLogNat n hn))) := by
-  obtain ⟨C, hCd, hCn, hVle⟩ := Vterm_le_A_delta s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 n hn
-  refine ⟨C, hCd, ?_⟩
+          (Rmul (ofQ (Vconst sb T) (Vconst_den_pos hsbd hTd)) (deltaLogNat n hn))) := by
+  have hVle := Vterm_le_A_delta s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 n hn
   -- Vterm ≤ A·(C·δ) ≤ B·(C·δ)   [A ≤ B = exp(−σ·k·log2), and C·δ ≥ 0]
   refine Rle_trans hVle ?_
   exact Rmul_le_Rmul_right
-    (Rnonneg_Rmul (Rnonneg_ofQ hCd hCn) (Rnonneg_deltaLogNat n hn))
+    (Rnonneg_Rmul (Rnonneg_ofQ (Vconst_den_pos hsbd hTd) (Vconst_num_nonneg hsb0 hT0))
+      (Rnonneg_deltaLogNat n hn))
     (A_dyadic_le s hσ k n hn hkn)
 
 -- ===========================================================================
@@ -2293,5 +2302,27 @@ theorem RsumRange_smul (c : Real) (f : Nat → Real) :
       Req_trans (Radd_congr (RsumRange_smul c f d) (Req_refl _))
         (Req_symm (Rmul_distrib c (RsumRange f d) (f d)))
 
-end UOR.Bridge.F1Square.Analysis
+/-- **The η dyadic block bound**: for a contiguous range `[N, N+d)` inside dyadic block `k`
+    (`N ≥ 2ᵏ`), the variation sum is `≤ B·C·(RlogNat(N+d) − RlogNat N)`, where
+    `B = exp(−σ·k·log2)` is the dyadic modulus and `C = Vconst sb T`. -/
+theorem Vterm_block_le (s : Complex) {sb T : Q} (hsbd : 0 < sb.den) (hsb0 : 0 ≤ sb.num)
+    (hTd : 0 < T.den) (hT0 : 0 ≤ T.num) (hσ : Rnonneg s.re) (hsb : Rle s.re (ofQ sb hsbd))
+    (hT1 : Rle (Rneg (ofQ T hTd)) s.im) (hT2 : Rle s.im (ofQ T hTd))
+    (k N : Nat) (hN2 : 2 ≤ N) (hNk : 2 ^ k ≤ N) (d : Nat) :
+    Rle (RsumRange (fun i => Vterm s (N + i) (by omega) (Rmul (ofQ T hTd) (deltaLogNat (N + i) (by omega)))) d)
+      (Rmul (Rmul (RexpReal (Rneg (Rmul s.re (Rnsmul k (logN 2 (by omega))))))
+              (ofQ (Vconst sb T) (Vconst_den_pos hsbd hTd)))
+        (Rsub (RlogNat (N + d) (by omega)) (RlogNat N hN2))) := by
+  let B := RexpReal (Rneg (Rmul s.re (Rnsmul k (logN 2 (by omega)))))
+  let Cv := ofQ (Vconst sb T) (Vconst_den_pos hsbd hTd)
+  have hterm : ∀ i, Rle (Vterm s (N + i) (by omega) (Rmul (ofQ T hTd) (deltaLogNat (N + i) (by omega))))
+      (Rmul (Rmul B Cv) (deltaLogNat (N + i) (by omega))) := by
+    intro i
+    have h := Vterm_dyadic_le s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 k (N + i) (by omega)
+      (by omega)
+    exact Rle_trans h (Rle_of_Req (Req_symm (Rmul_assoc B Cv (deltaLogNat (N + i) (by omega)))))
+  refine Rle_trans (RsumRange_mono hterm d) ?_
+  refine Rle_of_Req (Req_trans (RsumRange_smul (Rmul B Cv) (fun i => deltaLogNat (N + i) (by omega)) d) ?_)
+  exact Rmul_congr (Req_refl _) (deltaLogNat_sum_telescope N hN2 d)
 
+end UOR.Bridge.F1Square.Analysis
