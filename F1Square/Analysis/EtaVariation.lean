@@ -2757,4 +2757,72 @@ theorem eta_smallness_n (sb T : Q) (hsbd : 0 < sb.den) (hTd : 0 < T.den) (n : Na
   · show (T.num * 1) * ((1 : Nat) : Int) ≤ (1 : Int) * ((T.den * n : Nat) : Int)
     omega
 
+-- ===========================================================================
+-- Step 7b-ii(β-3/x) — the REINDEX absorbing both the Vconst prefactor and the smallness threshold.
+-- etaC ≥ Vconst (a Nat ceiling), etaLevel j = (j+1)·etaC + N₀ (≥ N₀ for the threshold, ≥ (j+1)·etaC for the
+-- Vconst absorption), etaMidx j = etaLevel j · r.den² (a multiple of r.den² so EtaVSum_tail_full applies,
+-- and ≥ N₀). Paired index K_j = 2^{etaMidx j − 1}, so 2·K_j = 2^{etaMidx j} (even-index alignment to EtaVSum).
+-- ===========================================================================
+
+/-- Nat ceiling `≥ Vconst`: `etaC = Vconst.num⁺ + 1`. -/
+def etaC (sb T : Q) : Nat := (Vconst sb T).num.toNat + 1
+
+/-- Reindex level `etaLevel j = (j+1)·etaC + N₀` (so `etaMidx j = etaLevel j · r.den²`). -/
+def etaLevel (sb T : Q) (j : Nat) : Nat := (j + 1) * etaC sb T + etaN0 sb T
+
+/-- The η dyadic reindex (analogue of `czetaMidx`): `etaMidx j = etaLevel j · r.den²`, `r = 1/(1+τ)`. -/
+def etaMidx (τ sb T : Q) (j : Nat) : Nat :=
+  etaLevel sb T j * ((Qinv (add ⟨1, 1⟩ τ)).den * (Qinv (add ⟨1, 1⟩ τ)).den)
+
+theorem etaLevel_ge_N0 (sb T : Q) (j : Nat) : etaN0 sb T ≤ etaLevel sb T j := by
+  simp only [etaLevel]; omega
+
+/-- `etaMidx j ≥ N₀` (≥ etaLevel j ≥ N₀, since `r.den² ≥ 1`). -/
+theorem etaMidx_ge_N0 (τ sb T : Q) (hτn : 0 < τ.num) (hτd : 0 < τ.den) (j : Nat) :
+    etaN0 sb T ≤ etaMidx τ sb T j := by
+  have hrd : 0 < (Qinv (add (⟨1, 1⟩ : Q) τ)).den := Qinv_den_pos (by simp only [add]; push_cast; omega)
+  refine Nat.le_trans (etaLevel_ge_N0 sb T j) ?_
+  simp only [etaMidx]; exact Nat.le_mul_of_pos_right _ (Nat.mul_pos hrd hrd)
+
+/-- `etaMidx j ≥ 1` (since `≥ N₀ ≥ 1`). -/
+theorem etaMidx_ge_one (τ sb T : Q) (hτn : 0 < τ.num) (hτd : 0 < τ.den) (j : Nat) :
+    1 ≤ etaMidx τ sb T j :=
+  Nat.le_trans (by simp only [etaN0]; omega) (etaMidx_ge_N0 τ sb T hτn hτd j)
+
+/-- `etaMidx` is monotone. -/
+theorem etaMidx_mono (τ sb T : Q) {j k : Nat} (hjk : j ≤ k) : etaMidx τ sb T j ≤ etaMidx τ sb T k := by
+  simp only [etaMidx, etaLevel]
+  exact Nat.mul_le_mul_right _ (Nat.add_le_add_right (Nat.mul_le_mul_right _ (by omega)) _)
+
+/-- Even-index alignment: `2 · 2^{etaMidx j − 1} = 2^{etaMidx j}`. -/
+theorem etaMidx_two_pow (τ sb T : Q) (hτn : 0 < τ.num) (hτd : 0 < τ.den) (j : Nat) :
+    2 * 2 ^ (etaMidx τ sb T j - 1) = 2 ^ etaMidx τ sb T j := by
+  have h1 : 1 ≤ etaMidx τ sb T j := etaMidx_ge_one τ sb T hτn hτd j
+  obtain ⟨p, hp⟩ : ∃ p, etaMidx τ sb T j = p + 1 := ⟨etaMidx τ sb T j - 1, by omega⟩
+  rw [hp, Nat.add_sub_cancel, Nat.pow_succ]
+  omega
+
+/-- **The `Vconst` absorption** at the reindex: `Vconst · 1/etaLevel j ≤ 1/(j+1)`. -/
+theorem eta_Vconst_bound (sb T : Q) (hsbd : 0 < sb.den) (hTd : 0 < T.den)
+    (hsb0 : 0 ≤ sb.num) (hT0 : 0 ≤ T.num) (j : Nat) :
+    Qle (mul (Vconst sb T) (⟨1, etaLevel sb T j⟩ : Q)) (⟨1, j + 1⟩ : Q) := by
+  have hVn : 0 ≤ (Vconst sb T).num := Vconst_num_nonneg hsb0 hT0
+  have hVd : 1 ≤ (Vconst sb T).den := Vconst_den_pos hsbd hTd
+  -- Qle reduces to  Vconst.num·(j+1) ≤ Vconst.den · etaLevel j
+  show ((Vconst sb T).num * 1) * ((j + 1 : Nat) : Int) ≤ (1 : Int) * (((Vconst sb T).den * etaLevel sb T j : Nat) : Int)
+  -- Nat inequality:  Vconst.num⁺·(j+1) ≤ Vconst.den · etaLevel j
+  have key : (Vconst sb T).num.toNat * (j + 1) ≤ (Vconst sb T).den * etaLevel sb T j := by
+    have e1 : (Vconst sb T).num.toNat * (j + 1) ≤ (j + 1) * etaC sb T := by
+      simp only [etaC]; rw [Nat.mul_comm]
+      exact Nat.mul_le_mul_left _ (Nat.le_succ _)
+    have e2 : (j + 1) * etaC sb T ≤ etaLevel sb T j := by simp only [etaLevel]; omega
+    have e3 : etaLevel sb T j ≤ (Vconst sb T).den * etaLevel sb T j :=
+      Nat.le_mul_of_pos_left _ (by omega)
+    exact Nat.le_trans e1 (Nat.le_trans e2 e3)
+  have hcast : ((Vconst sb T).num.toNat : Int) = (Vconst sb T).num := Int.toNat_of_nonneg hVn
+  have keyI : (Vconst sb T).num * ((j + 1 : Nat) : Int)
+      ≤ (((Vconst sb T).den * etaLevel sb T j : Nat) : Int) := by
+    rw [← hcast]; exact_mod_cast key
+  simpa using keyI
+
 end UOR.Bridge.F1Square.Analysis

@@ -1656,3 +1656,9 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.czEtaPaired_re_tail
 #print axioms Analysis.czEtaPaired_im_tail
 #print axioms Analysis.eta_smallness_n
+#print axioms Analysis.etaMidx_ge_N0
+#print axioms Analysis.etaMidx_mono
+#print axioms Analysis.etaMidx_two_pow
+#print axioms Analysis.eta_Vconst_bound
+#print axioms Analysis.etaLevel_ge_N0
+#print axioms Analysis.etaMidx_ge_one
