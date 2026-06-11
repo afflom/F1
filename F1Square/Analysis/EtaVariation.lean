@@ -2183,4 +2183,27 @@ theorem Vterm_le_A_delta (s : Complex) {sb T : Q} (hsbd : 0 < sb.den) (hTd : 0 <
       (Rmul A (Rmul (ofQ C hCd) δ))
   exact Rmul_le_Rmul_left (RexpReal_nonneg _) hUM
 
+-- ===========================================================================
+-- Step 7b-ii(β-2c) — the η geometric ratio: u = exp(−σ·log2) ≤ 1/(1+τ) < 1 for σ > 0 (Pos s.re).
+-- (czetaU s IS exactly u.) Unlike czeta's 2u (needs σ>1), the η dyadic ratio is u itself — the δ_n ≤ 2⁻ᵏ
+-- factor cancels the 2ᵏ block size — so it is < 1 for every σ > 0 (the critical strip). Mirrors
+-- czeta_theta_ge + czetaU_2u_le_of_theta with θ = σ·log2 (not (σ−1)·log2).
+-- ===========================================================================
+
+/-- **The η dyadic ratio `u = exp(−Re s·log 2) ≤ 1/(1+τ) < 1`** for some rational `τ > 0`, whenever
+    `Re s > 0`. The `θ = Re s·log 2 ≥ ε/2` lower bound (from `Pos(Re s)` via `Pos_imp_ofQ_le`, `log2 ≥ ½`)
+    feeds `Rexp_neg_le_ratio`. -/
+theorem etaU_le_ratio (s : Complex) (hs : Pos s.re) :
+    ∃ (τ : Q) (hτd : 0 < τ.den) (hτn : 0 < τ.num),
+      Rle (czetaU s)
+        (ofQ (Qinv (add ⟨1, 1⟩ τ)) (Qinv_den_pos (by simp only [add]; push_cast; omega))) := by
+  obtain ⟨ε, hεd, hεn, hε⟩ := Pos_imp_ofQ_le hs
+  refine ⟨mul ε ⟨1, 2⟩, Qmul_den_pos hεd (by decide), by simp only [mul]; omega, ?_⟩
+  have hθ : Rle (ofQ (mul ε (⟨1, 2⟩ : Q)) (Qmul_den_pos hεd (by decide)))
+      (Rmul s.re (logN 2 (by omega))) := by
+    refine Rle_trans (Rle_of_Req (Req_symm (Rmul_ofQ_ofQ hεd (by decide)))) ?_
+    exact Rle_trans (Rmul_le_Rmul_left (Rnonneg_ofQ hεd (Int.le_of_lt hεn)) logN_2_ge_half)
+      (Rmul_le_Rmul_right (Rnonneg_logN 2 (by omega)) hε)
+  exact Rexp_neg_le_ratio (by simp only [mul]; omega) (Qmul_den_pos hεd (by decide)) hθ
+
 end UOR.Bridge.F1Square.Analysis
