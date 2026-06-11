@@ -1674,3 +1674,6 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.etaDenom_Pos_normSq
 #print axioms Analysis.CzetaStrip
 #print axioms Analysis.CzetaStrip_functional
+#print axioms Analysis.RrpowPos
+#print axioms Analysis.Pos_RrpowPos_of_nonneg
+#print axioms Analysis.RrpowPos_add

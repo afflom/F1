@@ -80,6 +80,7 @@ import F1Square.Analysis.EulerMaclaurin
 import F1Square.Analysis.EtaFunction
 import F1Square.Analysis.EtaVariation
 import F1Square.Analysis.CriticalZeta
+import F1Square.Analysis.Gamma
 
 open UOR.Primitives
 
