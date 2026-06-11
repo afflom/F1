@@ -1584,3 +1584,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rcos_congr
 #print axioms Analysis.Rsin_congr
 #print axioms Analysis.Cexp_congr
+#print axioms Analysis.cpowNeg_succ
