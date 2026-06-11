@@ -1550,4 +1550,237 @@ theorem oneSubCexp_im_lower {d b Bb : Real} (hd0 : Rnonneg d)
       (oneSubCexp_oneBbB3 Bb (Radd one (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul b b)))))
   exact Rle_Rneg hbound
 
+
+-- ===========================================================================
+-- The per-term η variation bound: −V_n ≤ Re/Im(n⁻ˢ − (n+1)⁻ˢ) ≤ V_n, V_n = Vterm ~ n^{−σ−1} (summable).
+-- Combines the cpowNeg z-bounds and the oneSubCexp u-bounds via the two-sided product keystone
+-- (abstract combinators Rmul_sub/add_two_sided) and the cpowNeg_diff Ceq-transport (D_n = z·u).
+-- Hypotheses are the n ≥ N₀(s) smallness conditions (d=Re s·δ_n ≤ 1/2, b=−Im s·δ_n ∈ [−1,1], etc.).
+-- ===========================================================================
+
+-- ABSTRACT two-sided combinators (keystone Rmul_le_mul_of_abs/Rneg_mul_le_of_abs applied to each product,
+-- then Rsub/Radd two-sided). For zr,zi ∈ [−A,A], ur ∈ [−U,U], ui ∈ [−M,M]:
+--   Rsub (zr·ur) (zi·ui) ∈ [−(AU+AM), AU+AM]   and   Radd (zr·ui) (zi·ur) ∈ [−(AM+AU), AM+AU].
+
+theorem Rmul_sub_two_sided {zr zi ur ui A U M : Real}
+    (hzr1 : Rle (Rneg A) zr) (hzr2 : Rle zr A) (hzi1 : Rle (Rneg A) zi) (hzi2 : Rle zi A)
+    (hur1 : Rle (Rneg U) ur) (hur2 : Rle ur U) (hui1 : Rle (Rneg M) ui) (hui2 : Rle ui M) :
+    Rle (Rsub (Rmul zr ur) (Rmul zi ui)) (Radd (Rmul A U) (Rmul A M))
+  ∧ Rle (Rneg (Radd (Rmul A U) (Rmul A M))) (Rsub (Rmul zr ur) (Rmul zi ui)) := by
+  -- p = zr·ur ∈ [−AU, AU],  q = zi·ui ∈ [−AM, AM]
+  have hp_up : Rle (Rmul zr ur) (Rmul A U) := Rmul_le_mul_of_abs hzr1 hzr2 hur1 hur2
+  have hp_lo : Rle (Rneg (Rmul A U)) (Rmul zr ur) := Rneg_mul_le_of_abs hzr1 hzr2 hur1 hur2
+  have hq_up : Rle (Rmul zi ui) (Rmul A M) := Rmul_le_mul_of_abs hzi1 hzi2 hui1 hui2
+  have hq_lo : Rle (Rneg (Rmul A M)) (Rmul zi ui) := Rneg_mul_le_of_abs hzi1 hzi2 hui1 hui2
+  constructor
+  · -- p − q ≤ AU + AM.  −q ≤ AM  from  −(AM) ≤ q.
+    have hnegq : Rle (Rneg (Rmul zi ui)) (Rmul A M) :=
+      Rle_trans (Rle_Rneg hq_lo) (Rle_of_Req (Rneg_neg (Rmul A M)))
+    exact Radd_le_add hp_up hnegq
+  · -- −(AU+AM) ≤ p − q.  −(AU+AM) ≈ (−AU)+(−AM) ≤ p + (−q).
+    have hnegq : Rle (Rneg (Rmul A M)) (Rneg (Rmul zi ui)) := Rle_Rneg hq_up
+    refine Rle_trans (Rle_of_Req (Rneg_Radd (Rmul A U) (Rmul A M))) ?_
+    exact Radd_le_add hp_lo hnegq
+
+theorem Rmul_add_two_sided {zr zi ur ui A U M : Real}
+    (hzr1 : Rle (Rneg A) zr) (hzr2 : Rle zr A) (hzi1 : Rle (Rneg A) zi) (hzi2 : Rle zi A)
+    (hur1 : Rle (Rneg U) ur) (hur2 : Rle ur U) (hui1 : Rle (Rneg M) ui) (hui2 : Rle ui M) :
+    Rle (Radd (Rmul zr ui) (Rmul zi ur)) (Radd (Rmul A M) (Rmul A U))
+  ∧ Rle (Rneg (Radd (Rmul A M) (Rmul A U))) (Radd (Rmul zr ui) (Rmul zi ur)) := by
+  -- p = zr·ui ∈ [−AM, AM],  q = zi·ur ∈ [−AU, AU]
+  have hp_up : Rle (Rmul zr ui) (Rmul A M) := Rmul_le_mul_of_abs hzr1 hzr2 hui1 hui2
+  have hp_lo : Rle (Rneg (Rmul A M)) (Rmul zr ui) := Rneg_mul_le_of_abs hzr1 hzr2 hui1 hui2
+  have hq_up : Rle (Rmul zi ur) (Rmul A U) := Rmul_le_mul_of_abs hzi1 hzi2 hur1 hur2
+  have hq_lo : Rle (Rneg (Rmul A U)) (Rmul zi ur) := Rneg_mul_le_of_abs hzi1 hzi2 hur1 hur2
+  constructor
+  · exact Radd_le_add hp_up hq_up
+  · refine Rle_trans (Rle_of_Req (Rneg_Radd (Rmul A M) (Rmul A U))) ?_
+    exact Radd_le_add hp_lo hq_lo
+
+-- The per-term variation bound V_n.  δ = deltaLogNat n hn, d = s.re·δ, b = −s.im·δ,
+-- A = exp(−s.re·log n), U = 4d+3b², M = (1+3b²)·Bb.  Bb is a caller-supplied bound with −Bb ≤ b ≤ Bb.
+-- Vterm = A·(U + M).
+def Vterm (s : Complex) (n : Nat) (hn : 2 ≤ n) (Bb : Real) : Real :=
+  Rmul (RexpReal (Rmul (Rneg s.re) (RlogNat n hn)))
+    (Radd
+      (Radd (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul s.re (deltaLogNat n hn)))
+            (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide))
+                  (Rmul (Rmul (Rneg s.im) (deltaLogNat n hn)) (Rmul (Rneg s.im) (deltaLogNat n hn)))))
+      (Rmul (Radd one (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide))
+                  (Rmul (Rmul (Rneg s.im) (deltaLogNat n hn)) (Rmul (Rneg s.im) (deltaLogNat n hn))))) Bb))
+
+-- Per-term variation: −V_n ≤ Re(n⁻ˢ − (n+1)⁻ˢ) ≤ V_n  (and same for Im).
+-- Hypotheses (the n ≥ N₀(s) smallness, supplied by the caller):
+--   hσ : Re s ≥ 0,  hd1 : s.re·δ ≤ 1/2,  hb1/hb2 : b ∈ [−1,1],  hBb1/hBb2 : −Bb ≤ b ≤ Bb,  hBb : Bb ≥ 0.
+theorem cpowNeg_diff_re_bound (s : Complex) (n : Nat) (hn : 2 ≤ n) {Bb : Real}
+    (hσ : Rnonneg s.re)
+    (hd1 : Rle (Rmul s.re (deltaLogNat n hn)) (ofQ (⟨1, 2⟩ : Q) (by decide)))
+    (hb1 : Rle (Rneg one) (Rmul (Rneg s.im) (deltaLogNat n hn)))
+    (hb2 : Rle (Rmul (Rneg s.im) (deltaLogNat n hn)) one)
+    (hBb1 : Rle (Rneg Bb) (Rmul (Rneg s.im) (deltaLogNat n hn)))
+    (hBb2 : Rle (Rmul (Rneg s.im) (deltaLogNat n hn)) Bb)
+    (hBb : Rnonneg Bb) :
+    Rle (Rsub (cpowNeg s n).re (cpowNeg s (n + 1)).re) (Vterm s n hn Bb)
+  ∧ Rle (Rneg (Vterm s n hn Bb)) (Rsub (cpowNeg s n).re (cpowNeg s (n + 1)).re) := by
+  -- abbreviations (let-bound; defeq to their definitions)
+  let δ := deltaLogNat n hn
+  let b := Rmul (Rneg s.im) δ
+  let d := Rmul s.re δ
+  let A := RexpReal (Rmul (Rneg s.re) (RlogNat n hn))
+  let E := RexpReal (Rmul (Rneg s.re) δ)
+  let three : Real := ofQ (⟨3, 1⟩ : Q) (by decide)
+  let four : Real := ofQ (⟨4, 1⟩ : Q) (by decide)
+  let U := Radd (Rmul four d) (Rmul three (Rmul b b))
+  let M := Rmul (Radd one (Rmul three (Rmul b b))) Bb
+  let z := cpowNeg s n
+  let u := Csub Cone (Cexp ⟨Rmul (Rneg s.re) δ, b⟩)
+  -- d ≥ 0
+  have hdnn : Rnonneg d := Rnonneg_Rmul hσ (Rnonneg_deltaLogNat n hn)
+  -- z-component bounds (A)
+  have hzr_up : Rle z.re A := cpowNeg_re_le s n hn
+  have hzr_lo : Rle (Rneg A) z.re := cpowNeg_re_ge s n hn
+  have hzi_up : Rle z.im A := cpowNeg_im_le s n hn
+  have hzi_lo : Rle (Rneg A) z.im := cpowNeg_im_ge s n hn
+  -- the Req lifting RexpReal (Rmul (Rneg s.re) δ) = RexpReal (Rneg d)
+  have hEeq : Req E (RexpReal (Rneg d)) := RexpReal_congr (Rmul_neg_left s.re δ)
+  -- u.re / u.im components (definitional)
+  have hure : u.re = Rsub one (Rmul E (Rcos b)) := rfl
+  have huim : u.im = Radd zero (Rneg (Rmul E (Rsin b))) := rfl
+  -- u.re bounds via oneSubCexp, transported across E ≈ exp(−d)
+  have hcongr_re : Req (Rsub one (Rmul E (Rcos b)))
+      (Rsub one (Rmul (RexpReal (Rneg d)) (Rcos b))) :=
+    Rsub_congr (Req_refl one) (Rmul_congr hEeq (Req_refl (Rcos b)))
+  have hur_up : Rle u.re U := by
+    rw [hure]
+    refine Rle_trans (Rle_of_Req hcongr_re) ?_
+    exact oneSubCexp_re_upper hdnn hd1 hb1 hb2
+  -- U ≥ 0
+  have hUnn : Rnonneg U :=
+    Rnonneg_Radd (Rnonneg_Rmul (Rnonneg_ofQ (by decide) (by decide)) hdnn)
+      (Rnonneg_Rmul (Rnonneg_ofQ (by decide) (by decide)) (Rnonneg_Rmul_self b))
+  have hur_lo : Rle (Rneg U) u.re := by
+    rw [hure]
+    have h0 : Rle zero (Rsub one (Rmul (RexpReal (Rneg d)) (Rcos b))) :=
+      oneSubCexp_re_lower hdnn
+    have h0' : Rle zero (Rsub one (Rmul E (Rcos b))) :=
+      Rle_trans h0 (Rle_of_Req (Req_symm hcongr_re))
+    have hnU0 : Rle (Rneg U) zero :=
+      Rle_trans (Rle_Rneg (Rle_zero_of_Rnonneg hUnn)) (Rle_of_Req Rneg_zero)
+    exact Rle_trans hnU0 h0'
+  -- u.im bounds via oneSubCexp_im_*, transported across E ≈ exp(−d) and Radd zero
+  have hcongr_im : Req (Rneg (Rmul E (Rsin b)))
+      (Rneg (Rmul (RexpReal (Rneg d)) (Rsin b))) :=
+    Rneg_congr (Rmul_congr hEeq (Req_refl (Rsin b)))
+  have huim_eq : Req u.im (Rneg (Rmul (RexpReal (Rneg d)) (Rsin b))) := by
+    rw [huim]
+    exact Req_trans (Req_trans (Radd_comm zero (Rneg (Rmul E (Rsin b))))
+      (Radd_zero (Rneg (Rmul E (Rsin b))))) hcongr_im
+  have hui_up : Rle u.im M := by
+    refine Rle_trans (Rle_of_Req huim_eq) ?_
+    exact oneSubCexp_im_upper hdnn hb1 hb2 hBb1 hBb2 hBb
+  have hui_lo : Rle (Rneg M) u.im := by
+    refine Rle_trans ?_ (Rle_of_Req (Req_symm huim_eq))
+    exact oneSubCexp_im_lower hdnn hb1 hb2 hBb1 hBb2 hBb
+  -- combine via the abstract combinator
+  have hcomb := Rmul_sub_two_sided (A := A) (U := U) (M := M)
+    hzr_lo hzr_up hzi_lo hzi_up hur_lo hur_up hui_lo hui_up
+  -- (Cmul z u).re = Rsub (Rmul z.re u.re) (Rmul z.im u.im)
+  have hCmulre : (Cmul z u).re = Rsub (Rmul z.re u.re) (Rmul z.im u.im) := rfl
+  -- Vterm ≈ Radd (A·U) (A·M)
+  have hVterm : Req (Vterm s n hn Bb) (Radd (Rmul A U) (Rmul A M)) :=
+    Rmul_distrib A U M
+  -- cpowNeg_diff transport: hdiff : Req (Rsub z.re (n+1).re) (Cmul z u).re
+  have hdiff := (cpowNeg_diff s n hn).1
+  constructor
+  · -- upper:  Rsub z.re (n+1).re ≤ Vterm
+    refine Rle_trans (Rle_of_Req hdiff) ?_
+    rw [hCmulre]
+    exact Rle_trans hcomb.1 (Rle_of_Req (Req_symm hVterm))
+  · -- lower:  −Vterm ≤ Rsub z.re (n+1).re
+    refine Rle_trans (Rle_of_Req (Rneg_congr hVterm)) ?_
+    refine Rle_trans hcomb.2 ?_
+    rw [← hCmulre]
+    exact Rle_of_Req (Req_symm hdiff)
+
+theorem cpowNeg_diff_im_bound (s : Complex) (n : Nat) (hn : 2 ≤ n) {Bb : Real}
+    (hσ : Rnonneg s.re)
+    (hd1 : Rle (Rmul s.re (deltaLogNat n hn)) (ofQ (⟨1, 2⟩ : Q) (by decide)))
+    (hb1 : Rle (Rneg one) (Rmul (Rneg s.im) (deltaLogNat n hn)))
+    (hb2 : Rle (Rmul (Rneg s.im) (deltaLogNat n hn)) one)
+    (hBb1 : Rle (Rneg Bb) (Rmul (Rneg s.im) (deltaLogNat n hn)))
+    (hBb2 : Rle (Rmul (Rneg s.im) (deltaLogNat n hn)) Bb)
+    (hBb : Rnonneg Bb) :
+    Rle (Rsub (cpowNeg s n).im (cpowNeg s (n + 1)).im) (Vterm s n hn Bb)
+  ∧ Rle (Rneg (Vterm s n hn Bb)) (Rsub (cpowNeg s n).im (cpowNeg s (n + 1)).im) := by
+  -- abbreviations (let-bound; defeq to their definitions)
+  let δ := deltaLogNat n hn
+  let b := Rmul (Rneg s.im) δ
+  let d := Rmul s.re δ
+  let A := RexpReal (Rmul (Rneg s.re) (RlogNat n hn))
+  let E := RexpReal (Rmul (Rneg s.re) δ)
+  let three : Real := ofQ (⟨3, 1⟩ : Q) (by decide)
+  let four : Real := ofQ (⟨4, 1⟩ : Q) (by decide)
+  let U := Radd (Rmul four d) (Rmul three (Rmul b b))
+  let M := Rmul (Radd one (Rmul three (Rmul b b))) Bb
+  let z := cpowNeg s n
+  let u := Csub Cone (Cexp ⟨Rmul (Rneg s.re) δ, b⟩)
+  have hdnn : Rnonneg d := Rnonneg_Rmul hσ (Rnonneg_deltaLogNat n hn)
+  have hzr_up : Rle z.re A := cpowNeg_re_le s n hn
+  have hzr_lo : Rle (Rneg A) z.re := cpowNeg_re_ge s n hn
+  have hzi_up : Rle z.im A := cpowNeg_im_le s n hn
+  have hzi_lo : Rle (Rneg A) z.im := cpowNeg_im_ge s n hn
+  have hEeq : Req E (RexpReal (Rneg d)) := RexpReal_congr (Rmul_neg_left s.re δ)
+  have hure : u.re = Rsub one (Rmul E (Rcos b)) := rfl
+  have huim : u.im = Radd zero (Rneg (Rmul E (Rsin b))) := rfl
+  have hcongr_re : Req (Rsub one (Rmul E (Rcos b)))
+      (Rsub one (Rmul (RexpReal (Rneg d)) (Rcos b))) :=
+    Rsub_congr (Req_refl one) (Rmul_congr hEeq (Req_refl (Rcos b)))
+  have hur_up : Rle u.re U := by
+    rw [hure]
+    refine Rle_trans (Rle_of_Req hcongr_re) ?_
+    exact oneSubCexp_re_upper hdnn hd1 hb1 hb2
+  have hUnn : Rnonneg U :=
+    Rnonneg_Radd (Rnonneg_Rmul (Rnonneg_ofQ (by decide) (by decide)) hdnn)
+      (Rnonneg_Rmul (Rnonneg_ofQ (by decide) (by decide)) (Rnonneg_Rmul_self b))
+  have hur_lo : Rle (Rneg U) u.re := by
+    rw [hure]
+    have h0 : Rle zero (Rsub one (Rmul (RexpReal (Rneg d)) (Rcos b))) :=
+      oneSubCexp_re_lower hdnn
+    have h0' : Rle zero (Rsub one (Rmul E (Rcos b))) :=
+      Rle_trans h0 (Rle_of_Req (Req_symm hcongr_re))
+    have hnU0 : Rle (Rneg U) zero :=
+      Rle_trans (Rle_Rneg (Rle_zero_of_Rnonneg hUnn)) (Rle_of_Req Rneg_zero)
+    exact Rle_trans hnU0 h0'
+  have hcongr_im : Req (Rneg (Rmul E (Rsin b)))
+      (Rneg (Rmul (RexpReal (Rneg d)) (Rsin b))) :=
+    Rneg_congr (Rmul_congr hEeq (Req_refl (Rsin b)))
+  have huim_eq : Req u.im (Rneg (Rmul (RexpReal (Rneg d)) (Rsin b))) := by
+    rw [huim]
+    exact Req_trans (Req_trans (Radd_comm zero (Rneg (Rmul E (Rsin b))))
+      (Radd_zero (Rneg (Rmul E (Rsin b))))) hcongr_im
+  have hui_up : Rle u.im M := by
+    refine Rle_trans (Rle_of_Req huim_eq) ?_
+    exact oneSubCexp_im_upper hdnn hb1 hb2 hBb1 hBb2 hBb
+  have hui_lo : Rle (Rneg M) u.im := by
+    refine Rle_trans ?_ (Rle_of_Req (Req_symm huim_eq))
+    exact oneSubCexp_im_lower hdnn hb1 hb2 hBb1 hBb2 hBb
+  -- combine via the ADD abstract combinator (.im uses Radd of cross products)
+  have hcomb := Rmul_add_two_sided (A := A) (U := U) (M := M)
+    hzr_lo hzr_up hzi_lo hzi_up hur_lo hur_up hui_lo hui_up
+  -- (Cmul z u).im = Radd (Rmul z.re u.im) (Rmul z.im u.re)
+  have hCmulim : (Cmul z u).im = Radd (Rmul z.re u.im) (Rmul z.im u.re) := rfl
+  -- Vterm ≈ Radd (A·M) (A·U)
+  have hVterm : Req (Vterm s n hn Bb) (Radd (Rmul A M) (Rmul A U)) :=
+    Req_trans (Rmul_distrib A U M) (Radd_comm (Rmul A U) (Rmul A M))
+  -- cpowNeg_diff transport: hdiff : Req (Rsub z.im (n+1).im) (Cmul z u).im
+  have hdiff := (cpowNeg_diff s n hn).2
+  constructor
+  · refine Rle_trans (Rle_of_Req hdiff) ?_
+    rw [hCmulim]
+    exact Rle_trans hcomb.1 (Rle_of_Req (Req_symm hVterm))
+  · refine Rle_trans (Rle_of_Req (Rneg_congr hVterm)) ?_
+    refine Rle_trans hcomb.2 ?_
+    rw [← hCmulim]
+    exact Rle_of_Req (Req_symm hdiff)
+
 end UOR.Bridge.F1Square.Analysis

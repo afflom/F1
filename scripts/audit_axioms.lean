@@ -1617,3 +1617,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.oneSubCexp_re_lower
 #print axioms Analysis.oneSubCexp_im_upper
 #print axioms Analysis.oneSubCexp_im_lower
+#print axioms Analysis.Rmul_sub_two_sided
+#print axioms Analysis.Rmul_add_two_sided
+#print axioms Analysis.cpowNeg_diff_re_bound
+#print axioms Analysis.cpowNeg_diff_im_bound
