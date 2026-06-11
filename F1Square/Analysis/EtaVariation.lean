@@ -2730,4 +2730,31 @@ theorem czEtaPaired_im_tail (s : Complex) {sb T : Q} (hsbd : 0 < sb.den) (hTd : 
   · exact Rle_trans (czEtaPaired_im_diff_le s K V hbU d) htail
   · exact Rle_trans (Rle_Rneg htail) (czEtaPaired_im_diff_ge s K V hbL d)
 
+-- ===========================================================================
+-- Step 7b-ii(β-3/ix) — the SMALLNESS THRESHOLD: the per-term variation bound (cpowNeg_diff_*_tail) holds for
+-- n ≥ N₀(s) where N₀ = 2·sb.num + T.num + 1. For n above this, sb/n ≤ 1/2 and T/n ≤ 1 (the smallness the
+-- paired-tail connecting lemma needs). Pure Nat/Int rational reasoning. (czeta needed no threshold — its bound
+-- is unconditional for n ≥ 2 since σ>1; the η route trades σ>0 for this n ≥ N₀(s) tail condition.)
+-- ===========================================================================
+
+/-- The smallness threshold `N₀(sb,T) = 2·sb.num + T.num + 1`. -/
+def etaN0 (sb T : Q) : Nat := 2 * sb.num.toNat + T.num.toNat + 1
+
+/-- **Smallness for `n ≥ N₀`**: `sb/n ≤ 1/2` and `T/n ≤ 1` as the rational inequalities the V-bound needs. -/
+theorem eta_smallness_n (sb T : Q) (hsbd : 0 < sb.den) (hTd : 0 < T.den) (n : Nat)
+    (hn : etaN0 sb T ≤ n) :
+    Qle (mul sb (⟨1, n⟩ : Q)) (⟨1, 2⟩ : Q) ∧ Qle (mul T (⟨1, n⟩ : Q)) (⟨1, 1⟩ : Q) := by
+  have hsd : 1 ≤ sb.den := hsbd
+  have hTd' : 1 ≤ T.den := hTd
+  have hms : n ≤ sb.den * n := Nat.le_mul_of_pos_left n hsbd
+  have hmt : n ≤ T.den * n := Nat.le_mul_of_pos_left n hTd
+  have hmsI : (n : Int) ≤ ((sb.den * n : Nat) : Int) := by exact_mod_cast hms
+  have hmtI : (n : Int) ≤ ((T.den * n : Nat) : Int) := by exact_mod_cast hmt
+  simp only [etaN0] at hn
+  refine ⟨?_, ?_⟩
+  · show (sb.num * 1) * ((2 : Nat) : Int) ≤ (1 : Int) * ((sb.den * n : Nat) : Int)
+    omega
+  · show (T.num * 1) * ((1 : Nat) : Int) ≤ (1 : Int) * ((T.den * n : Nat) : Int)
+    omega
+
 end UOR.Bridge.F1Square.Analysis

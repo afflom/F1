@@ -1655,3 +1655,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.etaPaired_sum_le_tail
 #print axioms Analysis.czEtaPaired_re_tail
 #print axioms Analysis.czEtaPaired_im_tail
+#print axioms Analysis.eta_smallness_n
