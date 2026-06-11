@@ -1644,3 +1644,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.etaB_le_geo
 #print axioms Analysis.RsumRange_congr
 #print axioms Analysis.EtaVSum_diff_eq_RsumRange
+#print axioms Analysis.EtaVSum_block_geo_le

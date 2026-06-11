@@ -2417,4 +2417,85 @@ theorem EtaVSum_diff_eq_RsumRange (s : Complex) (T : Q) (hTd : 0 < T.den) (N : N
           (EtaVSum s T hTd N))
         (Radd_congr (EtaVSum_diff_eq_RsumRange s T hTd N d) (Req_refl _))
 
+/-- **The dyadic block of the η variation modulus sum, as a pure rational geometric**: for `k ≥ 1`,
+    `EtaVSum(2ᵏ⁺¹) − EtaVSum(2ᵏ) ≤ ofQ (Vconst · rᵏ)` with `r = 1/(1+τ) < 1`. Chains the contiguous
+    difference identity, the `etaVtermTerm = Vterm` reduction, the dyadic block bound
+    (`Vterm_geo_block_le`), and the rational geometric bound on the modulus (`etaB_le_geo`). -/
+theorem EtaVSum_block_geo_le (s : Complex) {sb T : Q} (hsbd : 0 < sb.den) (hsb0 : 0 ≤ sb.num)
+    (hTd : 0 < T.den) (hT0 : 0 ≤ T.num) (hσ : Rnonneg s.re) (hsb : Rle s.re (ofQ sb hsbd))
+    (hT1 : Rle (Rneg (ofQ T hTd)) s.im) (hT2 : Rle s.im (ofQ T hTd)) (hs : Pos s.re) :
+    ∃ (τ : Q) (hτd : 0 < τ.den) (hτn : 0 < τ.num),
+      ∀ (k : Nat), 1 ≤ k →
+        Rle (Rsub (EtaVSum s T hTd (2 ^ (k + 1))) (EtaVSum s T hTd (2 ^ k)))
+          (ofQ (mul (Vconst sb T) (qpow (Qinv (add ⟨1, 1⟩ τ)) k))
+            (Qmul_den_pos (Vconst_den_pos hsbd hTd)
+              (qpow_den_pos (Qinv_den_pos (by simp only [add]; push_cast; omega)) k))) := by
+  obtain ⟨τ, hτd, hτn, hB⟩ := etaB_le_geo s hs
+  refine ⟨τ, hτd, hτn, fun k hk1 => ?_⟩
+  -- abbreviations
+  let r : Q := Qinv (add (⟨1, 1⟩ : Q) τ)
+  have hrd : 0 < r.den := Qinv_den_pos (by simp only [add]; push_cast; omega)
+  let Bk : Real := RexpReal (Rneg (Rmul s.re (Rnsmul k (logN 2 (by omega)))))
+  let Cv : Real := ofQ (Vconst sb T) (Vconst_den_pos hsbd hTd)
+  -- index facts
+  have hkk : 2 ≤ 2 ^ k := by
+    have h : 2 ^ 1 ≤ 2 ^ k := Nat.pow_le_pow_right (by omega) hk1
+    simpa using h
+  have hk1' : 2 ≤ 2 ^ (k + 1) := by
+    have h : 2 ^ 1 ≤ 2 ^ (k + 1) := Nat.pow_le_pow_right (by omega) (by omega)
+    simpa using h
+  have h2eq : 2 ^ k + 2 ^ k = 2 ^ (k + 1) := by rw [Nat.pow_succ]; omega
+  -- Step 3: EtaVSum diff = RsumRange of etaVtermTerm
+  have hdiff := EtaVSum_diff_eq_RsumRange s T hTd (2 ^ k) (2 ^ k)
+  -- rewrite the index 2^k+2^k → 2^(k+1) inside EtaVSum
+  have hidxeq : EtaVSum s T hTd (2 ^ k + 2 ^ k) = EtaVSum s T hTd (2 ^ (k + 1)) :=
+    congrArg _ h2eq
+  rw [hidxeq] at hdiff
+  -- Step 4: etaVtermTerm (2^k+i) = Vterm (2^k+i) … via dif_pos
+  have hcongr : Req (RsumRange (fun i => etaVtermTerm s T hTd (2 ^ k + i)) (2 ^ k))
+      (RsumRange (fun i => Vterm s (2 ^ k + i) (by omega)
+          (Rmul (ofQ T hTd) (deltaLogNat (2 ^ k + i) (by omega)))) (2 ^ k)) := by
+    refine RsumRange_congr (fun i => ?_) (2 ^ k)
+    have hi : 2 ≤ 2 ^ k + i := by omega
+    show Req (etaVtermTerm s T hTd (2 ^ k + i)) _
+    unfold etaVtermTerm
+    rw [dif_pos hi]
+    exact Req_refl _
+  -- Step 5: dyadic block bound
+  have hblock := Vterm_geo_block_le s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 k hk1' hkk
+  -- combine: the RsumRange (Vterm form) ≤ Rmul (Rmul Bk Cv) (logN 2)
+  have hsum : Rle (RsumRange (fun i => etaVtermTerm s T hTd (2 ^ k + i)) (2 ^ k))
+      (Rmul (Rmul Bk Cv) (logN 2 (by omega))) :=
+    Rle_trans (Rle_of_Req hcongr) hblock
+  -- left side ≈ the EtaVSum difference
+  have hLHS : Rle (Rsub (EtaVSum s T hTd (2 ^ (k + 1))) (EtaVSum s T hTd (2 ^ k)))
+      (Rmul (Rmul Bk Cv) (logN 2 (by omega))) :=
+    Rle_trans (Rle_of_Req hdiff) hsum
+  -- Step 6: fold to the rational geometric.
+  -- nonneg facts
+  have hCvnn : Rnonneg Cv := Rnonneg_ofQ (Vconst_den_pos hsbd hTd) (Vconst_num_nonneg hsb0 hT0)
+  have hBknn : Rnonneg Bk := RexpReal_nonneg _
+  have hrnum : (0 : Int) ≤ r.num := by
+    show (0 : Int) ≤ ((add (⟨1, 1⟩ : Q) τ).den : Int); exact_mod_cast Nat.zero_le _
+  -- (a) logN 2 ≤ ofQ ⟨1,1⟩
+  have hlog : Rle (logN 2 (by omega)) (ofQ (⟨1, 1⟩ : Q) (by decide)) := logN_2_le_one
+  -- step a: bound logN 2 by ofQ ⟨1,1⟩ (scalar = Rmul Bk Cv on the left)
+  have ha : Rle (Rmul (Rmul Bk Cv) (logN 2 (by omega)))
+      (Rmul (Rmul Bk Cv) (ofQ (⟨1, 1⟩ : Q) (by decide))) :=
+    Rmul_le_Rmul_left (Rnonneg_Rmul hBknn hCvnn) hlog
+  -- step b: Bk ≤ ofQ rᵏ, lifted through (· Cv) then (· ofQ⟨1,1⟩)
+  have hb1 : Rle (Rmul Bk Cv) (Rmul (ofQ (qpow r k) (qpow_den_pos hrd k)) Cv) :=
+    Rmul_le_Rmul_right hCvnn (hB k)
+  have hb : Rle (Rmul (Rmul Bk Cv) (ofQ (⟨1, 1⟩ : Q) (by decide)))
+      (Rmul (Rmul (ofQ (qpow r k) (qpow_den_pos hrd k)) Cv) (ofQ (⟨1, 1⟩ : Q) (by decide))) :=
+    Rmul_le_Rmul_right (Rnonneg_ofQ (by decide) (by decide)) hb1
+  -- fold the rational product
+  have hfold : Req (Rmul (Rmul (ofQ (qpow r k) (qpow_den_pos hrd k)) Cv) (ofQ (⟨1, 1⟩ : Q) (by decide)))
+      (ofQ (mul (Vconst sb T) (qpow r k))
+        (Qmul_den_pos (Vconst_den_pos hsbd hTd) (qpow_den_pos hrd k))) := by
+    refine Req_trans (Rmul_congr (Rmul_ofQ_ofQ (qpow_den_pos hrd k) (Vconst_den_pos hsbd hTd)) (Req_refl _)) ?_
+    refine Req_trans (Rmul_ofQ_ofQ (Qmul_den_pos (qpow_den_pos hrd k) (Vconst_den_pos hsbd hTd)) (by decide)) ?_
+    exact ofQ_congr _ _ (by simp only [Qeq, mul]; push_cast; ring_uor)
+  exact Rle_trans hLHS (Rle_trans ha (Rle_trans hb (Rle_of_Req hfold)))
+
 end UOR.Bridge.F1Square.Analysis
