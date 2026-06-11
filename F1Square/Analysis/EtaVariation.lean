@@ -2529,4 +2529,34 @@ theorem EtaVSum_tail (s : Complex) (T : Q) (hTd : 0 < T.den) (sb : Q) (hsbd : 0 
           (mul (Vconst sb T) (geoFrom r j (d + 1)))
       simp only [geoFrom, Qeq, add, mul]; push_cast; ring_uor
 
+-- ===========================================================================
+-- Step 7b-ii(β-3/v) — the reindexed dyadic tail ≤ Vconst·1/(j+1) (mirror czetaExp_tail_reindex): at the base
+-- M(j) = (j+1)·r.den², geoFrom collapses to 1/(j+1) (geoFrom_le + geom_reindex, GENERIC), so the η tail is
+-- ≤ ofQ(Vconst/(j+1)) → 0. (The Vconst prefactor is absorbed into the regular-sequence reindex downstream.)
+-- ===========================================================================
+
+/-- **The reindexed η tail ≤ `ofQ(Vconst·⟨1,j+1⟩)`** at base `M(j) = (j+1)·r.den²` (`r = 1/(1+τ)`). -/
+theorem EtaVSum_tail_reindex (s : Complex) (T : Q) (hTd : 0 < T.den) (sb : Q) (hsbd : 0 < sb.den)
+    (hsb0 : 0 ≤ sb.num) (hT0 : 0 ≤ T.num) {τ : Q} (hτn : 0 < τ.num) (hτd : 0 < τ.den)
+    (hblk : ∀ k, 1 ≤ k →
+      Rle (Rsub (EtaVSum s T hTd (2 ^ (k + 1))) (EtaVSum s T hTd (2 ^ k)))
+        (ofQ (mul (Vconst sb T) (qpow (Qinv (add ⟨1, 1⟩ τ)) k))
+          (Qmul_den_pos (Vconst_den_pos hsbd hTd)
+            (qpow_den_pos (Qinv_den_pos (by simp only [add]; push_cast; omega)) k))))
+    (j d : Nat) :
+    Rle (Rsub (EtaVSum s T hTd (2 ^ ((j + 1) *
+            ((Qinv (add ⟨1, 1⟩ τ)).den * (Qinv (add ⟨1, 1⟩ τ)).den) + d)))
+          (EtaVSum s T hTd (2 ^ ((j + 1) *
+            ((Qinv (add ⟨1, 1⟩ τ)).den * (Qinv (add ⟨1, 1⟩ τ)).den)))))
+        (ofQ (mul (Vconst sb T) (⟨1, j + 1⟩ : Q))
+          (Qmul_den_pos (Vconst_den_pos hsbd hTd) (Nat.succ_pos j))) := by
+  obtain ⟨hrd, hr0, hple, hsub⟩ := czetaR_facts hτn hτd
+  refine Rle_trans (EtaVSum_tail s T hTd sb hsbd hrd hblk
+    ((j + 1) * ((Qinv (add ⟨1, 1⟩ τ)).den * (Qinv (add ⟨1, 1⟩ τ)).den))
+    (Nat.mul_pos (Nat.succ_pos j) (Nat.mul_pos hrd hrd)) d) ?_
+  refine Rle_ofQ_ofQ _ _ ?_
+  exact Qmul_le_mul_left (Vconst_num_nonneg hsb0 hT0)
+    (Qle_trans (Qmul_den_pos (qpow_den_pos hrd _) (Qinv_den_pos hsub))
+      (geoFrom_le _ hrd hr0 hsub _ d) (geom_reindex hrd hr0 hple hsub j))
+
 end UOR.Bridge.F1Square.Analysis
