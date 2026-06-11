@@ -1569,3 +1569,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.cornerCs_le
 #print axioms Analysis.cornerSc_le
 #print axioms Analysis.sinAdd_decay_le
+#print axioms Analysis.sinAdd_decay_5

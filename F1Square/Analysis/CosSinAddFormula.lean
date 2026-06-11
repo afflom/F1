@@ -1887,4 +1887,41 @@ theorem sinAdd_decay_le {a b : Q} {M : Nat} (had : 0 < a.den) (hbd : 0 < b.den)
     (Qabs_add_le _ _) ?_
   exact Qadd_le_add (cornerCs_le had hbd ha hb K hK) (cornerSc_le had hbd ha hb K hK)
 
+/-- **The clean sin decay bound** `|sin(a+b) − (cos a·sin b + sin a·cos b partial)| ≤ 4M/(n+1)` at the
+    deep depth `2K+1` (threshold linear in `n`): `sinAdd_decay_le` gives `2·(M·Mertens)`, and `uterm_le`
+    collapses each Mertens term to `1/(n+1)`. The convergence modulus the Real reconciliation consumes. -/
+theorem sinAdd_decay_5 {a b : Q} {M : Nat} (had : 0 < a.den) (hbd : 0 < b.den)
+    (ha : Qle (Qabs a) ⟨(M : Int), 1⟩) (hb : Qle (Qabs b) ⟨(M : Int), 1⟩) (n K : Nat) (hm : 0 < M * M)
+    (hK : (expM_U (M * M) (2 * (M * M))).num.toNat * 4 * (n + 1) * npow (M * M) (2 * (M * M) + 1)
+        + 2 * (M * M) ≤ K) :
+    Qle (Qabs (Qsub (Fsum (sinTerm (add a b)) (2 * K + 1))
+        (add (mul (altSum a 0 (2 * K + 1)) (Fsum (sinTerm b) (2 * K + 1)))
+             (mul (Fsum (sinTerm a) (2 * K + 1)) (altSum b 0 (2 * K + 1))))))
+      ⟨(4 * M : Int), n + 1⟩ := by
+  have h24 : (expM_U (M * M) (2 * (M * M))).num.toNat * 2 * (n + 1) * npow (M * M) (2 * (M * M) + 1)
+      ≤ (expM_U (M * M) (2 * (M * M))).num.toNat * 4 * (n + 1) * npow (M * M) (2 * (M * M) + 1) :=
+    Nat.mul_le_mul (Nat.mul_le_mul (Nat.mul_le_mul (Nat.le_refl _) (by omega)) (Nat.le_refl _)) (Nat.le_refl _)
+  have hMERTd : 0 < (add (mul (expM_U (M * M) (2 * (M * M))) ⟨(4 * npow (M * M) (K + 2) : Int), fct (K + 2)⟩)
+      (mul ⟨(2 * npow (M * M) (K + 1) : Int), fct (K + 1)⟩ (expM_U (M * M) (2 * (M * M))))).den :=
+    add_den_pos (Qmul_den_pos (expM_U_den_pos _ _) (fct_pos _)) (Qmul_den_pos (fct_pos _) (expM_U_den_pos _ _))
+  -- each Mertens term ≤ 1/(n+1)
+  have ht1 : Qle (mul (expM_U (M * M) (2 * (M * M))) ⟨(4 * npow (M * M) (K + 2) : Int), fct (K + 2)⟩) ⟨1, n + 1⟩ :=
+    uterm_le M (K + 2) n 4 hm (by omega) (by omega)
+  have ht2 : Qle (mul (⟨(2 * npow (M * M) (K + 1) : Int), fct (K + 1)⟩ : Q) (expM_U (M * M) (2 * (M * M)))) ⟨1, n + 1⟩ :=
+    Qle_trans (Qmul_den_pos (expM_U_den_pos _ _) (fct_pos _))
+      (Qeq_le (Qmul_swap _ _)) (uterm_le M (K + 1) n 2 hm (by omega) (by omega))
+  have hMert : Qle (add (mul (expM_U (M * M) (2 * (M * M))) ⟨(4 * npow (M * M) (K + 2) : Int), fct (K + 2)⟩)
+        (mul ⟨(2 * npow (M * M) (K + 1) : Int), fct (K + 1)⟩ (expM_U (M * M) (2 * (M * M))))) ⟨2, n + 1⟩ :=
+    Qle_trans (add_den_pos (Nat.succ_pos n) (Nat.succ_pos n)) (Qadd_le_add ht1 ht2)
+      (Qeq_le (by simp only [Qeq, add]; push_cast; ring_uor))
+  have hMmert : Qle (mul (⟨(M : Int), 1⟩ : Q)
+        (add (mul (expM_U (M * M) (2 * (M * M))) ⟨(4 * npow (M * M) (K + 2) : Int), fct (K + 2)⟩)
+          (mul ⟨(2 * npow (M * M) (K + 1) : Int), fct (K + 1)⟩ (expM_U (M * M) (2 * (M * M)))))) ⟨(2 * M : Int), n + 1⟩ :=
+    Qle_trans (Qmul_den_pos Nat.one_pos (Nat.succ_pos n)) (Qmul_le_mul_left (Int.ofNat_nonneg _) hMert)
+      (Qeq_le (by simp only [Qeq, mul]; push_cast; ring_uor))
+  refine Qle_trans (add_den_pos (Qmul_den_pos Nat.one_pos hMERTd) (Qmul_den_pos Nat.one_pos hMERTd))
+    (sinAdd_decay_le had hbd ha hb K (by omega)) ?_
+  refine Qle_trans (add_den_pos (Nat.succ_pos n) (Nat.succ_pos n)) (Qadd_le_add hMmert hMmert)
+    (Qeq_le (by simp only [Qeq, add]; push_cast; ring_uor))
+
 end UOR.Bridge.F1Square.Analysis
