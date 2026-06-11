@@ -1622,3 +1622,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.cpowNeg_diff_re_bound
 #print axioms Analysis.cpowNeg_diff_im_bound
 #print axioms Analysis.czEtaSum_two_eq_paired
+#print axioms Analysis.czEtaPaired_re_diff_le
+#print axioms Analysis.czEtaPaired_re_diff_ge
+#print axioms Analysis.czEtaPaired_im_diff_le
+#print axioms Analysis.czEtaPaired_im_diff_ge

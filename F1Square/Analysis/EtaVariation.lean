@@ -1813,4 +1813,58 @@ theorem czEtaSum_two_eq_paired (s : Complex) (K : Nat) :
         (Cneg (cpowNeg s (2 * K + 1 + 1)))) ?_
     exact Cadd_congr ih (Ceq_refl _)
 
+-- ===========================================================================
+-- Step 7b-i — the PAIRED-SUM TAIL BOUND (abstract telescoping): the change in the paired partial sum over
+-- a block is controlled by the sum of the per-term variation bounds V i. A direct mirror of
+-- czeta_re_diff_le/ge_aux, taking the per-term bounds as a hypothesis (the n ≥ N₀(s) smallness lives at the
+-- call site). RsumRange V d = Σ_{i<d} V i.
+-- ===========================================================================
+
+/-- Partial sums `Σ_{i=0}^{d−1} V i` of an arbitrary term sequence. -/
+def RsumRange (V : Nat → Real) : Nat → Real
+  | 0 => zero
+  | (d + 1) => Radd (RsumRange V d) (V d)
+
+/-- **Paired tail, upper (real part)**: `S(K+d).re − S(K).re ≤ Σ_{i<d} V i` from the per-term upper bounds. -/
+theorem czEtaPaired_re_diff_le (s : Complex) (K : Nat) (V : Nat → Real)
+    (hb : ∀ i, Rle (Rsub (cpowNeg s (2 * (K + i) + 1)).re (cpowNeg s (2 * (K + i) + 1 + 1)).re) (V i)) :
+    ∀ d, Rle (Rsub (czEtaPaired s (K + d)).re (czEtaPaired s K).re) (RsumRange V d)
+  | 0 => Rle_of_Req (Radd_neg _)
+  | (d + 1) =>
+      Rle_trans (Rle_of_Req (Rsub_Radd_left (czEtaPaired s (K + d)).re
+          (cpowNegDiff s (2 * (K + d) + 1)).re (czEtaPaired s K).re))
+        (Radd_le_add (czEtaPaired_re_diff_le s K V hb d) (hb d))
+
+/-- **Paired tail, lower (real part)**: `−Σ_{i<d} V i ≤ S(K+d).re − S(K).re` from the per-term lower bounds. -/
+theorem czEtaPaired_re_diff_ge (s : Complex) (K : Nat) (V : Nat → Real)
+    (hb : ∀ i, Rle (Rneg (V i)) (Rsub (cpowNeg s (2 * (K + i) + 1)).re (cpowNeg s (2 * (K + i) + 1 + 1)).re)) :
+    ∀ d, Rle (Rneg (RsumRange V d)) (Rsub (czEtaPaired s (K + d)).re (czEtaPaired s K).re)
+  | 0 => Rle_of_Req (Req_trans Rneg_zero (Req_symm (Radd_neg _)))
+  | (d + 1) =>
+      Rle_trans (Rle_of_Req (Rneg_Radd (RsumRange V d) (V d)))
+        (Rle_trans (Radd_le_add (czEtaPaired_re_diff_ge s K V hb d) (hb d))
+          (Rle_of_Req (Req_symm (Rsub_Radd_left (czEtaPaired s (K + d)).re
+            (cpowNegDiff s (2 * (K + d) + 1)).re (czEtaPaired s K).re))))
+
+/-- **Paired tail, upper (imaginary part)**. -/
+theorem czEtaPaired_im_diff_le (s : Complex) (K : Nat) (V : Nat → Real)
+    (hb : ∀ i, Rle (Rsub (cpowNeg s (2 * (K + i) + 1)).im (cpowNeg s (2 * (K + i) + 1 + 1)).im) (V i)) :
+    ∀ d, Rle (Rsub (czEtaPaired s (K + d)).im (czEtaPaired s K).im) (RsumRange V d)
+  | 0 => Rle_of_Req (Radd_neg _)
+  | (d + 1) =>
+      Rle_trans (Rle_of_Req (Rsub_Radd_left (czEtaPaired s (K + d)).im
+          (cpowNegDiff s (2 * (K + d) + 1)).im (czEtaPaired s K).im))
+        (Radd_le_add (czEtaPaired_im_diff_le s K V hb d) (hb d))
+
+/-- **Paired tail, lower (imaginary part)**. -/
+theorem czEtaPaired_im_diff_ge (s : Complex) (K : Nat) (V : Nat → Real)
+    (hb : ∀ i, Rle (Rneg (V i)) (Rsub (cpowNeg s (2 * (K + i) + 1)).im (cpowNeg s (2 * (K + i) + 1 + 1)).im)) :
+    ∀ d, Rle (Rneg (RsumRange V d)) (Rsub (czEtaPaired s (K + d)).im (czEtaPaired s K).im)
+  | 0 => Rle_of_Req (Req_trans Rneg_zero (Req_symm (Radd_neg _)))
+  | (d + 1) =>
+      Rle_trans (Rle_of_Req (Rneg_Radd (RsumRange V d) (V d)))
+        (Rle_trans (Radd_le_add (czEtaPaired_im_diff_ge s K V hb d) (hb d))
+          (Rle_of_Req (Req_symm (Rsub_Radd_left (czEtaPaired s (K + d)).im
+            (cpowNegDiff s (2 * (K + d) + 1)).im (czEtaPaired s K).im))))
+
 end UOR.Bridge.F1Square.Analysis
