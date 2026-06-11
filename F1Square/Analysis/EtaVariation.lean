@@ -2364,4 +2364,26 @@ theorem Vterm_geo_block_le (s : Complex) {sb T : Q} (hsbd : 0 < sb.den) (hsb0 : 
       (Req_trans (logN_eq_of_eq h2 (by omega) (by omega)) (Req_symm (RlogNat_eq_logN (2 ^ (k + 1)) hk1)))
   exact Req_trans (Rsub_congr hidx (Req_refl _)) (logBlock_eq k hk1 hkk)
 
+-- ===========================================================================
+-- Step 7b-ii(β-3/i) — the dyadic modulus B = exp(−σ·k·log2) is bounded by the RATIONAL geometric ofQ(rᵏ),
+-- r = 1/(1+τ) < 1 (from etaU_le_ratio). This lets the generic czeta geoFrom/geom_reindex tail apparatus
+-- (parametric in r) collapse the η variation tail to the canonical 1/(j+1) modulus.
+-- ===========================================================================
+
+/-- **`exp(−σ·k·log2) ≤ ofQ(rᵏ)`** (`r = 1/(1+τ) < 1`) for `Re s > 0`: `B ≈ uᵏ ≤ (ofQ r)ᵏ ≈ ofQ(rᵏ)`. -/
+theorem etaB_le_geo (s : Complex) (hs : Pos s.re) :
+    ∃ (τ : Q) (hτd : 0 < τ.den) (hτn : 0 < τ.num),
+      ∀ k, Rle (RexpReal (Rneg (Rmul s.re (Rnsmul k (logN 2 (by omega))))))
+        (ofQ (qpow (Qinv (add ⟨1, 1⟩ τ)) k)
+          (qpow_den_pos (Qinv_den_pos (by simp only [add]; push_cast; omega)) k)) := by
+  obtain ⟨τ, hτd, hτn, hu⟩ := etaU_le_ratio s hs
+  refine ⟨τ, hτd, hτn, fun k => ?_⟩
+  have hrd : 0 < (Qinv (add (⟨1, 1⟩ : Q) τ)).den :=
+    Qinv_den_pos (by simp only [add]; push_cast; omega)
+  have hrnn : Rnonneg (ofQ (Qinv (add (⟨1, 1⟩ : Q) τ)) hrd) :=
+    Rnonneg_ofQ hrd (by show (0 : Int) ≤ ((add (⟨1, 1⟩ : Q) τ).den : Int); exact_mod_cast Nat.zero_le _)
+  refine Rle_trans (Rle_of_Req (czetaExpB_eq_pow s k)) ?_
+  refine Rle_trans (Rpow_mono (RexpReal_nonneg _) hrnn hu k) ?_
+  exact Rle_of_Req (Rpow_ofQ hrd k)
+
 end UOR.Bridge.F1Square.Analysis
