@@ -1572,3 +1572,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.sinAdd_decay_5
 #print axioms Analysis.csConv_den_pos
 #print axioms Analysis.scConv_den_pos
+#print axioms Analysis.csMul_diag_le
