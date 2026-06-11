@@ -1592,3 +1592,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Csub_congr
 #print axioms Analysis.Cmul_neg_right
 #print axioms Analysis.cpowNeg_diff
+#print axioms Analysis.cpowNeg_re_le
+#print axioms Analysis.cpowNeg_re_ge
+#print axioms Analysis.cpowNeg_im_le
+#print axioms Analysis.cpowNeg_im_ge

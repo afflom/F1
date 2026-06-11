@@ -10,6 +10,7 @@ Pure Lean 4, no Mathlib, no `sorry`/`native_decide`, choice-free.
 
 import F1Square.Analysis.EulerMaclaurin
 import F1Square.Analysis.ComplexExpAdd
+import F1Square.Analysis.ComplexZeta
 
 namespace UOR.Bridge.F1Square.Analysis
 
@@ -87,5 +88,30 @@ theorem cpowNeg_diff (s : Complex) (n : Nat) (hn : 2 ≤ n) :
           (Cexp ⟨Rmul (Rneg s.re) (deltaLogNat n hn), Rmul (Rneg s.im) (deltaLogNat n hn)⟩))))
       (Ceq_symm (Cmul_distrib (cpowNeg s n) Cone
         (Cneg (Cexp ⟨Rmul (Rneg s.re) (deltaLogNat n hn), Rmul (Rneg s.im) (deltaLogNat n hn)⟩)))))
+
+-- ===========================================================================
+-- The `n⁻ˢ` per-term component bounds `−n⁻ᴿᵉˢ ≤ Re/Im(n⁻ˢ) ≤ n⁻ᴿᵉˢ` (no real-abs; two-sided `Rle`,
+-- mirroring `ComplexZeta`'s `czetaTerm_re_le`/`ge`). `cpowNeg s n = e^{−s·log n}` for `n ≥ 2`. -/
+-- ===========================================================================
+
+/-- `Re(n⁻ˢ) ≤ e^{−Re s·log n}` (`= n⁻ᴿᵉˢ`). -/
+theorem cpowNeg_re_le (s : Complex) (n : Nat) (hn : 2 ≤ n) :
+    Rle ((cpowNeg s n).re) (RexpReal (Rmul (Rneg s.re) (RlogNat n hn))) := by
+  unfold cpowNeg; rw [dif_pos hn]; exact Cexp_re_le _
+
+/-- `−e^{−Re s·log n} ≤ Re(n⁻ˢ)`. -/
+theorem cpowNeg_re_ge (s : Complex) (n : Nat) (hn : 2 ≤ n) :
+    Rle (Rneg (RexpReal (Rmul (Rneg s.re) (RlogNat n hn)))) ((cpowNeg s n).re) := by
+  unfold cpowNeg; rw [dif_pos hn]; exact Cexp_re_ge _
+
+/-- `Im(n⁻ˢ) ≤ e^{−Re s·log n}`. -/
+theorem cpowNeg_im_le (s : Complex) (n : Nat) (hn : 2 ≤ n) :
+    Rle ((cpowNeg s n).im) (RexpReal (Rmul (Rneg s.re) (RlogNat n hn))) := by
+  unfold cpowNeg; rw [dif_pos hn]; exact Cexp_im_le _
+
+/-- `−e^{−Re s·log n} ≤ Im(n⁻ˢ)`. -/
+theorem cpowNeg_im_ge (s : Complex) (n : Nat) (hn : 2 ≤ n) :
+    Rle (Rneg (RexpReal (Rmul (Rneg s.re) (RlogNat n hn)))) ((cpowNeg s n).im) := by
+  unfold cpowNeg; rw [dif_pos hn]; exact Cexp_im_ge _
 
 end UOR.Bridge.F1Square.Analysis
