@@ -16,8 +16,15 @@ Pure Lean 4, no Mathlib, no `sorry`/`native_decide`, choice-free.
 import F1Square.Analysis.ComplexExp
 import F1Square.Analysis.CosSinAddFormula
 import F1Square.Analysis.ExpRealAdd
+import F1Square.Analysis.ExpLog
 
 namespace UOR.Bridge.F1Square.Analysis
+
+/-- **The complex exponential respects `≈`**: `z ≈ w ⟹ e^z ≈ e^w` (componentwise, from `RexpReal_congr`,
+    `Rcos_congr`, `Rsin_congr`). -/
+theorem Cexp_congr {z w : Complex} (h : Ceq z w) : Ceq (Cexp z) (Cexp w) :=
+  ⟨Rmul_congr (RexpReal_congr h.1) (Rcos_congr h.2),
+    Rmul_congr (RexpReal_congr h.1) (Rsin_congr h.2)⟩
 
 /-- **The complex exponential law** `e^{z+w} ≈ e^z · e^w`. Componentwise: the real part is
     `e^{re z+re w}·cos(im z+im w)` reorganized via `RexpReal_add`+`Rcos_add` into
