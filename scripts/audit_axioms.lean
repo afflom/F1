@@ -1547,3 +1547,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.altMulDeep_le
 #print axioms Analysis.sinMulDeep_le
 #print axioms Analysis.Rcos_add
+#print axioms Analysis.pairTermD_den_pos
+#print axioms Analysis.binTermD_scaled_eq
+#print axioms Analysis.addPow_div_diag
+#print axioms Analysis.Fsum_parity_split_odd

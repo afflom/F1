@@ -1353,4 +1353,74 @@ theorem Rcos_add (a b : Real) :
         (add_den_pos (Nat.succ_pos N) (Nat.succ_pos N)))))
     htotal (Qeq_le (by simp only [Qeq, add]; push_cast; ring_uor))
 
+-- ===========================================================================
+-- The **`sin(a+b)` cross-Cauchy theory** — general (odd) degree antidiagonal + mixed pairing.
+-- ===========================================================================
+
+/-- **General-degree pair term** `aᵖ·b^{d−p}/(p!·(d−p)!)` (the `pairTerm` total degree `2m` is now an
+    arbitrary `d`; the `sin(a+b)` cross-diagonals live at the odd degree `d = 2m+1`). -/
+def pairTermD (a b : Q) (d p : Nat) : Q :=
+  mul (mul (qpow a p) (qpow b (d - p))) ⟨1, fct p * fct (d - p)⟩
+
+theorem pairTermD_den_pos {a b : Q} (had : 0 < a.den) (hbd : 0 < b.den) (d p : Nat) :
+    0 < (pairTermD a b d p).den :=
+  Qmul_den_pos (Qmul_den_pos (qpow_den_pos had p) (qpow_den_pos hbd _))
+    (Nat.mul_pos (fct_pos _) (fct_pos _))
+
+/-- **Per-term scaling, general degree**: `C(d,p)·aᵖ·b^{d−p} / d! = aᵖ·b^{d−p}/(p!·(d−p)!)`. -/
+theorem binTermD_scaled_eq {a b : Q} (d : Nat) {p : Nat} (hp : p ≤ d) :
+    Qeq (mul (⟨1, fct d⟩ : Q) (binTerm a b d p)) (pairTermD a b d p) := by
+  have hkeyZ : (choose d p : Int) * (fct p : Int) * (fct (d - p) : Int) = (fct d : Int) := by
+    exact_mod_cast choose_mul_fct_mul_fct hp
+  show Qeq (mul (⟨1, fct d⟩ : Q)
+      (mul (⟨(choose d p : Int), 1⟩ : Q) (mul (qpow a p) (qpow b (d - p)))))
+    (mul (mul (qpow a p) (qpow b (d - p))) ⟨1, fct p * fct (d - p)⟩)
+  simp only [Qeq, mul]
+  push_cast
+  generalize (qpow a p).num = an
+  generalize (qpow b (d - p)).num = bn
+  generalize ((qpow a p).den : Int) = ad
+  generalize ((qpow b (d - p)).den : Int) = bd
+  generalize ((choose d p : Nat) : Int) = cc at hkeyZ ⊢
+  generalize ((fct p : Nat) : Int) = fp at hkeyZ ⊢
+  generalize ((fct (d - p) : Nat) : Int) = fq at hkeyZ ⊢
+  generalize ((fct d : Nat) : Int) = ff at hkeyZ ⊢
+  rw [← hkeyZ]; ring_uor
+
+/-- **The general-degree antidiagonal**: `(a+b)^d/d! = Σ_{p=0}^{d} aᵖ·b^{d−p}/(p!·(d−p)!)`. -/
+theorem addPow_div_diag {a b : Q} (had : 0 < a.den) (hbd : 0 < b.den) (d : Nat) :
+    Qeq (mul (qpow (add a b) d) ⟨1, fct d⟩) (Fsum (pairTermD a b d) d) := by
+  have hbtd : ∀ i, 0 < (binTerm a b d i).den := binTerm_den_pos had hbd _
+  have hcd : 0 < (⟨1, fct d⟩ : Q).den := fct_pos _
+  have h1 : Qeq (mul (qpow (add a b) d) ⟨1, fct d⟩)
+      (mul (⟨1, fct d⟩ : Q) (Fsum (binTerm a b d) d)) :=
+    Qeq_trans (Qmul_den_pos (Fsum_den_pos hbtd _) hcd)
+      (Qmul_congr (binomial had hbd _) (Qeq_refl _)) (Qmul_swap _ _)
+  have h2 : Qeq (mul (⟨1, fct d⟩ : Q) (Fsum (binTerm a b d) d)) (Fsum (pairTermD a b d) d) :=
+    Qeq_trans (Fsum_den_pos (fun i => Qmul_den_pos hcd (hbtd i)) _)
+      (Qeq_symm (Fsum_mul_left hcd hbtd _))
+      (Fsum_congr_le (fun i hi => binTermD_scaled_eq d (by omega : i ≤ d)))
+  exact Qeq_trans (Qmul_den_pos hcd (Fsum_den_pos hbtd _)) h1 h2
+
+/-- **Odd-degree parity split**: `Σ_{p=0}^{2m+1} a(p) = Σ_{j=0}^{m} a(2j) + Σ_{j=0}^{m} a(2j+1)`. -/
+theorem Fsum_parity_split_odd (a : Nat → Q) (ha : ∀ i, 0 < (a i).den) :
+    ∀ m, Qeq (Fsum a (2 * m + 1))
+      (add (Fsum (fun j => a (2 * j)) m) (Fsum (fun j => a (2 * j + 1)) m))
+  | 0 => Qeq_refl _
+  | (m + 1) => by
+      show Qeq (add (add (Fsum a (2 * m + 1)) (a (2 * m + 1 + 1))) (a (2 * m + 1 + 1 + 1)))
+        (add (add (Fsum (fun j => a (2 * j)) m) (a (2 * (m + 1))))
+          (add (Fsum (fun j => a (2 * j + 1)) m) (a (2 * (m + 1) + 1))))
+      have he1 : a (2 * m + 1 + 1) = a (2 * (m + 1)) := by rw [show 2 * m + 1 + 1 = 2 * (m + 1) from by omega]
+      have he2 : a (2 * m + 1 + 1 + 1) = a (2 * (m + 1) + 1) := by
+        rw [show 2 * m + 1 + 1 + 1 = 2 * (m + 1) + 1 from by omega]
+      rw [he1, he2]
+      refine Qeq_trans
+        (add_den_pos (add_den_pos (add_den_pos (Fsum_den_pos (fun j => ha (2 * j)) m)
+          (Fsum_den_pos (fun j => ha (2 * j + 1)) m)) (ha (2 * (m + 1)))) (ha (2 * (m + 1) + 1)))
+        (Qadd_congr (Qadd_congr (Fsum_parity_split_odd a ha m) (Qeq_refl _)) (Qeq_refl _)) ?_
+      generalize Fsum (fun j => a (2 * j)) m = E
+      generalize Fsum (fun j => a (2 * j + 1)) m = O
+      simp only [Qeq, add]; push_cast; ring_uor
+
 end UOR.Bridge.F1Square.Analysis
