@@ -2206,4 +2206,24 @@ theorem etaU_le_ratio (s : Complex) (hs : Pos s.re) :
       (Rmul_le_Rmul_right (Rnonneg_logN 2 (by omega)) hε)
   exact Rexp_neg_le_ratio (by simp only [mul]; omega) (Qmul_den_pos hεd (by decide)) hθ
 
+-- ===========================================================================
+-- Step 7b-ii(β-2b/i) — the η per-term modulus A_n = exp(−σ·log n) is the czeta modulus term (via the bridge),
+-- so it inherits the dyadic per-term bound: A_n ≤ exp(−σ·k·log2) for n ≥ 2ᵏ. This + δ_n ≤ 2⁻ᵏ gives the
+-- dyadic block bound block_k ≤ uᵏ.
+-- ===========================================================================
+
+/-- **`A_n` is the czeta modulus term**: `exp(−Re s·RlogNat n) ≈ exp(−Re s·logN n) = exp(czetaExpArg s n)`,
+    via the `RlogNat ↔ logN` bridge. -/
+theorem A_eq_czetaExp (s : Complex) (n : Nat) (hn : 2 ≤ n) :
+    Req (RexpReal (Rmul (Rneg s.re) (RlogNat n hn)))
+        (RexpReal (czetaExpArg s n (by omega))) :=
+  RexpReal_congr (Rmul_congr (Req_refl (Rneg s.re)) (RlogNat_eq_logN n hn))
+
+/-- **The η per-term dyadic modulus bound**: for `n ≥ 2ᵏ`, `A_n = exp(−Re s·log n) ≤ exp(−Re s·k·log 2)`.
+    The czeta per-term bound `czetaExp_term_le` transported through `A_eq_czetaExp`. -/
+theorem A_dyadic_le (s : Complex) (hσ : Rnonneg s.re) (k n : Nat) (hn : 2 ≤ n) (hkn : 2 ^ k ≤ n) :
+    Rle (RexpReal (Rmul (Rneg s.re) (RlogNat n hn)))
+        (RexpReal (Rneg (Rmul s.re (Rnsmul k (logN 2 (by omega)))))) :=
+  Rle_trans (Rle_of_Req (A_eq_czetaExp s n hn)) (czetaExp_term_le s hσ k n (by omega) hkn)
+
 end UOR.Bridge.F1Square.Analysis
