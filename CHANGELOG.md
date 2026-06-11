@@ -4,6 +4,55 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html), starting at `v0.0.1`.
 
+## [0.16.0] - 2026-06-11
+
+### Added — stage B: critical-strip `ζ`, the archimedean `Γ′/Γ` place, and `Pos λ₂` (pure Lean 4, no Mathlib, no `sorry`, choice-free)
+
+The three v0.16.0 release goals are delivered. Every theorem below is choice-free
+(`#print axioms` = `{propext, Quot.sound}`), audited in `scripts/audit_axioms.lean`; the build is green
+and the honesty gate passes. The crux `liPositivityHolds`/`hodgeIndexHolds` stay `none` — **RH stays open**.
+
+- **(B) `ζ(s)` on the critical strip `0 < Re s < 1`** — built the integration-free way, via the **Dirichlet
+  eta** `η(s) = Σ (−1)^{n−1} n⁻ˢ`, which converges by **bounded variation** across the whole strip where the
+  raw `ζ` series diverges.
+  - `F1Square/Analysis/EtaVariation.lean` — **`Ceta`**: `η(s)` for every `Re s > 0` as a genuine constructive
+    `ℂ`, the Bishop diagonal limit (`Rlim`) of the reindexed paired partial sums. The convergence is the full
+    dyadic-geometric `RReg` stack adapted to `σ > 0`: the per-term variation bound (a new alternating-series
+    quadratic remainder `altSum_quad`, the `RlogNat ↔ logN` bridge, a two-sided product keystone), the pairing
+    identity, the geometric block bound `≤ ofQ(Vconst·rᵏ)` (`r = 1/(1+τ) < 1`), the telescoping tail
+    `EtaVSum_tail_full → ofQ(Vconst/(j+1))`, the odd-offset subsum, and the reindex `etaMidx` (absorbing the
+    `Vconst` prefactor) → `RReg_of_real_bound` → `Rlim`.
+  - `F1Square/Analysis/CriticalZeta.lean` — **`CzetaStrip`**: `ζ(s) = η(s) / (1 − 2^{1−s})` for `0 < Re s < 1`,
+    a genuine constructive `ℂ`. `cpowNeg_normSq` (`|n⁻ˢ|² = n⁻²ᴿᵉˢ`), the denominator
+    `1 − 2^{1−s} = 1 − 2·cpowNeg s 2` (reusing `cpowNeg`, no new `Cexp`), its **non-vanishing**
+    `etaDenom_Pos_normSq` (`|1 − 2^{1−s}|² ≥ (2^{1−σ} − 1)² > 0`, the spurious zeros all sit on `Re s = 1`),
+    the constructive inverse `Cinv`, and the certificate `CzetaStrip_functional : (1 − 2^{1−s})·ζ ≈ η`. Since
+    `ExactBoundedReal = Real`, the real and imaginary parts are exact-bounded objects automatically.
+- **(A) The Gamma function via Spouge; the archimedean `Γ′/Γ` place** (`F1Square/Analysis/Gamma.lean`).
+  - **`RrpowPos`** — the real power `x^y := exp(y·log x)` for a positive base, the single combinator behind
+    every Spouge power (`√(2π) = exp(½·log 2π)`, `(z+a)^{z+½}`, the half-integer `(a−k)^{k−½}`). **No sqrt
+    primitive and no complex `Clog` are needed.**
+  - **`Digamma`** — the archimedean place `ψ = Γ′/Γ` as a genuine constructive real (the **exact** object, not an
+    approximation), via the convergent series `ψ(z) = −γ + Σ_{n≥0}[1/(n+1) − 1/(n+z)]`. Architecture mirrors
+    `Ceta`: per-term two-sided bound `|t_n| ≤ B/((n+1)n)` (`Rinv_le_ofQ_Qinv` + a two-sided product bound),
+    the telescoping tail `digammaTail_two_sided`, the reindex `digammaMidx` absorbing `B = |z−1|`, then
+    `RReg_of_real_bound` → `Rlim`; reuses the Euler–Mascheroni constant `Rgamma_h`.
+  - **`SpougeGamma`** — Spouge's approximant of `Γ(z+1) = (z+a)^{z+½}·e^{−(z+a)}·(c₀ + Σ_{k=1}^{N} c_k/(z+k))`,
+    `c₀ = √(2π)`, `c_k = ((−1)^{k−1}/(k−1)!)(a−k)^{k−½}e^{a−k}`, as a constructive real built entirely from
+    `exp`/`log`/reciprocal of positive reals (general rational parameter `a`). Spouge's explicit **relative**-error
+    bound `|ε_S(a,z)| < √a·(2π)^{−(a+½)}/Re(z+a)` (`a ≥ 3`; Spouge 1994 SIAM J. Numer. Anal. 31(3); Pugh thesis
+    eqns 2.18–2.19) is **documented, not asserted as a Lean theorem** — a rigorous proof presupposes an
+    independent `Γ`, so the *exact* archimedean place is carried by the `Digamma` series instead.
+- **(C) `Pos λ₂`** (`F1Square/Analysis/LambdaTwo.lean`) — the second Li/Keiper coefficient is positive
+  (`Rlambda2_pos : Pos Rlambda2`, `λ₂ ≈ 0.0043 > 0`), the higher-Stieltjes-`γₙ` → `λₙ` capstone, a
+  `λ₁`-style positivity certificate for `n = 2`.
+
+### Honest scope (unchanged)
+- `Pos λ₂` is **evidence** for Li's criterion at `n = 2`, **not** the crux: `liPositivityHolds` stays `none`
+  and **RH stays open**. `λₙ > 0 ∀ n` (= RH), the off-critical-line zeros, and the arithmetic square remain
+  deferred. The Spouge `Γ`-value's error bound is cited, not formalized; the archimedean place used downstream
+  is the exact `Digamma`.
+
 ## [0.15.3] - 2026-06-10
 
 ### Added — the explicit formula's arithmetic ingredient: von Mangoldt `Λ`, the prime side, and the Bombieri–Lagarias `n = 1` decomposition (pure Lean 4, no Mathlib, no `sorry`)
