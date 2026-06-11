@@ -2271,4 +2271,57 @@ theorem scMulDeep_le (a b : Real) (N s K : Nat) (hNs : N ≤ s)
         (Qabs_num_nonneg _) (Int.ofNat_nonneg _) hQ'le (altDiag_to_deep b 0 N s K hNs hdb)))
     (Qeq_le (by simp only [Qeq, add, mul]; push_cast; ring_uor))
 
+set_option maxHeartbeats 1000000 in
+/-- **The `sin(a+b)` LHS reconcile**: `(Rsin (Radd a b)).seq N` is within `C/(N+1)` of the deep
+    `Fsum (sinTerm (a₍₂R_z₊₁₎ + b₍₂R_z₊₁₎)) (2K+1)` (`R_z = RaltReal_R (Radd a b) N`). `RsinSelf_diag_le`
+    de-reindexes the nested `Rsin`, then the `off=1` partial sum reconciles to depth `2K+1` (same arg
+    `(Radd a b)₍R_z₎`, `altSum_trunc_bound` + `RaltReal_trunc_le`) and `Fsum_sinTerm_eq` re-folds it. -/
+theorem sinAddLHS_le (a b : Real) (N K : Nat)
+    (hdeep : RaltReal_R (Radd a b) N ≤ 2 * K + 1) :
+    Qle (Qabs (Qsub ((Rsin (Radd a b)).seq N)
+        (Fsum (sinTerm (add (a.seq (2 * RaltReal_R (Radd a b) N + 1)) (b.seq (2 * RaltReal_R (Radd a b) N + 1))))
+          (2 * K + 1))))
+      ⟨(2 * (expM_U (xBound (Radd a b) * xBound (Radd a b))
+              (2 * (xBound (Radd a b) * xBound (Radd a b)))).num.toNat + 2 * xBound (Radd a b) : Int), N + 1⟩ := by
+  have h2M : 2 * (xBound (Radd a b) * xBound (Radd a b)) ≤ RaltReal_R (Radd a b) N := by
+    unfold RaltReal_R; omega
+  have hQd : 0 < ((Radd a b).seq (RaltReal_R (Radd a b) N)).den := (Radd a b).den_pos _
+  have hpd : 0 < (RaltReal_seq (Radd a b) 1 N).den := (RsinAux (Radd a b)).den_pos N
+  -- term2: |natural − Fsum_target| ≤ ⟨xBound (Radd a b), N+1⟩
+  have hterm2 : Qle (Qabs (Qsub (mul ((Radd a b).seq (RaltReal_R (Radd a b) N)) (RaltReal_seq (Radd a b) 1 N))
+        (Fsum (sinTerm (add (a.seq (2 * RaltReal_R (Radd a b) N + 1)) (b.seq (2 * RaltReal_R (Radd a b) N + 1))))
+          (2 * K + 1))))
+      ⟨(xBound (Radd a b) : Int), N + 1⟩ := by
+    show Qle (Qabs (Qsub (mul ((Radd a b).seq (RaltReal_R (Radd a b) N))
+          (altSum ((Radd a b).seq (RaltReal_R (Radd a b) N)) 1 (RaltReal_R (Radd a b) N)))
+        (Fsum (sinTerm ((Radd a b).seq (RaltReal_R (Radd a b) N))) (2 * K + 1)))) _
+    refine Qle_trans (Qabs_den_pos (Qsub_den_pos (Qmul_den_pos hQd (altSum_den_pos hQd 1 _))
+        (Qmul_den_pos hQd (altSum_den_pos hQd 1 _))))
+      (Qeq_le (Qabs_Qeq (QsubCongr (Qeq_refl _) (Fsum_sinTerm_eq _ hQd (2 * K + 1))))) ?_
+    refine Qle_trans (Qabs_den_pos (Qmul_den_pos hQd (Qsub_den_pos (altSum_den_pos hQd 1 _)
+        (altSum_den_pos hQd 1 _))))
+      (Qeq_le (Qabs_Qeq (Qeq_symm (Qmul_sub_distrib ((Radd a b).seq (RaltReal_R (Radd a b) N))
+        (altSum ((Radd a b).seq (RaltReal_R (Radd a b) N)) 1 (RaltReal_R (Radd a b) N))
+        (altSum ((Radd a b).seq (RaltReal_R (Radd a b) N)) 1 (2 * K + 1)))))) ?_
+    have htrunc : Qle (Qabs (Qsub (altSum ((Radd a b).seq (RaltReal_R (Radd a b) N)) 1 (RaltReal_R (Radd a b) N))
+        (altSum ((Radd a b).seq (RaltReal_R (Radd a b) N)) 1 (2 * K + 1)))) ⟨1, N + 1⟩ := by
+      rw [Qabs_Qsub_comm]
+      refine Qle_trans (fct_pos _) (altSum_trunc_bound hQd (canon_bound (Radd a b) _) 1
+        (a := RaltReal_R (Radd a b) N) (b := 2 * K + 1) (Nat.le_trans h2M (Nat.le_add_right _ 2)) hdeep) ?_
+      exact Qle_trans (Nat.succ_pos _) (RaltReal_trunc_le (Radd a b) N) (Q_den_mono (by decide) (by omega))
+    rw [Qabs_mul]
+    refine Qle_trans (Qmul_den_pos Nat.one_pos (Nat.succ_pos N))
+      (Qmul_le_mul (Qabs_den_pos hQd) Nat.one_pos (Qabs_den_pos (Qsub_den_pos (altSum_den_pos hQd 1 _)
+          (altSum_den_pos hQd 1 _))) (Qabs_num_nonneg _) (Int.ofNat_nonneg _) (canon_bound (Radd a b) _)
+        htrunc)
+      (Qeq_le (by simp only [Qeq, mul]; push_cast; ring_uor))
+  refine Qle_trans (add_den_pos (Qabs_den_pos (Qsub_den_pos ((Rsin (Radd a b)).den_pos N)
+      (Qmul_den_pos hQd hpd))) (Qabs_den_pos (Qsub_den_pos (Qmul_den_pos hQd hpd)
+      (Fsum_den_pos (sinTerm_den_pos (add_den_pos (a.den_pos _) (b.den_pos _))) _))))
+    (Qabs_sub_triangle ((Rsin (Radd a b)).den_pos N) (Qmul_den_pos hQd hpd)
+      (Fsum_den_pos (sinTerm_den_pos (add_den_pos (a.den_pos _) (b.den_pos _))) _)) ?_
+  refine Qle_trans (add_den_pos (Nat.succ_pos N) (Nat.succ_pos N))
+    (Qadd_le_add (RsinSelf_diag_le (Radd a b) N) hterm2) ?_
+  exact Qeq_le (by simp only [Qeq, add]; push_cast; ring_uor)
+
 end UOR.Bridge.F1Square.Analysis

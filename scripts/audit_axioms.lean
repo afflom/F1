@@ -1577,3 +1577,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.RsinSelf_diag_le
 #print axioms Analysis.csMulDeep_le
 #print axioms Analysis.scMulDeep_le
+#print axioms Analysis.sinAddLHS_le
