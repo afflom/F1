@@ -1668,3 +1668,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.etaIm_RReg
 #print axioms Analysis.Ceta
 #print axioms Analysis.cpowNeg_normSq
+#print axioms Analysis.CnormSq_Cmul_ofReal
+#print axioms Analysis.Pos_RlogNat_two
+#print axioms Analysis.etaTwoPow_re
+#print axioms Analysis.etaDenom_Pos_normSq
