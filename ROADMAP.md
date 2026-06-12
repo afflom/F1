@@ -152,16 +152,43 @@ axiom-clean `{propext, Quot.sound}`):
   `F ⊗_𝔹 F` over the Boolean semiring — the concrete description Sagnier (arXiv 1703.10521) reports
   open — is finer than the monoid-level tensor constructed here and is not claimed.
 
-## v0.18.0 — (D) The bridge and the crux
+## v0.18.0 — (D) The bridge and the crux **[shipped]**
 
 State the geometric↔analytic equivalence faithfully, and **attempt** the crux on canonical `𝕊`.
+**Shipped** (four bricks, all axiom-clean `{propext, Quot.sound}`):
 
-- The equivalence `Crux.HodgeIndex 𝕊 ⟺ Li.LiPositive λ` (classical; stated as a faithful theorem/interface).
-- The **Hodge-index / Li-positivity attempt** on canonical `𝕊` under the gate. This is where RH closes
-  **iff** it closes: `hodgeIndexHolds` / `liPositivityHolds` flip `none → some true` **iff** a genuine,
-  audited, axiom-clean proof lands — otherwise they stay `none` and RH stays open, and the release still
-  ships the bridge substrate. No fake, no `decide`-over-finite-N, no template substitution (see the
-  faithfulness cautions in `Crux.lean` / `Li.lean`).
+- **The Castelnuovo–Severi anchor** (`BridgeFF.lean`): the function-field model of
+  "Hodge index ⟹ RH" as a genuine LATTICE DERIVATION — on the `E × E` lattice
+  `{F_h, F_v, Δ, Γ}` with the trace datum `Δ·Γ = q+1−a` (Lefschetz) inside it, the primitive part
+  of `xΔ + yΓ` has `D°² = −2(x² + a·xy + q·y²)` and `∀x,y D°² ≤ 0 ⟺ a² ≤ 4q`
+  (`ff_hodge_iff_hasse`); the v0.1.0 governor is now DERIVED (`ff_hodge_iff_hodgeType`) —
+  "the mechanism is not the gap" (§0.3) is a theorem.
+- **The λ₂ Bombieri–Lagarias decomposition** (`Analysis/LiTwo.lean`):
+  `λ₂ = [2γ − (γ² + 2γ₁)] + [(1−γ) − log 4π + ¾ζ(2)]` as a constructive-real identity
+  (`Rlambda2_decomposition`, via `η₀ = −γ`, `η₁ = γ² + 2γ₁`); `Li.LiDecomposition` realized with
+  TWO genuine slices (`li_decomposition_two_realized`), both certified positive (`liTwo_evidence`).
+- **THE BRIDGE — the release goal** (`Square/Spectral.lean`): `SpectralSquare`, the `H¹`-bearing
+  enrichment of `𝕊` as an interface (Li/trace data `lam`, primitive self-intersections `cSq`, and
+  the dictionary `⟨Cₙ,Cₙ⟩ = −2λₙ` — Deninger's Hodge-index reading of Li's criterion, normalized
+  exactly as `BridgeFF.primDG_sq` derives it on the function-field model). The equivalence is a
+  genuine constructive THEOREM: `spectral_bridge_nonneg`/`spectral_bridge_pos` and
+  **`crux_faces_equivalent : SpectralCrux S ⟺ Li.LiCrux S.lam`** — the geometric and analytic
+  faces of the crux are the same proposition. Inhabited by the two-slice instance carrying the
+  genuine certified `λ₁, λ₂` (`spectral_evidence_two`: `⟨C₁,C₁⟩ < 0`, `⟨C₂,C₂⟩ < 0`), with the
+  honesty guards as theorems (`spectralTwoSlice_not_crux` — no finite assembly of certified slices
+  can be passed off as RH; `spectral_iff_all_upTo` — the finite-check guard, geometric face).
+- **The attempt, under the gate** (`Square/Attempt.lean`): run, recorded, honestly concluded. The
+  certified part (strict negativity through `n = 2`, `spectral_strict_upTo_two`) is the furthest
+  any axiom-clean run reaches in this substrate; the frontier is exact
+  (`crux_attempt_frontier(_geometric)`: given the certified slices, the crux ⟺ `∀ n ≥ 3, λₙ > 0`;
+  the next slice needs the second Stieltjes constant `γ₂`); the post-mortem records why every
+  general route is blocked by the program's own controls (vacuity `Bridge.control_psd`;
+  pencil-blindness; the BL cancellation; the Conrey–Li precedent) and what would close it (the
+  genuine `H¹` instance — T4/§3.4). **The universal did not close**: `hodgeIndexHolds` /
+  `liPositivityHolds` stay `none`, exactly per the bright line — and the release ships the bridge
+  substrate, as scoped.
+- **Stays open:** RH (both faces, now provably one proposition through the bridge); the genuine
+  spectral instance (`H¹`, T4/§3.4); `λₙ` certification beyond `n = 2` (`γ₂, γ₃, …`).
 
 ## v0.19.0 — (E) Completion: the explicit formula and the F1-square roll-up
 

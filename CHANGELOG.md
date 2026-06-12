@@ -4,6 +4,62 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html), starting at `v0.0.1`.
 
+## [0.18.0] - 2026-06-12
+
+### Added — stage D: the bridge and the crux attempt (pure Lean 4, no Mathlib, no `sorry`, choice-free)
+
+The two stage-D release goals are delivered: **the geometric and analytic faces of the crux are proven
+equivalent**, and **the crux attempt ran under the gate** — it did not close the universal, so
+`hodgeIndexHolds`/`liPositivityHolds` stay `none` and **RH stays OPEN**, with the bridge substrate shipped
+exactly as scoped. Every theorem is choice-free (`{propext, Quot.sound}`), audited; the gate passes.
+
+- **The Castelnuovo–Severi anchor** (`F1Square/BridgeFF.lean`) — the function-field model of
+  "Hodge index ⟹ RH" as a genuine lattice derivation, no governor shortcut: the `E × E` lattice
+  `{F_h, F_v, Δ, Γ}` with the standard Gram (`Γ` bidegree `(1, q)`; `Δ² = Γ² = 0`, genus-1 adjunction;
+  the **trace datum** `Δ·Γ = q+1−a` by Lefschetz — `ff_trace_datum`); the primitive projection
+  `D° = D − (D·F_v)F_h − (D·F_h)F_v` of `D = xΔ + yΓ` (`primDG_perp_h/v`); the computation
+  **`primDG_sq`**: `D°² = −2(x² + a·xy + q·y²)` — the Hodge-index form IS the binary quadratic form of
+  discriminant `a² − 4q`; and **`ff_hodge_iff_hasse`**: `∀x,y D°² ≤ 0 ⟺ a² ≤ 4q` (forward: instantiate
+  `(a, −2)`; backward: `4(x²+axy+qy²) = (2x+ay)² + (4q−a²)y²`). `ff_hodge_iff_hodgeType` derives the
+  v0.1.0 governor from lattice positivity — "§0.3: the mechanism is not the gap" is now a theorem.
+- **The λ₂ Bombieri–Lagarias decomposition** (`F1Square/Analysis/LiTwo.lean`) —
+  `λ₂^{arith} = −(2η₀ + η₁) = 2γ − (γ² + 2γ₁)` (the prime side, via the Stieltjes `γ₁`) and
+  `λ₂^{∞} = (1−γ) − log 4π + ¾ζ(2)` (the Γ-factor place); **`Rlambda2_decomposition`** proves
+  `λ₂ = λ₂^{arith} + λ₂^{∞}` as a constructive-real identity. **`li_decomposition_two_realized`**:
+  `Li.LiDecomposition` realized with BOTH genuine slices (`n = 1` from v0.15.3, `n = 2` new), both
+  certified positive (`liTwo_evidence`).
+- **THE BRIDGE** (`F1Square/Square/Spectral.lean`) — the release goal. `SpectralSquare`: the `H¹`-bearing
+  enrichment of `𝕊` as an interface — the Li/trace data `lam`, the primitive-class self-intersections
+  `cSq`, and the **dictionary** `⟨Cₙ,Cₙ⟩ = −2λₙ` (Deninger's Hodge-index reading of Li's criterion,
+  Proc. Symp. Pure Math. 55 (1994); normalized exactly as `BridgeFF.primDG_sq` derives it on the
+  function-field model; the classical chain "RH ⟺ Weil positivity ⟺ λₙ ≥ 0" is Weil 1952 / Li 1997 /
+  Bombieri–Lagarias 1999 / Bombieri 2000). The equivalence is a genuine constructive **theorem**:
+  `spectral_bridge_nonneg` (`⟨Cₙ,Cₙ⟩ ≤ 0 ∀n ⟺ Li.LiNonneg`), `spectral_bridge_pos(_slice)` (strict ⟺
+  `Li.LiPositive`), and **`crux_faces_equivalent : SpectralCrux S ⟺ Li.LiCrux S.lam`** — via new
+  doubling lemmas (`Pos_of_Radd_self` at the sequence level: a witness `1/(n+1) < 2x_{2n+1}` halves to
+  `1/(2n+2) < x_{2n+1}`). Inhabited by `spectralTwoSlice` (the genuine certified `λ₁, λ₂`;
+  `spectral_evidence_two`: `⟨C₁,C₁⟩ < 0` and `⟨C₂,C₂⟩ < 0` — the geometric face's first genuine
+  negativity slices). **Honesty guards as theorems**: `spectralTwoSlice_not_crux` (the finite-slice
+  instance provably FAILS the crux — its `n = 3` slice vanishes) and `spectral_iff_all_upTo` (no finite
+  run of negativity checks reaches the crux — the finite-check guard, geometric face).
+- **The crux attempt, under the gate** (`F1Square/Square/Attempt.lean`) — run, recorded, honestly
+  concluded. Certified: strict Hodge negativity through `n = 2` (`spectral_strict_upTo_two`), the
+  furthest any axiom-clean run reaches in this substrate. The frontier, exact:
+  **`crux_attempt_frontier(_geometric)`** — given the certified slices, the crux ⟺ `∀ n ≥ 3, λₙ > 0`
+  (the next slice needs `γ₂`, a fresh `GammaOne`-scale mechanization). The post-mortem records why the
+  general routes are blocked, with the program's own controls as evidence (vacuous-kernel control
+  `Bridge.control_psd`; pencil-blindness `square_hodge_pencil_blind`; the BL cancellation, companion
+  §8.1; the Conrey–Li precedent) and what would close it (the genuine `H¹` instance, T4/§3.4 —
+  Connes–Consani's archimedean/semilocal Weil positivity, Selecta Math. 27 (2021), being the strongest
+  partial result). **Conclusion: the universal did not close; the fields stay `none`.**
+
+### Honest scope (the bright line, unchanged)
+- The bridge makes the two crux faces ONE proposition; it does not make that proposition easier. The
+  certified slices are `n = 1, 2`; `λₙ > 0 ∀n` (= RH, both faces) stays open;
+  `hodgeIndexHolds`/`liPositivityHolds` stay `none`. The genuine spectral instance (`H¹` with spectrum =
+  the zeros) remains the program's single open object (T4/§3.4), now with the exact shape of what
+  carrying it buys (`BridgeFF`).
+
 ## [0.17.0] - 2026-06-12
 
 ### Added — stage C: the canonical arithmetic square `𝕊 = Spec ℤ ×_𝔽₁ Spec ℤ` with its derived intersection lattice (pure Lean 4, no Mathlib, no `sorry`, choice-free)
