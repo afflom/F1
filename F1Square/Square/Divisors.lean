@@ -58,6 +58,15 @@ theorem graph_one_diag (z : SqPt) : graph 1 z ↔ diag z := by
   unfold graph diag
   omega
 
+/-- `Γ_0 = ∅`: the index `0` is degenerate (no point of `𝕊` has a coordinate `0`), so the
+    pencil is genuinely indexed by the positive integers. -/
+theorem graph_zero_empty (z : SqPt) : ¬ graph 0 z := by
+  intro h
+  have h2 : z.2.val = 0 * z.1.val := h
+  rw [Nat.zero_mul] at h2
+  have := z.2.property
+  omega
+
 /-- TRANSVERSE COUNT 1 — the two rulings: `V_a ∩ H_b = {(a, b)}`, a single point.
     (Derives the boundary number `E₁·E₂ = 1` of §1.3.) -/
 theorem vFiber_inter_hFiber (a b : Nat) (ha : 1 ≤ a) (hb : 1 ≤ b) (z : SqPt) :
@@ -159,6 +168,19 @@ theorem graph_inter_hFiber (n a : Nat) (hn : 1 ≤ n) (ha : 1 ≤ a) (z : SqPt) 
       cases h
       exact ⟨rfl, rfl⟩
 
+/-- COMPLEMENT of `graph_inter_hFiber` — off the divisible representatives the graph
+    misses the horizontal fiber entirely: `Γ_n ∩ H_b = ∅` when `n ∤ b`. This makes the
+    monoid-level coarseness EXPLICIT rather than hidden: at the point level the count over
+    `H_b` is `1` exactly on the cofinal divisible family (`graph_inter_hFiber`) and `0`
+    otherwise; the stable (tropical) count is the constant `1`
+    (`|det((1,1),(0,1))| = 1`, the R13 rule), realized by the divisible family. -/
+theorem graph_inter_hFiber_empty (n b : Nat) (h : ¬ n ∣ b) (z : SqPt) :
+    ¬(graph n z ∧ hFiber b z) := by
+  intro ⟨h1, h2⟩
+  have e1 : z.2.val = n * z.1.val := h1
+  have e2 : z.2.val = b := h2
+  exact h ⟨z.1.val, e2.symm.trans e1⟩
+
 /-- THE §2.3 FINDING, point level, on canonical `𝕊`: the scaling Frobenius has NO
     transverse fixed points — `Δ ∩ Γ_n = ∅` for `n ≥ 2` (`m = n·m` is impossible for
     positive `m`). The algebraic template's fixed-point count `Δ·Γ_q = q + 1 − a` has no
@@ -225,6 +247,38 @@ theorem vFiber_translate (k a : Nat) (hk : 1 ≤ k) (z : SqPt) :
     have hv : w.1.val = a := hw
     subst hz
     show k * w.1.val = k * a
+    rw [hv]
+
+/-- Every vertical fiber is a translate of the UNIT fiber `V₁` — the vertical ruling is
+    one translation pencil through `V₁` (the `a = 1` instance of `vFiber_translate`),
+    which is the precise form of the "single translation class" used in the `E₁² = 0`
+    moving derivation. -/
+theorem vFiber_translate_unit (k : Nat) (hk : 1 ≤ k) (z : SqPt) :
+    vFiber k z ↔ ∃ w : SqPt, vFiber 1 w ∧ z = (mScale k hk w.1, w.2) := by
+  have h := vFiber_translate k 1 hk z
+  rwa [Nat.mul_one] at h
+
+/-- The horizontal mirror of `vFiber_translate`: `H_{k·b} = (id × mScale k)(H_b)` —
+    the horizontal ruling is a translation pencil too (the `E₂² = 0` moving step). -/
+theorem hFiber_translate (k b : Nat) (hk : 1 ≤ k) (z : SqPt) :
+    hFiber (k * b) z ↔ ∃ w : SqPt, hFiber b w ∧ z = (w.1, mScale k hk w.2) := by
+  constructor
+  · intro h
+    have hv : z.2.val = k * b := h
+    have hb : 1 ≤ b := by
+      rcases Nat.eq_zero_or_pos b with h0 | h1
+      · exfalso
+        have := z.2.property
+        rw [h0, Nat.mul_zero] at hv
+        omega
+      · exact h1
+    refine ⟨(z.1, (⟨b, hb⟩ : MPos)), rfl, ?_⟩
+    cases z with
+    | mk z1 z2 => exact congrArg (Prod.mk z1) (Subtype.ext hv)
+  · intro ⟨w, hw, hz⟩
+    have hv : w.2.val = b := hw
+    subst hz
+    show k * w.2.val = k * b
     rw [hv]
 
 end UOR.Bridge.F1Square.Square

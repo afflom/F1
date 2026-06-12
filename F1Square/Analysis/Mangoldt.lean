@@ -244,4 +244,191 @@ theorem primeTerm_zero_of_h (h : Real → Real) (n : Nat) (hn : 2 ≤ n)
   rw [dif_pos hn]
   exact Req_trans (Rmul_congr (Req_refl _) hh) (Rmul_zero _)
 
+-- ===========================================================================
+-- EUCLID'S LEMMA from scratch (Bézout-free, the Gauss descent), and the general
+-- correctness of `Λ` on ALL prime powers: `Λ(pᵏ) = log p`.
+--
+-- Core Lean has no `Nat.Coprime`/Bézout API, so Euclid's lemma is proved by the
+-- classical descent: for `q ∣ a·b` with `q` prime, reduce `a` — by `a % q` when
+-- `a ≥ q`, and through `q % a` when `1 < a < q` (if `q % a = 0` then `a ∣ q` forces
+-- `a ∈ {1, q}`, both impossible) — each step strictly decreasing `a`, carried on a
+-- fuel parameter (the file's own `spfFrom` idiom). No gcd, no Bézout coefficients.
+-- ===========================================================================
+
+private theorem prime_dvd_mul_fuel {q : Nat} (hq2 : 2 ≤ q)
+    (hq : ∀ d, d ∣ q → d = 1 ∨ d = q) :
+    ∀ fuel a b : Nat, a ≤ fuel → q ∣ a * b → q ∣ a ∨ q ∣ b := by
+  intro fuel
+  induction fuel with
+  | zero =>
+    intro a b ha _
+    have h0 : a = 0 := by omega
+    subst h0
+    exact Or.inl (Nat.dvd_zero q)
+  | succ f ih =>
+    intro a b ha hab
+    rcases Nat.eq_zero_or_pos a with h0 | hapos
+    · subst h0; exact Or.inl (Nat.dvd_zero q)
+    by_cases ha1 : a = 1
+    · subst ha1
+      rw [Nat.one_mul] at hab
+      exact Or.inr hab
+    rcases Nat.lt_or_ge a q with haq | haq
+    · -- 1 < a < q: descend through q % a
+      have hqa_lt : q % a < a := Nat.mod_lt q hapos
+      -- (a·(q/a))·b + (q%a)·b = q·b, so q ∣ (q%a)·b
+      have hid : a * (q / a) * b + q % a * b = q * b := by
+        have h0 := Nat.div_add_mod q a
+        calc a * (q / a) * b + q % a * b = (a * (q / a) + q % a) * b := by
+              rw [Nat.add_mul]
+          _ = q * b := by rw [h0]
+      have hdvd1 : q ∣ a * (q / a) * b := by
+        obtain ⟨c, hc⟩ := hab
+        have h1 : q ∣ a * b * (q / a) := ⟨c * (q / a), by rw [hc, Nat.mul_assoc]⟩
+        have hac : a * b * (q / a) = a * (q / a) * b := by
+          rw [Nat.mul_assoc, Nat.mul_comm b (q / a), ← Nat.mul_assoc]
+        rwa [hac] at h1
+      have hdvd2 : q ∣ q % a * b := by
+        have hle : a * (q / a) * b ≤ q * b := by omega
+        have hsub : q * b - a * (q / a) * b = q % a * b := by omega
+        have hd := Nat.dvd_sub hle (Nat.dvd_mul_right q b) hdvd1
+        rwa [hsub] at hd
+      rcases Nat.eq_zero_or_pos (q % a) with hz | hpos'
+      · -- a ∣ q with 1 < a < q: impossible for a prime q
+        have hadvd : a ∣ q := Nat.dvd_of_mod_eq_zero hz
+        rcases hq a hadvd with h1 | h1 <;> omega
+      · rcases ih (q % a) b (by omega) hdvd2 with h | h
+        · -- q ∣ q % a with 0 < q % a < q: impossible
+          have hle' := Nat.le_of_dvd hpos' h
+          omega
+        · exact Or.inr h
+    · -- a ≥ q: descend to a % q
+      have hmodlt : a % q < a := by
+        have := Nat.mod_lt a (show 0 < q by omega)
+        omega
+      have hid : q * (a / q) * b + a % q * b = a * b := by
+        have h0 := Nat.div_add_mod a q
+        calc q * (a / q) * b + a % q * b = (q * (a / q) + a % q) * b := by
+              rw [Nat.add_mul]
+          _ = a * b := by rw [h0]
+      have hdvd2 : q ∣ a % q * b := by
+        have hle : q * (a / q) * b ≤ a * b := by omega
+        have hq1 : q ∣ q * (a / q) * b := by
+          have h1 : q ∣ q * (a / q * b) := Nat.dvd_mul_right q (a / q * b)
+          rwa [← Nat.mul_assoc] at h1
+        have hsub : a * b - q * (a / q) * b = a % q * b := by omega
+        have hd := Nat.dvd_sub hle hab hq1
+        rwa [hsub] at hd
+      rcases ih (a % q) b (by omega) hdvd2 with h | h
+      · -- q ∣ a % q ⟹ q ∣ a
+        have h0 := Nat.div_add_mod a q
+        have hsum : q ∣ q * (a / q) + a % q :=
+          Nat.dvd_add (Nat.dvd_mul_right q (a / q)) h
+        rw [h0] at hsum
+        exact Or.inl hsum
+      · exact Or.inr h
+
+/-- **EUCLID'S LEMMA**, from scratch (no Mathlib, no Bézout): a prime dividing a product
+    divides one of the factors. The descent reduces the first factor modulo `q` (and the
+    Gauss step reduces `q` modulo the factor), so no gcd machinery is needed. -/
+theorem prime_dvd_mul {q : Nat} (hq2 : 2 ≤ q) (hq : ∀ d, d ∣ q → d = 1 ∨ d = q)
+    (a b : Nat) (hab : q ∣ a * b) : q ∣ a ∨ q ∣ b :=
+  prime_dvd_mul_fuel hq2 hq a a b (Nat.le_refl a) hab
+
+/-- A prime dividing a prime power `pᵏ` (`k ≥ 1`) divides `p` (iterated Euclid). -/
+theorem prime_dvd_pow {q p : Nat} (hq2 : 2 ≤ q) (hq : ∀ d, d ∣ q → d = 1 ∨ d = q) :
+    ∀ k : Nat, 1 ≤ k → q ∣ p ^ k → q ∣ p := by
+  intro k
+  induction k with
+  | zero => omega
+  | succ j ih =>
+    intro _ hdvd
+    rw [Nat.pow_succ] at hdvd
+    rcases prime_dvd_mul hq2 hq (p ^ j) p hdvd with h | h
+    · rcases Nat.eq_zero_or_pos j with h0 | hj
+      · subst h0
+        -- q ∣ p⁰ = 1 is impossible for q ≥ 2
+        rw [Nat.pow_zero] at h
+        have := Nat.le_of_dvd (by omega) h
+        omega
+      · exact ih hj h
+    · exact h
+
+private theorem p_dvd_pow_self {p : Nat} : ∀ k : Nat, 1 ≤ k → p ∣ p ^ k := by
+  intro k
+  cases k with
+  | zero => omega
+  | succ j => exact fun _ => by rw [Nat.pow_succ]; exact Nat.dvd_mul_left p (p ^ j)
+
+private theorem two_le_pow {p : Nat} (hp2 : 2 ≤ p) {k : Nat} (hk : 1 ≤ k) : 2 ≤ p ^ k := by
+  have h1 : p ≤ p ^ k :=
+    Nat.le_of_dvd (Nat.pos_pow_of_pos k (by omega)) (p_dvd_pow_self k hk)
+  omega
+
+/-- **`spf(pᵏ) = p`** for a prime `p` and `k ≥ 1`: the least prime factor of a prime power
+    is its prime (via Euclid — `spf(pᵏ)` is a prime dividing `pᵏ`, hence divides `p`,
+    hence equals `p`). -/
+theorem spf_prime_pow {p : Nat} (hp2 : 2 ≤ p) (hp : ∀ d, d ∣ p → d = 1 ∨ d = p)
+    {k : Nat} (hk : 1 ≤ k) : spf (p ^ k) = p := by
+  have hpk2 : 2 ≤ p ^ k := two_le_pow hp2 hk
+  have hq2 : 2 ≤ spf (p ^ k) := spf_two_le hpk2
+  have hqd : spf (p ^ k) ∣ p ^ k := spf_dvd hpk2
+  have hqp : ∀ d, d ∣ spf (p ^ k) → d = 1 ∨ d = spf (p ^ k) := spf_prime hpk2
+  have hdvdp : spf (p ^ k) ∣ p := prime_dvd_pow hq2 hqp k hk hqd
+  rcases hp (spf (p ^ k)) hdvdp with h | h
+  · omega
+  · exact h
+
+private theorem isPow_pow {p : Nat} (hp2 : 2 ≤ p) :
+    ∀ k fuel : Nat, k ≤ fuel → isPow (p ^ k) p fuel = true := by
+  intro k
+  induction k with
+  | zero => intro fuel _; exact isPow_one p fuel
+  | succ j ih =>
+    intro fuel hf
+    cases fuel with
+    | zero => omega
+    | succ f =>
+      have hne : ¬ p ^ (j + 1) = 1 := by
+        have := two_le_pow hp2 (show 1 ≤ j + 1 by omega)
+        omega
+      have hmod : p ^ (j + 1) % p = 0 :=
+        Nat.mod_eq_zero_of_dvd (p_dvd_pow_self (j + 1) (by omega))
+      have hdiv : p ^ (j + 1) / p = p ^ j := by
+        rw [Nat.pow_succ]
+        exact Nat.mul_div_cancel (p ^ j) (by omega)
+      simp only [isPow]
+      rw [if_neg hne, if_pos hmod, hdiv]
+      exact ih f (by omega)
+
+private theorem le_two_pow_self : ∀ k : Nat, k ≤ 2 ^ k := by
+  intro k
+  induction k with
+  | zero => omega
+  | succ j ih =>
+    rw [Nat.pow_succ]
+    have h1 : 1 ≤ 2 ^ j := Nat.pos_pow_of_pos j (by omega)
+    omega
+
+/-- A prime power `pᵏ` (`k ≥ 1`) passes the prime-power test. -/
+theorem isPrimePow_pow {p : Nat} (hp2 : 2 ≤ p) (hp : ∀ d, d ∣ p → d = 1 ∨ d = p)
+    {k : Nat} (hk : 1 ≤ k) : isPrimePow (p ^ k) = true := by
+  unfold isPrimePow
+  rw [spf_prime_pow hp2 hp hk, Bool.and_eq_true]
+  have hfuel : k ≤ p ^ k := by
+    have h1 : k ≤ 2 ^ k := le_two_pow_self k
+    have h2 : 2 ^ k ≤ p ^ k := Nat.pow_le_pow_left hp2 k
+    omega
+  exact ⟨decide_eq_true (two_le_pow hp2 hk), isPow_pow hp2 k (p ^ k) hfuel⟩
+
+/-- **`Λ(pᵏ) = log p` for EVERY prime `p` and EVERY `k ≥ 1`** — the general correctness of
+    `vonMangoldt` on all prime powers (not merely at sampled points like `Λ(8)`, `Λ(9)`):
+    the value is `log spf(pᵏ) = log p` by Euclid's lemma. This is the full defining clause
+    of the von Mangoldt function, closed. -/
+theorem vonMangoldt_prime_pow {p : Nat} (hp2 : 2 ≤ p) (hp : ∀ d, d ∣ p → d = 1 ∨ d = p)
+    {k : Nat} (hk : 1 ≤ k) : Req (vonMangoldt (p ^ k)) (logN p (by omega)) := by
+  unfold vonMangoldt
+  rw [dif_pos (isPrimePow_pow hp2 hp hk)]
+  exact logN_eq_of_eq (spf_prime_pow hp2 hp hk) _ _
+
 end UOR.Bridge.F1Square.Analysis

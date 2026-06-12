@@ -155,10 +155,7 @@ theorem inl_ne_inr : inl.map mTwo ≠ inr.map mTwo := by
   omega
 
 /-- The identity hom of the curve. -/
-def idCurve : MHom Curve Curve where
-  map := fun a => a
-  map_one := rfl
-  map_mul := fun _ _ => rfl
+def idCurve : MHom Curve Curve := idHom Curve
 
 /-- The CODIAGONAL `∇ : 𝕊 → Curve`, `z ↦ z₁·z₂` — the comparison map to the collapsed
     (over-`ℤ`) product. -/
@@ -212,6 +209,65 @@ theorem codiag_not_injective :
     have := (gen2_injective 1 0 0 1 h).1
     omega
   · exact Subtype.ext (by show 2 ^ 1 * 2 ^ 0 = 2 ^ 0 * 2 ^ 1; omega)
+
+-- ===========================================================================
+-- The coproduct property packaged as ONE proposition, and uniqueness up to
+-- canonical isomorphism — the full sense in which `𝕊` is canonical.
+-- ===========================================================================
+
+/-- The coproduct (universal) property, packaged: `(T, i₁, i₂)` is A coproduct of the
+    curve with itself over `𝔽₁` iff every pair of homs out of the curve factors through
+    a mediating hom, uniquely (pointwise). -/
+def IsCoproduct (T : CMon) (i1 i2 : MHom Curve T) : Prop :=
+  ∀ (U : CMon) (f g : MHom Curve U),
+    ∃ h : MHom T U,
+      (∀ a, h.map (i1.map a) = f.map a)
+      ∧ (∀ b, h.map (i2.map b) = g.map b)
+      ∧ ∀ h' : MHom T U,
+          (∀ a, h'.map (i1.map a) = f.map a) → (∀ b, h'.map (i2.map b) = g.map b) →
+          ∀ t, h'.map t = h.map t
+
+/-- **`𝕊` IS the coproduct** — the canonicality of the construction, as a single
+    proposition (assembling `copair_inl`, `copair_inr`, `copair_unique`). -/
+theorem sq_isCoproduct : IsCoproduct Sq inl inr := by
+  intro U f g
+  exact ⟨copair U f g, copair_inl U f g, copair_inr U f g,
+    fun h' hl hr z => copair_unique U f g h' hl hr z⟩
+
+/-- **UNIQUENESS UP TO CANONICAL ISOMORPHISM**: any other coproduct `(T, i₁, i₂)` of the
+    curve with itself over `𝔽₁` is isomorphic to `𝕊` — the canonical mediating homs
+    `φ : 𝕊 → T` and `ψ : T → 𝕊` are mutually inverse and `φ` matches the injections. So
+    "the" tensor `F ⊗_𝔽₁ F` is well-defined: `𝕊` is not one model among many but the
+    object itself, up to unique isomorphism. -/
+theorem coproduct_unique_upto_iso (T : CMon) (i1 i2 : MHom Curve T)
+    (hT : IsCoproduct T i1 i2) :
+    ∃ (φ : MHom Sq T) (ψ : MHom T Sq),
+      (∀ z, ψ.map (φ.map z) = z) ∧ (∀ t, φ.map (ψ.map t) = t)
+      ∧ (∀ a, φ.map (inl.map a) = i1.map a) ∧ (∀ b, φ.map (inr.map b) = i2.map b) := by
+  obtain ⟨ψ, hψ1, hψ2, _⟩ := hT Sq inl inr
+  refine ⟨copair T i1 i2, ψ, ?_, ?_, copair_inl T i1 i2, copair_inr T i1 i2⟩
+  · -- ψ ∘ φ = id on 𝕊, by the tensor decomposition z = z₁ ⊗ z₂
+    intro z
+    show ψ.map (T.mul (i1.map z.1) (i2.map z.2)) = z
+    rw [show ψ.map (T.mul (i1.map z.1) (i2.map z.2))
+          = Sq.mul (ψ.map (i1.map z.1)) (ψ.map (i2.map z.2)) from ψ.map_mul _ _,
+      hψ1 z.1, hψ2 z.2]
+    exact (sq_factor z).symm
+  · -- φ ∘ ψ = id on T, by T's OWN uniqueness clause: both mediate (i₁, i₂) over T
+    obtain ⟨θ, _, _, hθu⟩ := hT T i1 i2
+    intro t
+    have hid := hθu (idHom T) (fun _ => rfl) (fun _ => rfl)
+    have hco := hθu (compHom ψ (copair T i1 i2))
+      (fun a => by
+        show (copair T i1 i2).map (ψ.map (i1.map a)) = i1.map a
+        rw [hψ1 a]
+        exact copair_inl T i1 i2 a)
+      (fun b => by
+        show (copair T i1 i2).map (ψ.map (i2.map b)) = i2.map b
+        rw [hψ2 b]
+        exact copair_inr T i1 i2 b)
+    show (copair T i1 i2).map (ψ.map t) = t
+    exact (hco t).trans (hid t).symm
 
 /-- The first projection retracts the first injection: `proj1 ∘ inl = id` —
     the square's first structural map recovers the curve. -/

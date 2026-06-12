@@ -365,7 +365,13 @@ Stage C of the roadmap closes the **construction** half of the §2.2 frontier in
 
 *Honest scope.* "Constructed" means the monoid-scheme (T1) level with its derived divisor/intersection
 layer (T2/T3); the spectral (`H¹`) enrichment of `𝕊` — the object the crux is genuinely about — is
-**not** constructed, and `hodgeIndexHolds` stays `none`.
+**not** constructed, and `hodgeIndexHolds` stays `none`. *Level precision:* the canonical object built
+is the **monoid-level** tensor `F ⊗_𝔽₁ F` (Deitmar 𝔽₁-algebras = commutative monoids; the coproduct,
+with its universal property proved and uniqueness up to canonical isomorphism). The **semiring-level**
+tensor `F ⊗_𝔹 F` over the Boolean semiring — the concrete description §2.2 records as open (Sagnier,
+arXiv 1703.10521) — is a finer object: the monoid square is its underlying combinatorial skeleton (the
+pencil layer realizes the bi-tropical structure in the log coordinate), but the semiring-level
+description is **not** claimed closed by this construction.
 
 ---
 

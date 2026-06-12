@@ -99,6 +99,8 @@ open UOR.Bridge.F1Square
 #print axioms Square.proj1_inl
 #print axioms Square.proj2_inr
 #print axioms Square.proj_faithful
+#print axioms Square.sq_isCoproduct
+#print axioms Square.coproduct_unique_upto_iso
 
 -- v0.17.0 stage C — distinguished divisors of 𝕊 and their point-count intersections
 -- (Square/Divisors.lean): the intrinsic input the lattice is derived from.
@@ -114,6 +116,10 @@ open UOR.Bridge.F1Square
 #print axioms Square.graph_disjoint
 #print axioms Square.graph_translate_diag
 #print axioms Square.vFiber_translate
+#print axioms Square.graph_zero_empty
+#print axioms Square.graph_inter_hFiber_empty
+#print axioms Square.vFiber_translate_unit
+#print axioms Square.hFiber_translate
 
 -- v0.17.0 stage C — the parallel pencil on canonical 𝕊 with shift lengths log n
 -- (Square/Pencil.lean): the §2.3 finding as theorems on the constructed object.
@@ -125,6 +131,15 @@ open UOR.Bridge.F1Square
 #print axioms Square.pencil_separation
 #print axioms Square.pencil_separation_vonMangoldt
 #print axioms Square.pencil_separation_pow
+#print axioms Square.pencil_separation_pow_vonMangoldt
+
+-- v0.17.0 peer-review hardening — Euclid's lemma from scratch and Λ on ALL prime powers
+-- (Analysis/Mangoldt.lean).
+#print axioms Analysis.prime_dvd_mul
+#print axioms Analysis.prime_dvd_pow
+#print axioms Analysis.spf_prime_pow
+#print axioms Analysis.isPrimePow_pow
+#print axioms Analysis.vonMangoldt_prime_pow
 
 -- v0.17.0 stage C — the intersection lattice of 𝕊, derived from point counts
 -- (Square/Lattice.lean): the §2.2 declarative discipline mechanized; T3 intrinsic.

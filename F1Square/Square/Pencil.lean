@@ -156,4 +156,28 @@ theorem pencil_separation_pow (p : Nat) (hp : 1 ≤ p) (k : Nat) (hpk : 1 ≤ p 
       (Rnsmul k (logN p hp)) :=
   Req_trans (pencil_separation (p ^ k) hpk z hz) (logN_pow_general p hp k hpk)
 
+private theorem rnsmul_congr {x y : Real} (h : Req x y) :
+    ∀ k : Nat, Req (Rnsmul k x) (Rnsmul k y) := by
+  intro k
+  induction k with
+  | zero => exact Req_refl zero
+  | succ j ih =>
+    rw [Rnsmul_succ, Rnsmul_succ]
+    exact Radd_congr h ih
+
+/-- **THE PENCIL SEPARATION IS `k·Λ(pᵏ)` AT EVERY PRIME POWER** (§2.3, layer 3, the general
+    Λ-tie): for a prime `p` and any `k ≥ 1`, every point of `Γ_{pᵏ}` sits at log-separation
+    `k·Λ(pᵏ)` from the diagonal — since `Λ(pᵏ) = log p` in general
+    (`vonMangoldt_prime_pow`, via the from-scratch Euclid's lemma `prime_dvd_mul`). With
+    `pencil_separation_vonMangoldt` (the `k = 1` case) this closes the identification of
+    the pencil's shift lengths with the explicit-formula weights on the FULL prime-power
+    support of `Λ`, not merely at primes. -/
+theorem pencil_separation_pow_vonMangoldt (p : Nat) (hp2 : 2 ≤ p)
+    (hp : ∀ d, d ∣ p → d = 1 ∨ d = p) (k : Nat) (hk : 1 ≤ k) (hpk : 1 ≤ p ^ k)
+    (z : SqPt) (hz : graph (p ^ k) z) :
+    Req (Rsub (logN z.2.val z.2.property) (logN z.1.val z.1.property))
+      (Rnsmul k (vonMangoldt (p ^ k))) :=
+  Req_trans (pencil_separation_pow p (by omega) k hpk z hz)
+    (rnsmul_congr (Req_symm (vonMangoldt_prime_pow hp2 hp hk)) k)
+
 end UOR.Bridge.F1Square.Square

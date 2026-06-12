@@ -3,7 +3,9 @@ F1 square — the product-of-curves intersection-form TEMPLATE (a UOR-style real
 
 Companion §2.2 / §0.3 / §1.4. Canonical form: the Néron–Severi lattice of a product of
 (elliptic) curves, basis `{E₁, E₂, E₃}` with `E₁·E₂ = 1`, `E₁² = E₂² = 0`, `E₃² = −2`
-(sourced: Bryan et al., arXiv 1905.07085). Invariants proved here — pure Lean 4, no Mathlib,
+(sourced: Pietromonaco, arXiv 1905.07085 — the `NS(E×E)` survey; the underlying DT
+computation is Bryan, arXiv 1902.08695. See the companion §2.1 citation verification).
+Invariants proved here — pure Lean 4, no Mathlib,
 no `sorry`:
   • the pairing is symmetric;
   • the sourced intersection numbers (`E₁·E₂ = 1`, `E₃² = −2`);

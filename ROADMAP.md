@@ -148,7 +148,9 @@ axiom-clean `{propext, Quot.sound}`):
 - **Stays open:** the crux — the Hodge index / Weil positivity of the **`H¹`-bearing** pairing (the
   form that carries the zeros, T4/T5), equivalently `λₙ ≥ 0 ∀n`. `hodgeIndexHolds` /
   `liPositivityHolds` stay `none`; **RH stays open**. Stating the geometric⟺analytic equivalence
-  faithfully is stage D.
+  faithfully is stage D. Also open (a refinement, not a stage-C goal): the SEMIRING-level tensor
+  `F ⊗_𝔹 F` over the Boolean semiring — the concrete description Sagnier (arXiv 1703.10521) reports
+  open — is finer than the monoid-level tensor constructed here and is not claimed.
 
 ## v0.18.0 — (D) The bridge and the crux
 

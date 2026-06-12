@@ -1,8 +1,13 @@
 -- F1 square intersection theory — UOR Foundation individual constants.
 --
--- Formalization of `Spec ℤ ×_𝔽₁ Spec ℤ` (the arithmetic square `F ⊗_𝔹 F`) and its
--- intersection theory, in the UOR ontology idiom. Companion to the development in
--- `f1_square_intersection_theory.md`.
+-- Formalization of `Spec ℤ ×_𝔽₁ Spec ℤ` and its intersection theory, in the UOR ontology
+-- idiom. Companion to the development in `f1_square_intersection_theory.md`.
+-- PRECISION (v0.17.0): what is constructed canonically is the MONOID-LEVEL tensor
+-- `F ⊗_𝔽₁ F` (Deitmar 𝔽₁-algebras = commutative monoids; coproduct with universal
+-- property proved, `Square/Tensor.lean`), whose tropicalization carries the §2.3 pencil.
+-- The SEMIRING-level tensor `F ⊗_𝔹 F` over the Boolean semiring (the concrete description
+-- Sagnier, arXiv 1703.10521, reports open) is the finer object; its concrete
+-- intersection-theoretic description remains open and is NOT claimed here.
 --
 -- EPISTEMIC CONVENTION (matching this library, e.g. Bridge.Homology.boundarySquaredZero):
 --   `universallyValid := some true`  ⇒ asserted established (verified / classical theorem)
@@ -780,5 +785,19 @@ example :
           (Analysis.vonMangoldt p))
     ∧ f1SquareStatus.hodgeIndexHolds = none :=
   ⟨fun p hp2 hp z hz => Square.pencil_separation_vonMangoldt p hp2 hp z hz, rfl⟩
+
+/-- Elaboration-checked witness binding the v0.17.0 **peer-review hardening**: (1) the coproduct
+    property of `𝕊` packaged as one proposition (`sq_isCoproduct`) with uniqueness up to canonical
+    isomorphism (`coproduct_unique_upto_iso`) — "the" tensor is well-defined; and (2) the von Mangoldt
+    function is correct on ALL prime powers (`Λ(pᵏ) = log p`, via the from-scratch Euclid's lemma
+    `prime_dvd_mul`), so the pencil's Λ-tie covers the full support of `Λ`. The crux stays `none`. -/
+example :
+    Square.IsCoproduct Square.Sq Square.inl Square.inr
+    ∧ (∀ (p : Nat) (hp2 : 2 ≤ p), (∀ d, d ∣ p → d = 1 ∨ d = p) →
+        ∀ {k : Nat}, 1 ≤ k →
+          Analysis.Req (Analysis.vonMangoldt (p ^ k)) (Analysis.logN p (by omega)))
+    ∧ f1SquareStatus.hodgeIndexHolds = none :=
+  ⟨Square.sq_isCoproduct,
+   fun p hp2 hp {k} hk => Analysis.vonMangoldt_prime_pow hp2 hp hk, rfl⟩
 
 end UOR.Bridge.F1Square

@@ -25,7 +25,8 @@ Pure Lean 4 core (no Mathlib), no `sorry`, choice-free; audited by `scripts/hone
 namespace UOR.Bridge.F1Square.Square
 
 /-- The carrier of the 𝔽₁ curve at the monoid level: positive integers (multiplicative).
-    The canonical form of an element is its prime factorization — the content-address. -/
+    (Classically its canonical form is the prime factorization — the content-address;
+    see the `Curve` docstring for the honest scope of that remark.) -/
 def MPos : Type := {n : Nat // 1 ≤ n}
 
 /-- The unit `1` of the curve monoid. -/
@@ -93,8 +94,27 @@ structure MHom (M N : CMon) where
   /-- it preserves multiplication -/
   map_mul : ∀ a b, map (M.mul a b) = N.mul (map a) (map b)
 
-/-- The 𝔽₁ curve `Spec ℤ / 𝔽₁` at the monoid level: `(ℕ₊, ·, 1)`,
-    the free commutative monoid on the primes. -/
+/-- The identity homomorphism. -/
+def idHom (M : CMon) : MHom M M where
+  map := fun a => a
+  map_one := rfl
+  map_mul := fun _ _ => rfl
+
+/-- Composition of homomorphisms. -/
+def compHom {M N P : CMon} (f : MHom M N) (g : MHom N P) : MHom M P where
+  map := fun a => g.map (f.map a)
+  map_one := by
+    show g.map (f.map M.one) = P.one
+    rw [f.map_one, g.map_one]
+  map_mul := fun a b => by
+    show g.map (f.map (M.mul a b)) = P.mul (g.map (f.map a)) (g.map (f.map b))
+    rw [f.map_mul, g.map_mul]
+
+/-- The 𝔽₁ curve `Spec ℤ / 𝔽₁` at the monoid level: `(ℕ₊, ·, 1)` — classically the free
+    commutative monoid on the primes via unique factorization (whose canonical form, the
+    prime exponent vector, is the UOR content-address); freeness is a [CLASSICAL] remark,
+    not used or proved here — what the construction uses are the proved monoid laws below
+    and the prime machinery of `Analysis/Mangoldt.lean` (`spf_prime`, `prime_dvd_mul`). -/
 def Curve : CMon where
   carrier := MPos
   mul := mMul
