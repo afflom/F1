@@ -190,10 +190,32 @@ State the geometric↔analytic equivalence faithfully, and **attempt** the crux 
 - **Stays open:** RH (both faces, now provably one proposition through the bridge); the genuine
   spectral instance (`H¹`, T4/§3.4); `λₙ` certification beyond `n = 2` (`γ₂, γ₃, …`).
 
-## v0.19.0 — (E) Completion: the explicit formula and the F1-square roll-up **[shipped]**
+## v0.19.0 — (E) Completion: the explicit formula, the F1-square roll-up, and THE GENUINE PAIRING
 
-Assemble the full Weil explicit formula and the final status record. **Shipped** (all axiom-clean
-`{propext, Quot.sound}`):
+The release goal is **closure and faithful/truthful completion of the proof**: implement the complete
+proof-strategy — the full power of the UOR-based constructive approach — to close the crux, with the
+gate (not ambition) deciding what is asserted. The first arc (the explicit-formula trace, the
+interface retirements, the dominance face, the closed-form genuine Li sequence) is **built** (all
+axiom-clean `{propext, Quot.sound}`, listed below). The second arc — **the genuine pairing** — folds
+the formerly-planned v0.20/v0.21 work into this release:
+
+- **The Weil quadratic functional, constructed** (`W(g ⋆ ǧ) = poles − primes − archimedean` on an
+  explicit constructive test class): the genuine `H¹`-bearing pairing — the object `SpectralSquare`
+  has carried as interface data — built from the already-constructed prime side (`Mangoldt.primeSide`)
+  and archimedean place (`Digamma`/`exp`/`log`), with no zeros as inputs (the zero side is the
+  defect, as classically). Gram matrices of certified reals on finite test families; the first REAL
+  geometric-face computations (not dictionary-defined).
+- **The classical chain, stated faithfully**: PSD on the (Burnol) restricted class ⟺ Weil
+  positivity ⟺ RH [CLASSICAL — Burnol's direct proof; Bombieri's finite truncations; exact
+  statements deep-research-verified before use]; finite Gram checks are evidence, never the crux
+  (the standing finite-check guards transfer).
+- **The unconditional window**: Connes–Consani's archimedean positivity (support in the prime-free
+  window) as a target unconditional theorem on the built functional — conquered ground where the
+  mathematics permits, exactly as far as it permits.
+- **The bright line, unchanged**: `hodgeIndexHolds`/`liPositivityHolds` flip iff a genuine,
+  audited, axiom-clean proof of the universal lands. Anything short stays an explicit interface.
+
+**Built so far** (the first arc, all axiom-clean):
 
 - **The complete `Li.ExplicitFormulaTrace`** (`Analysis/LiComplete.lean`): realized with the genuine
   three-sided reading at both built slices (`explicitFormulaTrace_one/two_realized` — the zero side
