@@ -207,20 +207,18 @@ theorem digamma_Rneg_mul_le_of_abs {x y A B : Real}
       (Rhalf_nonneg hDD)
   exact Rle_of_Rnonneg_Rsub (Rnonneg_congr (Req_symm (digamma_Rsub_neg_mul_eq A B x y)) hD)
 
-/-- `n` as a constructive real (local copy of `RofNat`, to avoid the `ComplexPow` dependency). -/
-def RnatQ (n : Nat) : Real := ofQ ⟨(n : Int), 1⟩ Nat.one_pos
+/-- The shifted argument `z + n` of the `n`-th digamma term (`RofNat` is `n : ℝ`, from `ComplexPow`,
+    already in scope via the `ComplexZeta` import). -/
+def digammaArg (z : Real) (n : Nat) : Real := Radd z (RofNat n)
 
-/-- The shifted argument `z + n` of the `n`-th digamma term. -/
-def digammaArg (z : Real) (n : Nat) : Real := Radd z (RnatQ n)
-
-/-- `RnatQ n ≥ 0`. -/
-theorem Rnonneg_RnatQ (n : Nat) : Rnonneg (RnatQ n) :=
+/-- `RofNat n ≥ 0`. -/
+theorem Rnonneg_RofNat (n : Nat) : Rnonneg (RofNat n) :=
   Rnonneg_ofQ Nat.one_pos (by show (0 : Int) ≤ (n : Int); exact Int.ofNat_nonneg n)
 
 /-- The rational floor `c` of `z` is also a floor of `z + n`. -/
 theorem ofQ_le_digammaArg {z : Real} {c : Q} (hcd : 0 < c.den) (hcz : Rle (ofQ c hcd) z) (n : Nat) :
     Rle (ofQ c hcd) (digammaArg z n) :=
-  Rle_trans hcz (Rle_self_Radd_right (Rnonneg_RnatQ n))
+  Rle_trans hcz (Rle_self_Radd_right (Rnonneg_RofNat n))
 
 /-- The uniform positivity witness index for every shifted argument `z + n`: `3 · c.den`. -/
 def digammaArgK (c : Q) : Nat := 3 * c.den
@@ -619,6 +617,91 @@ def Digamma (z : Real) {c : Q} (hcn : 0 < c.num) (hcd : 0 < c.den)
     (hBlo : Rle (Rneg (ofQ B hBd)) (Rsub z one)) (hBhi : Rle (Rsub z one) (ofQ B hBd)) : Real :=
   Radd (Rneg Rgamma_h) (digammaCore z hcn hcd hcz hBd hB0 hBlo hBhi)
 
+-- ---------------------------------------------------------------------------
+-- **`ψ(1) = −γ`** — the convention witness (non-vacuity of `Digamma`). At `z = 1` every term
+-- `1/(n+1) − 1/(n+1) ≈ 0`, so the core series vanishes and `ψ(1) ≈ −γ`.
+-- ---------------------------------------------------------------------------
+
+/-- **The factored digamma term** `t_n(z) ≈ (z−1)·P_n` (no bound hypotheses; the algebraic core of
+    `digammaTerm_abs_le`'s identity, extracted for the `ψ(1)=−γ` witness). -/
+theorem digammaTerm_eq_factored (z : Real) {c : Q} (hcn : 0 < c.num) (hcd : 0 < c.den)
+    (hcz : Rle (ofQ c hcd) z) (n : Nat) :
+    Req (digammaTerm z hcn hcd hcz n) (Rmul (Rsub z one) (digammaPfac z hcn hcd hcz n)) := by
+  have h1 : Req (digammaTerm z hcn hcd hcz n)
+      (Rmul (Rsub (digammaArg z n) (ofQ (⟨((n : Int) + 1), 1⟩ : Q) Nat.one_pos))
+        (digammaPfac z hcn hcd hcz n)) := by
+    show Req (Rsub (ofQ (⟨1, n + 1⟩ : Q) (Nat.succ_pos n))
+        (Rinv (digammaArg z n) (digammaArgK c) (digammaArg_witness hcn hcd hcz n)))
+      (Rmul (Rsub (digammaArg z n) (ofQ (⟨((n : Int) + 1), 1⟩ : Q) Nat.one_pos))
+        (digammaPfac z hcn hcd hcz n))
+    have hsub := Rinv_ofQ_sub_eq (digammaArg_witness hcn hcd hcz n) (m := n + 1) (Nat.succ_pos n)
+    exact Req_trans (Req_refl _) hsub
+  exact Req_trans h1 (Rmul_congr (digammaArg_sub_succ_eq z n) (Req_refl _))
+
+/-- **The digamma term vanishes at `z = 1`**: `t_n(1) ≈ 0` (since `z−1 ≈ 0`). -/
+theorem digammaTerm_one_eq_zero {c : Q} (hcn : 0 < c.num) (hcd : 0 < c.den)
+    (hcz : Rle (ofQ c hcd) one) (n : Nat) :
+    Req (digammaTerm one hcn hcd hcz n) zero := by
+  refine Req_trans (digammaTerm_eq_factored one hcn hcd hcz n) ?_
+  -- (1−1)·P ≈ 0·P ≈ P·0 ≈ 0
+  have hz : Req (Rsub one one) zero := Radd_neg one
+  refine Req_trans (Rmul_congr hz (Req_refl _)) ?_
+  refine Req_trans (Rmul_comm zero (digammaPfac one hcn hcd hcz n)) ?_
+  exact Rmul_zero (digammaPfac one hcn hcd hcz n)
+
+/-- **The digamma partial sum vanishes at `z = 1`**: `D 1 N ≈ 0` for all `N`. -/
+theorem digammaSum_one_eq_zero {c : Q} (hcn : 0 < c.num) (hcd : 0 < c.den)
+    (hcz : Rle (ofQ c hcd) one) :
+    ∀ N, Req (digammaSum one hcn hcd hcz N) zero
+  | 0 => Req_refl zero
+  | (N + 1) => by
+      show Req (Radd (digammaSum one hcn hcd hcz N) (digammaTerm one hcn hcd hcz N)) zero
+      refine Req_trans (Radd_congr (digammaSum_one_eq_zero hcn hcd hcz N)
+        (digammaTerm_one_eq_zero hcn hcd hcz N)) ?_
+      exact Radd_zero zero
+
+/-- **A sequence that is `≈ 0` pointwise tends to `0`** (every term equal to `0` is well within the
+    convergence modulus). -/
+theorem RTendsTo_zero_of_Req_zero {X : Nat → Real} (h : ∀ j, Req (X j) zero) :
+    RTendsTo X zero := by
+  intro k n
+  -- |（X k).seq n − 0| ≤ 2/(n+1) ≤ 2/(k+1) + 2/(n+1)
+  have hk := h k n
+  refine Qle_trans (show 0 < (⟨2, n + 1⟩ : Q).den by exact Nat.succ_pos n) hk ?_
+  exact Qle_add_self (show (0 : Int) ≤ (2 : Int) by omega)
+
+/-- **The digamma core vanishes at `z = 1`**: `digammaCore 1 … ≈ 0`. -/
+theorem digammaCore_one_eq_zero {c : Q} (hcn : 0 < c.num) (hcd : 0 < c.den)
+    (hcz : Rle (ofQ c hcd) one) {B : Q} (hBd : 0 < B.den) (hB0 : 0 ≤ B.num)
+    (hBlo : Rle (Rneg (ofQ B hBd)) (Rsub one one)) (hBhi : Rle (Rsub one one) (ofQ B hBd)) :
+    Req (digammaCore one hcn hcd hcz hBd hB0 hBlo hBhi) zero := by
+  -- the underlying regular sequence is `≈0` pointwise, so it tends to `0`; `Rlim` tends to itself;
+  -- uniqueness gives `Rlim ≈ 0`.
+  have hseq : ∀ j, Req (digammaSum one hcn hcd hcz (digammaMidx B j)) zero :=
+    fun j => digammaSum_one_eq_zero hcn hcd hcz (digammaMidx B j)
+  have hto0 : RTendsTo (fun j => digammaSum one hcn hcd hcz (digammaMidx B j)) zero :=
+    RTendsTo_zero_of_Req_zero hseq
+  have htoL := Rlim_tendsTo (fun j => digammaSum one hcn hcd hcz (digammaMidx B j))
+    (digammaCore_RReg one hcn hcd hcz hBd hB0 hBlo hBhi)
+  exact RTendsTo_unique htoL hto0
+
+/-- **`ψ(1) = −γ`** (the digamma convention witness; proof that `Digamma` is non-vacuously the
+    archimedean `Γ′/Γ`). The series at `z = 1` is all-zero, so `Digamma 1 … = −γ + 0 ≈ −γ`. -/
+theorem Digamma_one_eq_neg_gamma :
+    Req (Digamma one (c := ⟨1, 1⟩) (by decide) (by decide)
+          (Rle_of_Req (Req_of_seq_Qeq (fun _ => Qeq_refl _)))
+          (B := ⟨1, 1⟩) (by decide) (by decide)
+          -- hBlo : −1 ≤ (1−1) ≈ 0   (since ofQ⟨1,1⟩ ≥ 0 ⟹ −ofQ⟨1,1⟩ ≤ 0 ≈ 1−1)
+          (Rle_trans (Rle_Rneg (Rle_zero_of_Rnonneg (Rnonneg_ofQ (by decide) (by decide))))
+            (Rle_trans (Rle_of_Req Rneg_zero) (Rle_of_Req (Req_symm (Radd_neg one)))))
+          -- hBhi : (1−1) ≈ 0 ≤ 1
+          (Rle_trans (Rle_of_Req (Radd_neg one))
+            (Rle_zero_of_Rnonneg (Rnonneg_ofQ (by decide) (by decide)))))
+        (Rneg Rgamma_h) := by
+  show Req (Radd (Rneg Rgamma_h) (digammaCore one _ _ _ _ _ _ _)) (Rneg Rgamma_h)
+  refine Req_trans (Radd_congr (Req_refl (Rneg Rgamma_h)) (digammaCore_one_eq_zero _ _ _ _ _ _ _)) ?_
+  exact Radd_zero (Rneg Rgamma_h)
+
 -- ===========================================================================
 -- **Spouge's Γ approximant** (the computational `Γ` object on the real line `z > 0`).
 --
@@ -659,7 +742,11 @@ theorem Qsub_nat_den_pos {a : Q} (hadp : 0 < a.den) (k : Nat) :
 /-- **Spouge's coefficient** `cₖ = ((−1)^{k−1}/(k−1)!) · (a−k)^{k−½} · e^{a−k}` (real), for a rational
     parameter `a` (denominator positive `hadp`) with `a − k > 1` (so the positive base `a−k` of the
     half-integer power `(a−k)^{k−½} = exp((k−½)·log(a−k))` has the immediate positivity witness
-    `Qbound 0 = ⟨1,1⟩ < a−k` at index `0`). The exponent `k − ½ = (2k−1)/2` is the rational `⟨2k−1, 2⟩`. -/
+    `Qbound 0 = ⟨1,1⟩ < a−k` at index `0`). The exponent `k − ½ = (2k−1)/2` is the rational `⟨2k−1, 2⟩`.
+
+    Marked `@[irreducible]`: the body nests `exp`/`log` of `a−k`, so leaving it reducible lets the
+    bracket recursion (`spougeBracketAux`) drive `whnf` into those transcendental sub-terms, which is
+    expensive and can stall elaboration. Sealing `spougeCoeff` keeps each `cₖ` an opaque atom. -/
 @[irreducible] def spougeCoeff (a : Q) (hadp : 0 < a.den) (k : Nat)
     (hak : Qlt (⟨1, 1⟩ : Q) (Qsub a ⟨(k : Int), 1⟩)) : Real :=
   Rmul
@@ -673,19 +760,22 @@ theorem Qsub_nat_den_pos {a : Q} (hadp : 0 < a.den) (k : Nat) :
     The hypothesis `ha k _ _` supplies the per-`k` positivity `a − k > 1`; each reciprocal `1/(z+k)`
     reuses the `digammaArg`/`digammaArg_witness` enclosure machinery (`z ≥ c > 0 ⟹ z+k > 0`). -/
 def spougeBracketAux (z : Real) {c : Q} (hcn : 0 < c.num) (hcd : 0 < c.den)
-    (hcz : Rle (ofQ c hcd) z) (a : Q) (hadp : 0 < a.den)
-    (ha : ∀ (k : Nat), 1 ≤ k → Qlt (⟨1, 1⟩ : Q) (Qsub a ⟨(k : Int), 1⟩)) : Nat → Real
-  | 0 => spougeSqrt2pi
-  | (k + 1) =>
-      Radd (spougeBracketAux z hcn hcd hcz a hadp ha k)
-        (Rmul (spougeCoeff a hadp (k + 1) (ha (k + 1) (Nat.le_add_left 1 k)))
+    (hcz : Rle (ofQ c hcd) z) (a : Q) (hadp : 0 < a.den) :
+    (m : Nat) → (ha : ∀ (k : Nat), 1 ≤ k → k ≤ m → Qlt (⟨1, 1⟩ : Q) (Qsub a ⟨(k : Int), 1⟩)) → Real
+  | 0, _ => spougeSqrt2pi
+  | (k + 1), ha =>
+      Radd (spougeBracketAux z hcn hcd hcz a hadp k
+              (fun j hj1 hjk => ha j hj1 (Nat.le_succ_of_le hjk)))
+        (Rmul (spougeCoeff a hadp (k + 1) (ha (k + 1) (Nat.le_add_left 1 k) (Nat.le_refl _)))
           (Rinv (digammaArg z (k + 1)) (digammaArgK c) (digammaArg_witness hcn hcd hcz (k + 1))))
 
-/-- **Spouge's bracket** `c₀ + Σ_{k=1}^{N} cₖ/(z+k)`. -/
+/-- **Spouge's bracket** `c₀ + Σ_{k=1}^{N} cₖ/(z+k)`. The hypothesis `ha` is bounded `1 ≤ k ≤ N`
+    (only those `cₖ` are summed); this is what makes `ha` satisfiable for a concrete `a` (e.g. `a = N+2`).
+    The earlier unbounded `∀ k ≥ 1` was vacuous: no finite `a` keeps `a − k > 1` for arbitrarily large `k`. -/
 def spougeBracket (z : Real) {c : Q} (hcn : 0 < c.num) (hcd : 0 < c.den)
-    (hcz : Rle (ofQ c hcd) z) (a : Q) (hadp : 0 < a.den)
-    (ha : ∀ (k : Nat), 1 ≤ k → Qlt (⟨1, 1⟩ : Q) (Qsub a ⟨(k : Int), 1⟩)) (N : Nat) : Real :=
-  spougeBracketAux z hcn hcd hcz a hadp ha N
+    (hcz : Rle (ofQ c hcd) z) (a : Q) (hadp : 0 < a.den) (N : Nat)
+    (ha : ∀ (k : Nat), 1 ≤ k → k ≤ N → Qlt (⟨1, 1⟩ : Q) (Qsub a ⟨(k : Int), 1⟩)) : Real :=
+  spougeBracketAux z hcn hcd hcz a hadp N ha
 
 /-- The base `z + a` of Spouge's leading power, as a constructive real. -/
 def spougeBase (z : Real) (a : Q) (hadp : 0 < a.den) : Real := Radd z (ofQ a hadp)
@@ -701,8 +791,10 @@ theorem spougeBase_witness {z : Real} {c : Q} (hcn : 0 < c.num) (hcd : 0 < c.den
     Qlt (Qbound (digammaArgK c)) ((spougeBase z a hadp).seq (digammaArgK c)) :=
   Rlt_Qbound_of_Rle_ofQ hcn hcd (ofQ_le_spougeBase hcd hcz hadp han)
 
-/-- **Spouge's Γ approximant** `Γ(z+1) ≈ (z+a)^{z+½} · e^{−(z+a)} · (c₀ + Σ_{k=1}^{N} cₖ/(z+k))`, a
-    genuine constructive real for real `z > 0` (enclosed by the rational floor `c`, `0 < c ≤ z`).
+/-- **Spouge's Γ approximant** — `SpougeGamma z … N` approximates `Γ(z+1)` by
+    `(z+a)^{z+½} · e^{−(z+a)} · (c₀ + Σ_{k=1}^{N} cₖ/(z+k))`, a genuine constructive real for real
+    `z > 0` (enclosed by the rational floor `c`, `0 < c ≤ z`). (Here "approximates" is prose: NO
+    `Req`/`≈` to the true `Γ` is asserted — see the error note below.)
 
     Built from `exp`/`log`/reciprocal of positive reals ONLY:
     * `(z+a)^{z+½} = RrpowPos (z+a) _ _ (z + ½)`  (base `z+a > 0`; exponent `z + ½`),
@@ -710,20 +802,38 @@ theorem spougeBase_witness {z : Real} {c : Q} (hcn : 0 < c.num) (hcd : 0 < c.den
     * the bracket `c₀ + Σ cₖ/(z+k)` from `spougeBracket`.
 
     `a : Q` is a free rational parameter `≥ 3` (denominator positive `hadp`, numerator non-negative `han`),
-    `N = ⌈a⌉ − 1`, and `ha` certifies `a − k > 1` for every `1 ≤ k ≤ N` (needed for `(a−k)^{k−½}`).
+    and `ha` certifies `a − k > 1` for every `1 ≤ k ≤ N` (needed for `(a−k)^{k−½}`).
+
+    ⚠ CALLER OBLIGATION (UNCHECKED): the cited Spouge error bound is valid ONLY when `N = ⌈a⌉ − 1`.
+    `N` is a FREE argument here and is NOT constrained to `⌈a⌉ − 1` by the type. Passing any other `N`
+    still yields a well-formed real, but the documented bound below does NOT apply to it. ⚠
 
     The relative error obeys Spouge's bound `|ε_S(a,z)| < √a · (2π)^{−(a+½)} / Re(z+a)` (`a ≥ 3`,
-    `Re z ≥ 0`); see the section header. That bound is documented, not asserted, as a rigorous proof
-    presupposes an independent `Γ`. -/
+    `Re z ≥ 0`, AND `N = ⌈a⌉ − 1`); see the section header. That bound is documented, not asserted, as
+    a rigorous proof presupposes an independent `Γ`. -/
 def SpougeGamma (z : Real) {c : Q} (hcn : 0 < c.num) (hcd : 0 < c.den)
-    (hcz : Rle (ofQ c hcd) z) (a : Q) (hadp : 0 < a.den) (han : 0 ≤ a.num)
-    (ha : ∀ (k : Nat), 1 ≤ k → Qlt (⟨1, 1⟩ : Q) (Qsub a ⟨(k : Int), 1⟩)) (N : Nat) : Real :=
+    (hcz : Rle (ofQ c hcd) z) (a : Q) (hadp : 0 < a.den) (han : 0 ≤ a.num) (N : Nat)
+    (ha : ∀ (k : Nat), 1 ≤ k → k ≤ N → Qlt (⟨1, 1⟩ : Q) (Qsub a ⟨(k : Int), 1⟩)) : Real :=
   Rmul
     (Rmul
       (RrpowPos (spougeBase z a hadp) (digammaArgK c)
         (spougeBase_witness hcn hcd hcz hadp han)
         (Radd z (ofQ ⟨1, 2⟩ (by decide))))
       (RexpReal (Rneg (spougeBase z a hadp))))
-    (spougeBracket z hcn hcd hcz a hadp ha N)
+    (spougeBracket z hcn hcd hcz a hadp N ha)
+
+/-- **`SpougeGamma` is non-vacuous** (instantiation witness at `z = 1`, `a = 4`, `N = 2`). With the
+    bounded hypothesis `1 ≤ k ≤ N`, the per-`k` positivity `a − k > 1` is now satisfiable:
+    `k = 1 ⟹ 4−1 = 3 > 1`, `k = 2 ⟹ 4−2 = 2 > 1`. (The old unbounded `∀ k ≥ 1` admitted no witness.) -/
+noncomputable def spougeGammaWitness : Real :=
+  SpougeGamma one (c := ⟨1, 1⟩) (by decide) (by decide)
+    (Rle_of_Req (Req_of_seq_Qeq (fun _ => Qeq_refl _)))
+    (a := ⟨4, 1⟩) (by decide) (by decide) 2
+    (fun k hk1 hk2 => by
+      -- 1 ≤ k ≤ 2 ⟹ Qlt ⟨1,1⟩ (Qsub ⟨4,1⟩ ⟨k,1⟩): k=1 → 3>1, k=2 → 2>1
+      have hk : k = 1 ∨ k = 2 := by omega
+      show Qlt (⟨1, 1⟩ : Q) (Qsub (⟨4, 1⟩ : Q) (⟨(k : Int), 1⟩ : Q))
+      rcases hk with h | h <;> subst h <;>
+        (show Qlt (⟨1, 1⟩ : Q) (Qsub (⟨4, 1⟩ : Q) (⟨_, 1⟩ : Q)); simp only [Qlt, Qsub, add, neg]; decide))
 
 end UOR.Bridge.F1Square.Analysis

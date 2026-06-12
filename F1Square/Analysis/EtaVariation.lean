@@ -2233,6 +2233,76 @@ theorem etaU_le_ratio (s : Complex) (hs : Pos s.re) :
   exact Rexp_neg_le_ratio (by simp only [mul]; omega) (Qmul_den_pos hεd (by decide)) hθ
 
 -- ===========================================================================
+-- Step 7b-ii(β-2c, DATA) — `etaEps`/`etaTau`: expose the geometric ratio witness `τ` as DATA threaded
+-- from an explicit positivity witness `(kσ, hkσ : Qlt (Qbound kσ) (s.re.seq kσ))`, so the η-limit can be
+-- instantiated concretely (no `∃`/choice). This is the closed-form of `Pos_imp_ofQ_le`'s witness.
+-- ===========================================================================
+
+/-- The explicit `ε > 0` lower-bound rational for `Re s`, from the witness index `kσ`: `(Re s)ₖ − 1/(kσ+1)`.
+    This is `Pos_imp_ofQ_le`'s witness rational `c = Qsub (x.seq n) (Qbound n)` made into DATA. -/
+def etaEps (s : Complex) (kσ : Nat) (_hkσ : Qlt (Qbound kσ) (s.re.seq kσ)) : Q :=
+  Qsub (s.re.seq kσ) (Qbound kσ)
+
+theorem etaEps_den_pos (s : Complex) (kσ : Nat) (hkσ : Qlt (Qbound kσ) (s.re.seq kσ)) :
+    0 < (etaEps s kσ hkσ).den :=
+  Qsub_den_pos (s.re.den_pos kσ) (Qbound_den_pos kσ)
+
+theorem etaEps_num_pos (s : Complex) (kσ : Nat) (hkσ : Qlt (Qbound kσ) (s.re.seq kσ)) :
+    0 < (etaEps s kσ hkσ).num := by
+  simp only [Qlt, Qbound] at hkσ; simp only [etaEps, Qsub, add, neg, Qbound]; push_cast at hkσ ⊢; omega
+
+/-- **`ofQ ε ≤ Re s`**: the rational witness `ε = etaEps …` lower-bounds `Re s` (verbatim mirror of
+    `Pos_imp_ofQ_le`'s second bullet with `x := s.re`, `n := kσ`, `hn := hkσ`). -/
+theorem etaEps_le (s : Complex) (kσ : Nat) (hkσ : Qlt (Qbound kσ) (s.re.seq kσ)) :
+    Rle (ofQ (etaEps s kσ hkσ) (etaEps_den_pos s kσ hkσ)) s.re := by
+  intro m
+  show Qle (Qsub (s.re.seq kσ) (Qbound kσ)) (add (s.re.seq m) ⟨2, m + 1⟩)
+  have hreg : Qle (s.re.seq kσ) (add (s.re.seq m) (add (Qbound kσ) (Qbound m))) :=
+    Qle_add_of_Qabs_sub (s.re.den_pos kσ) (s.re.den_pos m)
+      (add_den_pos (Qbound_den_pos kσ) (Qbound_den_pos m)) (s.re.reg kσ m)
+  have hassoc : Qle (s.re.seq kσ) (add (Qbound kσ) (add (s.re.seq m) (Qbound m))) :=
+    Qle_trans (add_den_pos (s.re.den_pos m) (add_den_pos (Qbound_den_pos kσ) (Qbound_den_pos m))) hreg
+      (Qeq_le (by simp only [Qeq, add, Qbound]; push_cast; ring_uor))
+  have hsub : Qle (Qsub (s.re.seq kσ) (Qbound kσ)) (add (s.re.seq m) (Qbound m)) :=
+    Qsub_le_of_le_add (Qbound_den_pos kσ) (add_den_pos (s.re.den_pos m) (Qbound_den_pos m)) hassoc
+  exact Qle_trans (add_den_pos (s.re.den_pos m) (Qbound_den_pos m)) hsub
+    (Qadd_le_add (Qle_refl _) (by simp only [Qle, Qbound]; push_cast; omega))
+
+/-- The explicit geometric ratio witness `τ = ε·½ > 0` (mirrors `etaU_le_ratio`'s `τ := mul c ⟨1,2⟩`). -/
+def etaTau (s : Complex) (kσ : Nat) (hkσ : Qlt (Qbound kσ) (s.re.seq kσ)) : Q :=
+  mul (etaEps s kσ hkσ) ⟨1, 2⟩
+
+theorem etaTau_den_pos (s : Complex) (kσ : Nat) (hkσ : Qlt (Qbound kσ) (s.re.seq kσ)) :
+    0 < (etaTau s kσ hkσ).den :=
+  Qmul_den_pos (etaEps_den_pos s kσ hkσ) (by decide)
+
+theorem etaTau_num_pos (s : Complex) (kσ : Nat) (hkσ : Qlt (Qbound kσ) (s.re.seq kσ)) :
+    0 < (etaTau s kσ hkσ).num := by
+  simp only [etaTau, mul]; have := etaEps_num_pos s kσ hkσ; omega
+
+/-- The `(1 + τ)`-numerator is positive — the reusable den-positivity feed for every downstream
+    `Qinv (add ⟨1,1⟩ (etaTau …))`. -/
+theorem etaTau_add_num_pos (s : Complex) (kσ : Nat) (hkσ : Qlt (Qbound kσ) (s.re.seq kσ)) :
+    0 < (add (⟨1, 1⟩ : Q) (etaTau s kσ hkσ)).num := by
+  simp only [add]; have hn := etaTau_num_pos s kσ hkσ; have hd := etaTau_den_pos s kσ hkσ
+  push_cast; omega
+
+/-- **DATA form of `etaU_le_ratio`**: `u ≤ 1/(1+τ)` with `τ := etaTau …` returned directly (no `∃`). -/
+theorem etaU_le_ratio_data (s : Complex) (kσ : Nat) (hkσ : Qlt (Qbound kσ) (s.re.seq kσ)) :
+    Rle (czetaU s)
+      (ofQ (Qinv (add ⟨1, 1⟩ (etaTau s kσ hkσ)))
+        (Qinv_den_pos (etaTau_add_num_pos s kσ hkσ))) := by
+  have hεd := etaEps_den_pos s kσ hkσ
+  have hεn := etaEps_num_pos s kσ hkσ
+  have hε := etaEps_le s kσ hkσ
+  have hθ : Rle (ofQ (etaTau s kσ hkσ) (etaTau_den_pos s kσ hkσ))
+      (Rmul s.re (logN 2 (by omega))) := by
+    refine Rle_trans (Rle_of_Req (Req_symm (Rmul_ofQ_ofQ hεd (by decide)))) ?_
+    exact Rle_trans (Rmul_le_Rmul_left (Rnonneg_ofQ hεd (Int.le_of_lt hεn)) logN_2_ge_half)
+      (Rmul_le_Rmul_right (Rnonneg_logN 2 (by omega)) hε)
+  exact Rexp_neg_le_ratio (etaTau_num_pos s kσ hkσ) (etaTau_den_pos s kσ hkσ) hθ
+
+-- ===========================================================================
 -- Step 7b-ii(β-2b/i) — the η per-term modulus A_n = exp(−σ·log n) is the czeta modulus term (via the bridge),
 -- so it inherits the dyadic per-term bound: A_n ≤ exp(−σ·k·log2) for n ≥ 2ᵏ. This + δ_n ≤ 2⁻ᵏ gives the
 -- dyadic block bound block_k ≤ uᵏ.
@@ -2386,6 +2456,21 @@ theorem etaB_le_geo (s : Complex) (hs : Pos s.re) :
   refine Rle_trans (Rpow_mono (RexpReal_nonneg _) hrnn hu k) ?_
   exact Rle_of_Req (Rpow_ofQ hrd k)
 
+/-- **DATA form of `etaB_le_geo`**: `B ≤ ofQ(rᵏ)` with `r = 1/(1+etaTau …)` returned for every `k`. -/
+theorem etaB_le_geo_data (s : Complex) (kσ : Nat) (hkσ : Qlt (Qbound kσ) (s.re.seq kσ)) :
+    ∀ k, Rle (RexpReal (Rneg (Rmul s.re (Rnsmul k (logN 2 (by omega))))))
+      (ofQ (qpow (Qinv (add ⟨1, 1⟩ (etaTau s kσ hkσ))) k)
+        (qpow_den_pos (Qinv_den_pos (etaTau_add_num_pos s kσ hkσ)) k)) := by
+  intro k
+  have hrd : 0 < (Qinv (add (⟨1, 1⟩ : Q) (etaTau s kσ hkσ))).den :=
+    Qinv_den_pos (etaTau_add_num_pos s kσ hkσ)
+  have hrnn : Rnonneg (ofQ (Qinv (add (⟨1, 1⟩ : Q) (etaTau s kσ hkσ))) hrd) :=
+    Rnonneg_ofQ hrd (by
+      show (0 : Int) ≤ ((add (⟨1, 1⟩ : Q) (etaTau s kσ hkσ)).den : Int); exact_mod_cast Nat.zero_le _)
+  refine Rle_trans (Rle_of_Req (czetaExpB_eq_pow s k)) ?_
+  refine Rle_trans (Rpow_mono (RexpReal_nonneg _) hrnn (etaU_le_ratio_data s kσ hkσ) k) ?_
+  exact Rle_of_Req (Rpow_ofQ hrd k)
+
 -- ===========================================================================
 -- Step 7b-ii(β-3/ii) — the FULL variation modulus partial sum EtaVSum (mirror czetaExpSum): the term for
 -- index n is Vterm (for n ≥ 2, else 0). Its contiguous difference is RsumRange of the terms — the bridge
@@ -2490,6 +2575,78 @@ theorem EtaVSum_block_geo_le (s : Complex) {sb T : Q} (hsbd : 0 < sb.den) (hsb0 
       (Rmul (Rmul (ofQ (qpow r k) (qpow_den_pos hrd k)) Cv) (ofQ (⟨1, 1⟩ : Q) (by decide))) :=
     Rmul_le_Rmul_right (Rnonneg_ofQ (by decide) (by decide)) hb1
   -- fold the rational product
+  have hfold : Req (Rmul (Rmul (ofQ (qpow r k) (qpow_den_pos hrd k)) Cv) (ofQ (⟨1, 1⟩ : Q) (by decide)))
+      (ofQ (mul (Vconst sb T) (qpow r k))
+        (Qmul_den_pos (Vconst_den_pos hsbd hTd) (qpow_den_pos hrd k))) := by
+    refine Req_trans (Rmul_congr (Rmul_ofQ_ofQ (qpow_den_pos hrd k) (Vconst_den_pos hsbd hTd)) (Req_refl _)) ?_
+    refine Req_trans (Rmul_ofQ_ofQ (Qmul_den_pos (qpow_den_pos hrd k) (Vconst_den_pos hsbd hTd)) (by decide)) ?_
+    exact ofQ_congr _ _ (by simp only [Qeq, mul]; push_cast; ring_uor)
+  exact Rle_trans hLHS (Rle_trans ha (Rle_trans hb (Rle_of_Req hfold)))
+
+/-- **DATA form of `EtaVSum_block_geo_le`**: the dyadic block bound for the explicit ratio
+    `τ := etaTau s kσ hkσ`, returned directly (no `∃`). The `Pos s.re` hypothesis is replaced by the
+    explicit positivity witness `(kσ, hkσ)`; `hσ : Rnonneg s.re` is still taken as it is used internally. -/
+theorem EtaVSum_block_geo_data (s : Complex) {sb T : Q} (hsbd : 0 < sb.den) (hsb0 : 0 ≤ sb.num)
+    (hTd : 0 < T.den) (hT0 : 0 ≤ T.num) (hσ : Rnonneg s.re) (hsb : Rle s.re (ofQ sb hsbd))
+    (hT1 : Rle (Rneg (ofQ T hTd)) s.im) (hT2 : Rle s.im (ofQ T hTd))
+    (kσ : Nat) (hkσ : Qlt (Qbound kσ) (s.re.seq kσ)) :
+      ∀ (k : Nat), 1 ≤ k →
+        Rle (Rsub (EtaVSum s T hTd (2 ^ (k + 1))) (EtaVSum s T hTd (2 ^ k)))
+          (ofQ (mul (Vconst sb T) (qpow (Qinv (add ⟨1, 1⟩ (etaTau s kσ hkσ))) k))
+            (Qmul_den_pos (Vconst_den_pos hsbd hTd)
+              (qpow_den_pos (Qinv_den_pos (etaTau_add_num_pos s kσ hkσ)) k))) := by
+  have hB := etaB_le_geo_data s kσ hkσ
+  intro k hk1
+  -- abbreviations
+  let r : Q := Qinv (add (⟨1, 1⟩ : Q) (etaTau s kσ hkσ))
+  have hrd : 0 < r.den := Qinv_den_pos (etaTau_add_num_pos s kσ hkσ)
+  let Bk : Real := RexpReal (Rneg (Rmul s.re (Rnsmul k (logN 2 (by omega)))))
+  let Cv : Real := ofQ (Vconst sb T) (Vconst_den_pos hsbd hTd)
+  -- index facts
+  have hkk : 2 ≤ 2 ^ k := by
+    have h : 2 ^ 1 ≤ 2 ^ k := Nat.pow_le_pow_right (by omega) hk1
+    simpa using h
+  have hk1' : 2 ≤ 2 ^ (k + 1) := by
+    have h : 2 ^ 1 ≤ 2 ^ (k + 1) := Nat.pow_le_pow_right (by omega) (by omega)
+    simpa using h
+  have h2eq : 2 ^ k + 2 ^ k = 2 ^ (k + 1) := by rw [Nat.pow_succ]; omega
+  -- Step 3: EtaVSum diff = RsumRange of etaVtermTerm
+  have hdiff := EtaVSum_diff_eq_RsumRange s T hTd (2 ^ k) (2 ^ k)
+  have hidxeq : EtaVSum s T hTd (2 ^ k + 2 ^ k) = EtaVSum s T hTd (2 ^ (k + 1)) :=
+    congrArg _ h2eq
+  rw [hidxeq] at hdiff
+  -- Step 4: etaVtermTerm (2^k+i) = Vterm (2^k+i) … via dif_pos
+  have hcongr : Req (RsumRange (fun i => etaVtermTerm s T hTd (2 ^ k + i)) (2 ^ k))
+      (RsumRange (fun i => Vterm s (2 ^ k + i) (by omega)
+          (Rmul (ofQ T hTd) (deltaLogNat (2 ^ k + i) (by omega)))) (2 ^ k)) := by
+    refine RsumRange_congr (fun i => ?_) (2 ^ k)
+    have hi : 2 ≤ 2 ^ k + i := by omega
+    show Req (etaVtermTerm s T hTd (2 ^ k + i)) _
+    unfold etaVtermTerm
+    rw [dif_pos hi]
+    exact Req_refl _
+  -- Step 5: dyadic block bound
+  have hblock := Vterm_geo_block_le s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 k hk1' hkk
+  have hsum : Rle (RsumRange (fun i => etaVtermTerm s T hTd (2 ^ k + i)) (2 ^ k))
+      (Rmul (Rmul Bk Cv) (logN 2 (by omega))) :=
+    Rle_trans (Rle_of_Req hcongr) hblock
+  have hLHS : Rle (Rsub (EtaVSum s T hTd (2 ^ (k + 1))) (EtaVSum s T hTd (2 ^ k)))
+      (Rmul (Rmul Bk Cv) (logN 2 (by omega))) :=
+    Rle_trans (Rle_of_Req hdiff) hsum
+  -- Step 6: fold to the rational geometric.
+  have hCvnn : Rnonneg Cv := Rnonneg_ofQ (Vconst_den_pos hsbd hTd) (Vconst_num_nonneg hsb0 hT0)
+  have hBknn : Rnonneg Bk := RexpReal_nonneg _
+  have hrnum : (0 : Int) ≤ r.num := by
+    show (0 : Int) ≤ ((add (⟨1, 1⟩ : Q) (etaTau s kσ hkσ)).den : Int); exact_mod_cast Nat.zero_le _
+  have hlog : Rle (logN 2 (by omega)) (ofQ (⟨1, 1⟩ : Q) (by decide)) := logN_2_le_one
+  have ha : Rle (Rmul (Rmul Bk Cv) (logN 2 (by omega)))
+      (Rmul (Rmul Bk Cv) (ofQ (⟨1, 1⟩ : Q) (by decide))) :=
+    Rmul_le_Rmul_left (Rnonneg_Rmul hBknn hCvnn) hlog
+  have hb1 : Rle (Rmul Bk Cv) (Rmul (ofQ (qpow r k) (qpow_den_pos hrd k)) Cv) :=
+    Rmul_le_Rmul_right hCvnn (hB k)
+  have hb : Rle (Rmul (Rmul Bk Cv) (ofQ (⟨1, 1⟩ : Q) (by decide)))
+      (Rmul (Rmul (ofQ (qpow r k) (qpow_den_pos hrd k)) Cv) (ofQ (⟨1, 1⟩ : Q) (by decide))) :=
+    Rmul_le_Rmul_right (Rnonneg_ofQ (by decide) (by decide)) hb1
   have hfold : Req (Rmul (Rmul (ofQ (qpow r k) (qpow_den_pos hrd k)) Cv) (ofQ (⟨1, 1⟩ : Q) (by decide)))
       (ofQ (mul (Vconst sb T) (qpow r k))
         (Qmul_den_pos (Vconst_den_pos hsbd hTd) (qpow_den_pos hrd k))) := by
@@ -3007,12 +3164,15 @@ theorem etaIm_RReg (s : Complex) {sb T : Q} (hsbd : 0 < sb.den) (hsb0 : 0 ≤ sb
     exact Rle_ofQ_ofQ (Nat.succ_pos _) _
       (eta_Qle_self_add_left (by show (0 : Int) ≤ 1; decide) (Nat.succ_pos _) (Nat.succ_pos _))
 
-/-- **The Dirichlet eta function `η(s) = Σ_{n≥1} (−1)^{n−1} n⁻ˢ` for `Re s > 0`** — a genuine
-    constructive complex number, the culmination of goal B. The half-plane `Re s > 0` is captured by a
-    rational box `sb, T` (`0 ≤ Re s ≤ sb`, `|Im s| ≤ T`) plus `Pos (Re s)`; the witness `τ > 0` of the
-    geometric block decay (`EtaVSum_block_geo_le`) is supplied explicitly (choice-free, mirroring
-    `Czeta`). The real and imaginary parts are Bishop diagonal limits of the reindexed alternating
-    paired partial sums `(czEtaPaired s (2^{etaMidx j − 1})).re/.im`. -/
+/-- **The Dirichlet eta value for `Re s > 0`** — a genuine constructive complex number defined as the
+    **Bishop diagonal limit (`Rlim`) of the reindexed paired partial sums** of the alternating series
+    `Σ_{n≥1} (−1)^{n−1} n⁻ˢ`: the real and imaginary parts are `Rlim` of
+    `(czEtaPaired s (2^{etaMidx j − 1})).re/.im` (the even η partial sums in paired form, reindexed by
+    the convergence modulus `etaMidx`). The half-plane `Re s > 0` is captured by a rational box `sb, T`
+    (`0 ≤ Re s ≤ sb`, `|Im s| ≤ T`) plus `Pos (Re s)`; the witness `τ > 0` of the geometric block decay
+    (`EtaVSum_block_geo_le`) is supplied explicitly (choice-free, mirroring `Czeta`). The tie to the
+    genuine alternating partial sums `czEtaSum` is `CetaW_czEtaSum_re_tendsTo`/`_im` — that is the sense
+    in which this value is `η(s)`. -/
 def Ceta (s : Complex) {sb T : Q} (hsbd : 0 < sb.den) (hsb0 : 0 ≤ sb.num) (hTd : 0 < T.den) (hT0 : 0 ≤ T.num)
     (hσ : Rnonneg s.re) (hsb : Rle s.re (ofQ sb hsbd)) (hT1 : Rle (Rneg (ofQ T hTd)) s.im)
     (hT2 : Rle s.im (ofQ T hTd)) {τ : Q} (hτn : 0 < τ.num) (hτd : 0 < τ.den)
@@ -3022,5 +3182,365 @@ def Ceta (s : Complex) {sb T : Q} (hsbd : 0 < sb.den) (hsb0 : 0 ≤ sb.num) (hTd
     Complex :=
   ⟨Rlim (fun j => etaReSeq s τ sb T j) (etaRe_RReg s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 hτn hτd hblk),
    Rlim (fun j => etaImSeq s τ sb T j) (etaIm_RReg s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 hτn hτd hblk)⟩
+
+/-- **The η value on `Re s > 0` as a constructive ℂ**, built from an explicit positivity witness
+    `(kσ,hkσ)` for `Re s` — no `∃`/choice; this is the concretely-instantiable form of `Ceta`. The
+    geometric-decay witness `τ := etaTau s kσ hkσ` and its block bound `EtaVSum_block_geo_data` are now
+    closed data. Like `Ceta`, this is the **Bishop limit of the reindexed paired partial sums** of the
+    η series; `CetaW_czEtaSum_re_tendsTo`/`_im` exhibit it as the limit of the genuine alternating
+    partial sums `czEtaSum`, and `CetaW_re_canonical`/`_im` show it is independent of the witness. -/
+def CetaW (s : Complex) {sb T : Q} (hsbd : 0 < sb.den) (hsb0 : 0 ≤ sb.num) (hTd : 0 < T.den)
+    (hT0 : 0 ≤ T.num) (hσ : Rnonneg s.re) (hsb : Rle s.re (ofQ sb hsbd))
+    (hT1 : Rle (Rneg (ofQ T hTd)) s.im) (hT2 : Rle s.im (ofQ T hTd))
+    (kσ : Nat) (hkσ : Qlt (Qbound kσ) (s.re.seq kσ)) : Complex :=
+  Ceta s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 (etaTau_num_pos s kσ hkσ) (etaTau_den_pos s kσ hkσ)
+    (EtaVSum_block_geo_data s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ hkσ)
+
+/-- **Convergence of `CetaW` (real part)**: the reindexed alternating paired partial sums
+    `(czEtaPaired s (2^{etaMidx j − 1})).re` converge to `Re (CetaW s …)` with the canonical rate
+    `2/(k+1)`. Mirror of `Czeta_re_tendsTo`; the `.re` of `CetaW`/`Ceta` is *definitionally* the
+    `Rlim` of `etaReSeq`, so this is `Rlim_tendsTo` of the corresponding `etaRe_RReg`. -/
+theorem CetaW_re_tendsTo (s : Complex) {sb T : Q} (hsbd : 0 < sb.den) (hsb0 : 0 ≤ sb.num)
+    (hTd : 0 < T.den) (hT0 : 0 ≤ T.num) (hσ : Rnonneg s.re) (hsb : Rle s.re (ofQ sb hsbd))
+    (hT1 : Rle (Rneg (ofQ T hTd)) s.im) (hT2 : Rle s.im (ofQ T hTd))
+    (kσ : Nat) (hkσ : Qlt (Qbound kσ) (s.re.seq kσ)) :
+    RTendsTo (fun j => etaReSeq s (etaTau s kσ hkσ) sb T j)
+      (CetaW s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ hkσ).re :=
+  Rlim_tendsTo _ (etaRe_RReg s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2
+    (etaTau_num_pos s kσ hkσ) (etaTau_den_pos s kσ hkσ)
+    (EtaVSum_block_geo_data s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ hkσ))
+
+/-- **Convergence of `CetaW` (imaginary part)** — mirror of `CetaW_re_tendsTo`. -/
+theorem CetaW_im_tendsTo (s : Complex) {sb T : Q} (hsbd : 0 < sb.den) (hsb0 : 0 ≤ sb.num)
+    (hTd : 0 < T.den) (hT0 : 0 ≤ T.num) (hσ : Rnonneg s.re) (hsb : Rle s.re (ofQ sb hsbd))
+    (hT1 : Rle (Rneg (ofQ T hTd)) s.im) (hT2 : Rle s.im (ofQ T hTd))
+    (kσ : Nat) (hkσ : Qlt (Qbound kσ) (s.re.seq kσ)) :
+    RTendsTo (fun j => etaImSeq s (etaTau s kσ hkσ) sb T j)
+      (CetaW s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ hkσ).im :=
+  Rlim_tendsTo _ (etaIm_RReg s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2
+    (etaTau_num_pos s kσ hkσ) (etaTau_den_pos s kσ hkσ)
+    (EtaVSum_block_geo_data s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ hkσ))
+
+/-- **Convergence transports across pointwise `≈`** (with a relaxed rate): if `X k → L` and each
+    `X' k ≈ X k`, then `X' k → L` with rate `2/(k+1) + 4/(n+1)` (the extra `2/(n+1)` is the cost of
+    the `≈`-gap, which lives inside the modulus). General helper, used to tie `CetaW` to the genuine
+    alternating partial sums `czEtaSum`. -/
+theorem RTendsTo_of_Req {X X' : Nat → Real} {L : Real}
+    (hL : RTendsTo X L) (heq : ∀ k, Req (X' k) (X k)) :
+    ∀ k n : Nat, Qle (Qabs (Qsub ((X' k).seq n) (L.seq n))) (add ⟨2, k + 1⟩ ⟨4, n + 1⟩) := by
+  intro k n
+  have htri := Qabs_sub_triangle (a := (X' k).seq n) (b := (X k).seq n) (c := L.seq n)
+    ((X' k).den_pos n) ((X k).den_pos n) (L.den_pos n)
+  have hb1 : Qle (Qabs (Qsub ((X' k).seq n) ((X k).seq n))) (⟨2, n + 1⟩ : Q) := heq k n
+  have hfin : Qle (add (⟨2, n + 1⟩ : Q) (add ⟨2, k + 1⟩ ⟨2, n + 1⟩)) (add (⟨2, k + 1⟩ : Q) ⟨4, n + 1⟩) := by
+    apply Qeq_le; simp only [Qeq, add]; push_cast; ring_uor
+  exact Qle_trans
+    (add_den_pos (Qabs_den_pos (Qsub_den_pos ((X' k).den_pos n) ((X k).den_pos n)))
+      (Qabs_den_pos (Qsub_den_pos ((X k).den_pos n) (L.den_pos n)))) htri
+    (Qle_trans (add_den_pos (Nat.succ_pos _) (add_den_pos (Nat.succ_pos _) (Nat.succ_pos _)))
+      (Qadd_le_add hb1 (hL k n)) hfin)
+
+/-- **`CetaW` is the limit of the genuine alternating partial sums `czEtaSum` (real part)**: the
+    even (paired-index) η partial sums `S(2·2^{etaMidx j − 1}).re` converge to `Re (CetaW s …)` with
+    rate `2/(k+1) + 4/(n+1)`. This ties `CetaW` to the genuine alternating partial sums `czEtaSum`;
+    this is the sense in which `CetaW = η(s)`. De-orphans `czEtaSum_two_eq_paired`. -/
+theorem CetaW_czEtaSum_re_tendsTo (s : Complex) {sb T : Q} (hsbd : 0 < sb.den) (hsb0 : 0 ≤ sb.num)
+    (hTd : 0 < T.den) (hT0 : 0 ≤ T.num) (hσ : Rnonneg s.re) (hsb : Rle s.re (ofQ sb hsbd))
+    (hT1 : Rle (Rneg (ofQ T hTd)) s.im) (hT2 : Rle s.im (ofQ T hTd))
+    (kσ : Nat) (hkσ : Qlt (Qbound kσ) (s.re.seq kσ)) :
+    ∀ k n : Nat, Qle (Qabs (Qsub
+        ((czEtaSum s (2 * 2 ^ (etaMidx (etaTau s kσ hkσ) sb T k - 1))).re.seq n)
+        ((CetaW s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ hkσ).re.seq n)))
+      (add ⟨2, k + 1⟩ ⟨4, n + 1⟩) :=
+  RTendsTo_of_Req (X := fun j => etaReSeq s (etaTau s kσ hkσ) sb T j)
+    (X' := fun j => (czEtaSum s (2 * 2 ^ (etaMidx (etaTau s kσ hkσ) sb T j - 1))).re)
+    (CetaW_re_tendsTo s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ hkσ)
+    (fun j => (czEtaSum_two_eq_paired s (2 ^ (etaMidx (etaTau s kσ hkσ) sb T j - 1))).1)
+
+/-- **`CetaW` is the limit of the genuine alternating partial sums `czEtaSum` (imaginary part)** —
+    mirror of `CetaW_czEtaSum_re_tendsTo`. -/
+theorem CetaW_czEtaSum_im_tendsTo (s : Complex) {sb T : Q} (hsbd : 0 < sb.den) (hsb0 : 0 ≤ sb.num)
+    (hTd : 0 < T.den) (hT0 : 0 ≤ T.num) (hσ : Rnonneg s.re) (hsb : Rle s.re (ofQ sb hsbd))
+    (hT1 : Rle (Rneg (ofQ T hTd)) s.im) (hT2 : Rle s.im (ofQ T hTd))
+    (kσ : Nat) (hkσ : Qlt (Qbound kσ) (s.re.seq kσ)) :
+    ∀ k n : Nat, Qle (Qabs (Qsub
+        ((czEtaSum s (2 * 2 ^ (etaMidx (etaTau s kσ hkσ) sb T k - 1))).im.seq n)
+        ((CetaW s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ hkσ).im.seq n)))
+      (add ⟨2, k + 1⟩ ⟨4, n + 1⟩) :=
+  RTendsTo_of_Req (X := fun j => etaImSeq s (etaTau s kσ hkσ) sb T j)
+    (X' := fun j => (czEtaSum s (2 * 2 ^ (etaMidx (etaTau s kσ hkσ) sb T j - 1))).im)
+    (CetaW_im_tendsTo s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ hkσ)
+    (fun j => (czEtaSum_two_eq_paired s (2 ^ (etaMidx (etaTau s kσ hkσ) sb T j - 1))).2)
+
+/-- **Anchor tail (real part), arbitrary upper index**: for *any* paired index `K ≥ 2^{etaMidx k − 1}`,
+    the difference of the paired real partial sums from the level-`k` anchor is two-sided bounded by
+    `1/(k+1)`. The arbitrary-`K` strengthening of `etaRe_tail_reindexed` (whose upper index is itself a
+    reindex anchor); built from `czEtaPaired_re_tail` at anchor `Kk`, `EtaVSum_tail_full`, and the
+    `Vconst` absorption. -/
+theorem etaRe_paired_tail_anchor (s : Complex) {sb T : Q} (hsbd : 0 < sb.den) (hsb0 : 0 ≤ sb.num)
+    (hTd : 0 < T.den) (hT0 : 0 ≤ T.num) (hσ : Rnonneg s.re) (hsb : Rle s.re (ofQ sb hsbd))
+    (hT1 : Rle (Rneg (ofQ T hTd)) s.im) (hT2 : Rle s.im (ofQ T hTd)) {τ : Q} (hτn : 0 < τ.num) (hτd : 0 < τ.den)
+    (hblk : ∀ k, 1 ≤ k → Rle (Rsub (EtaVSum s T hTd (2^(k+1))) (EtaVSum s T hTd (2^k)))
+        (ofQ (mul (Vconst sb T) (qpow (Qinv (add ⟨1,1⟩ τ)) k))
+          (Qmul_den_pos (Vconst_den_pos hsbd hTd) (qpow_den_pos (Qinv_den_pos (by simp only [add]; push_cast; omega)) k))))
+    (k K : Nat) (hK : 2 ^ (etaMidx τ sb T k - 1) ≤ K) :
+    Rle (Rsub (czEtaPaired s K).re (czEtaPaired s (2 ^ (etaMidx τ sb T k - 1))).re)
+        (ofQ (⟨1, k+1⟩ : Q) (Nat.succ_pos k))
+  ∧ Rle (Rneg (Rsub (czEtaPaired s K).re (czEtaPaired s (2 ^ (etaMidx τ sb T k - 1))).re))
+        (ofQ (⟨1, k+1⟩ : Q) (Nat.succ_pos k)) := by
+  have key : ∀ m, m < 2 ^ m := by
+    intro m; induction m with
+    | zero => decide
+    | succ p ih => rw [Nat.pow_succ]; omega
+  let Kk : Nat := 2 ^ (etaMidx τ sb T k - 1)
+  have h2k : 2 * Kk = 2 ^ etaMidx τ sb T k := etaMidx_two_pow τ sb T hτn hτd k
+  have hKk1 : 1 ≤ Kk := Nat.one_le_two_pow
+  -- smallness for every index ≥ 2·Kk
+  have hsm : ∀ i, Qle (mul sb (⟨1, 2*(Kk+i)+1⟩ : Q)) (⟨1,2⟩ : Q) ∧ Qle (mul T (⟨1, 2*(Kk+i)+1⟩ : Q)) (⟨1,1⟩ : Q) := by
+    intro i
+    refine eta_smallness_n sb T hsbd hTd (2*(Kk+i)+1) ?_
+    have hkey := key (etaMidx τ sb T k)
+    have hN0 := etaMidx_ge_N0 τ sb T hτn hτd k
+    show etaN0 sb T ≤ 2 * (Kk + i) + 1
+    omega
+  -- paired re-tail at anchor Kk, two-sided, d := K - Kk
+  have htail := czEtaPaired_re_tail s hsbd hTd hT0 hσ hsb hT1 hT2 Kk hKk1 hsm (K - Kk)
+  have hKsum : Kk + (K - Kk) = K := Nat.add_sub_cancel' hK
+  rw [hKsum] at htail
+  rw [h2k] at htail
+  -- full geometric tail at the k-level, with N := 2*K
+  have htf0 := EtaVSum_tail_full s T hTd sb hsbd hsb0 hT0 hσ hτn hτd hblk
+    (etaLevel sb T k - 1) (2 * K)
+  have hL1 : 1 ≤ etaLevel sb T k := by
+    have := etaLevel_ge_N0 sb T k; simp only [etaN0] at this; omega
+  have heq : etaLevel sb T k - 1 + 1 = etaLevel sb T k := by omega
+  have hbaseexp : (etaLevel sb T k - 1 + 1) * ((Qinv (add ⟨1,1⟩ τ)).den * (Qinv (add ⟨1,1⟩ τ)).den)
+      = etaMidx τ sb T k := by rw [heq]; rfl
+  rw [hbaseexp] at htf0
+  have hVcQ : Qle (mul (Vconst sb T) (⟨1, etaLevel sb T k - 1 + 1⟩ : Q)) (⟨1, k + 1⟩ : Q) := by
+    rw [heq]; exact eta_Vconst_bound sb T hsbd hTd hsb0 hT0 k
+  have hVc : Rle (ofQ (mul (Vconst sb T) (⟨1, etaLevel sb T k - 1 + 1⟩ : Q))
+        (Qmul_den_pos (Vconst_den_pos hsbd hTd) (Nat.succ_pos _)))
+      (ofQ (⟨1, k+1⟩ : Q) (Nat.succ_pos k)) :=
+    Rle_ofQ_ofQ _ _ hVcQ
+  refine ⟨?_, ?_⟩
+  · exact Rle_trans htail.1 (Rle_trans htf0 hVc)
+  · have hstep : Rle (Rneg (Rsub (czEtaPaired s K).re (czEtaPaired s Kk).re))
+        (Rsub (EtaVSum s T hTd (2 * K)) (EtaVSum s T hTd (2 ^ etaMidx τ sb T k))) := by
+      have h := Rle_Rneg htail.2
+      exact Rle_trans h (Rle_of_Req (Rneg_neg _))
+    exact Rle_trans hstep (Rle_trans htf0 hVc)
+
+/-- **Anchor tail (imaginary part), arbitrary upper index** — mirror of `etaRe_paired_tail_anchor`. -/
+theorem etaIm_paired_tail_anchor (s : Complex) {sb T : Q} (hsbd : 0 < sb.den) (hsb0 : 0 ≤ sb.num)
+    (hTd : 0 < T.den) (hT0 : 0 ≤ T.num) (hσ : Rnonneg s.re) (hsb : Rle s.re (ofQ sb hsbd))
+    (hT1 : Rle (Rneg (ofQ T hTd)) s.im) (hT2 : Rle s.im (ofQ T hTd)) {τ : Q} (hτn : 0 < τ.num) (hτd : 0 < τ.den)
+    (hblk : ∀ k, 1 ≤ k → Rle (Rsub (EtaVSum s T hTd (2^(k+1))) (EtaVSum s T hTd (2^k)))
+        (ofQ (mul (Vconst sb T) (qpow (Qinv (add ⟨1,1⟩ τ)) k))
+          (Qmul_den_pos (Vconst_den_pos hsbd hTd) (qpow_den_pos (Qinv_den_pos (by simp only [add]; push_cast; omega)) k))))
+    (k K : Nat) (hK : 2 ^ (etaMidx τ sb T k - 1) ≤ K) :
+    Rle (Rsub (czEtaPaired s K).im (czEtaPaired s (2 ^ (etaMidx τ sb T k - 1))).im)
+        (ofQ (⟨1, k+1⟩ : Q) (Nat.succ_pos k))
+  ∧ Rle (Rneg (Rsub (czEtaPaired s K).im (czEtaPaired s (2 ^ (etaMidx τ sb T k - 1))).im))
+        (ofQ (⟨1, k+1⟩ : Q) (Nat.succ_pos k)) := by
+  have key : ∀ m, m < 2 ^ m := by
+    intro m; induction m with
+    | zero => decide
+    | succ p ih => rw [Nat.pow_succ]; omega
+  let Kk : Nat := 2 ^ (etaMidx τ sb T k - 1)
+  have h2k : 2 * Kk = 2 ^ etaMidx τ sb T k := etaMidx_two_pow τ sb T hτn hτd k
+  have hKk1 : 1 ≤ Kk := Nat.one_le_two_pow
+  have hsm : ∀ i, Qle (mul sb (⟨1, 2*(Kk+i)+1⟩ : Q)) (⟨1,2⟩ : Q) ∧ Qle (mul T (⟨1, 2*(Kk+i)+1⟩ : Q)) (⟨1,1⟩ : Q) := by
+    intro i
+    refine eta_smallness_n sb T hsbd hTd (2*(Kk+i)+1) ?_
+    have hkey := key (etaMidx τ sb T k)
+    have hN0 := etaMidx_ge_N0 τ sb T hτn hτd k
+    show etaN0 sb T ≤ 2 * (Kk + i) + 1
+    omega
+  have htail := czEtaPaired_im_tail s hsbd hTd hT0 hσ hsb hT1 hT2 Kk hKk1 hsm (K - Kk)
+  have hKsum : Kk + (K - Kk) = K := Nat.add_sub_cancel' hK
+  rw [hKsum] at htail
+  rw [h2k] at htail
+  have htf0 := EtaVSum_tail_full s T hTd sb hsbd hsb0 hT0 hσ hτn hτd hblk
+    (etaLevel sb T k - 1) (2 * K)
+  have hL1 : 1 ≤ etaLevel sb T k := by
+    have := etaLevel_ge_N0 sb T k; simp only [etaN0] at this; omega
+  have heq : etaLevel sb T k - 1 + 1 = etaLevel sb T k := by omega
+  have hbaseexp : (etaLevel sb T k - 1 + 1) * ((Qinv (add ⟨1,1⟩ τ)).den * (Qinv (add ⟨1,1⟩ τ)).den)
+      = etaMidx τ sb T k := by rw [heq]; rfl
+  rw [hbaseexp] at htf0
+  have hVcQ : Qle (mul (Vconst sb T) (⟨1, etaLevel sb T k - 1 + 1⟩ : Q)) (⟨1, k + 1⟩ : Q) := by
+    rw [heq]; exact eta_Vconst_bound sb T hsbd hTd hsb0 hT0 k
+  have hVc : Rle (ofQ (mul (Vconst sb T) (⟨1, etaLevel sb T k - 1 + 1⟩ : Q))
+        (Qmul_den_pos (Vconst_den_pos hsbd hTd) (Nat.succ_pos _)))
+      (ofQ (⟨1, k+1⟩ : Q) (Nat.succ_pos k)) :=
+    Rle_ofQ_ofQ _ _ hVcQ
+  refine ⟨?_, ?_⟩
+  · exact Rle_trans htail.1 (Rle_trans htf0 hVc)
+  · have hstep : Rle (Rneg (Rsub (czEtaPaired s K).im (czEtaPaired s Kk).im))
+        (Rsub (EtaVSum s T hTd (2 * K)) (EtaVSum s T hTd (2 ^ etaMidx τ sb T k))) := by
+      have h := Rle_Rneg htail.2
+      exact Rle_trans h (Rle_of_Req (Rneg_neg _))
+    exact Rle_trans hstep (Rle_trans htf0 hVc)
+
+/-- **The full paired partial-sum sequence converges to `Re (CetaW s …)`** (not just the reindexed
+    subsequence): for *every* paired index `K ≥ 2^{etaMidx k − 1}`, `|(czEtaPaired s K).re − Re CetaW|
+    ≤ 3/(k+1)`. Mirror of `czetaRe_full_tendsTo`; triangle through the reindex anchor — `1/(k+1)` (the
+    arbitrary-`K` anchor tail `etaRe_paired_tail_anchor`) + `2/(k+1)` (the subsequence limit). -/
+theorem CetaW_re_full_tendsTo (s : Complex) {sb T : Q} (hsbd : 0 < sb.den) (hsb0 : 0 ≤ sb.num)
+    (hTd : 0 < T.den) (hT0 : 0 ≤ T.num) (hσ : Rnonneg s.re) (hsb : Rle s.re (ofQ sb hsbd))
+    (hT1 : Rle (Rneg (ofQ T hTd)) s.im) (hT2 : Rle s.im (ofQ T hTd))
+    (kσ : Nat) (hkσ : Qlt (Qbound kσ) (s.re.seq kσ)) (k K : Nat)
+    (hK : 2 ^ (etaMidx (etaTau s kσ hkσ) sb T k - 1) ≤ K) :
+    Rle (Rsub (czEtaPaired s K).re (CetaW s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ hkσ).re)
+        (ofQ ⟨3, k + 1⟩ (Nat.succ_pos k))
+      ∧ Rle (Rsub (CetaW s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ hkσ).re (czEtaPaired s K).re)
+        (ofQ ⟨3, k + 1⟩ (Nat.succ_pos k)) := by
+  have hτn := etaTau_num_pos s kσ hkσ
+  have hτd := etaTau_den_pos s kσ hkσ
+  have hblk := EtaVSum_block_geo_data s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ hkσ
+  have hanc := etaRe_paired_tail_anchor s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 hτn hτd hblk k K hK
+  -- the reindex anchor seq value equals (czEtaPaired s (2^{etaMidx k −1})).re
+  have hsub : RTendsTo (fun j => etaReSeq s (etaTau s kσ hkσ) sb T j)
+      (CetaW s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ hkσ).re :=
+    CetaW_re_tendsTo s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ hkσ
+  refine ⟨?_, ?_⟩
+  · refine Rle_trans (Rle_of_Req (Req_symm (Rsub_telescope (czEtaPaired s K).re
+        (etaReSeq s (etaTau s kσ hkσ) sb T k) (CetaW s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ hkσ).re))) ?_
+    refine Rle_trans (Radd_le_add hanc.1 (RTendsTo_to_Rle hsub k)) ?_
+    exact Rle_of_Req (Req_trans (Radd_ofQ_ofQ _ _)
+      (ofQ_congr _ _ (by simp only [Qeq, add]; push_cast; ring_uor)))
+  · refine Rle_trans (Rle_of_Req (Req_symm (Rsub_telescope
+        (CetaW s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ hkσ).re
+        (etaReSeq s (etaTau s kσ hkσ) sb T k) (czEtaPaired s K).re))) ?_
+    refine Rle_trans (Radd_le_add (RTendsTo_to_Rle_lower hsub k)
+        (Rle_trans (Rle_of_Req (Req_symm (Rneg_Rsub (czEtaPaired s K).re
+          (etaReSeq s (etaTau s kσ hkσ) sb T k)))) hanc.2)) ?_
+    exact Rle_of_Req (Req_trans (Radd_ofQ_ofQ _ _)
+      (ofQ_congr _ _ (by simp only [Qeq, add]; push_cast; ring_uor)))
+
+/-- **The full paired partial-sum sequence converges to `Im (CetaW s …)`** — mirror of
+    `CetaW_re_full_tendsTo`. -/
+theorem CetaW_im_full_tendsTo (s : Complex) {sb T : Q} (hsbd : 0 < sb.den) (hsb0 : 0 ≤ sb.num)
+    (hTd : 0 < T.den) (hT0 : 0 ≤ T.num) (hσ : Rnonneg s.re) (hsb : Rle s.re (ofQ sb hsbd))
+    (hT1 : Rle (Rneg (ofQ T hTd)) s.im) (hT2 : Rle s.im (ofQ T hTd))
+    (kσ : Nat) (hkσ : Qlt (Qbound kσ) (s.re.seq kσ)) (k K : Nat)
+    (hK : 2 ^ (etaMidx (etaTau s kσ hkσ) sb T k - 1) ≤ K) :
+    Rle (Rsub (czEtaPaired s K).im (CetaW s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ hkσ).im)
+        (ofQ ⟨3, k + 1⟩ (Nat.succ_pos k))
+      ∧ Rle (Rsub (CetaW s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ hkσ).im (czEtaPaired s K).im)
+        (ofQ ⟨3, k + 1⟩ (Nat.succ_pos k)) := by
+  have hτn := etaTau_num_pos s kσ hkσ
+  have hτd := etaTau_den_pos s kσ hkσ
+  have hblk := EtaVSum_block_geo_data s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ hkσ
+  have hanc := etaIm_paired_tail_anchor s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 hτn hτd hblk k K hK
+  have hsub : RTendsTo (fun j => etaImSeq s (etaTau s kσ hkσ) sb T j)
+      (CetaW s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ hkσ).im :=
+    CetaW_im_tendsTo s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ hkσ
+  refine ⟨?_, ?_⟩
+  · refine Rle_trans (Rle_of_Req (Req_symm (Rsub_telescope (czEtaPaired s K).im
+        (etaImSeq s (etaTau s kσ hkσ) sb T k) (CetaW s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ hkσ).im))) ?_
+    refine Rle_trans (Radd_le_add hanc.1 (RTendsTo_to_Rle hsub k)) ?_
+    exact Rle_of_Req (Req_trans (Radd_ofQ_ofQ _ _)
+      (ofQ_congr _ _ (by simp only [Qeq, add]; push_cast; ring_uor)))
+  · refine Rle_trans (Rle_of_Req (Req_symm (Rsub_telescope
+        (CetaW s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ hkσ).im
+        (etaImSeq s (etaTau s kσ hkσ) sb T k) (czEtaPaired s K).im))) ?_
+    refine Rle_trans (Radd_le_add (RTendsTo_to_Rle_lower hsub k)
+        (Rle_trans (Rle_of_Req (Req_symm (Rneg_Rsub (czEtaPaired s K).im
+          (etaImSeq s (etaTau s kσ hkσ) sb T k)))) hanc.2)) ?_
+    exact Rle_of_Req (Req_trans (Radd_ofQ_ofQ _ _)
+      (ofQ_congr _ _ (by simp only [Qeq, add]; push_cast; ring_uor)))
+
+/-- **Canonicity of `CetaW` (real part)**: `Re (CetaW s …)` does not depend on the positivity witness
+    `(kσ,hkσ)` (hence not on the geometric-decay witness `τ = etaTau …`). Any two witnesses give
+    `≈`-equal real parts — both are the limit of the *same* full paired partial-sum sequence (compared
+    at the common index `K = max` of the two reindex anchors), so the limit is unique. Mirror of
+    `Czeta_re_canonical`. -/
+theorem CetaW_re_canonical (s : Complex) {sb T : Q} (hsbd : 0 < sb.den) (hsb0 : 0 ≤ sb.num)
+    (hTd : 0 < T.den) (hT0 : 0 ≤ T.num) (hσ : Rnonneg s.re) (hsb : Rle s.re (ofQ sb hsbd))
+    (hT1 : Rle (Rneg (ofQ T hTd)) s.im) (hT2 : Rle s.im (ofQ T hTd))
+    (kσ₁ : Nat) (hkσ₁ : Qlt (Qbound kσ₁) (s.re.seq kσ₁))
+    (kσ₂ : Nat) (hkσ₂ : Qlt (Qbound kσ₂) (s.re.seq kσ₂)) :
+    Req (CetaW s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ₁ hkσ₁).re
+        (CetaW s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ₂ hkσ₂).re := by
+  apply Req_of_Rle_ofQ_all (C := 6)
+  · intro k
+    refine Rle_trans (Rle_of_Req (Req_symm (Rsub_telescope
+        (CetaW s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ₁ hkσ₁).re
+        (czEtaPaired s (max (2 ^ (etaMidx (etaTau s kσ₁ hkσ₁) sb T k - 1))
+          (2 ^ (etaMidx (etaTau s kσ₂ hkσ₂) sb T k - 1)))).re
+        (CetaW s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ₂ hkσ₂).re))) ?_
+    refine Rle_trans (Radd_le_add
+        (CetaW_re_full_tendsTo s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ₁ hkσ₁ k _ (Nat.le_max_left _ _)).2
+        (CetaW_re_full_tendsTo s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ₂ hkσ₂ k _ (Nat.le_max_right _ _)).1) ?_
+    exact Rle_of_Req (Req_trans (Radd_ofQ_ofQ _ _)
+      (ofQ_congr _ _ (by simp only [Qeq, add]; push_cast; ring_uor)))
+  · intro k
+    refine Rle_trans (Rle_of_Req (Req_symm (Rsub_telescope
+        (CetaW s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ₂ hkσ₂).re
+        (czEtaPaired s (max (2 ^ (etaMidx (etaTau s kσ₁ hkσ₁) sb T k - 1))
+          (2 ^ (etaMidx (etaTau s kσ₂ hkσ₂) sb T k - 1)))).re
+        (CetaW s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ₁ hkσ₁).re))) ?_
+    refine Rle_trans (Radd_le_add
+        (CetaW_re_full_tendsTo s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ₂ hkσ₂ k _ (Nat.le_max_right _ _)).2
+        (CetaW_re_full_tendsTo s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ₁ hkσ₁ k _ (Nat.le_max_left _ _)).1) ?_
+    exact Rle_of_Req (Req_trans (Radd_ofQ_ofQ _ _)
+      (ofQ_congr _ _ (by simp only [Qeq, add]; push_cast; ring_uor)))
+
+/-- **Canonicity of `CetaW` (imaginary part)** — mirror of `CetaW_re_canonical`. -/
+theorem CetaW_im_canonical (s : Complex) {sb T : Q} (hsbd : 0 < sb.den) (hsb0 : 0 ≤ sb.num)
+    (hTd : 0 < T.den) (hT0 : 0 ≤ T.num) (hσ : Rnonneg s.re) (hsb : Rle s.re (ofQ sb hsbd))
+    (hT1 : Rle (Rneg (ofQ T hTd)) s.im) (hT2 : Rle s.im (ofQ T hTd))
+    (kσ₁ : Nat) (hkσ₁ : Qlt (Qbound kσ₁) (s.re.seq kσ₁))
+    (kσ₂ : Nat) (hkσ₂ : Qlt (Qbound kσ₂) (s.re.seq kσ₂)) :
+    Req (CetaW s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ₁ hkσ₁).im
+        (CetaW s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ₂ hkσ₂).im := by
+  apply Req_of_Rle_ofQ_all (C := 6)
+  · intro k
+    refine Rle_trans (Rle_of_Req (Req_symm (Rsub_telescope
+        (CetaW s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ₁ hkσ₁).im
+        (czEtaPaired s (max (2 ^ (etaMidx (etaTau s kσ₁ hkσ₁) sb T k - 1))
+          (2 ^ (etaMidx (etaTau s kσ₂ hkσ₂) sb T k - 1)))).im
+        (CetaW s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ₂ hkσ₂).im))) ?_
+    refine Rle_trans (Radd_le_add
+        (CetaW_im_full_tendsTo s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ₁ hkσ₁ k _ (Nat.le_max_left _ _)).2
+        (CetaW_im_full_tendsTo s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ₂ hkσ₂ k _ (Nat.le_max_right _ _)).1) ?_
+    exact Rle_of_Req (Req_trans (Radd_ofQ_ofQ _ _)
+      (ofQ_congr _ _ (by simp only [Qeq, add]; push_cast; ring_uor)))
+  · intro k
+    refine Rle_trans (Rle_of_Req (Req_symm (Rsub_telescope
+        (CetaW s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ₂ hkσ₂).im
+        (czEtaPaired s (max (2 ^ (etaMidx (etaTau s kσ₁ hkσ₁) sb T k - 1))
+          (2 ^ (etaMidx (etaTau s kσ₂ hkσ₂) sb T k - 1)))).im
+        (CetaW s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ₁ hkσ₁).im))) ?_
+    refine Rle_trans (Radd_le_add
+        (CetaW_im_full_tendsTo s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ₂ hkσ₂ k _ (Nat.le_max_right _ _)).2
+        (CetaW_im_full_tendsTo s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 kσ₁ hkσ₁ k _ (Nat.le_max_left _ _)).1) ?_
+    exact Rle_of_Req (Req_trans (Radd_ofQ_ofQ _ _)
+      (ofQ_congr _ _ (by simp only [Qeq, add]; push_cast; ring_uor)))
+
+/-- The point `s = ½` (`Re s = ½`, `Im s = 0`) — a concrete instance on the critical line. -/
+def sHalf : Complex := ⟨ofQ ⟨1, 2⟩ (by decide), zero⟩
+
+/-- **Non-vacuity of `CetaW`** (choice-free): a concrete `CetaW` value exists at `s = ½` with the box
+    `sb = ½`, `T = 1`, and positivity witness index `kσ = 2` (`Qbound 2 = ⟨1,3⟩ < ½ = (Re ½)₂`). -/
+theorem CetaW_half_wellTyped :
+    ∃ z : Complex, z = CetaW sHalf (sb := ⟨1, 2⟩) (by decide) (by decide) (T := ⟨1, 1⟩)
+      (by decide) (by decide)
+      (Rnonneg_ofQ (by decide) (by decide))
+      (Rle_refl _)
+      (by
+        show Rle (Rneg (ofQ (⟨1, 1⟩ : Q) (by decide))) zero
+        intro n
+        show Qle (neg (⟨1, 1⟩ : Q)) (add (⟨0, 1⟩ : Q) ⟨2, n + 1⟩)
+        simp only [Qle, neg, add]; push_cast; omega)
+      (by
+        show Rle zero (ofQ (⟨1, 1⟩ : Q) (by decide))
+        intro n
+        show Qle (⟨0, 1⟩ : Q) (add (⟨1, 1⟩ : Q) ⟨2, n + 1⟩)
+        simp only [Qle, add]; push_cast; omega)
+      2 (by decide) :=
+  ⟨_, rfl⟩
 
 end UOR.Bridge.F1Square.Analysis

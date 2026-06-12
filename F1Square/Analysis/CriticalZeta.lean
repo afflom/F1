@@ -4,8 +4,10 @@ F1 square — **critical-strip ζ via the Dirichlet η quotient** `ζ(s) = η(s)
 `Ceta` (EtaVariation) gives the Dirichlet eta `η(s) = Σ (−1)^{n−1} n⁻ˢ` as a genuine constructive
 complex number on the whole open right half `Re s > 0` (the integration-free route — η converges by
 bounded variation where the raw ζ series diverges). The functional relation `(1 − 2^{1−s})·ζ(s) = η(s)`
-then yields ζ on the critical strip `0 < Re s < 1`, where the spurious zeros of `1 − 2^{1−s}` (all on
-`Re s = 1`) are absent, so the quotient is everywhere defined.
+then yields ζ on the critical strip `0 < Re s < 1`: there `1 − 2^{1−s}` is non-vanishing (proved below
+as `|1 − 2^{1−s}|² ≥ (2^{1−σ} − 1)² > 0` for `Re s < 1`), so the quotient is everywhere defined.
+(The zeros of `1 − 2^{1−s}` — which all lie on `Re s = 1` — are thus outside the open strip; this file
+proves the `Re s < 1` non-vanishing it needs, not the full zero-locus characterization.)
 
 This file builds the denominator `1 − 2^{1−s} = 1 − 2·2⁻ˢ = 1 − 2·cpowNeg s 2` (reusing the committed
 `cpowNeg`, no new `Cexp`), its non-vanishing `|1 − 2^{1−s}|² ≥ (2^{1−σ} − 1)² > 0` for `σ < 1` (via the
@@ -83,8 +85,10 @@ theorem etaTwoPow_re (s : Complex) :
   exact Rsub_zero _
 
 -- Pure additive (atom-level) rearrangements for the `(1−r)²` / `(2u−1)²` expansions and the final
--- difference collapse. Each is an exact pointwise ℚ identity (`Radd`/`Rneg`/`Rsub` only — no products
--- to reindex), discharged by `ring_uor`.
+-- difference collapse. These are real-level `Req` regroupings, proved by hand-rolled `Req_trans`
+-- chains over the additive ring lemmas (`Radd_assoc`/`Radd_comm`/`Rneg_Radd`/`Radd_neg`): a pointwise
+-- `Req_of_seq_Qeq` + `ring_uor` discharge is NOT available here, because `Radd`/`Rsub` reindex their
+-- operands (`2n+1`), so the two groupings have different sequence-nesting and are not equal pointwise.
 
 /-- `(o−r) − (r − rr) ≈ (o − (r+r)) + rr`. Composed from the proven additive ring lemmas
     (`Radd_assoc`/`Rneg_Radd`/`Rneg_neg`) — a pointwise `Req_of_seq_Qeq` proof is impossible here
@@ -319,7 +323,9 @@ def CzetaStrip (s : Complex) {sb T : Q} (hsbd : 0 < sb.den) (hsb0 : 0 ≤ sb.num
   Cmul (Ceta s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 hτn hτd hblk) (etaDenomInv s k hk)
 
 /-- **The functional relation** `(1 − 2^{1−s}) · ζ_strip(s) = η(s)` — the certificate that `CzetaStrip`
-    is the genuine analytic continuation, with no spurious denominator zero in the open strip. -/
+    satisfies the η-quotient defining relation. Combined with the non-vanishing `etaDenom_Pos_normSq`
+    (denominator `≠ 0` for `Re s < 1`) this pins the value uniquely; it is the algebraic relation, not a
+    formalization of analyticity (no analyticity/continuation is formalized in this development). -/
 theorem CzetaStrip_functional (s : Complex) {sb T : Q} (hsbd : 0 < sb.den) (hsb0 : 0 ≤ sb.num)
     (hTd : 0 < T.den) (hT0 : 0 ≤ T.num) (hσ : Rnonneg s.re) (hsb : Rle s.re (ofQ sb hsbd))
     (hT1 : Rle (Rneg (ofQ T hTd)) s.im) (hT2 : Rle s.im (ofQ T hTd)) {τ : Q} (hτn : 0 < τ.num)
