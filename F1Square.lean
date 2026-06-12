@@ -666,4 +666,20 @@ example :
   ⟨Analysis.vonMangoldt_four, Analysis.vonMangoldt_six, Analysis.Rlambda1_decomposition,
    Analysis.li_decomposition_realized, rfl⟩
 
+/-- Elaboration-checked witness binding the **v0.16.0 stage-B layer** — critical-strip `ζ`, the
+    archimedean `Γ′/Γ` place, and `Pos λ₂`. Built and compiled in this build (so their existence is
+    machine-checked): `Analysis.Ceta` — `η(s)` on the whole strip `Re s > 0` as a constructive `ℂ`
+    (the integration-free Dirichlet-eta route); `Analysis.CzetaStrip` with
+    `Analysis.CzetaStrip_functional : (1 − 2^{1−s})·ζ ≈ η` and the non-vanishing
+    `Analysis.etaDenom_Pos_normSq` — `ζ(s)` on the critical strip `0 < Re s < 1`; `Analysis.Digamma` —
+    the archimedean `Γ′/Γ = ψ` EXACTLY (the convergent series `−γ + Σ[1/(n+1) − 1/(n+z)]`); and
+    `Analysis.SpougeGamma` — Spouge's `Γ`-approximant (error bound cited, not formalized). The single
+    theorem-level fact bound here is **`Pos λ₂`** (`Analysis.Rlambda2_pos`, `λ₂ ≈ 0.0043 > 0`), the
+    higher-Stieltjes capstone — EVIDENCE for Li's criterion at `n = 2`, not the crux. RH stays open:
+    `liPositivityHolds = none`. -/
+example :
+    Analysis.Pos Analysis.Rlambda2
+    ∧ f1SquareStatus.liPositivityHolds = none :=
+  ⟨Analysis.Rlambda2_pos, rfl⟩
+
 end UOR.Bridge.F1Square
