@@ -134,21 +134,26 @@ def ampleClassOnTemplate : UOR.Kernel.Op.Identity UOR.Prims.Standard := {
   validKMax := none
 }
 
--- §2.3. The concrete square F ⊗_𝔹 F: the parallel-pencil structural finding.
--- In the tropical (log) coordinate the scaling Frobenius Fr_n : x ↦ x + log n is an affine
--- shift, so its graph is PARALLEL to the diagonal: Δ · Γ_n = |det((1,1),(1,1))| = 0. The
--- arithmetic content relocates to the shift length log p. This is a structural property of
--- the concrete bi-tropical model (a candidate realization), derived from the stable-
--- intersection rule. Status: established for the candidate model (topological/geometric);
--- NOT asserted as the canonical F ⊗_𝔹 F (which is still under construction, arXiv 1703.10521).
+-- §2.3. The concrete square F ⊗_𝔽₁ F: the parallel-pencil structural finding.
+-- v0.17.0: DERIVED ON CANONICAL 𝕊, no longer a candidate-model observation. On the
+-- constructed square (Square/Tensor.lean, universal property proved) the Frobenius
+-- correspondences Γ_n = {(m, n·m)} are the flow translates of the diagonal
+-- (Square.graph_translate_diag), have NO transverse fixed points
+-- (Square.diag_inter_graph_empty), are pairwise disjoint (Square.graph_disjoint), run at
+-- log-slope 1 — direction (1,1), stable count Δ·Γ_n = |det((1,1),(1,1))| = 0
+-- (Square.pencil_parallel, Square.pencil_det_zero) — and sit at the constant separation
+-- log n (Square.pencil_separation), which at a prime is the explicit-formula weight
+-- Λ(p) = log p (Square.pencil_separation_vonMangoldt) and at pᵏ is k·log p
+-- (Square.pencil_separation_pow). The arithmetic content provably relocates to the shift
+-- lengths. Status: established on canonical 𝕊 (theorems, axiom-clean).
 def parallelPencilStructure : UOR.Kernel.Op.Identity UOR.Prims.Standard := {
   lhs := none
   rhs := none
   forAll := none
   verificationDomain := #[.topological, .geometric]
   verifiedAtLevel := #[]
-  universallyValid := none           -- candidate model; not asserted canonical
-  validityKind := none
+  universallyValid := some (true)    -- derived on canonical 𝕊 (v0.17.0), no longer candidate-only
+  validityKind := some (.universal)
   validKMin := none
   validKMax := none
 }
@@ -204,22 +209,38 @@ def hodgeIndexCrux : UOR.Kernel.Op.Identity UOR.Prims.Standard := {
 -- A roll-up record of the construction's status, for the unproven-manifest layer.
 -- Every field reflects the HONEST verified status; the crux fields are `none`.
 structure F1SquareStatus where
-  surfaceConstructed        : Option Bool   -- §1.1: candidate (bi-tropical) — not canonical
-  classGroupFinitelyGen     : Option Bool   -- §1.2 / T2: partial (true on template)
-  intersectionTemplateValid : Option Bool   -- §2.2 / T3: true (classical, on template)
-  ampleClassExists          : Option Bool   -- §1.4: true (verified on template)
-  parallelPencilFinding     : Option Bool   -- §2.3: candidate-model structural finding
+  surfaceConstructed        : Option Bool   -- §1.1 / T1: canonical 𝕊 at the monoid-scheme level (v0.17.0)
+  classGroupFinitelyGen     : Option Bool   -- §1.2 / T2: true on canonical 𝕊 (Square.cls_generated)
+  intersectionTemplateValid : Option Bool   -- §2.2 / T3: true — derived intrinsically on 𝕊
+  ampleClassExists          : Option Bool   -- §1.4: true on canonical 𝕊 (Square.sq_ample_pos)
+  parallelPencilFinding     : Option Bool   -- §2.3: derived on canonical 𝕊 (v0.17.0)
   hodgeIndexHolds           : Option Bool   -- §1.5 / T5: NONE — this is RH (geometric face)
   liPositivityHolds         : Option Bool   -- Li's criterion: NONE — this is RH (analytic face)
   deriving Repr
 
 def f1SquareStatus : F1SquareStatus := {
-  surfaceConstructed        := none          -- candidate only; canonical F ⊗_𝔹 F open
-  classGroupFinitelyGen     := some true      -- on the template
-  intersectionTemplateValid := some true      -- classical Hodge index for product surfaces
-  ampleClassExists          := some true      -- verified on the template
-  parallelPencilFinding     := none           -- candidate model, not asserted canonical
-  hodgeIndexHolds           := none           -- = RH (geometric face), OPEN, never asserted
+  surfaceConstructed        := some true      -- canonical 𝕊 = F ⊗_𝔽₁ F at the monoid-scheme level:
+                                              -- the coproduct with its universal property PROVED
+                                              -- (Square.copair_unique), strictly 2-dimensional
+                                              -- (Square.gen2_injective), projections recover the curve.
+                                              -- HONEST SCOPE: the T1/T2/T3 layers; the H¹-bearing
+                                              -- spectral enrichment (T4/T5) is NOT constructed.
+  classGroupFinitelyGen     := some true      -- on canonical 𝕊: free of rank 3 on the derived basis
+                                              -- {V,H,E₃}; all distinguished classes inside
+                                              -- (Square.cls_generated, Square.clsDiag_in_lattice)
+  intersectionTemplateValid := some true      -- the sourced template EMERGES from point counts on 𝕊
+                                              -- (Square.sqPair_eq_template; e3_sq_forced) — T3's
+                                              -- intrinsic realization, no longer only the analogy
+  ampleClassExists          := some true      -- on canonical 𝕊: H = [V]+[H], H² = 2 > 0, H^⊥
+                                              -- negative-definite (Square.sq_ample_pos, sq_hperp_*)
+  parallelPencilFinding     := some true      -- derived on canonical 𝕊 (Square/Pencil.lean): no
+                                              -- transverse fixed points; separation log n = Λ-weights
+  hodgeIndexHolds           := none           -- = RH (geometric face), OPEN, never asserted. NOTE:
+                                              -- the COARSE-LATTICE Hodge index on 𝕊 is proven
+                                              -- (Square.square_hodgeIndex) but PENCIL-BLIND
+                                              -- (Square.square_hodge_pencil_blind: Δ·Γ_n = 0,
+                                              -- [Γ_n] = [Δ] ∀n — no spectral input), hence NOT the
+                                              -- crux; the crux is the H¹-bearing pairing's positivity.
   liPositivityHolds         := none           -- = RH (analytic face: λₙ > 0 ∀n, Li 1997), OPEN, never asserted
 }
 
@@ -342,9 +363,41 @@ def f1SquareStatus : F1SquareStatus := {
 --                               from γ ≥ 0.54, log 2 ≤ 0.6931, log π ≤ 1.1453 through the ℝ-order
 --                               bridges (Radd_le_add, Rneg_le, Rhalf_ge). This realizes the n = 1 slice
 --                               of Li's criterion as EVIDENCE; it does NOT assert λₙ > 0 for all n.
+-- v0.17.0 (stage C — the canonical arithmetic square 𝕊 and its derived intersection lattice):
+--   canonical 𝕊 = F ⊗_𝔽₁ F     ← Square.{copair_inl, copair_inr, copair_unique, sq_factor,
+--     (universal property)        square_base_cocone, f1_initial, f1_initial_unique} — the
+--                                coproduct of comm. monoids over the initial 𝔽₁; canonical
+--                                BY the universal property, not by choice of model
+--   strict 2-dimensionality    ← Square.{gen2_injective, inl_ne_inr, codiag_not_injective,
+--     (§3.1 collapse avoided)     gen2_codiag_collapse, proj1_inl, proj2_inr, proj_faithful}
+--   divisors & point counts    ← Square.{vFiber_inter_hFiber, vFiber_disjoint, hFiber_disjoint,
+--                                diag_inter_vFiber, diag_inter_hFiber, graph_inter_vFiber,
+--                                graph_inter_hFiber, graph_disjoint, diag_inter_graph_empty,
+--                                graph_translate_diag, vFiber_translate, graph_one_diag}
+--   the parallel pencil        ← Square.{pencil_shift (log y = log x + log n on Γ_n),
+--     (§2.3 on canonical 𝕊)      pencil_parallel (slope 1 ⇒ direction (1,1)), pencil_det_zero
+--                                (stable Δ·Γ_n = 0), pencil_separation (constant log n),
+--                                pencil_separation_vonMangoldt (= Λ(p) at primes),
+--                                pencil_separation_pow (k·log p), logN_mul_general,
+--                                logN_pow_general}
+--   the derived lattice (T3)   ← Square.{pair_*_derived (each number = a point count on 𝕊),
+--                                e3_sq_forced (E₃² = −2 by bilinearity), sqPair_eq_template
+--                                (the sourced §2.2 template EMERGES), sqPair_symm,
+--                                sq_boundary_checks, sq_adjunction_checks, sq_signature_diag
+--                                (the five-gate discipline), cls_generated (T2 f.g. on 𝕊)}
+--   polarized 𝕊 (the lift)     ← Square.{squarePolarized (the Crux.Polarized instance is now
+--                                𝕊's own lattice), sq_ample_pos (§1.4 on 𝕊), sq_hperp_neg_semidef,
+--                                sq_hperp_definite, square_hodgeIndex} — and the boundary:
+--                                Square.square_hodge_pencil_blind ([Γ_n]=[Δ], Δ·Γ_n=0 ∀n: the
+--                                coarse-lattice Hodge index carries NO spectral input, so it is
+--                                NOT the crux; same discipline as Bridge.control_psd)
 -- The crux is NOT backed and stays `none` (BOTH faces, same RH) — λ₁ > 0 is the n=1 case, not RH:
---   hodgeIndexHolds (= RH, geometric) ← Crux.CruxFor 𝕊 — OPEN. Crux.template_hodgeIndex proves the
---                               property only on the product-of-curves TEMPLATE, never on 𝕊.
+--   hodgeIndexHolds (= RH, geometric) ← OPEN. Crux.template_hodgeIndex proves the property on the
+--                               product-of-curves TEMPLATE; Square.square_hodgeIndex (v0.17.0)
+--                               proves it on 𝕊's COARSE NUMERICAL LATTICE — which is provably
+--                               pencil-blind (Square.square_hodge_pencil_blind), so NEITHER is the
+--                               crux: the crux is the same property for the H¹-bearing pairing
+--                               that carries the zeros (T4/T5), equivalently λₙ ≥ 0 ∀n.
 --   liPositivityHolds (= RH, analytic) ← Li.LiCrux λ for the unconstructed genuine Li sequence λ —
 --                               OPEN. Li.template_liPositive proves the property only for a constant
 --                               sequence, never for λ; LiPositive λ ⟺ RH is [CLASSICAL] (Li 1997).
@@ -687,5 +740,45 @@ example :
     Analysis.Pos Analysis.Rlambda2
     ∧ f1SquareStatus.liPositivityHolds = none :=
   ⟨Analysis.Rlambda2_pos, rfl⟩
+
+/-- Elaboration-checked witness binding the **v0.17.0 stage-C layer** — the canonical arithmetic
+    square. In order: (1) the UNIVERSAL PROPERTY of `𝕊 = F ⊗_𝔽₁ F` (uniqueness of the universal
+    map — the canonicality); (2) strict 2-dimensionality (the rank-2 monomial family is free);
+    (3) the §2.3 finding on canonical `𝕊` (no transverse fixed points of the scaling Frobenius);
+    (4) the derived lattice reproduces the sourced template intrinsically (`E₃² = −2`, forced by
+    bilinearity from point counts); (5) the Hodge index of the derived lattice holds —
+    AND (6) that lattice is pencil-blind (`Δ·Γ_n = 0` for all `n`), which is exactly why (5) is
+    NOT the crux: `hodgeIndexHolds` and `liPositivityHolds` stay `none`, RH OPEN. -/
+example :
+    (∀ (T : Square.CMon) (f g : Square.MHom Square.Curve T) (h : Square.MHom Square.Sq T),
+        (∀ a, h.map (Square.inl.map a) = f.map a) →
+        (∀ b, h.map (Square.inr.map b) = g.map b) →
+        ∀ z, h.map z = (Square.copair T f g).map z)
+    ∧ (∀ a b c d : Nat, Square.gen2 a b = Square.gen2 c d → a = c ∧ b = d)
+    ∧ (∀ n : Nat, 2 ≤ n → ∀ z : Square.SqPt, ¬(Square.diag z ∧ Square.graph n z))
+    ∧ Square.sqPair Square.clsE3 Square.clsE3 = -2
+    ∧ (∀ u v : Square.SqCls, Square.sqPair u v = Template.pair u v)
+    ∧ Crux.HodgeIndex Square.squarePolarized
+    ∧ (∀ n : Nat, Square.sqPair Square.clsDiag (Square.clsGraph n) = 0)
+    ∧ f1SquareStatus.hodgeIndexHolds = none
+    ∧ f1SquareStatus.liPositivityHolds = none :=
+  ⟨Square.copair_unique, Square.gen2_injective, Square.diag_inter_graph_empty,
+   (Square.e3_sq_forced).2, Square.sqPair_eq_template, Square.square_hodgeIndex,
+   fun _ => rfl, rfl, rfl⟩
+
+/-- Elaboration-checked witness that the v0.17.0 pencil carries the ARITHMETIC content as
+    constructive-real shift lengths: at every prime `p`, every point of the Frobenius graph `Γ_p`
+    sits at log-separation exactly `Λ(p) = log p` from the diagonal — the explicit-formula prime
+    weight (`Analysis/Mangoldt.lean`), reached geometrically on canonical `𝕊`. The pencil's
+    POSITIVITY is RH and stays open. -/
+example :
+    (∀ (p : Nat) (hp2 : 2 ≤ p), (∀ d, d ∣ p → d = 1 ∨ d = p) →
+      ∀ (z : Square.SqPt) (_ : Square.graph p z),
+        Analysis.Req
+          (Analysis.Rsub (Analysis.logN z.2.val z.2.property)
+            (Analysis.logN z.1.val z.1.property))
+          (Analysis.vonMangoldt p))
+    ∧ f1SquareStatus.hodgeIndexHolds = none :=
+  ⟨fun p hp2 hp z hz => Square.pencil_separation_vonMangoldt p hp2 hp z hz, rfl⟩
 
 end UOR.Bridge.F1Square
