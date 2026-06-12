@@ -85,6 +85,12 @@ open UOR.Bridge.F1Square
 #print axioms BridgeFF.ff_hasse_q25_a10
 #print axioms BridgeFF.ff_hasse_q25_a12_fails
 
+-- v0.18.0 stage D — the Bombieri–Lagarias decomposition of λ₂ and the two-slice
+-- realization of Li.LiDecomposition (Analysis/LiTwo.lean).
+#print axioms Analysis.Rlambda2_decomposition
+#print axioms Analysis.li_decomposition_two_realized
+#print axioms Analysis.liTwo_evidence
+
 -- v0.17.0 stage C — the 𝔽₁ curve at the monoid level (Square/Monoid.lean).
 #print axioms Square.one_le_mul
 #print axioms Square.mMul_assoc
