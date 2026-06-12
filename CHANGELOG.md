@@ -78,6 +78,21 @@ crux did not close — now a *sourced* result, not a presumption — so `hodgeIn
   the BUILT trend, the crux ⟺ "the arithmetic part admits one bound strictly below
   `genuineArchSeq`". The open content of RH contracts to the arithmetic side alone; the trend's
   classical growth is sourced, not mechanized; nothing touches positivity of the genuine `λₙ`.
+- **THE GENUINE LI SEQUENCE IN CLOSED FORM** (`F1Square/Analysis/GenuineLi.lean`) — the
+  implementation's deepest open question ("the genuine sequences are unconstructed") closed modulo
+  the Stieltjes tail: `StieltjesEta` (η-data with the BUILT anchors `η₀ = −γ`, `η₁ = γ² + 2γ₁` as
+  proof fields), `genuineArithSeq` (`λₙ^{arith} = −Σ_{j=1}^n C(n,j)·η_{j−1}`, every `n` — the
+  verified non-alternating closed form, anchored to BOTH mechanized slices as theorems
+  `genuineArith_one/two`; the Coffey recursion deliberately NOT used, convention guard), and
+  **`genuineLamSeq` — the genuine Li sequence with both sides closed forms** (`weilTraceGenuine`:
+  the full-ladder trace, definitional at every positive index, exactly as classically `λₙ` is
+  defined through the explicit formula). The closed form MEETS the certified values
+  (`genuineLam_one/two`), so **the head is a THEOREM** (`genuineLam_head`: `Pos` at `n = 1, 2` for
+  ANY anchored η-data). `etaTwoSlice` inhabits the structure; its `n ≥ 3` outputs are flagged
+  TRUNCATIONS (caution (d)). **`crux_genuine_form`** + **`crux_genuine_route`** (the maximal honest
+  reduction): the crux follows from exactly TWO open inputs — the genuine η-tail (`γ₂, γ₃, …`,
+  constructible one at a time by the `GammaOne` pattern) and ONE bound between the two closed forms
+  from `n = 3` on, a bound that exists iff RH. The head is DISCHARGED; neither input is asserted.
 - **The final roll-up** (`F1Square.lean`) — the stage-E backing block, the elaboration-checked
   v0.19.0 witness (both trace realizations, the retirement, the ∀-form three-face equivalence, the
   dominance reading, both guards, crux fields `none`), and the **v1.0.0-candidate state**: complete

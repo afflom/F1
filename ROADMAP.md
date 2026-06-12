@@ -225,6 +225,11 @@ Assemble the full Weil explicit formula and the final status record. **Shipped**
   ingredient already built), consistency-proved against both independently-built slices
   (`genuineArch_one/two`); **`crux_vs_constructed_trend`** — the crux's open content contracts to
   the arithmetic side alone: one bound strictly below the BUILT trend, which exists iff RH.
+- **The genuine Li sequence in closed form** (`Analysis/GenuineLi.lean`): constructed modulo the
+  Stieltjes tail — `genuineLamSeq` with both sides closed forms, the full-ladder trace
+  (`weilTraceGenuine`), the certified head as a THEOREM of the closed form (`genuineLam_head`);
+  **`crux_genuine_route`**: the crux follows from exactly two open inputs — the genuine η-tail and
+  one bound between the two closed forms from `n = 3` on (exists iff RH). Neither is asserted.
 - **The final roll-up** (`F1Square.lean`): the stage-E backing block and elaboration-checked
   witness — the **v1.0.0-candidate state**: complete construction, honest crux. Every surrounding
   field `some true`; `hodgeIndexHolds`/`liPositivityHolds` stay `none`. **RH stays OPEN** — one
