@@ -4,6 +4,82 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html), starting at `v0.0.1`.
 
+## [0.17.0] - 2026-06-12
+
+### Added — stage C: the canonical arithmetic square `𝕊 = Spec ℤ ×_𝔽₁ Spec ℤ` with its derived intersection lattice (pure Lean 4, no Mathlib, no `sorry`, choice-free)
+
+The stage-C release goals are delivered (`F1Square/Square/`, six bricks). Every theorem is choice-free
+(`#print axioms` = `{propext, Quot.sound}`), audited in `scripts/audit_axioms.lean`; the build is green and the
+honesty gate passes. The crux fields stay `none` — **RH stays open**.
+
+- **Canonical `𝕊` = the tensor `F ⊗_𝔽₁ F`, with its universal property PROVED**
+  (`Square/Monoid.lean`, `Square/Tensor.lean`). Deitmar 𝔽₁-algebras are commutative monoids (realized as a
+  bundled `CMon` record — the pure-core substitute for the typeclass hierarchy); the curve is the
+  multiplicative monoid `ℕ₊` (free commutative on the primes — the canonical form of an element is its prime
+  factorization, the UOR content-address); `𝔽₁` is the trivial monoid, proved **initial** (`f1_initial`), so
+  the fiber coproduct over it is the plain coproduct: `𝕊 = ℕ₊ × ℕ₊` with injections `a ↦ a⊗1`, `b ↦ 1⊗b` and
+  the **universal property** `copair_inl`/`copair_inr`/`copair_unique` (uniqueness via the tensor
+  decomposition `z = z₁⊗z₂`, `sq_factor`); the 𝔽₁-cocone condition is automatic (`square_base_cocone`), so
+  coproduct = pushout over `𝔽₁`. **Canonicality = the universal property** — `𝕊` is THE object, unique up to
+  unique isomorphism, not a candidate model. Non-collapse of §3.1 (`ℤ ⊗_ℤ ℤ = ℤ`) by theorems: `inl ≠ inr`,
+  the codiagonal identifies distinct points (`codiag_not_injective`, `gen2_codiag_collapse`), and the
+  monomial family `2^a ⊗ 2^b` is **free of rank 2** (`gen2_injective`) — strict 2-dimensionality (T1 for all
+  points, not a finite truncation); both projections recover the curve (`proj1_inl`, `proj_faithful`). The
+  power Frobenius `frobPow k : a ↦ aᵏ` (a genuine hom) is distinguished from the Connes–Consani scaling flow
+  `mScale n : a ↦ n·a` (NOT a hom, `mScale_not_hom` — a correspondence; its graphs are the pencil).
+- **The distinguished divisors and their point counts** (`Square/Divisors.lean`): rulings `V_a = {a}×C`,
+  `H_b = C×{b}`, diagonal `Δ`, Frobenius correspondences `Γ_n = {(m, n·m)}` as genuine subsets of `𝕊`;
+  transverse singletons (`vFiber_inter_hFiber`, `diag_inter_vFiber/_hFiber`, `graph_inter_vFiber/_hFiber`),
+  moving disjointness (`vFiber_disjoint`, `hFiber_disjoint`, `graph_disjoint`), the translate structure
+  (`graph_translate_diag` — `Γ_n` is the flow translate of `Δ`; `vFiber_translate`), and the §2.3 finding at
+  the point level: **`Δ ∩ Γ_n = ∅` for `n ≥ 2`** (`diag_inter_graph_empty`) — the scaling Frobenius has no
+  transverse fixed points on canonical `𝕊`.
+- **The parallel pencil with its shift lengths `log n`** (`Square/Pencil.lean`) — the §2.3 structural finding
+  lifted from the candidate bi-tropical model to theorems on `𝕊`: **`logN_mul_general`**
+  (`log(ab) = log a + log b` for ALL positive naturals, by exp injectivity — generalizing the v0.15.2 base-2
+  keystone) and `logN_pow_general` (`log pᵏ = k·log p`); **`pencil_shift`** (`log y = log x + log n` on `Γ_n`
+  — the affine shift, exact), **`pencil_parallel`** (slope 1 ⇒ recession direction `(1,1)`, the diagonal's
+  own), **`pencil_det_zero`** (stable count `Δ·Γ_n = |det((1,1),(1,1))| = 0`, tied to the mechanized
+  `Tropical.Signature.parallel_pencil`), **`pencil_separation`** (constant separation `log n`),
+  **`pencil_separation_vonMangoldt`** (at a prime the separation IS `Λ(p) = log p`, the explicit-formula
+  prime weight of `Analysis/Mangoldt.lean`), and `pencil_separation_pow` (`k·log p` — the closed orbit of
+  length `log p` traversed `k` times). **The arithmetic content provably relocates to the shift lengths.**
+- **The intersection lattice, DERIVED — never entered by hand** (`Square/Lattice.lean`, the §2.2 declarative
+  discipline mechanized): every primitive number is a point count with classes moved along their translation
+  pencils (`pair_*_derived`: `V·H = 1`, `V² = H² = 0`, `Δ·V = Δ·H = 1`, **`Δ² = 0` from the parallel-pencil
+  disjointness itself**, `Γ·V = Γ·H = 1` — degree-1 translation correspondences, `Γ·Γ = Δ·Γ = 0`);
+  bilinearity (`sqPair_add_left`, `sqPair_smul_left`) **forces `E₃² = −2`** (`e3_sq_forced`); the sourced
+  §2.2 product-of-curves template **emerges** (`sqPair_eq_template`) — **T3's "realize the pairing
+  intrinsically" is closed by derivation**, agreement with the template is now a consistency theorem. The
+  five §2.2 gate self-checks are theorems (`sqPair_symm`, `sq_boundary_checks`, `sq_adjunction_checks`,
+  `sq_signature_diag` — signature `(1,2)` by explicit diagonalization `{V+H, V−H, E₃} → diag(2,−2,−2)` with
+  complementarity). The class lattice is **finitely generated** on the derived basis (`cls_generated`,
+  T2 on `𝕊`); the graph class is **forced** (`graph_class_unique`), so `[Γ_n] = [Δ]` for all `n`
+  (`pencil_numerically_trivial`).
+- **Polarized `𝕊`, the Hodge index of the derived lattice, and the faithfulness boundary**
+  (`Square/Polarized.lean`): `squarePolarized` — the `Crux.Polarized` instance is now `𝕊`'s own derived
+  lattice (the stage-C lift); the ample class `H = [V]+[H]` has `H² = 2 > 0` (`sq_ample_pos` — verified, NOT
+  automatic for a tropical surface) with Nakai-style meets (`sq_ample_meets`); `H^⊥` is negative-definite
+  (`sq_hperp_neg_semidef`, `sq_hperp_definite`); **`square_hodgeIndex : HodgeIndex squarePolarized`** holds.
+  **And the boundary** (`square_hodge_pencil_blind`): the lattice is **pencil-blind** — `[Γ_n] = [Δ]` and
+  `Δ·Γ_n = 0` for ALL `n`, so the function-field trace input (`Δ·Γ_q = q+1−a`, `Mechanism.hodgeType`) is
+  provably absent and the positivity carries **no spectral content** — the geometric face of the §2.3
+  control (`Bridge.control_psd`). It is therefore **NOT the crux**.
+- **Manifest de-hedge** (`F1Square.lean`, `Crux.lean`): `surfaceConstructed` and `parallelPencilFinding`
+  flip `none → some true` (honest scope documented: canonical at the monoid-scheme / T1–T3 level; the
+  `H¹`-bearing spectral enrichment is NOT constructed); `classGroupFinitelyGen` /
+  `intersectionTemplateValid` / `ampleClassExists` are now carried by canonical `𝕊`; the
+  `parallelPencilStructure` identity flips to universally valid; two new elaboration-checked witness
+  examples bind the layer to the manifest; the `Crux` faithfulness caution is sharpened with the proven
+  pencil-blindness boundary.
+
+### Honest scope (the bright line, unchanged)
+- The crux is the Hodge index / Weil positivity of the **`H¹`-bearing** pairing — the form on which the
+  scaling flow acts with spectrum = the zeta zeros (T4/T5), equivalently `λₙ ≥ 0 ∀n` (Li). `𝕊`'s coarse
+  numerical lattice provably does not carry it (`square_hodge_pencil_blind`), so `square_hodgeIndex` is a
+  result about the constructed object and **not** an RH claim. `hodgeIndexHolds` / `liPositivityHolds` stay
+  `none` — **RH stays open**. Stating the geometric⟺analytic equivalence faithfully is stage D (v0.18.0).
+
 ## [0.16.0] - 2026-06-11
 
 ### Added — stage B: critical-strip `ζ`, the archimedean `Γ′/Γ` place, and `Pos λ₂` (pure Lean 4, no Mathlib, no `sorry`, choice-free)

@@ -20,11 +20,11 @@ stop sign — the focus is always the **construction of the F1 square**, to comp
 
 | Field | Now | Target release |
 |---|---|---|
-| `intersectionTemplateValid` | `some true` (template) | → canonical 𝕊 in **C / v0.17.0** |
-| `ampleClassExists` | `some true` (template) | → canonical 𝕊 in **C / v0.17.0** |
-| `classGroupFinitelyGen` | `some true` (template) | → canonical 𝕊 in **C / v0.17.0** |
-| `surfaceConstructed` | `none` (candidate) | **C / v0.17.0** |
-| `parallelPencilFinding` | `none` (candidate) | **C / v0.17.0** |
+| `intersectionTemplateValid` | `some true` (**canonical 𝕊**, derived intrinsically — v0.17.0) | shipped in **C** |
+| `ampleClassExists` | `some true` (**canonical 𝕊** — v0.17.0) | shipped in **C** |
+| `classGroupFinitelyGen` | `some true` (**canonical 𝕊** — v0.17.0) | shipped in **C** |
+| `surfaceConstructed` | `some true` (**canonical 𝕊**, monoid-scheme level — v0.17.0) | shipped in **C** |
+| `parallelPencilFinding` | `some true` (**canonical 𝕊** — v0.17.0) | shipped in **C** |
 | `hodgeIndexHolds` (= RH, geometric) | `none` | **D / v0.18.0** (iff genuinely proven) |
 | `liPositivityHolds` (= RH, analytic) | `none` | **D / v0.18.0** (iff genuinely proven) |
 
@@ -109,18 +109,46 @@ The heavy analytic mechanization: ζ off the convergent regime and the `λₙ` f
 - **Honesty gate:** research-grade; whatever does not close axiom-clean stays an interface.
 - **Stays open:** `λₙ > 0 ∀ n` (= RH); off-critical-line zeros; the crux (`liPositivityHolds = none`).
 
-## v0.17.0 — (C) The arithmetic square 𝕊
+## v0.17.0 — (C) The arithmetic square 𝕊 **[shipped]**
 
-Construct the object the whole program runs on. The frontier is less unknown than it looks: the
-candidate bi-tropical model, the proved mechanism, and the §2.3 control already constrain it; the gap is
-making `𝕊 = Spec ℤ ×_𝔽₁ Spec ℤ` (the `F ⊗_𝔹 F` tensor) canonical.
+Construct the object the whole program runs on. **Shipped** (`F1Square/Square/`, six bricks, all
+axiom-clean `{propext, Quot.sound}`):
 
-- Construct canonical `𝕊` and its intersection lattice (`surfaceConstructed`, `parallelPencilFinding`).
-- Lift `intersectionTemplateValid` / `ampleClassExists` / `classGroupFinitelyGen` from the
-  product-of-curves template to canonical `𝕊` (the `Crux.Polarized` instance becomes `𝕊`, not the template).
-- **De-hedges:** `surfaceConstructed`, `parallelPencilFinding`, and the three template fields → canonical 𝕊.
-- **Method:** analyze `Mechanism`/`Bridge`/`Tropical` + deep-research the 𝔽₁ tensor / arithmetic-surface
-  literature (Deninger, Connes–Consani, Borger) to fix the canonical construction.
+- **Canonical `𝕊` with its universal property proved** (`Monoid.lean`, `Tensor.lean`): Deitmar
+  𝔽₁-algebras are commutative monoids and `𝔽₁` (the trivial monoid) is proved **initial**, so the
+  tensor `F ⊗_𝔽₁ F` is the plain coproduct — realized as `ℕ₊ × ℕ₊` with injections `a ↦ a⊗1`,
+  `b ↦ 1⊗b`, and the **universal property proved** (`copair_inl/inr/unique`; the 𝔽₁-cocone condition
+  is automatic, so coproduct = pushout over 𝔽₁). **Canonicality = the universal property** — `𝕊` is
+  THE object, unique up to unique isomorphism, not a hand-picked candidate. The §3.1 ℤ-collapse is
+  avoided by theorems (`inl ≠ inr`, the codiagonal is not injective, the monomial family `2^a ⊗ 2^b`
+  is **free of rank 2** — strict 2-dimensionality); both projections recover the curve (T1, all
+  points, no truncation).
+- **The intersection lattice, derived — never entered by hand** (`Divisors.lean`, `Lattice.lean`):
+  the distinguished divisors (rulings `V_a`/`H_b`, diagonal `Δ`, Frobenius correspondences
+  `Γ_n = {(m, n·m)}`) are genuine subsets of `𝕊`, and every primitive intersection number is a
+  **point count** with classes moved along their translation pencils (`V·H = 1`, `V² = H² = 0`,
+  `Δ·V = Δ·H = 1`, `Δ² = 0` via `Δ ∩ Γ_n = ∅`, `Γ·V = Γ·H = 1`, `Γ·Γ = Δ·Γ = 0`); bilinearity then
+  **forces** `E₃² = −2` (`e3_sq_forced`), and the sourced §2.2 product-of-curves template **emerges**
+  (`sqPair_eq_template`) — T3's intrinsic realization, closed by derivation. The five §2.2
+  self-checks are theorems; the class lattice is finitely generated on `{V, H, E₃}` (T2 on `𝕊`).
+- **The parallel pencil on canonical `𝕊`** (`Pencil.lean`): no transverse fixed points
+  (`Δ ∩ Γ_n = ∅`), slope 1 in the log coordinate (direction `(1,1)`, stable count `Δ·Γ_n = 0`),
+  **constant separation `log n`** as a constructive real (via the new general log-multiplicativity
+  `logN_mul_general`), equal to the explicit-formula weight **`Λ(p) = log p` at primes** and
+  `k·log p` at prime powers — the §2.3 finding, lifted from the candidate model to theorems.
+- **Polarized `𝕊` and the honesty boundary** (`Polarized.lean`): the `Crux.Polarized` instance is now
+  `𝕊`'s own derived lattice (`squarePolarized`); the ample class `H = [V]+[H]` has `H² = 2 > 0`
+  (verified — not automatic tropically) and `H^⊥` is negative-definite, so
+  `square_hodgeIndex : HodgeIndex squarePolarized` holds — **and the lattice is provably
+  pencil-blind** (`square_hodge_pencil_blind`: `[Γ_n] = [Δ]`, `Δ·Γ_n = 0` for all `n`): the
+  function-field trace input is absent, the positivity carries **no spectral content**, and it is
+  therefore **not the crux** (the §2.3-control discipline, geometric face).
+- **De-hedges done:** `surfaceConstructed`, `parallelPencilFinding` → `some true`; the three template
+  fields now carried by canonical `𝕊`.
+- **Stays open:** the crux — the Hodge index / Weil positivity of the **`H¹`-bearing** pairing (the
+  form that carries the zeros, T4/T5), equivalently `λₙ ≥ 0 ∀n`. `hodgeIndexHolds` /
+  `liPositivityHolds` stay `none`; **RH stays open**. Stating the geometric⟺analytic equivalence
+  faithfully is stage D.
 
 ## v0.18.0 — (D) The bridge and the crux
 

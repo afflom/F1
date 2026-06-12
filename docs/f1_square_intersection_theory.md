@@ -330,6 +330,43 @@ faithful construction (Hodge index on the algebraic square §0.3; shift-length p
 positivity §3.4; confining self-adjointness, Thread 2 of the cross-reference) reaches the *same*
 proposition, RH, by a different face.
 
+### 2.4 The canonical square, mechanized (v0.17.0) — what is now constructed, derived, and proved
+
+Stage C of the roadmap closes the **construction** half of the §2.2 frontier in Lean
+(`F1Square/Square/`, all axiom-clean `{propext, Quot.sound}`, no Mathlib, choice-free):
+
+- **Canonical `𝕊`, by universal property.** Deitmar 𝔽₁-algebras are commutative monoids and `𝔽₁`
+  (the trivial monoid) is proved **initial**, so the fiber coproduct over it — the tensor
+  `F ⊗_𝔽₁ F` — is the plain coproduct of the curve monoid `(ℕ₊, ·)` with itself. That coproduct is
+  realized as `ℕ₊ × ℕ₊` and its **universal property is proved** (`copair_inl/inr/unique`): the
+  canonicality is the universal property, not a choice of model. The §3.1 collapse is avoided by
+  theorems (distinct injections; non-injective codiagonal; the monomial family `2^a ⊗ 2^b` free of
+  rank 2 — strict 2-dimensionality, T1 for **all** points, superseding the 17-prime truncation).
+- **The intersection lattice, derived.** The distinguished divisors are genuine subsets of `𝕊`, and
+  every primitive intersection number is a **point count** with classes moved along their translation
+  pencils — including `Δ² = 0` *from the parallel-pencil disjointness itself* (`Δ ∩ Γ_n = ∅`).
+  Bilinearity then **forces** `E₃² = −2`, and the sourced §2.2 template **emerges**
+  (`sqPair_eq_template`): T3's "realize the pairing intrinsically, not by analogy" is closed *by
+  derivation*, with the five §2.2 gate self-checks as theorems and the class lattice finitely
+  generated (T2 on `𝕊`).
+- **The pencil, with its arithmetic.** The §2.3 finding is now a theorem stack on canonical `𝕊`:
+  no transverse fixed points; log-slope 1 (direction `(1,1)`, stable count `Δ·Γ_n = 0`); constant
+  separation `log n` as a **constructive real** (`logN_mul_general` — general log-multiplicativity by
+  exp injectivity); separation `= Λ(p) = log p` at primes and `k·log p` at prime powers — the
+  explicit-formula prime weights, reached geometrically.
+- **The Hodge index of the derived lattice — and its precise limit.** `𝕊`'s own polarized instance
+  (`squarePolarized`) has the ample `H = [V]+[H]`, `H² = 2 > 0` (verified, per the §2.2 caution), and
+  `H^⊥` negative-definite: `square_hodgeIndex` holds, **and the lattice is provably pencil-blind**
+  (`square_hodge_pencil_blind`: `[Γ_n] = [Δ]`, `Δ·Γ_n = 0` for all `n`). The trace data through which
+  the §0.3 mechanism forces RH-for-curves is *absent by theorem* from the coarse numerical lattice —
+  the positivity holds with no spectral input, the geometric face of the §2.3 control. **So the crux
+  (§1.5/T5) is sharpened, not closed:** it is the Hodge index / Weil positivity of the `H¹`-bearing
+  pairing (T4: scaling spectrum = the zeros), equivalently `λₙ ≥ 0 ∀n` — open, exactly as before.
+
+*Honest scope.* "Constructed" means the monoid-scheme (T1) level with its derived divisor/intersection
+layer (T2/T3); the spectral (`H¹`) enrichment of `𝕊` — the object the crux is genuinely about — is
+**not** constructed, and `hodgeIndexHolds` stays `none`.
+
 ---
 
 ## 3. The precise obstructions (why §1.5 resists, stated as named problems)
@@ -374,15 +411,15 @@ A construction proceeds by stages; each stage has a checkable target. These are 
 milestones, in order of increasing difficulty. (None is yet met for the genuine `𝕊`; each was
 verified for the *product-of-curves model* in §0.3, which is the boundary condition.)
 
-- **T1.** [VERIFIED] `𝕊` is strictly 2-dimensional over `𝔽₁`. **Resolved:** the candidate
-  `𝕊 = C ×_{𝔽₁} C`, the **Deitmar monoid product of the arithmetic-site curve** (points = primes /
-  closed orbits) with itself, is strictly 2-dimensional — verified: point set `= C × C`
-  (`|C|² = 289` for the 17-prime truncation, *not* collapsing to `|C|`); it avoids the `ℤ`-collapse
-  (§3.1) by being the monoid/`𝔽₁` product, not the `ℤ` product; both projections recover `C` with
-  1-dimensional fibers (total dim `1 + 1 = 2`); the projections are independent (`corr ≈ 0.016`, a
-  genuine product, not a degenerate graph). *Scope:* T1 establishes 2-dimensionality at the
-  point-set / projection level (a 2D monoid scheme, on solid Deitmar footing); the class group,
-  intersection pairing, and Hodge index remain T2–T5.
+- **T1.** [MECHANIZED — canonical, v0.17.0] `𝕊` is strictly 2-dimensional over `𝔽₁`. **Resolved and
+  now PROVED in Lean for all points** (§2.4, `Square/Tensor.lean`): `𝕊 = C ×_{𝔽₁} C` is the Deitmar
+  monoid product of the arithmetic-site curve with itself, realized as the **coproduct with its
+  universal property proved** (canonical, not a candidate); strictly 2-dimensional (the monomial
+  family `2^a ⊗ 2^b` is free of rank 2, `gen2_injective`); avoids the `ℤ`-collapse (§3.1) by theorems
+  (`inl ≠ inr`, non-injective codiagonal); both projections recover `C` (`proj1_inl`,
+  `proj_faithful`). This supersedes the earlier 17-prime-truncation runtime check (`|C|² = 289`,
+  projection independence `corr ≈ 0.016`), which remains as historical evidence. *Scope:* T1 is the
+  point-set / projection level; the spectral `H¹` layer remains T4–T5.
 - **T2.** [PARTIAL] `Cl(𝕊)` is finitely generated with the §1.2 distinguished classes.
   **Verified:** `Cl(𝕊)` is finitely generated; the distinguished classes — the two rulings
   `F_h, F_v` (independent), the diagonal `Δ`, and the scaling-graph classes `Γ_k` — are all present.
@@ -396,15 +433,18 @@ verified for the *product-of-curves model* in §0.3, which is the boundary condi
   because that requires `H¹` of the `𝔽₁` curve, which routes back to the named obstruction §3.4.
   *(A first attempt using ad-hoc, non-Lefschetz intersection numbers produced an inconsistent
   `(3+, 3−)` Gram matrix — discarded; the corrected Lefschetz-derived pairing is the one above.)*
-- **T3.** [TEMPLATE established; intrinsic realization OPEN] The intersection pairing (§1.3) reproduces
-  the boundary intersection numbers on the factors — `⟨F_h, F_v⟩ = 1`, etc. **The correct reference form
-  is now sourced** (§2.2): the product-of-curves Néron–Severi form `⟨E₁,E₂,E₃⟩` with `E₁·E₂=1`,
-  `E₃²=−2`, extended by Lefschetz/adjunction-derived graph classes — signature `(1, ρ−1)`, verified, and
-  matching the §0.3 boundary numbers. What remains **open** is realizing this pairing *intrinsically* on
-  the concrete `F ⊗_𝔹 F` tropical square (§2.2, arXiv 1703.10521) rather than importing it from the
-  field-curve case. *(Earlier ad-hoc Gram matrices for this step were inconsistent — an inconsistent
-  `(3+,3−)` attempt and a genus-driven attempt that contradicted §0.3 — and are discarded in favor of
-  the sourced template.)*
+- **T3.** [INTRINSIC REALIZATION MECHANIZED, v0.17.0 — at the monoid/pencil level] The intersection
+  pairing (§1.3) reproduces the boundary intersection numbers on the factors — `⟨F_h, F_v⟩ = 1`, etc.
+  **Now realized intrinsically on canonical `𝕊`** (§2.4, `Square/Lattice.lean`): every primitive
+  number is a point count on the constructed square (with translation-pencil moving), bilinearity
+  forces `E₃² = −2`, and the sourced §2.2 template **emerges as a consistency theorem**
+  (`sqPair_eq_template`) rather than being imported by analogy — with the five gate self-checks as
+  theorems. *Honest residue:* this realizes the pairing on the COARSE numerical lattice, which is
+  pencil-blind (`[Γ_n] = [Δ]`, `Δ·Γ_n = 0`); the form whose `Δ·Γ` carries the trace — the input the
+  §0.3 mechanism needs — lives on the spectral `H¹` layer and routes to T4/T5 (§3.4), exactly as T2's
+  open input always said. *(Earlier ad-hoc Gram matrices for this step were inconsistent — an
+  inconsistent `(3+,3−)` attempt and a genus-driven attempt that contradicted §0.3 — and are discarded
+  in favor of the derived form.)*
 - **T4.** [RESOLVED as constraint; closes the chain] The trace `a` and `H¹`. **Resolved:** the
   Lefschetz fixed-point formula for the scaling flow *is* the Weil explicit formula, giving
   `trace(scaling Fr_x | H¹) = Σ_zeros x^{1/2+iγ}` (the trace identity verified numerically at
@@ -421,12 +461,13 @@ verified for the *product-of-curves model* in §0.3, which is the boundary condi
   computation rather than a conjecture, exactly as §0.3 is a definite (and verified) computation on
   the product-of-curves model.
 
-The ladder's current state: **T1 is verified at the point-set level** (an 𝔽₁/Deitmar-monoid product
-of a finite prime truncation is strictly 2-dimensional — evidence the 𝔽₁-product avoids the ℤ-collapse,
-**not** a construction of `𝕊`: its class group, intersection pairing, and Hodge index remain T2–T5 and
-the surface itself is unbuilt, §1.1/§5 [OPEN]); **T2 is partially resolved**
-(class group + distinguished classes verified, intersection-form machinery consistent, specific form
-pending `H¹`); **T4 resolves T2's pending input as a constraint** (`H¹` must be the Hilbert–Pólya
+The ladder's current state (updated v0.17.0): **T1 is mechanized and canonical** (`𝕊` constructed in
+Lean as the coproduct with its universal property proved, strictly 2-dimensional for all points —
+§2.4); **T2 is resolved on `𝕊`'s coarse lattice** (class lattice finitely generated with the
+distinguished classes, derived intersection form; the SPECTRAL form still pends `H¹`, which is the
+honest residue routed to §3.4); **T3's intrinsic realization is mechanized** at the monoid/pencil
+level (the template emerges from point counts; the `H¹`-bearing form remains the open object);
+**T4 resolves T2's pending input as a constraint** (`H¹` must be the Hilbert–Pólya
 space, spectrum = the zeros, verified via the Lefschetz↔explicit-formula identity; Connes–Consani
 built such an `H¹`); **T3** (the intersection pairing realized intrinsically on `𝕊`, not just
 consistent) is the remaining genuine construction step; and **T5 is RH** — the positivity (signature
@@ -447,8 +488,8 @@ which is RH — with every other link verified, pinned, or routed to a named obs
 | Hodge index from Rosati positivity (the `𝔽_q` proof of RH-for-curves) | **CLASSICAL** — Weil (1948), Deligne (1974) |
 | `𝔽₁`-geometries (monoid schemes, blueprints, relative schemes, arithmetic site) | **CLASSICAL** — Deitmar, Toën–Vaquié, Lorscheid, Connes–Consani |
 | 1-dimensional Arakelov intersection on `Spec ℤ` | **CLASSICAL** — Arakelov, Faltings |
-| **`Spec ℤ ×_{𝔽₁} Spec ℤ` as a 2-dimensional surface with an intersection pairing** (§1.1, 1.3) | **OPEN** |
-| **a Hodge index theorem for that pairing** (§1.5, §3.4) — the positivity that is RH | **OPEN** |
+| **`Spec ℤ ×_{𝔽₁} Spec ℤ` as a 2-dimensional surface with an intersection pairing** (§1.1, 1.3) | **MECHANIZED at the monoid-scheme level, v0.17.0** (§2.4: canonical by universal property, derived lattice; the spectral `H¹` enrichment remains open) |
+| **a Hodge index theorem for that pairing** (§1.5, §3.4) — the positivity that is RH | **OPEN** (the derived lattice's Hodge index is proved AND provably pencil-blind — not the crux; the `H¹`-bearing positivity is RH and is open) |
 | this scaffold: the precise specification, the candidate-gap table, the named obstructions, the verification ladder | the contribution of this document |
 
 **What this document is and is not.** It is a *formalization of the construction problem* for the
@@ -471,7 +512,11 @@ ample class and negative-definiteness on `H^⊥` (`Template.lean`); the §2.3 pa
 `Δ·Γ_n = 0` (`det((1,1),(1,1)) = 0`) and the fan-vs-fiber correction (the fan recession form is
 degenerate, so the `(1,ρ−1)` shape belongs to the fiber form), plus a Babaee–Huh counterexample
 showing the signature is NOT automatic (`Tropical/Signature.lean`); and the §2.3 control (the
-shift-length Gram is PSD for any spectrum ⇒ vacuous, `Bridge.lean`).
+shift-length Gram is PSD for any spectrum ⇒ vacuous, `Bridge.lean`). **As of v0.17.0 (stage C), the
+canonical square itself is mechanized** (§2.4, `F1Square/Square/`): `𝕊 = F ⊗_𝔽₁ F` with its universal
+property, the derived intersection lattice with the five-gate discipline, the parallel pencil with
+constructive-real shift lengths `log n` (= `Λ(p)` at primes), the polarized instance with its Hodge
+index, and the pencil-blindness boundary theorem that keeps the crux honestly open.
 
 **The analysis-substrate roadmap (building the needed analysis the UOR way).** The analytic half of
 the program (Li's `λₙ`, the explicit-formula trace, the cos/sin Weil-Gram over ℝ, T4's trace
