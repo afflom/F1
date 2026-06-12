@@ -128,6 +128,19 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.genuineArch_one
 #print axioms Analysis.genuineArch_two
 #print axioms Square.crux_vs_constructed_trend
+
+-- v0.19.0 stage E — the genuine Li sequence in closed form, modulo the Stieltjes tail
+-- (Analysis/GenuineLi.lean), and the closure route with the head DISCHARGED
+-- (Square/Dominance.lean). Crux stays OPEN — the open data is the genuine η-tail + the bound.
+#print axioms Analysis.genuineArith_one
+#print axioms Analysis.genuineArith_two
+#print axioms Analysis.genuineLam_one
+#print axioms Analysis.genuineLam_two
+#print axioms Analysis.genuineLam_head
+#print axioms Analysis.weilTraceGenuine
+#print axioms Analysis.etaTwoSlice
+#print axioms Square.crux_genuine_form
+#print axioms Square.crux_genuine_route
 #print axioms Square.weilTraceTwo_not_crux
 #print axioms Square.twoSlice_not_dominated
 #print axioms Square.dominance_satisfiable

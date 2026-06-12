@@ -83,6 +83,7 @@ Pure Lean 4 core, no Mathlib, no `sorry`, choice-free; audited by `scripts/hones
 import F1Square.Square.Spectral
 import F1Square.Analysis.LiComplete
 import F1Square.Analysis.ArchTrend
+import F1Square.Analysis.GenuineLi
 import F1Square.Analysis.Pi
 
 namespace UOR.Bridge.F1Square.Square
@@ -253,6 +254,37 @@ theorem crux_closure_route (S : SpectralSquare) {arith arch : Nat → Real}
   · subst h1; exact hhead.1
   · have h2 : n = 2 := by omega
     subst h2; exact hhead.2
+
+/-- **THE CRUX IN CLOSED FORM**: for any spectral square carrying the genuine-form Li
+    values (`Analysis.genuineLamSeq` — BOTH sides closed forms) over any anchored η-data,
+    the crux is exactly the dominance of the closed-form arithmetic side by the closed-form
+    archimedean trend. Everything else is a theorem; the open data is the genuine η-tail
+    and the bound. -/
+theorem crux_genuine_form (S : SpectralSquare) (E : StieltjesEta)
+    (hlam : ∀ n : Nat, 0 < n → Req (S.lam n) (genuineLamSeq E.eta n)) :
+    Dominated (genuineArithSeq E.eta) genuineArchSeq ↔ SpectralCrux S :=
+  dominance_crux_equivalent S hlam
+
+/-- **THE CLOSURE ROUTE WITH THE HEAD DISCHARGED — the maximal honest reduction this
+    substrate provides.** For any spectral square carrying the genuine-form Li values over
+    anchored η-data, the crux follows from ONE remaining input: a tail bound between the
+    two CLOSED FORMS from `n = 3` on. The head is no longer a hypothesis — it is a theorem
+    (`Analysis.genuineLam_head`, from the certified `λ₁, λ₂` through the closed form). So
+    RH, in this substrate, IS: "exhibit the genuine η-tail (`γ₂, γ₃, …` — constructible
+    one at a time by the `GammaOne` pattern) and one bound `B` with
+    `−B(n) ≤ −Σ C(n,j)η_{j−1}` and `genuineArchSeq n − B(n) > 0` for `n ≥ 3`" — a bound
+    that exists iff RH (verified both directions, module docstring). Nothing here asserts
+    those inputs; the gate stays exactly as open as RH, with its shape fully explicit. -/
+theorem crux_genuine_route (S : SpectralSquare) (E : StieltjesEta)
+    (hlam : ∀ n : Nat, 0 < n → Req (S.lam n) (genuineLamSeq E.eta n))
+    (B : Nat → Real)
+    (htail1 : ∀ n : Nat, 2 < n → Rle (Rneg (B n)) (genuineArithSeq E.eta n))
+    (htail2 : ∀ n : Nat, 2 < n → Pos (Rsub (genuineArchSeq n) (B n))) :
+    SpectralCrux S := by
+  refine crux_closure_route S (arith := genuineArithSeq E.eta) (arch := genuineArchSeq)
+    (fun n hn => hlam n hn) ⟨?_, ?_⟩ B htail1 htail2
+  · exact Pos_congr (Req_symm (hlam 1 (by omega))) (genuineLam_head E).1
+  · exact Pos_congr (Req_symm (hlam 2 (by omega))) (genuineLam_head E).2
 
 -- ===========================================================================
 -- The honesty guards (two-sided, as theorems).

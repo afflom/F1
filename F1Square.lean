@@ -99,6 +99,7 @@ import F1Square.Analysis.CriticalZeta
 import F1Square.Analysis.Gamma
 import F1Square.Analysis.LiComplete
 import F1Square.Analysis.ArchTrend
+import F1Square.Analysis.GenuineLi
 
 open UOR.Primitives
 
