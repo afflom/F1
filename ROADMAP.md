@@ -92,18 +92,22 @@ core is not held hostage to it.
   the BL value is stated faithfully, not fabricated; nothing bears on positivity, `liPositivityHolds = none`.)
 - **Stays open across v0.15.x:** critical strip, zeros, crux.
 
-## v0.16.0 — (B) Analytic continuation & higher Li coefficients
+## v0.16.0 — (B) Analytic continuation & higher Li coefficients **[shipped]**
 
 The heavy analytic mechanization: ζ off the convergent regime and the `λₙ` for `n ≥ 2`.
 
-- `Analysis/Gamma.lean` — `Γ` via Spouge/Lanczos (uses `ncpow`/`Cexp`); the archimedean (`Γ′/Γ`) place.
-- `Analysis/EulerMaclaurin.lean` — periodic-Bernoulli remainder (fix-`K`, grow-`N`) → `Czeta` on the
-  **critical strip** as an `ExactBoundedReal`.
-- Higher **Stieltjes `γₙ`** by the same engine → individual **`λₙ` values** for `n ≥ 2`, with
-  `λ₁`-style positivity certificates for *specific small* `n` (e.g. `Pos λ₂`).
-- **De-hedges:** "genuine `λₙ` values deferred" → built for `n ≥ 2`; critical-strip ζ.
+- `Analysis/Gamma.lean` — `Γ` via Spouge; the archimedean (`Γ′/Γ`) place. **Shipped:** the real-power
+  combinator `RrpowPos` (`x^y = exp(y·log x)`, no sqrt/no complex `Clog`), the **exact** digamma
+  `ψ = Γ′/Γ` (`Digamma`, `Digamma_one_eq_neg_gamma`), and the Spouge `Γ`-approximant (`SpougeGamma`).
+- Critical-strip ζ — shipped via the integration-free **Dirichlet-η** route (`Analysis/EtaVariation.lean`,
+  `Analysis/CriticalZeta.lean`): `Ceta`/`CetaW` (η on `Re s > 0`), `CzetaStrip`/`CzetaStripW`
+  (`ζ = η/(1−2^{1−s})` on `0 < Re s < 1`) as an `ExactBoundedReal`, with non-vanishing, the functional
+  relation, and uniqueness. (Cleaner than the periodic-Bernoulli remainder; same deliverable.)
+- Higher **Stieltjes `γₙ`** → individual **`λₙ` values** for `n ≥ 2`, with a `λ₁`-style positivity
+  certificate — **shipped:** `Pos λ₂` (`Rlambda2_pos`).
+- **De-hedges done:** "genuine `λₙ` values deferred" → built for `n ≥ 2`; critical-strip ζ built.
 - **Honesty gate:** research-grade; whatever does not close axiom-clean stays an interface.
-- **Stays open:** `λₙ > 0 ∀ n` (= RH).
+- **Stays open:** `λₙ > 0 ∀ n` (= RH); off-critical-line zeros; the crux (`liPositivityHolds = none`).
 
 ## v0.17.0 — (C) The arithmetic square 𝕊
 
