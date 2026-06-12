@@ -475,6 +475,41 @@ def f1SquareStatus : F1SquareStatus := {
 --   single object (the dominance bound for the genuine parts, governed by the zeros'
 --   location). The fields below stay `none` — that is the v1.0.0-candidate state: complete
 --   construction, honest crux.
+-- v0.19.0, the GENUINE-PAIRING arc (the closure push, continued — the formerly-planned
+-- v0.20/v0.21 work folded in):
+--   the tent calculus           ← Analysis.{Rabs (regular, no reindex, via the reverse
+--     (test-function substrate)   triangle inequality Qabs_abs_sub), RmaxZero = ½(t+|t|),
+--                                 Rnonneg_RmaxZero, RmaxZero_of_nonpos/of_nonneg} +
+--                                 Analysis.{RsumN_congr, Rnonneg_RsumN, RsumN_le}
+--   THE WEIL FUNCTIONAL         ← Analysis.{WeilTest, weilPrimePart (THE WHOLE
+--     (assembled; zero side =     finite-place side Σ Λ(n)(f(n)+n⁻¹f(1/n)), CONSTRUCTED;
+--      the defect — no zeros      weilPrimePart_stable, weilArchConst ((log4π+γ)f(1),
+--      as inputs)                 both factors built)} + Square.{WeilSlot, weilValue
+--                                 (W = poles − (primes + arch); the two integral
+--                                 components interface — their PL closed forms are
+--                                 unverified in print, never fabricated)}
+--   THE FOURTH FACE             ← Square.{weilSpectralSquare (the FIRST SpectralSquare
+--     (the pairing face)          whose cSq comes from a pairing-valued assembly),
+--                                 weil_psd_iff_hodge, weil_strict_iff_crux (pairing
+--                                 positivity ⟺ the crux ⟺ Li ⟺ dominance — for the
+--                                 genuine family this is Weil positivity = RH, Weil
+--                                 1952/Burnol math/9810169, both directions elementary,
+--                                 PL test class admissible per Bombieri's Clay class W),
+--                                 weil_template_crux (two-sidedness guard),
+--                                 weilPrime_demo (the FIRST COMPUTED pairing value:
+--                                 the finite-place side at the tent peaked at 2 is
+--                                 exactly log 2)}
+--   THE UNCONDITIONAL TERRITORY (recorded, pinned, not asserted): CC Selecta 27 (2021)
+--   Thm 1 — Weil positivity UNCONDITIONAL for test support in [2^{−1/2}, 2^{1/2}] (the
+--   prime-free window; the finite-place side vanishes there BY CONSTRUCTION here);
+--   Burnol's explicit multiplier certificate α(τ) = 8√2cos(τlog2)/(1+4τ²) + h₊(τ) is
+--   the pinned next mechanization target (needs uniform-in-τ digamma bounds).
+--   CONCLUSION OF THE ARC: every component of the crux that mathematics permits to be
+--   constructed IS constructed — the trend (closed form), the genuine Li sequence
+--   (modulo the Stieltjes tail), and now the pairing assembly with its finite-place
+--   side computed. The crux = positivity of the genuine assembled family — one
+--   proposition, FOUR provably equivalent faces; it closes iff RH is proven, and the
+--   fields below stay `none` until then.
 -- The crux is NOT backed and stays `none` (BOTH faces, same RH) — λ₁ > 0 is the n=1 case, not RH:
 --   hodgeIndexHolds (= RH, geometric) ← OPEN. Crux.template_hodgeIndex proves the property on the
 --                               product-of-curves TEMPLATE; Square.square_hodgeIndex (v0.17.0)
@@ -934,5 +969,31 @@ example :
    fun S _ _ htrace => Square.dominance_crux_equivalent S htrace,
    Square.weilTrace_dominance, Square.dominance_satisfiable,
    Square.twoSlice_not_dominated, rfl, rfl⟩
+
+/-- Elaboration-checked witness binding the **v0.19.0 genuine-pairing arc** — the Weil
+    functional and the fourth face. In order: (1) the finite-place side is stable past the
+    support cutoff (the whole prime side is the finite constructed sum); (2) the FIRST
+    COMPUTED pairing value — the finite-place side at the tent peaked at `2` is exactly
+    `log 2`; (3) the pairing-induced spectral square satisfies the dictionary BY
+    CONSTRUCTION, and (4) strict positivity of a pairing family is EQUIVALENT to the crux
+    of its induced square — the fourth face (for the genuine family: Weil positivity = RH);
+    (5) the two-sidedness guard; (6) the crux fields stay `none`: **RH OPEN**. -/
+example :
+    (∀ (T : Analysis.WeilTest) (d : Nat),
+      Analysis.Req (Analysis.RsumN (Analysis.weilPrimeTerm T) (T.X + d))
+        (Analysis.weilPrimePart T))
+    ∧ Analysis.Req (Analysis.weilPrimePart Square.demoWeilTest) (Analysis.logN 2 (by omega))
+    ∧ (∀ (W : Nat → Analysis.Real) (n : Nat), 0 < n →
+        Analysis.Req ((Square.weilSpectralSquare W).cSq n)
+          (Analysis.Rneg (Analysis.Radd ((Square.weilSpectralSquare W).lam n)
+            ((Square.weilSpectralSquare W).lam n))))
+    ∧ (∀ W : Nat → Analysis.Real,
+        (∀ n : Nat, 0 < n → Analysis.Pos (W n)) ↔ Square.SpectralCrux (Square.weilSpectralSquare W))
+    ∧ Square.SpectralCrux (Square.weilSpectralSquare (fun _ => Analysis.one))
+    ∧ f1SquareStatus.hodgeIndexHolds = none
+    ∧ f1SquareStatus.liPositivityHolds = none :=
+  ⟨Analysis.weilPrimePart_stable, Square.weilPrime_demo,
+   fun W n hn => (Square.weilSpectralSquare W).dict n hn,
+   Square.weil_strict_iff_crux, Square.weil_template_crux, rfl, rfl⟩
 
 end UOR.Bridge.F1Square
