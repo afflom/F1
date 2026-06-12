@@ -30,6 +30,8 @@ import F1Square.Square.Monoid
 import F1Square.Square.Tensor
 import F1Square.Square.Divisors
 import F1Square.Square.Pencil
+import F1Square.Square.Lattice
+import F1Square.Square.Polarized
 import F1Square.Tropical.Closure
 import F1Square.Tropical.Signature
 import F1Square.Tropical.Spectrum

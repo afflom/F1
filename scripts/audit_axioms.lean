@@ -126,6 +126,43 @@ open UOR.Bridge.F1Square
 #print axioms Square.pencil_separation_vonMangoldt
 #print axioms Square.pencil_separation_pow
 
+-- v0.17.0 stage C — the intersection lattice of 𝕊, derived from point counts
+-- (Square/Lattice.lean): the §2.2 declarative discipline mechanized; T3 intrinsic.
+#print axioms Square.pair_rulings_derived
+#print axioms Square.pair_v_self_derived
+#print axioms Square.pair_h_self_derived
+#print axioms Square.pair_diag_v_derived
+#print axioms Square.pair_diag_h_derived
+#print axioms Square.pair_diag_self_derived
+#print axioms Square.pair_graph_v_derived
+#print axioms Square.pair_graph_h_derived
+#print axioms Square.pair_graph_self_derived
+#print axioms Square.pair_diag_graph_derived
+#print axioms Square.sqPair_add_left
+#print axioms Square.sqPair_smul_left
+#print axioms Square.e3_sq_forced
+#print axioms Square.sqPair_eq_template
+#print axioms Square.sqPair_symm
+#print axioms Square.sq_boundary_checks
+#print axioms Square.sq_adjunction_checks
+#print axioms Square.sq_signature_diag
+#print axioms Square.cls_generated
+#print axioms Square.clsDiag_in_lattice
+#print axioms Square.graph_class_unique
+#print axioms Square.pencil_numerically_trivial
+
+-- v0.17.0 stage C — polarized 𝕊: ample class, Hodge index of the derived lattice,
+-- and the pencil-blindness boundary (Square/Polarized.lean). The crux stays OPEN.
+#print axioms Square.clsAmple_eq
+#print axioms Square.sq_ample_pos
+#print axioms Square.sq_ample_meets
+#print axioms Square.sq_hperp_span
+#print axioms Square.sq_hperp_value
+#print axioms Square.sq_hperp_neg_semidef
+#print axioms Square.sq_hperp_definite
+#print axioms Square.square_hodgeIndex
+#print axioms Square.square_hodge_pencil_blind
+
 -- v0.2.0 — Tropical closure / κ / spectrum (R2, R3, R4, R9, R10, R11).
 #print axioms Tropical.star_matches
 #print axioms Tropical.R2_kleene_idempotent
