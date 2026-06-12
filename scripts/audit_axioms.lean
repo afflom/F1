@@ -113,6 +113,17 @@ open UOR.Bridge.F1Square
 #print axioms Square.crux_attempt_frontier_geometric
 #print axioms Square.spectral_strict_upTo_two
 
+-- v0.19.0 stage E — THE DOMINANCE FACE: the crux as a single uniform bound (oscillation
+-- loses), equivalent to both prior faces (Square/Dominance.lean). Crux stays OPEN.
+#print axioms Square.dominated_liPositive
+#print axioms Square.liPositive_dominated
+#print axioms Square.dominated_iff_liPositive
+#print axioms Square.dominance_crux_equivalent
+#print axioms Square.weilTrace_dominance
+#print axioms Square.weilTraceTwo_not_crux
+#print axioms Square.twoSlice_not_dominated
+#print axioms Square.dominance_satisfiable
+
 -- v0.19.0 stage E — the completed explicit-formula trace (zero side at the BL slices)
 -- and the retirement of Li.LiAgreesWith at the built slices (Analysis/LiComplete.lean).
 #print axioms Analysis.explicitFormulaTrace_one_realized

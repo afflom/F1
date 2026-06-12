@@ -40,6 +40,7 @@ import F1Square.Square.Lattice
 import F1Square.Square.Polarized
 import F1Square.Square.Spectral
 import F1Square.Square.Attempt
+import F1Square.Square.Dominance
 import F1Square.Tropical.Closure
 import F1Square.Tropical.Signature
 import F1Square.Tropical.Spectrum
