@@ -113,6 +113,15 @@ open UOR.Bridge.F1Square
 #print axioms Square.crux_attempt_frontier_geometric
 #print axioms Square.spectral_strict_upTo_two
 
+-- v0.19.0 stage E — the completed explicit-formula trace (zero side at the BL slices)
+-- and the retirement of Li.LiAgreesWith at the built slices (Analysis/LiComplete.lean).
+#print axioms Analysis.explicitFormulaTrace_one_realized
+#print axioms Analysis.explicitFormulaTrace_two_realized
+#print axioms Analysis.weilTraceTwo
+#print axioms Analysis.weilTraceTwo_evidence
+#print axioms Analysis.liAgreesWith_two_realized
+
+
 -- v0.17.0 stage C — the 𝔽₁ curve at the monoid level (Square/Monoid.lean).
 #print axioms Square.one_le_mul
 #print axioms Square.mMul_assoc
