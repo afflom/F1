@@ -4,6 +4,83 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html), starting at `v0.0.1`.
 
+## [0.19.0] - 2026-06-12
+
+### Added — stage E: completion — the explicit formula, the dominance face, the roll-up (pure Lean 4, no Mathlib, no `sorry`, choice-free)
+
+The three stage-E release goals are delivered: **the explicit-formula trace is completed** (the zero
+side realized at the Bombieri–Lagarias slices), **the remaining `Li` interfaces are retired** at the
+built slices, and **the final F1-square roll-up** records the v1.0.0-candidate state — plus **THE
+DOMINANCE FACE**: the crux as a single uniform bound, proven equivalent to both prior faces. The
+crux did not close — now a *sourced* result, not a presumption — so `hodgeIndexHolds`/
+`liPositivityHolds` stay `none` and **RH stays OPEN**. Every theorem is choice-free
+(`{propext, Quot.sound}`), audited; the build is warning-free; the gate passes.
+
+- **The completed explicit-formula trace** (`F1Square/Analysis/LiComplete.lean`) —
+  `Li.ExplicitFormulaTrace`, until now inhabited only by the trivial split `z = z + 0`, is REALIZED
+  with the genuine three-sided reading at both built slices (`explicitFormulaTrace_one_realized`,
+  `explicitFormulaTrace_two_realized`): zero side `λ₁`/`λ₂` (the sum-over-zeros reading is
+  [CLASSICAL], BL 1999 — the zeros are not constructed and nothing pretends they are), finite-place
+  closed forms `γ` and `2γ − (γ² + 2γ₁)`, archimedean parts — all three reals built. Packaged as the
+  **`WeilTrace` ladder** (`weilTraceTwo`, the trace identity at every positive index;
+  `weilTraceTwo_evidence`). Convention notes pinned (deep-research-verified): the Lagarias⟷BL
+  grouping (`λₙ = S∞(n) − S_f(n) + 1` vs `λₙ^{arith} = −S_f`, `λₙ^{∞} = S∞ + 1`, confirmed against
+  both built slices to 30 digits); the arithmetic closed form sourced from the η-polynomial form
+  (the arXiv print of Lagarias eq. (4.13) carries a sign typo — not used); unconditionally the
+  finite-place part equals the zero sum truncated at height `√n` up to `O(√n·log n)` (Lagarias
+  Thm 6.1) — the precise sense in which the prime side IS an incomplete zero side.
+- **`Li.LiAgreesWith` retired at the built slices** (`liAgreesWith_two_realized`) — computed (the
+  direct certified builds `Rlambda1` via the accelerated-γ assembly, `Rlambda2` via the
+  Stieltjes/ζ(2) assembly) agrees with classical (the BL closed-form assemblies,
+  `liClassicalSeqTwo`) — genuinely non-reflexive at `n = 1, 2`, the agreement being the content of
+  `Rlambda1_decomposition`/`Rlambda2_decomposition`. A REALIZATION LEDGER in `Li.lean` records the
+  boundary: every `Li` interface is realized exactly as far as the built slices reach, no further.
+- **THE DOMINANCE FACE** (`F1Square/Square/Dominance.lean`) — the crux as ONE uniform bound:
+  `Dominates B arith arch` (`−B(n) ≤ arith(n)` — the bound controls the oscillation's negative
+  excursions — and `arch(n) − B(n) > 0` — it stays strictly below the archimedean trend),
+  `Dominated` its single existential. Sign-agnostic in both parts: no case split between the
+  small-`n` regime (archimedean part NEGATIVE: `λ₁^{∞} ≈ −0.5541`, `λ₂^{∞} ≈ −0.8745`, re-verified
+  to 30 digits) and the asymptotic regime (roles swapped); the dichotomy is clean, no third option.
+  **The theorems**: `dominated_liPositive` / `liPositive_dominated` / `dominated_iff_liPositive`
+  (under the trace, "some single bound dominates" ⟺ `λₙ > 0 ∀n` — genuinely universal WITHOUT
+  enumeration; the necessity witness is the tight bound `B(n) = arch(n) − λₙ`), and
+  **`dominance_crux_equivalent`**: `Dominated ⟺ SpectralCrux ⟺ LiCrux` through the v0.18.0 bridge —
+  **the crux now has THREE provably equivalent faces** (geometric `⟨Cₙ,Cₙ⟩ < 0 ∀n`, analytic
+  `λₙ > 0 ∀n`, dominance `∃ one bound under which oscillation loses`); `weilTrace_dominance` reads
+  the completed trace ladder through it. **The assembly shape, exact**: `dominance_head_tail` +
+  `crux_closure_route` — the certified head (today `n ≤ 2`) plus ONE tail bound from `n = 3` on
+  yields the crux; the tail bound for the genuine parts is the single remaining object, provably
+  equivalent to the v0.18.0 frontier. **Honesty guards, two-sided**: `dominance_satisfiable` (no
+  hidden impossibility; the loose existential is NOT RH), `twoSlice_not_dominated` +
+  `weilTraceTwo_not_crux` (the finite-assembly guard transfers to this face).
+- **The classical sourcing, deep-research-verified** (101 agents, 23 claims confirmed 3-0 against
+  the primary PDFs, 2 refuted): **Voros's strict dichotomy** (*Math. Phys. Anal. Geom.* 9 (2006)
+  53–63, arXiv math/0506326 — "two sharply distinct and mutually exclusive asymptotic forms", NO
+  third option): RH ⟺ `λₙ ~ ½n(log n − 1 + γ − log 2π)` mod `o(n)`; ¬RH ⟺ exponential oscillation
+  `Σ((τₖ+i/2)/(τₖ−i/2))ⁿ + c.c.`, rate `|1 − 1/ρ| > 1` for the `Re ρ < 1/2` member of each
+  off-line pair (rigorous via Darboux in the 2006 paper; the 2004 note's sign erratum pinned as a
+  convention trap). **Lagarias** (*Ann. Inst. Fourier* 57 (2007) 1689–1740): the archimedean trend
+  `(n/2)log n + cn + O(1)`, `c = (γ − 1 − log 2π)/2`, **unconditional** (Thm 5.1; Voros pins the ζ
+  `O(1)` to `+3/4`); the `O(√n·log n)` excursion bound on the arithmetic part — a THEOREM under RH
+  (Thm 6.1). The general-`n` archimedean closed form
+  `λₙ^{∞} = 1 − (n/2)(γ + log 4π) + Σ_{j=2}^n (−1)ʲ C(n,j)(1 − 2^{−j})ζ(j)` matches the built
+  slices exactly. Net: `Dominated`(genuine parts) is TRUE iff RH — both directions confirmed at the
+  asymptotic level — and **no unconditional tail bound exists in the verified literature** (the
+  one-sided shape is published only as Coffey's sufficiency Conjectures 2–3, math-ph/0505052); the
+  equivalence-by-regrouping is this release's theorem, per the Conrey–Li relocation discipline.
+- **The final roll-up** (`F1Square.lean`) — the stage-E backing block, the elaboration-checked
+  v0.19.0 witness (both trace realizations, the retirement, the ∀-form three-face equivalence, the
+  dominance reading, both guards, crux fields `none`), and the **v1.0.0-candidate state**: complete
+  construction, honest crux. Workspace hygiene: warning-free build; `Li.lean` realization ledger;
+  `Attempt.lean` frontier cross-pointer.
+
+### Honest scope (the bright line, unchanged)
+- The dominance face RELOCATES the difficulty (Conrey–Li); it does not remove it. The open content
+  of RH is now ONE object: a single bound sequence dominating the genuine arithmetic part strictly
+  below the genuine archimedean trend — which exists iff RH (verified both directions). Nothing
+  asserts it; `hodgeIndexHolds`/`liPositivityHolds` stay `none`; **RH stays OPEN**. The certified
+  slices remain `n = 1, 2`; the next slice needs `γ₂`.
+
 ## [0.18.0] - 2026-06-12
 
 ### Added — stage D: the bridge and the crux attempt (pure Lean 4, no Mathlib, no `sorry`, choice-free)

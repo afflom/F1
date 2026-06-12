@@ -25,8 +25,8 @@ stop sign — the focus is always the **construction of the F1 square**, to comp
 | `classGroupFinitelyGen` | `some true` (**canonical 𝕊** — v0.17.0) | shipped in **C** |
 | `surfaceConstructed` | `some true` (**canonical 𝕊**, monoid-scheme level — v0.17.0) | shipped in **C** |
 | `parallelPencilFinding` | `some true` (**canonical 𝕊** — v0.17.0) | shipped in **C** |
-| `hodgeIndexHolds` (= RH, geometric) | `none` | **D / v0.18.0** (iff genuinely proven) |
-| `liPositivityHolds` (= RH, analytic) | `none` | **D / v0.18.0** (iff genuinely proven) |
+| `hodgeIndexHolds` (= RH, geometric) | `none` | stays `none` through **E** — the attempt ran (D), the dominance face pinned the open object (E); flips iff genuinely proven |
+| `liPositivityHolds` (= RH, analytic) | `none` | stays `none` through **E** — same proposition as the geometric face (D), and as the dominance face (E); flips iff genuinely proven |
 
 ---
 
@@ -190,16 +190,41 @@ State the geometric↔analytic equivalence faithfully, and **attempt** the crux 
 - **Stays open:** RH (both faces, now provably one proposition through the bridge); the genuine
   spectral instance (`H¹`, T4/§3.4); `λₙ` certification beyond `n = 2` (`γ₂, γ₃, …`).
 
-## v0.19.0 — (E) Completion: the explicit formula and the F1-square roll-up
+## v0.19.0 — (E) Completion: the explicit formula and the F1-square roll-up **[shipped]**
 
-Assemble the full Weil explicit formula and the final status record.
+Assemble the full Weil explicit formula and the final status record. **Shipped** (all axiom-clean
+`{propext, Quot.sound}`):
 
-- The complete `Li.ExplicitFormulaTrace` — the **zero side** (`Σ` over the nontrivial zeros). This is
-  RH-equivalent: it becomes provable exactly when the crux (D) closes; until then it remains the honest
-  interface it is today.
-- Retire the remaining honest interfaces (`LiAgreesWith`, …) as theorems where the now-built ζ/`λ` make
-  them so.
-- The final F1-square status roll-up and a v1.0.0-candidate state.
+- **The complete `Li.ExplicitFormulaTrace`** (`Analysis/LiComplete.lean`): realized with the genuine
+  three-sided reading at both built slices (`explicitFormulaTrace_one/two_realized` — the zero side
+  `λ₁`/`λ₂` [its sum-over-zeros reading is CLASSICAL, Bombieri–Lagarias 1999], the finite-place
+  closed forms, the archimedean parts), packaged as the **`WeilTrace` ladder** (`weilTraceTwo`: the
+  trace identity at every positive index). The zero side is RH-equivalent exactly as scoped: its
+  POSITIVITY is the crux (`weilTrace_dominance`) and stays the honest open interface — the TRACE
+  (the equality) bears no positivity content, so the completion ships while the crux stays `none`.
+- **The remaining interfaces retired** (`liAgreesWith_two_realized`): computed (the direct certified
+  builds `Rlambda1`/`Rlambda2`) = classical (the BL closed-form assemblies), genuinely non-reflexive
+  at `n = 1, 2`. With `LiDecomposition` (v0.15.3/v0.18.0) and `ExplicitFormulaTrace` (this release),
+  every `Li` interface is realized exactly as far as the built slices reach — the `Li.lean`
+  realization ledger records the boundary.
+- **THE DOMINANCE FACE** (`Square/Dominance.lean`): the crux as ONE uniform bound — `Dominated`
+  (a single `B` with `−B(n) ≤ arith(n)` and `arch(n) − B(n) > 0`, sign-agnostic, no enumeration,
+  no slice ladder) with `dominated_iff_liPositive` and **`dominance_crux_equivalent`**:
+  `Dominated ⟺ SpectralCrux ⟺ LiCrux` — the crux now has THREE provably equivalent faces. The
+  assembly shape exact (`dominance_head_tail`, `crux_closure_route`: certified head + one tail
+  bound from `n = 3` on ⟹ crux). Deep-research-verified sourcing (101 agents, primary PDFs):
+  Voros's strict dichotomy (*MPAG* 9 (2006) — tempered `½n(log n − 1 + γ − log 2π)` vs exponential
+  oscillation, NO third option), Lagarias (*Ann. Inst. Fourier* 57 (2007)): the archimedean trend
+  `(n/2)log n + cn + O(1)`, `c = (γ−1−log 2π)/2`, UNCONDITIONAL (Thm 5.1) and the `O(√n·log n)`
+  excursion bound, a THEOREM under RH (Thm 6.1) — so `Dominated`(genuine parts) is TRUE iff RH,
+  both directions, and NO unconditional tail bound exists in the verified literature: the
+  attempt's conclusion is a sourced result, not a presumption. Honesty guards two-sided
+  (`dominance_satisfiable`; `twoSlice_not_dominated`/`weilTraceTwo_not_crux`).
+- **The final roll-up** (`F1Square.lean`): the stage-E backing block and elaboration-checked
+  witness — the **v1.0.0-candidate state**: complete construction, honest crux. Every surrounding
+  field `some true`; `hodgeIndexHolds`/`liPositivityHolds` stay `none`. **RH stays OPEN** — one
+  proposition with three equivalent faces, its open content relocated into a single object (the
+  tail bound for the genuine parts, governed by the zeros' location).
 
 ---
 
