@@ -74,8 +74,9 @@ CI runs `lake build` on every push and pull request.
 
 This project uses [Semantic Versioning](https://semver.org), starting at **v0.0.1**. See
 [`CHANGELOG.md`](CHANGELOG.md) for the release history and [`ROADMAP.md`](ROADMAP.md) for the remaining
-construction of the F1 square, scoped into releases v0.15.0–v0.19.0 (the crux stays `none` until RH is
-genuinely proven).
+construction of the F1 square, scoped into releases v0.15.0–v0.20.0 (the crux stays `none` until RH is
+genuinely proven — v0.20.0 derives the Hodge-index dictionary `⟨Cₙ,Cₙ⟩ = −2λₙ` as a theorem and the
+gate locates the frontier: the forced signature is exactly `λₙ > 0 ∀n` = RH, still open).
 
 ## Publishing (Zenodo)
 

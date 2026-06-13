@@ -1104,9 +1104,13 @@ example :
     (`vanCyc_selfpair_built` — `sqPair clsDiag clsDiag = 0`, not plugged) and the trace datum
     `Δ·Γₙ=λₙ`, `⟨Cₙ,Cₙ⟩ = −2λₙ` is DERIVED (`genuineSpectralSquare_dict`), no longer a field; (4)
     B — the forced criterion (`genuine_crux_equivalent`): the geometric crux on the constructed
-    object ⟺ `LiCrux (genuineLamSeq)` = RH; (5) the two-sidedness guard (SATISFIABLE — no hidden
-    impossibility). The forced signature is RH and needs the genuine Stieltjes η-tail (the zeros);
-    the crux fields stay `none`: **RH OPEN**. -/
+    object ⟺ `LiCrux (genuineLamSeq)` = RH; (5) **THE FRONTIER, LOCATED**
+    (`genuine_crux_frontier_located`): the construction reaches its irreducible core — the forced
+    criterion is exactly `∀n, Pos (genuineLamSeq n)`, the head `λ₁,λ₂` is discharged, no finite run
+    reaches it, and it is satisfiable (no hidden impossibility). The remaining input is the genuine
+    Stieltjes η-tail (the zeros), whose positivity is RH. The gate flips `none → some true` the
+    instant a faithful, axiom-clean proof of the criterion lands; until then the crux fields stay
+    `none`, never faked — the bright line, not a ceiling: **RH OPEN**. -/
 example :
     Square.IsFreeFrob Square.H1
     ∧ (∀ dd gg dg : Analysis.Real,
@@ -1124,7 +1128,14 @@ example :
     ∧ (∀ E : Analysis.StieltjesEta,
         Square.SpectralCrux (Square.genuineSpectralSquare E)
           ↔ Li.LiCrux (Analysis.genuineLamSeq E.eta))
-    ∧ (∃ S : Square.SpectralSquare, Square.SpectralCrux S)
+    ∧ (∀ E : Analysis.StieltjesEta,
+        (Square.SpectralCrux (Square.genuineSpectralSquare E)
+            ↔ ∀ n : Nat, 0 < n → Analysis.Pos (Analysis.genuineLamSeq E.eta n))
+        ∧ (Analysis.Pos (Analysis.genuineLamSeq E.eta 1)
+            ∧ Analysis.Pos (Analysis.genuineLamSeq E.eta 2))
+        ∧ (Square.SpectralHodgeNeg (Square.genuineSpectralSquare E)
+            ↔ ∀ N, Square.SpectralHodgeNegUpTo (Square.genuineSpectralSquare E) N)
+        ∧ (∃ S : Square.SpectralSquare, Square.SpectralCrux S))
     ∧ f1SquareStatus.hodgeIndexHolds = none
     ∧ f1SquareStatus.liPositivityHolds = none :=
   ⟨Square.H1_isFree,
@@ -1132,6 +1143,6 @@ example :
    Square.vanCyc_selfpair_built,
    Square.genuineSpectralSquare_dict,
    Square.genuine_crux_equivalent,
-   Square.genuine_signature_satisfiable, rfl, rfl⟩
+   Square.genuine_crux_frontier_located, rfl, rfl⟩
 
 end UOR.Bridge.F1Square

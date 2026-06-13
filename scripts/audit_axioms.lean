@@ -2030,3 +2030,4 @@ open UOR.Bridge.F1Square
 #print axioms Square.genuine_crux_frontier
 #print axioms Square.genuine_signature_satisfiable
 #print axioms Square.genuine_iff_all_upTo
+#print axioms Square.genuine_crux_frontier_located

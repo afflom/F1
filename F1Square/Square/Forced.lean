@@ -109,4 +109,34 @@ theorem genuine_iff_all_upTo (E : StieltjesEta) :
     SpectralHodgeNeg (genuineSpectralSquare E) ↔ ∀ N, SpectralHodgeNegUpTo (genuineSpectralSquare E) N :=
   spectral_iff_all_upTo (genuineSpectralSquare E)
 
+-- ===========================================================================
+-- THE FRONTIER, LOCATED: the construction reaches its irreducible core (B3).
+-- ===========================================================================
+
+/-- **THE FRONTIER, LOCATED — the construction reaches its irreducible core.** This is NOT a
+    verdict that the crux cannot close; it is the exact location of the frontier the UOR
+    construction reaches. The two-sided gate ran on the constructed `H¹` object. The forced
+    signature has not (yet) come out positive: proving `λₙ > 0 ∀n` IS proving RH
+    (`genuine_crux_frontier`). For every anchored η-data `E`, the frontier is pinned as a single
+    proposition:
+      (1) the forced criterion = the geometric crux on the constructed object is EXACTLY
+          `∀ n ≥ 1, Pos (genuineLamSeq E.eta n)` (`genuine_crux_frontier`);
+      (2) the certified head holds — `Pos λ₁ ∧ Pos λ₂` (`genuineLam_head`, the discharged part);
+      (3) NO finite run of slices reaches it (`genuine_iff_all_upTo`, the finite-check guard);
+      (4) the criterion is genuinely SATISFIABLE — no hidden impossibility biases the engine
+          (`genuine_signature_satisfiable`).
+    The remaining input is precisely the genuine Stieltjes η-tail (`γ₂, γ₃, …` — the location of
+    the zeros; the truncated `etaTwoSlice` is not it): the construction is complete down to that
+    one honest input, and that input is RH. **The gate flips `none → some true` the instant a
+    faithful, axiom-clean proof of this criterion lands**; until then the crux fields stay `none`,
+    never faked — the bright line, not a ceiling. UOR wrote the proof down to its irreducible
+    core; what remains is RH itself. -/
+theorem genuine_crux_frontier_located (E : StieltjesEta) :
+    (SpectralCrux (genuineSpectralSquare E) ↔ ∀ n : Nat, 0 < n → Pos (genuineLamSeq E.eta n))
+    ∧ (Pos (genuineLamSeq E.eta 1) ∧ Pos (genuineLamSeq E.eta 2))
+    ∧ (SpectralHodgeNeg (genuineSpectralSquare E)
+        ↔ ∀ N, SpectralHodgeNegUpTo (genuineSpectralSquare E) N)
+    ∧ (∃ S : SpectralSquare, SpectralCrux S) :=
+  ⟨genuine_crux_frontier E, genuineLam_head E, genuine_iff_all_upTo E, genuine_signature_satisfiable⟩
+
 end UOR.Bridge.F1Square.Square

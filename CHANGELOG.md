@@ -4,6 +4,66 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html), starting at `v0.0.1`.
 
+## [0.20.0] - 2026-06-13
+
+### Added — stage F: the UOR construction of the crux — the canonical `H¹`-object and the FORCED dictionary (pure Lean 4, no Mathlib, no `sorry`, choice-free)
+
+The v0.18.0 bridge carried the dictionary `⟨Cₙ,Cₙ⟩ = −2λₙ` as INTERFACE DATA — a `SpectralSquare`
+field that any instance supplied definitionally (`cSq := −2λ`, `dict := rfl`). Stage F removes
+that assumption and **derives** the dictionary, mirroring `BridgeFF`'s dictionary column over ℤ: a
+genuine rank-4 Néron–Severi-style lattice, the primitive projection with PROVEN orthogonality, and
+the self-pairing computed from the Gram. **The gate then ran on the constructed object and LOCATED
+THE FRONTIER** — the forced signature did *not* come out positive (proving `λₙ > 0 ∀n` *is* RH), so
+the construction is complete down to one irreducible input (the genuine Stieltjes η-tail = the
+zeros) and `hodgeIndexHolds`/`liPositivityHolds` stay `none` — the gate flips the instant a
+faithful, axiom-clean proof of the criterion lands; until then **RH stays OPEN**. Every theorem is
+choice-free (`{propext, Quot.sound}`), audited; the build is warning-free; the gate passes.
+
+- **A1 — the `H¹` carrier by universal property** (`F1Square/Square/Cohomology.lean`): a
+  `FrobSys` is a carrier with a scaling/Frobenius action `φ` and a fundamental class `g`; the
+  canonical `H¹` is `H1 = (ℕ, succ, 0)`, the **free / initial Frobenius system on one generator**
+  — a morphism out of it is FORCED (`H1_universal`, `H1_isFree`, `freeFrob_unique_upto_iso`),
+  exactly as the coproduct forced `𝕊` (v0.17.0). The Frobenius orbit **realizes the built
+  prime-power pencil** as ONE equivariant identification (`orbit_realizes_pencil` — the orbit
+  position's log-separation from the diagonal equals the built `pencil_separation_pow`;
+  `orbitShift_succ` — each Frobenius step adds `log p = Λ(pᵏ)`, the Connes–Consani closed orbit).
+  Honest scope: this builds the ABSTRACT carrier of the action, NOT the genuine spectral `H¹`
+  (whose spectrum is the zeros) — that is the open frontier.
+- **A2 — the intrinsic lattice and the trace datum** (`F1Square/Square/WeilLattice.lean`): `hPair`
+  is the symmetric bilinear form on the rank-4 lattice `{F_h, F_v, Δ, Γ}` with the sourced/derived
+  ruling intersections and the spectral data `Δ², Γ², Δ·Γ` as parameters. The vanishing cycle
+  `Cₙ = Δ − Γₙ` is **proven GENUINELY PRIMITIVE** — orthogonal to both rulings for every spectral
+  datum (`vanCyc_perp_Fh`, `vanCyc_perp_Fv`, the `BridgeFF.primDG_perp` analog) — not hand-picked.
+  On `𝕊`'s coarse lattice the spectral data is `Δ²=Γ²=Δ·Γ=0` (pencil-blind, `vanCyc_blind`); the
+  `H¹` enrichment lifts `Δ·Γₙ` to the explicit-formula value `λₙ`.
+- **A3 — THE FORCED DICTIONARY**: the vanishing-cycle self-pairing is `Δ²−2(Δ·Γ)+Γ² = dd+gg−2dg`
+  (`vanCyc_selfpair_gen`, the `BridgeFF.primDG_sq` analog), the `−2` being the lattice's own cross
+  term. The geometric inputs `Δ²=Γ²=0` are **TIED to the v0.17.0 derived lattice**
+  (`vanCyc_selfpair_built`, from `pair_diag_self_derived`/`pair_graph_self_derived`), not plugged.
+  `IntrinsicH1` is **assumption-free by construction** — its only datum is `lam`; `cSq` is FORCED
+  to the pairing diagonal, so no false dictionary CAN be inhabited; `intrinsicH1_dict` is a
+  theorem. `genuineSpectralSquare` routes through it, so `⟨Cₙ,Cₙ⟩ = −2λₙ` is now DERIVED
+  (`genuineSpectralSquare_dict`), not a field — the v0.18.0 interface converted to construction.
+- **B — the forced signature and the located frontier** (`F1Square/Square/Forced.lean`):
+  `genuine_vanCyc_normal` (`−⟨Cₙ,Cₙ⟩ = 2λₙ`, the completed-square normal form);
+  `genuine_crux_equivalent` (the geometric crux on the constructed object ⟺ `LiCrux genuineLamSeq`
+  = RH, now on an object whose dictionary is a theorem); `genuine_evidence_head` (`⟨C₁,C₁⟩ < 0`,
+  `⟨C₂,C₂⟩ < 0` on the DERIVED object). **`genuine_crux_frontier_located` pins the FRONTIER** as
+  one proposition: the forced criterion is exactly `∀n, Pos (genuineLamSeq n)`, the head `λ₁,λ₂`
+  is discharged, no finite run reaches it (`genuine_iff_all_upTo`), and it is satisfiable
+  (`genuine_signature_satisfiable`, no hidden impossibility) — the remaining input is the genuine
+  Stieltjes η-tail (the zeros; the truncated `etaTwoSlice` is not it), and the gate flips the
+  instant a faithful proof of the criterion lands. **Which
+  `BridgeFF` column is done, which is open**: the DICTIONARY column (`primDG_sq`) is now a genuine
+  theorem; the SIGNATURE-FORCING column (`ff_hodge_iff_hasse`, where the function field's `4q−a²`
+  completed square forces the bound) has no unconditional analog over ℤ — the forced criterion is
+  RH.
+- **The roll-up** (`F1Square.lean`): the stage-F backing block and elaboration-checked witness
+  (the carrier's universal property, the proven primitivity, the built-tied dictionary, the forced
+  criterion, the located frontier); the crux fields stay `none`. The dictionary is a theorem;
+  the construction is complete down to its one honest input (the η-tail / the zeros); the
+  positivity does not close from anything built. **RH stays OPEN.**
+
 ## [0.19.0] - 2026-06-13
 
 ### Added — stage E: completion — the explicit formula, the dominance face, the roll-up (pure Lean 4, no Mathlib, no `sorry`, choice-free)

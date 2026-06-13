@@ -25,8 +25,8 @@ stop sign — the focus is always the **construction of the F1 square**, to comp
 | `classGroupFinitelyGen` | `some true` (**canonical 𝕊** — v0.17.0) | shipped in **C** |
 | `surfaceConstructed` | `some true` (**canonical 𝕊**, monoid-scheme level — v0.17.0) | shipped in **C** |
 | `parallelPencilFinding` | `some true` (**canonical 𝕊** — v0.17.0) | shipped in **C** |
-| `hodgeIndexHolds` (= RH, geometric) | `none` | the **F / v0.20.0** construction (the canonical `H¹`-object) derives the signature; flips iff that derivation forces positivity, gate-decided |
-| `liPositivityHolds` (= RH, analytic) | `none` | same proposition as the geometric face, through the bridge; flips iff the **F / v0.20.0** signature derivation closes |
+| `hodgeIndexHolds` (= RH, geometric) | `none` | **F / v0.20.0 shipped**: the dictionary is now DERIVED (the canonical `H¹` lattice, the primitive projection); the gate ran and LOCATED THE FRONTIER (the forced signature did not come out positive — that is RH), so this stays `none`; it flips the instant a faithful proof of the criterion lands |
+| `liPositivityHolds` (= RH, analytic) | `none` | same proposition as the geometric face, through the bridge; the **F / v0.20.0** forced criterion is exactly `λₙ > 0 ∀n` (needs the genuine Stieltjes η-tail = the zeros), so this stays `none` |
 
 ---
 
@@ -279,9 +279,24 @@ lands — that is the release's faithful completion.
 
 ---
 
-## v0.20.0 — (F) The UOR-based construction of the crux: the canonical `H¹`-object
+## v0.20.0 — (F) The UOR-based construction of the crux: the canonical `H¹`-object **[shipped]**
 
-**This release plans ALL remaining work.** The goal is the full UOR-based construction — brick by
+**Outcome (shipped 2026-06-13).** Group A is delivered: the dictionary `⟨Cₙ,Cₙ⟩ = −2λₙ` is no
+longer a `SpectralSquare` field assumption but a THEOREM, derived from a genuine rank-4
+Néron–Severi-style lattice (`Square/WeilLattice.lean`) whose vanishing cycle `Δ−Γ` is PROVEN
+primitive (`vanCyc_perp_Fh/Fv`, the `BridgeFF.primDG_perp` analog), with the geometric inputs
+`Δ²=Γ²=0` tied to the v0.17.0 derived theorems and the `H¹` carrier named by its universal property
+(`Square/Cohomology.lean`: `H1` free/initial on one generator, the orbit realizing the built
+pencil). Group B ran the gate (`Square/Forced.lean`): the forced signature is exactly
+`∀n, λₙ > 0` = Li's criterion = RH; **it did not come out positive, so `genuine_crux_frontier_located`
+pins the frontier** — the construction is complete down to one irreducible input (the genuine
+Stieltjes η-tail = the zeros), the gate flips the instant a faithful, axiom-clean proof of the
+criterion lands, and until then the crux fields stay `none`. The DICTIONARY column of
+`BridgeFF` (`primDG_sq`) is now a theorem; the SIGNATURE-FORCING column (`ff_hodge_iff_hasse`'s
+`4q−a²` completed square) has no unconditional ℤ-analog, because that analog is RH. The full
+construction map, as originally scoped, follows.
+
+The goal is the full UOR-based construction — brick by
 brick from universal properties — of the canonical content-addressed 𝔽₁-object whose *intrinsic*
 self-pairing is the Weil explicit-formula functional, so that its **signature is derived, not
 assumed**. The method is the one that wrote the entire F1 square: name the canonical object by its
