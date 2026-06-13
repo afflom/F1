@@ -196,4 +196,28 @@ theorem tri_sum_3a2 (a b : Real) :
     [] [Rneg (Rmul b b)]) ?_
   exact RsumL_cancel_anywhere (Rmul b b) [Rmul a a] [Rmul a a, Rmul a a] []
 
+/-- **`⅓·(Y+Y+Y) ≈ Y`** — the rational coefficient that closes the `e_k` decomposition
+    (`⅓ · 3a² = a²`): distribute `⅓` over the threefold sum, factor back to `(⅓+⅓+⅓)·Y`, and
+    `⅓+⅓+⅓ = 1`. -/
+theorem Rmul_third_three (Y : Real) :
+    Req (Rmul (ofQ (⟨1, 3⟩ : Q) (by decide)) (Radd (Radd Y Y) Y)) Y := by
+  have hdist : Req (Rmul (ofQ (⟨1, 3⟩ : Q) (by decide)) (Radd (Radd Y Y) Y))
+      (Rmul (Radd (Radd (ofQ (⟨1, 3⟩ : Q) (by decide)) (ofQ (⟨1, 3⟩ : Q) (by decide)))
+        (ofQ (⟨1, 3⟩ : Q) (by decide))) Y) := by
+    refine Req_trans (Rmul_distrib (ofQ (⟨1, 3⟩ : Q) (by decide)) (Radd Y Y) Y) ?_
+    refine Req_trans (Radd_congr (Rmul_distrib (ofQ (⟨1, 3⟩ : Q) (by decide)) Y Y) (Req_refl _)) ?_
+    refine Req_trans (Radd_congr
+      (Req_symm (Rmul_distrib_right (ofQ (⟨1, 3⟩ : Q) (by decide)) (ofQ (⟨1, 3⟩ : Q) (by decide)) Y))
+      (Req_refl _)) ?_
+    exact Req_symm (Rmul_distrib_right (Radd (ofQ (⟨1, 3⟩ : Q) (by decide))
+      (ofQ (⟨1, 3⟩ : Q) (by decide))) (ofQ (⟨1, 3⟩ : Q) (by decide)) Y)
+  refine Req_trans hdist ?_
+  have hcoef : Req (Radd (Radd (ofQ (⟨1, 3⟩ : Q) (by decide)) (ofQ (⟨1, 3⟩ : Q) (by decide)))
+      (ofQ (⟨1, 3⟩ : Q) (by decide))) one := by
+    refine Req_trans (Radd_congr (Radd_ofQ_ofQ (by decide) (by decide)) (Req_refl _)) ?_
+    refine Req_trans (Radd_ofQ_ofQ (by decide) (by decide)) ?_
+    exact Req_of_seq_Qeq (fun _ => by
+      show Qeq (add (add (⟨1, 3⟩ : Q) ⟨1, 3⟩) ⟨1, 3⟩) ⟨1, 1⟩; decide)
+  exact Req_trans (Rmul_congr hcoef (Req_refl Y)) (Rone_mul Y)
+
 end UOR.Bridge.F1Square.Analysis

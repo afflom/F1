@@ -2049,6 +2049,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.g2Seq_step_eq
 #print axioms Analysis.cube_diff_identity
 #print axioms Analysis.tri_sum_3a2
+#print axioms Analysis.Rmul_third_three
 
 -- v0.20.0 stage F: the Real additive-group normalizer (Analysis/RAddNF.lean) — the UOR κ-form solution.
 #print axioms Analysis.RsumL_nil
