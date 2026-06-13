@@ -111,6 +111,7 @@ import F1Square.Analysis.RMax
 import F1Square.Analysis.RSum
 import F1Square.Analysis.Weil
 import F1Square.Analysis.Voros
+import F1Square.Analysis.GammaTwo
 
 open UOR.Primitives
 

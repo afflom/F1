@@ -2039,3 +2039,9 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.exp_not_tempered
 #print axioms Analysis.voros_at_most_one
 #print axioms Analysis.voros_exactly_one
+
+-- v0.20.0 stage F, frontier (Analysis/GammaTwo.lean): the second Stieltjes constant γ₂ — brick 1 (substrate).
+#print axioms Analysis.lnSqOver_nonneg
+#print axioms Analysis.lnSqSum_step
+#print axioms Analysis.lnSqSum_mono
+#print axioms Analysis.logCube_nonneg
