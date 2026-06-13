@@ -173,6 +173,13 @@ open UOR.Bridge.F1Square
 #print axioms Square.weilPrime_demo
 #print axioms Square.weilPrime_window
 #print axioms Square.weilValue_window
+
+-- v0.19.0 the genuine-pairing arc — ψ(1/4), the archimedean kernel value at the window
+-- center, as a constructive real with a certified lower bracket (Analysis/PsiQuarter.lean).
+#print axioms Analysis.psiQuarterCore
+#print axioms Analysis.psiQuarterCore_lower
+#print axioms Analysis.psiQuarter
+#print axioms Analysis.psiQuarter_lower
 #print axioms Square.weilTraceTwo_not_crux
 #print axioms Square.twoSlice_not_dominated
 #print axioms Square.dominance_satisfiable
