@@ -102,6 +102,7 @@ import F1Square.Analysis.LiComplete
 import F1Square.Analysis.ArchTrend
 import F1Square.Analysis.GenuineLi
 import F1Square.Analysis.PsiQuarter
+import F1Square.Analysis.BurnolAlpha
 import F1Square.Analysis.RMax
 import F1Square.Analysis.RSum
 import F1Square.Analysis.Weil

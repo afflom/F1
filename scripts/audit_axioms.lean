@@ -180,6 +180,13 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.psiQuarterCore_lower
 #print axioms Analysis.psiQuarter
 #print axioms Analysis.psiQuarter_lower
+
+-- v0.19.0 the genuine-pairing arc — α(0) > 0: Burnol's window-center positivity
+-- certificate, computed (Analysis/BurnolAlpha.lean). Evidence, not the universal; crux none.
+#print axioms Analysis.sqrt2
+#print axioms Analysis.one_le_sqrt2
+#print axioms Analysis.burnolAlphaZero
+#print axioms Analysis.burnolAlphaZero_pos
 #print axioms Square.weilTraceTwo_not_crux
 #print axioms Square.twoSlice_not_dominated
 #print axioms Square.dominance_satisfiable
