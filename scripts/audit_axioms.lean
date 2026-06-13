@@ -187,6 +187,14 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.one_le_sqrt2
 #print axioms Analysis.burnolAlphaZero
 #print axioms Analysis.burnolAlphaZero_pos
+
+-- v0.19.0 the genuine-pairing arc — the τ-parameterized archimedean kernel Re ψ(1/4+iτ/2)
+-- and its monotonicity; the honest record that the bare multiplier is INDEFINITE
+-- (Analysis/DigammaWindow.lean). Pointwise α(τ)≥0 ∀τ is NOT a theorem; crux none.
+#print axioms Analysis.windowKernel_den_pos
+#print axioms Analysis.windowKernel_antitone
+#print axioms Analysis.windowTerm_mono
+#print axioms Analysis.windowTerm_zero
 #print axioms Square.weilTraceTwo_not_crux
 #print axioms Square.twoSlice_not_dominated
 #print axioms Square.dominance_satisfiable
