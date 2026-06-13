@@ -220,4 +220,33 @@ theorem Rmul_third_three (Y : Real) :
       show Qeq (add (add (⟨1, 3⟩ : Q) ⟨1, 3⟩) ⟨1, 3⟩) ⟨1, 1⟩; decide)
   exact Req_trans (Rmul_congr hcoef (Req_refl Y)) (Rone_mul Y)
 
+/-- **The e_k multiplicative core**: `a²(a−b) ≈ ⅓·(δ·W + δ²·(2a+b))`, `δ = a−b`,
+    `W = a²+ab+b²` — combining `tri_sum_3a2` (`W + δ(2a+b) = 3a²`) and `Rmul_third_three`
+    (`⅓·3a² = a²`). The identity that turns `e_k` into its bound-ready decomposition. -/
+theorem e2_core (a b : Real) :
+    Req (Rmul (Rmul a a) (Rsub a b))
+        (Rmul (ofQ (⟨1, 3⟩ : Q) (by decide))
+          (Radd (Rmul (Rsub a b) (Radd (Radd (Rmul a a) (Rmul a b)) (Rmul b b)))
+                (Rmul (Rmul (Rsub a b) (Rsub a b)) (Radd (Radd a a) b)))) := by
+  refine Req_symm ?_
+  -- ⅓·(δW + δ²T) ≈ ⅓·(δW + δ(δT))
+  refine Req_trans (Rmul_congr (Req_refl _) (Radd_congr (Req_refl _)
+    (Rmul_assoc (Rsub a b) (Rsub a b) (Radd (Radd a a) b)))) ?_
+  -- ≈ ⅓·(δ·(W + δT))
+  refine Req_trans (Rmul_congr (Req_refl _)
+    (Req_symm (Rmul_distrib (Rsub a b) (Radd (Radd (Rmul a a) (Rmul a b)) (Rmul b b))
+      (Rmul (Rsub a b) (Radd (Radd a a) b))))) ?_
+  -- ≈ ⅓·(δ·3a²)   [tri_sum_3a2 on W + δT]
+  refine Req_trans (Rmul_congr (Req_refl _)
+    (Rmul_congr (Req_refl _) (tri_sum_3a2 a b))) ?_
+  -- rearrange ⅓·(δ·3a²) ≈ δ·(⅓·3a²) ≈ δ·a² ≈ a²·δ
+  refine Req_trans (Req_symm (Rmul_assoc (ofQ (⟨1, 3⟩ : Q) (by decide)) (Rsub a b)
+    (Radd (Radd (Rmul a a) (Rmul a a)) (Rmul a a)))) ?_
+  refine Req_trans (Rmul_congr (Rmul_comm (ofQ (⟨1, 3⟩ : Q) (by decide)) (Rsub a b))
+    (Req_refl _)) ?_
+  refine Req_trans (Rmul_assoc (Rsub a b) (ofQ (⟨1, 3⟩ : Q) (by decide))
+    (Radd (Radd (Rmul a a) (Rmul a a)) (Rmul a a))) ?_
+  refine Req_trans (Rmul_congr (Req_refl _) (Rmul_third_three (Rmul a a))) ?_
+  exact Rmul_comm (Rsub a b) (Rmul a a)
+
 end UOR.Bridge.F1Square.Analysis
