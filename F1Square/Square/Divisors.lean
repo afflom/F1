@@ -56,7 +56,8 @@ def graph (n : Nat) (z : SqPt) : Prop := z.2.val = n * z.1.val
 /-- `Γ_1 = Δ`: the unit of the pencil is the diagonal. -/
 theorem graph_one_diag (z : SqPt) : graph 1 z ↔ diag z := by
   unfold graph diag
-  omega
+  rw [Nat.one_mul]
+  exact eq_comm
 
 /-- `Γ_0 = ∅`: the index `0` is degenerate (no point of `𝕊` has a coordinate `0`), so the
     pencil is genuinely indexed by the positive integers. -/

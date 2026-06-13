@@ -44,8 +44,16 @@ out="$(lake env lean scripts/audit_axioms.lean)"
 echo "$out"
 
 # 3. No forbidden axioms: sorryAx (sorry), Lean.ofReduceBool (native_decide), trustCompiler.
-if echo "$out" | grep -qE 'sorryAx|ofReduceBool|trustCompiler'; then
-  echo "FAIL: the proof layer depends on a forbidden axiom (sorry / native_decide)." >&2
+#    NOTE: results are captured into a variable and tested with `[ -n ... ]` rather than piped
+#    into `grep -q`. Under `set -o pipefail`, a `grep -q` that exits early sends SIGPIPE upstream,
+#    and the pipeline's status becomes that non-zero SIGPIPE code — which an `if` reads as FALSE,
+#    silently skipping the FAIL branch. That bug would let a real `sorry`/choice slip through, so
+#    the gate MUST NOT use `grep -q` in an `if`-condition pipeline here. (`|| true` guards the
+#    no-match exit-1 of plain grep, which `set -e` would otherwise treat as a fatal error.)
+forbidden="$(printf '%s\n' "$out" | grep -E 'sorryAx|ofReduceBool|trustCompiler' || true)"
+if [ -n "$forbidden" ]; then
+  echo "FAIL: the proof layer depends on a forbidden axiom (sorry / native_decide):" >&2
+  printf '%s\n' "$forbidden" >&2
   exit 1
 fi
 
@@ -53,11 +61,12 @@ fi
 #    These two are foundational (forced by `omega`/`simp`/`Int` core internals) and constructively
 #    uncontroversial. `Classical.choice` is deliberately EXCLUDED: the entire proof layer is
 #    choice-free, so any re-introduction of choice (or any other named axiom) fails the gate.
-if echo "$out" | grep -E 'depends on axioms' \
-   | grep -vqE '\[(propext|Quot\.sound)(, (propext|Quot\.sound))*\]'; then
-  echo "FAIL: a theorem depends on an axiom outside {propext, Quot.sound} (choice-free required)." >&2
-  echo "$out" | grep -E 'depends on axioms' \
-    | grep -vE '\[(propext|Quot\.sound)(, (propext|Quot\.sound))*\]' >&2
+#    Same capture-then-test discipline as check 3 (no `grep -q` in the `if` pipeline).
+nonminimal="$(printf '%s\n' "$out" | grep -E 'depends on axioms' \
+  | grep -vE '\[(propext|Quot\.sound)(, (propext|Quot\.sound))*\]' || true)"
+if [ -n "$nonminimal" ]; then
+  echo "FAIL: a theorem depends on an axiom outside {propext, Quot.sound} (choice-free required):" >&2
+  printf '%s\n' "$nonminimal" >&2
   exit 1
 fi
 

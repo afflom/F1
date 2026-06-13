@@ -110,6 +110,7 @@ import F1Square.Analysis.DigammaWindow
 import F1Square.Analysis.RMax
 import F1Square.Analysis.RSum
 import F1Square.Analysis.Weil
+import F1Square.Analysis.Voros
 
 open UOR.Primitives
 

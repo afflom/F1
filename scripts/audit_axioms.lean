@@ -2031,3 +2031,9 @@ open UOR.Bridge.F1Square
 #print axioms Square.genuine_signature_satisfiable
 #print axioms Square.genuine_iff_all_upTo
 #print axioms Square.genuine_crux_frontier_located
+
+-- v0.20.0 stage F, frontier brick (Analysis/Voros.lean): the Voros growth dichotomy, exclusivity.
+#print axioms Analysis.cube_le_pow2
+#print axioms Analysis.quad_lt_pow2
+#print axioms Analysis.tempered_not_exp
+#print axioms Analysis.exp_not_tempered
