@@ -501,11 +501,24 @@ def f1SquareStatus : F1SquareStatus := {
 --                                 weilPrime_demo (the FIRST COMPUTED pairing value:
 --                                 the finite-place side at the tent peaked at 2 is
 --                                 exactly log 2)}
---   THE UNCONDITIONAL TERRITORY (recorded, pinned, not asserted): CC Selecta 27 (2021)
---   Thm 1 — Weil positivity UNCONDITIONAL for test support in [2^{−1/2}, 2^{1/2}] (the
---   prime-free window; the finite-place side vanishes there BY CONSTRUCTION here);
---   Burnol's explicit multiplier certificate α(τ) = 8√2cos(τlog2)/(1+4τ²) + h₊(τ) is
---   the pinned next mechanization target (needs uniform-in-τ digamma bounds).
+--   THE UNCONDITIONAL TERRITORY (the window certificate, computed where computable): CC
+--   Selecta 27 (2021) Thm 1 — Weil positivity UNCONDITIONAL for test support in
+--   [2^{−1/2}, 2^{1/2}] (the prime-free window). On the built object the window is a
+--   THEOREM (Square.weilPrime_window/weilValue_window: in-window the finite-place side
+--   vanishes identically, so W = poles − archimedean) and Burnol's multiplier is
+--   evaluated at the center:
+--     the window-center kernel    ← Analysis.{psiQuarter (ψ(1/4) = −γ − 3Σ1/[(n+1)(4n+1)],
+--       value computed             the first exact non-trivial digamma value, a genuine
+--                                   constructive real), psiQuarter_lower (ψ(1/4) ≥ −4.32)}
+--     the certificate at τ = 0    ← Analysis.{sqrt2 (= exp(½log2), no sqrt primitive),
+--                                   one_le_sqrt2, burnolAlphaZero (= 8√2 − logπ + ψ(1/4)),
+--                                   burnolAlphaZero_pos (α(0) > 0 — Burnol's nonnegative
+--                                   multiplier at the window center, an axiom-clean
+--                                   theorem; true value ≈ 5.94)}
+--   This is EVIDENCE for the windowed positivity (the multiplier at one point), exactly
+--   as weilPrime_demo / the certified λ-slices are evidence — NOT the universal
+--   α(τ) ≥ 0 ∀τ (needs the uniform-in-τ complex-digamma bound), still less RH (the window
+--   excludes every prime). The universal window theorem stays the pinned next target.
 --   CONCLUSION OF THE ARC: every component of the crux that mathematics permits to be
 --   constructed IS constructed — the trend (closed form), the genuine Li sequence
 --   (modulo the Stieltjes tail), and now the pairing assembly with its finite-place
@@ -997,5 +1010,26 @@ example :
   ⟨Analysis.weilPrimePart_stable, Square.weilPrime_demo,
    fun W n hn => (Square.weilSpectralSquare W).dict n hn,
    Square.weil_strict_iff_crux, Square.weil_template_crux, rfl, rfl⟩
+
+/-- Elaboration-checked witness binding the **v0.19.0 window certificate** — the
+    unconditional territory, computed where computable. In order: (1) the window theorem on
+    the built object (in the prime-free window the finite-place side vanishes identically,
+    so `W = poles − archimedean`); (2) `ψ(1/4) ≥ −4.32` — the first exact non-trivial
+    digamma value, the archimedean kernel at the window center, as a genuine constructive
+    real; (3) `√2 ≥ 1`; (4) **`α(0) > 0`** — Burnol's nonnegative multiplier at the window
+    center, computed (`8√2 − log π + ψ(1/4) ≈ 5.94`). This is EVIDENCE for the windowed
+    Weil positivity, not the universal `α(τ) ≥ 0 ∀τ`, still less RH: the crux fields stay
+    `none`. -/
+example :
+    (∀ (S : Square.WeilSlot), S.test.X = 1 →
+      Analysis.Req (Square.weilValue S)
+        (Analysis.Rsub S.poles (Analysis.Radd (Analysis.weilArchConst S.test) S.archTail)))
+    ∧ Analysis.Rle (Analysis.ofQ (⟨-432, 100⟩ : Analysis.Q) (by decide)) Analysis.psiQuarter
+    ∧ Analysis.Rle Analysis.one Analysis.sqrt2
+    ∧ Analysis.Pos Analysis.burnolAlphaZero
+    ∧ f1SquareStatus.hodgeIndexHolds = none
+    ∧ f1SquareStatus.liPositivityHolds = none :=
+  ⟨Square.weilValue_window, Analysis.psiQuarter_lower, Analysis.one_le_sqrt2,
+   Analysis.burnolAlphaZero_pos, rfl, rfl⟩
 
 end UOR.Bridge.F1Square
