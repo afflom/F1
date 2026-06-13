@@ -140,7 +140,7 @@ crux did not close — now a *sourced* result, not a presumption — so `hodgeIn
     theorem of the assembly. Bombieri's Lincei truncations were verified to be ZERO-INDEXED (not
     zero-free certification targets) — that route is honestly closed.
   - **THE WINDOW CERTIFICATE, computed** (`Analysis/PsiQuarter.lean`, `Analysis/BurnolAlpha.lean`):
-    Burnol's nonnegative spectral multiplier `α(τ) = 8√2·cos(τ log2)/(1+4τ²) + h₊(τ)`,
+    Burnol's spectral multiplier `α(τ) = 8√2·cos(τ log2)/(1+4τ²) + h₊(τ)`,
     `h₊(τ) = −logπ + Re ψ(1/4 + iτ/2)`, evaluated at the center of the prime-free window. **ψ(1/4)**
     is built as the FIRST exact non-trivial digamma value — at `z = 1/4` the digamma series has
     exact-rational terms `1/(n+1) − 1/(n+1/4) = −3/[(n+1)(4n+1)]`, a sign-definite series with a
@@ -152,6 +152,17 @@ crux did not close — now a *sourced* result, not a presumption — so `hodgeIn
     multiplier at one point), exactly as `weilPrime_demo` / the certified `λ`-slices are evidence —
     NOT the universal `α(τ) ≥ 0 ∀τ` (needs the uniform-in-τ complex-digamma bound), still less RH
     (the window excludes every prime). The universal window theorem stays the pinned next target.
+  - **THE τ-PARAMETERIZED KERNEL + THE HONEST INDEFINITENESS FINDING** (`Analysis/DigammaWindow.lean`):
+    the kernel `Re ψ(1/4 + iτ/2)` has exact-rational terms (even in `τ`); `windowKernel`
+    `g_n(s) = (n+1/4)/((n+1/4)²+s)` is proven ANTITONE in `s = τ²/4` (`windowKernel_antitone`), so
+    `windowTerm = 1/(n+1) − g_n` is MONOTONE INCREASING in `τ²` (`windowTerm_mono`) — hence `h₊(τ)`
+    increases from `h₊(0) ≈ −5.37` toward `+∞`; `windowTerm_zero` reduces the kernel at `τ = 0` to
+    `ψ(1/4)`'s summand. **The load-bearing finding** (recorded faithfully): the BARE multiplier `α`
+    is **NOT** pointwise non-negative — `α(0) ≈ 5.94 > 0` but `α` is INDEFINITE, dipping to `≈ −1.0`
+    near `τ ≈ 2.27`. This is exactly why Burnol needs the restricted-class `A_ε`-correction and
+    Connes–Consani need the Sonine projection: **`α(τ) ≥ 0 ∀τ` is NOT a theorem**, so the
+    unconditional window positivity stays the honest interface — the monotone kernel (which bounds
+    the negative band) is the correct object the genuine window theorem is built from (v0.20.0).
 
 ### Honest scope (the bright line, unchanged)
 - The dominance face RELOCATES the difficulty (Conrey–Li); it does not remove it. The open content

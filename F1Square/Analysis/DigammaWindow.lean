@@ -7,9 +7,10 @@ THE HONEST FINDING (load-bearing — this brick exists to record it faithfully).
 window multiplier `α(τ) = 8√2·cos(τ·log 2)/(1+4τ²) + h₊(τ)`,
 `h₊(τ) = −log π + Re ψ(1/4 + iτ/2)`, is NOT pointwise non-negative. At the window center
 `α(0) ≈ 5.94 > 0` (`burnolAlphaZero_pos`), but the multiplier is INDEFINITE: near
-`τ ≈ 2.27` (where `cos(τ·log 2)` first vanishes) `h₊ ≈ −0.93`, so `α ≈ −0.93 < 0`; near
-`τ ≈ 4.5` (`cos = −1`) `α ≈ −0.41 < 0`. The negative band `τ ∈ [≈1.5, ≈6]` is exactly
-why Burnol notes "a further idea seems necessary to reach `c = √2`" and why Connes–Consani
+`τ ≈ 2.27` (where `cos(τ·log 2)` first vanishes, so `α = h₊`) `α ≈ −1.0 < 0`; near
+`τ ≈ 4.5` (`cos = −1`) `α ≈ −0.46 < 0`. The negative band (`α < 0` for `τ` roughly in
+`[≈0.9, ≈6.4]`) is exactly why Burnol notes "a further idea seems necessary to reach
+`c = √2`" and why Connes–Consani
 (*Selecta Math.* 27 (2021)) need the Sonine-space projection: windowed Weil positivity is
 recovered NOT by pointwise `α ≥ 0` but by adding a correction `A_ε·cos(ετ)` (which
 integrates to `0` against the RESTRICTED test class) — the form-level / integral statement,

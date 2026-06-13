@@ -2,12 +2,14 @@
 F1 square — v0.19.0 (the genuine-pairing arc), brick W3b: **α(0) > 0 — Burnol's
 window-center positivity certificate, computed.**
 
-THE CERTIFICATE. Burnol's nonnegative spectral multiplier for the prime-free window
+THE CERTIFICATE. Burnol's spectral multiplier for the prime-free window
 (arXiv math/0101068; deep-research-verified) is
     `α(τ) = 8√2·cos(τ·log 2)/(1 + 4τ²) + h₊(τ)`,   `h₊(τ) = −log π + Re ψ(1/4 + iτ/2)`,
-and `Z(g ⋆ g^τ) = ∫ α(τ)·|ĝ(s)|² dτ/2π ≥ 0` once `α ≥ 0`; `α(τ) ≥ 0` for all `τ` is the
-windowed Weil positivity, classical (Burnol; Connes–Consani, *Selecta Math.* 27 (2021),
-via the Sonine-space projection). At the window CENTER `τ = 0`:
+and `Z(g ⋆ g^τ) = ∫ α(τ)·|ĝ(s)|² dτ/2π ≥ 0`. The BARE `α` is NOT pointwise non-negative —
+it is indefinite (`DigammaWindow`); windowed positivity is recovered on the RESTRICTED
+test class via Burnol's `A_ε·cos(ετ)` correction (or the Connes–Consani Sonine-space
+projection, *Selecta Math.* 27 (2021)), NOT by pointwise `α ≥ 0`. At the window CENTER
+`τ = 0`:
     `α(0) = 8√2 − log π + ψ(1/4)`,
 every term now built: `√2 = exp(½·log 2)` (`RrpowPos`, `≥ 1` since `log 2 ≥ 0`),
 `log π` (`Rlogπc`, `≤ 115/100`), and `ψ(1/4)` (`psiQuarter`, `≥ −432/100`, brick W3a).
@@ -70,7 +72,7 @@ private theorem neg_logpi_lower :
 
 /-- **THE WINDOW-CENTER POSITIVITY CERTIFICATE, computed**: `α(0) = 8√2 − log π + ψ(1/4) > 0`
     (true value `≈ 5.94`; certified from the wide margin `8 − 1.15 − 4.32 = 2.53 > 0`). The
-    value of Burnol's nonnegative multiplier at the center of the prime-free window, made an
+    value of Burnol's window multiplier at the center of the prime-free window, made an
     axiom-clean theorem — EVIDENCE for the windowed Weil positivity, not the universal
     `α(τ) ≥ 0 ∀τ`, still less RH. -/
 theorem burnolAlphaZero_pos : Pos burnolAlphaZero := by

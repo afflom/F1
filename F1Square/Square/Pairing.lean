@@ -30,11 +30,11 @@ prime power contributes — the finite-place side vanishes BY CONSTRUCTION here,
 `weilPrimePart_stable`'s regime), Weil positivity holds UNCONDITIONALLY:
 Connes–Consani, Selecta Math. 27 (2021) art. 77, Thm 1 — the form is the trace of a
 positive operator (the Sonine-space projection; an infinite-dimensional certificate);
-Burnol's precursor (math/0101068) certifies a smaller window `[1/c, c]`, `c < √2`, by an
-EXPLICIT nonnegative spectral multiplier `α(τ) = 8√2·cos(τ·log 2)/(1+4τ²) + h₊(τ)`,
-`h₊(τ) = −log π + Re ψ(1/4 + iτ/2)` — the natural constructive SOS target (it needs
-uniform-in-τ digamma bounds, beyond any finite check; recorded, not asserted). The
-boundary at the first prime (`x = 2`, `1/2`) is exactly where RH begins.
+Burnol's precursor (math/0101068) certifies a smaller window `[1/c, c]`, `c < √2`, via the
+EXPLICIT spectral multiplier `α(τ) = 8√2·cos(τ·log 2)/(1+4τ²) + h₊(τ)`,
+`h₊(τ) = −log π + Re ψ(1/4 + iτ/2)` — which is INDEFINITE (not pointwise `≥ 0`;
+`DigammaWindow`), made non-negative on the restricted class by Burnol's `A_ε·cos(ετ)`
+correction. The boundary at the first prime (`x = 2`, `1/2`) is exactly where RH begins.
 
 FAITHFULNESS: nothing here asserts PSD for the genuine family; the loose existential
 over `W`-families is satisfiable and NOT RH (`weil_template_crux` mirror below); the

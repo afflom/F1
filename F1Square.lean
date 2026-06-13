@@ -513,9 +513,10 @@ def f1SquareStatus : F1SquareStatus := {
 --                                   constructive real), psiQuarter_lower (ψ(1/4) ≥ −4.32)}
 --     the certificate at τ = 0    ← Analysis.{sqrt2 (= exp(½log2), no sqrt primitive),
 --                                   one_le_sqrt2, burnolAlphaZero (= 8√2 − logπ + ψ(1/4)),
---                                   burnolAlphaZero_pos (α(0) > 0 — Burnol's nonnegative
+--                                   burnolAlphaZero_pos (α(0) > 0 — Burnol's window
 --                                   multiplier at the window center, an axiom-clean
---                                   theorem; true value ≈ 5.94)}
+--                                   theorem; true value ≈ 5.94; the bare multiplier is
+--                                   INDEFINITE away from the center — DigammaWindow)}
 --   This is EVIDENCE for the windowed positivity (the multiplier at one point), exactly
 --   as weilPrime_demo / the certified λ-slices are evidence — NOT the universal
 --   α(τ) ≥ 0 ∀τ (needs the uniform-in-τ complex-digamma bound), still less RH (the window
@@ -1017,7 +1018,7 @@ example :
     the built object (in the prime-free window the finite-place side vanishes identically,
     so `W = poles − archimedean`); (2) `ψ(1/4) ≥ −4.32` — the first exact non-trivial
     digamma value, the archimedean kernel at the window center, as a genuine constructive
-    real; (3) `√2 ≥ 1`; (4) **`α(0) > 0`** — Burnol's nonnegative multiplier at the window
+    real; (3) `√2 ≥ 1`; (4) **`α(0) > 0`** — Burnol's window multiplier at the window
     center, computed (`8√2 − log π + ψ(1/4) ≈ 5.94`). This is EVIDENCE for the windowed
     Weil positivity, not the universal `α(τ) ≥ 0 ∀τ`, still less RH: the crux fields stay
     `none`. -/
