@@ -2190,3 +2190,5 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.dMinusQ_nonneg
 #print axioms Analysis.dsq_ge
 #print axioms Analysis.dcube_ge
+#print axioms Analysis.dPlusQ_zero_eq_mid
+#print axioms Analysis.C2_nonneg

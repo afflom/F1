@@ -761,4 +761,45 @@ theorem dcube_ge (p T : Nat) (hp : 1 ≤ p)
   refine Rle_trans (Rmul_le_Rmul_right hdM_nn (dsq_ge p T hp hT)) ?_
   exact Rmul_le_Rmul_left (Rnonneg_Rmul hd_nn hd_nn) hlo
 
+-- ===========================================================================
+-- (C3d) **`C2 ≥ 0` (trapezoid ≥ integral)** — the key structural coincidence: the trapezoidal
+-- midpoint `M = ½(1/p+1/(p+1))` IS the `T=0` artanh upper bound `dPlusQ 0 p` (exactly, as rationals:
+-- `2·(1/(2p+1) + 1/((2p+1)·4p(p+1))) = (2p+1)/(2p(p+1)) = M`).  So `δ = d ≤ dPlusQ 0 p ≈ M`, hence
+-- `C2 = M − d ≥ 0` — with NO series comparison or polynomial inequality.
+-- ===========================================================================
+
+/-- **`dPlusQ 0 p = ½(1/p + 1/(p+1))`** (as rationals) — the trapezoidal midpoint equals the `T=0`
+    artanh upper bound. -/
+theorem dPlusQ_zero_eq_mid (p : Nat) (hp : 1 ≤ p) :
+    Qeq (dPlusQ 0 p) (mul (⟨1, 2⟩ : Q) (add (⟨1, p⟩ : Q) (⟨1, p + 1⟩ : Q))) := by
+  show ((dPlusQ 0 p).num) * ((mul (⟨1, 2⟩ : Q) (add (⟨1, p⟩ : Q) (⟨1, p + 1⟩ : Q))).den : Int)
+     = ((mul (⟨1, 2⟩ : Q) (add (⟨1, p⟩ : Q) (⟨1, p + 1⟩ : Q))).num)
+       * ((dPlusQ 0 p).den : Int)
+  simp only [dPlusQ, artSum, artTerm, qpow, npow, mul, add]
+  push_cast
+  ring_uor
+
+/-- **`C2 = ½(1/p+1/(p+1)) − d ≥ 0`** — the trapezoidal-error coefficient is nonnegative
+    (`d ≤ dPlusQ 0 p ≈ M`). -/
+theorem C2_nonneg (p : Nat) (hp : 1 ≤ p) :
+    Rnonneg (Rsub (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide))
+            (Radd (ofQ (⟨1, p⟩ : Q) hp) (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p))))
+          (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))) := by
+  have hMd : 0 < (mul (⟨1, 2⟩ : Q) (add (⟨1, p⟩ : Q) (⟨1, p + 1⟩ : Q))).den :=
+    Qmul_den_pos (by decide)
+      (add_den_pos (a := (⟨1, p⟩ : Q)) (b := (⟨1, p + 1⟩ : Q)) hp (Nat.succ_pos p))
+  -- d ≤ ofQ(dPlusQ 0 p) ≈ ofQ(M_Q) ≈ M
+  have hdM : Rle (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
+      (ofQ (mul (⟨1, 2⟩ : Q) (add (⟨1, p⟩ : Q) (⟨1, p + 1⟩ : Q))) hMd) :=
+    Rle_trans (deltaLog_upper_tight p 0 hp)
+      (Rle_of_Req (ofQ_congr (dPlusQ_den_pos 0 p hp) hMd (dPlusQ_zero_eq_mid p hp)))
+  have hMeq : Req (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide))
+        (Radd (ofQ (⟨1, p⟩ : Q) hp) (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p))))
+      (ofQ (mul (⟨1, 2⟩ : Q) (add (⟨1, p⟩ : Q) (⟨1, p + 1⟩ : Q))) hMd) :=
+    Req_trans (Rmul_congr (Req_refl _)
+        (Radd_ofQ_ofQ (a := (⟨1, p⟩ : Q)) (b := (⟨1, p + 1⟩ : Q)) hp (Nat.succ_pos p)))
+      (Rmul_ofQ_ofQ (by decide)
+        (add_den_pos (a := (⟨1, p⟩ : Q)) (b := (⟨1, p + 1⟩ : Q)) hp (Nat.succ_pos p)))
+  exact Rnonneg_Rsub_of_Rle (Rle_trans hdM (Rle_of_Req (Req_symm hMeq)))
+
 end UOR.Bridge.F1Square.Analysis
