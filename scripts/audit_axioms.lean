@@ -2204,3 +2204,6 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.bd_le_one
 #print axioms Analysis.negR1_nonneg
 #print axioms Analysis.bR1_lower
+#print axioms Analysis.dsq_self_le
+#print axioms Analysis.dcube_self_le
+#print axioms Analysis.R0_lower_clean
