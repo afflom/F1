@@ -2162,3 +2162,5 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.resid_regroup
 #print axioms Analysis.hSeq_step_eq
 #print axioms Analysis.sStep_stage1
+#print axioms Analysis.two_mul_eq
+#print axioms Analysis.sq_binom2

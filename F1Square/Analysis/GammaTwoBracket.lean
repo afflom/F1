@@ -220,4 +220,28 @@ theorem sStep_stage1 (p : Nat) (hp : 1 ≤ p) :
   -- a³ − b³  ≈  δ·(a²+ab+b²)
   exact Req_symm (cube_diff_identity (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
 
+-- Scalar-merge helpers (coefficients kept as `ofQ` FACTORS so `RMulNF` collapses `½·2=1`, `⅓·3=1`).
+
+/-- `x + x ≈ 2·x`. -/
+theorem two_mul_eq (x : Real) : Req (Radd x x) (Rmul (ofQ (⟨2, 1⟩ : Q) (by decide)) x) := by
+  have htwo : Req (Radd one one) (ofQ (⟨2, 1⟩ : Q) (by decide)) := by
+    apply Req_of_seq_Qeq; intro n; simp only [Radd, one, ofQ, add, Qeq]; push_cast
+  have hx1 : Req x (Rmul one x) := Req_symm (Req_trans (Rmul_comm one x) (Rmul_one x))
+  exact Req_trans (Radd_congr hx1 hx1)
+    (Req_trans (Req_symm (Rmul_distrib_right one one x)) (Rmul_congr htwo (Req_refl x)))
+
+/-- `(b+d)² ≈ b² + 2·(b·d) + d²` (cross term with coefficient `2` as a factor). -/
+theorem sq_binom2 (b d : Real) :
+    Req (Rmul (Radd b d) (Radd b d))
+        (Radd (Radd (Rmul b b) (Rmul (ofQ (⟨2, 1⟩ : Q) (by decide)) (Rmul b d))) (Rmul d d)) := by
+  refine Req_trans (Rmul_distrib_right b d (Radd b d)) ?_
+  refine Req_trans (Radd_congr (Rmul_distrib b b d) (Rmul_distrib d b d)) ?_
+  -- (b² + b·d) + (d·b + d²);  d·b ≈ b·d
+  refine Req_trans (Radd_congr (Req_refl _) (Radd_congr (Rmul_comm d b) (Req_refl _))) ?_
+  -- (b² + b·d) + (b·d + d²)  ≈  (b² + 2·(b·d)) + d²
+  refine Req_trans (Radd_assoc (Rmul b b) (Rmul b d) (Radd (Rmul b d) (Rmul d d))) ?_
+  refine Req_trans (Radd_congr (Req_refl _) (Req_symm (Radd_assoc (Rmul b d) (Rmul b d) (Rmul d d)))) ?_
+  refine Req_trans (Req_symm (Radd_assoc (Rmul b b) (Radd (Rmul b d) (Rmul b d)) (Rmul d d))) ?_
+  exact Radd_congr (Radd_congr (Req_refl _) (two_mul_eq (Rmul b d))) (Req_refl _)
+
 end UOR.Bridge.F1Square.Analysis
