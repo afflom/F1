@@ -1164,4 +1164,59 @@ theorem cube_dom_nat (j : Nat) (hj : 1 ≤ j) :
     Nat.le_mul_of_pos_right (j + 1) (by omega)
   omega
 
+/-- **`B_Q = 1/(3(j+1)³) ≤ A_Q = 1/(2(j+1)(j+2))`** (`j ≥ 1`) — from `cube_dom_nat`. -/
+theorem hBA_qle (j : Nat) (hj : 1 ≤ j) :
+    Qle (mul (⟨1, 3⟩ : Q) (mul (mul (⟨1, j + 1⟩ : Q) (⟨1, j + 1⟩ : Q)) (⟨1, j + 1⟩ : Q)))
+      (⟨1, 2 * (j + 1) * ((j + 1) + 1)⟩ : Q) := by
+  have h := cube_dom_nat j hj
+  have eR : (3 * ((j + 1) * (j + 1) * (j + 1)) : Nat) = 3 * (j + 1) * (j + 1) * (j + 1) := by
+    have hi : ((3 * ((j + 1) * (j + 1) * (j + 1)) : Nat) : Int)
+            = ((3 * (j + 1) * (j + 1) * (j + 1) : Nat) : Int) := by push_cast; ring_uor
+    exact_mod_cast hi
+  unfold Qle
+  simp only [mul, Int.one_mul, Int.mul_one]
+  rw [eR]
+  exact_mod_cast h
+
+/-- **`A_Q + B_Q ≤ 1/((j+1)(j+2))`** (`j ≥ 1`) — `A_Q + B_Q ≤ A_Q + A_Q = 2A_Q = 1/((j+1)(j+2))`. -/
+theorem hAB_qle (j : Nat) (hj : 1 ≤ j) :
+    Qle (add (⟨1, 2 * (j + 1) * ((j + 1) + 1)⟩ : Q)
+        (mul (⟨1, 3⟩ : Q) (mul (mul (⟨1, j + 1⟩ : Q) (⟨1, j + 1⟩ : Q)) (⟨1, j + 1⟩ : Q))))
+      (⟨1, (j + 1) * (j + 2)⟩ : Q) := by
+  refine Qle_trans (add_den_pos
+      (show 0 < 2 * (j + 1) * ((j + 1) + 1) from
+        Nat.mul_pos (Nat.mul_pos (by decide) (Nat.succ_pos j)) (Nat.succ_pos (j + 1)))
+      (show 0 < 2 * (j + 1) * ((j + 1) + 1) from
+        Nat.mul_pos (Nat.mul_pos (by decide) (Nat.succ_pos j)) (Nat.succ_pos (j + 1))))
+    (Qadd_le_add (Qle_refl (⟨1, 2 * (j + 1) * ((j + 1) + 1)⟩ : Q)) (hBA_qle j hj)) ?_
+  -- add A_Q A_Q = 2A_Q  =  1/((j+1)(j+2))
+  refine Qeq_le ?_
+  show Qeq (add (⟨1, 2 * (j + 1) * ((j + 1) + 1)⟩ : Q) (⟨1, 2 * (j + 1) * ((j + 1) + 1)⟩ : Q))
+    (⟨1, (j + 1) * (j + 2)⟩ : Q)
+  unfold Qeq add
+  push_cast
+  ring_uor
+
+/-- **`s_{j+1} ≥ −1/((j+1)(j+2))`** (`j ≥ 1`) — single-term telescoping per-step bound. -/
+theorem sStep_lower_tele (j : Nat) (hj : 1 ≤ j) :
+    Rle (Rneg (ofQ (⟨1, (j + 1) * (j + 2)⟩ : Q)
+          (Nat.mul_pos (Nat.succ_pos j) (Nat.succ_pos (j + 1)))))
+        (sStep (j + 1) (Nat.succ_pos j)) := by
+  refine Rle_trans ?_ (sStep_lower_clean j)
+  have hcollapse : Req
+      (Radd (Radd zero (Rneg (ofQ (⟨1, 2 * (j + 1) * ((j + 1) + 1)⟩ : Q)
+          (Nat.mul_pos (Nat.mul_pos (by decide) (Nat.succ_pos j)) (Nat.succ_pos (j + 1))))))
+        (Rneg (ofQ (mul (⟨1, 3⟩ : Q) (mul (mul (⟨1, j + 1⟩ : Q) (⟨1, j + 1⟩ : Q)) (⟨1, j + 1⟩ : Q)))
+          (Qmul_den_pos (by decide)
+            (Qmul_den_pos (Qmul_den_pos (Nat.succ_pos j) (Nat.succ_pos j)) (Nat.succ_pos j))))))
+      (Rneg (ofQ (add (⟨1, 2 * (j + 1) * ((j + 1) + 1)⟩ : Q)
+        (mul (⟨1, 3⟩ : Q) (mul (mul (⟨1, j + 1⟩ : Q) (⟨1, j + 1⟩ : Q)) (⟨1, j + 1⟩ : Q))))
+        (add_den_pos (Nat.mul_pos (Nat.mul_pos (by decide) (Nat.succ_pos j)) (Nat.succ_pos (j + 1)))
+          (Qmul_den_pos (by decide)
+            (Qmul_den_pos (Qmul_den_pos (Nat.succ_pos j) (Nat.succ_pos j)) (Nat.succ_pos j)))))) := by
+    refine Req_trans (Radd_congr (Req_trans (Radd_comm zero _) (Radd_zero _)) (Req_refl _)) ?_
+    exact Req_trans (Req_symm (Rneg_Radd _ _)) (Rneg_congr (Radd_ofQ_ofQ _ _))
+  refine Rle_trans ?_ (Rle_of_Req (Req_symm hcollapse))
+  exact Rle_Rneg (Rle_ofQ_ofQ _ _ (hAB_qle j hj))
+
 end UOR.Bridge.F1Square.Analysis

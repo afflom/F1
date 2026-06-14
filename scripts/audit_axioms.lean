@@ -2209,3 +2209,6 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.R0_lower_clean
 #print axioms Analysis.sStep_lower_clean
 #print axioms Analysis.cube_dom_nat
+#print axioms Analysis.hBA_qle
+#print axioms Analysis.hAB_qle
+#print axioms Analysis.sStep_lower_tele
