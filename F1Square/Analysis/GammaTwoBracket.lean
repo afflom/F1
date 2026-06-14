@@ -722,4 +722,43 @@ theorem dcube_le (p T : Nat) (hp : 1 ≤ p) :
     (Rmul_ofQ_ofQ (Qmul_den_pos (dPlusQ_den_pos T p hp) (dPlusQ_den_pos T p hp))
       (dPlusQ_den_pos T p hp)))
 
+/-- **`dMinusQ ≥ 0`** — the artanh-partial-sum floor is nonnegative (`= 2·artSum`, `artSum_nonneg`). -/
+theorem dMinusQ_nonneg (p T : Nat) : Rnonneg (ofQ (dMinusQ T p) (dMinusQ_den_pos T p)) :=
+  Rnonneg_ofQ (dMinusQ_den_pos T p)
+    (Qmul_num_nonneg (by decide) (artSum_nonneg (by show (0 : Int) ≤ 1; decide) (Nat.succ_pos _) T))
+
+/-- **`dMinusQ² ≤ d²`** — the squared consecutive-log difference bounded BELOW by a rational. -/
+theorem dsq_ge (p T : Nat) (hp : 1 ≤ p)
+    (hT : T ≤ (2 * p + 1) * (2 * p + 1) + 4 * (2 * p + 1)) :
+    Rle (ofQ (mul (dMinusQ T p) (dMinusQ T p))
+          (Qmul_den_pos (dMinusQ_den_pos T p) (dMinusQ_den_pos T p)))
+        (Rmul (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
+              (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))) := by
+  have hd_nn : Rnonneg (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp)) :=
+    Rnonneg_Rsub_of_Rle (logN_mono hp (Nat.le_succ p))
+  have hlo := deltaLog_lower_tight p T hp hT
+  have hdM_nn := dMinusQ_nonneg p T
+  refine Rle_trans (Rle_of_Req (Req_symm (Rmul_ofQ_ofQ (dMinusQ_den_pos T p)
+    (dMinusQ_den_pos T p)))) ?_
+  refine Rle_trans (Rmul_le_Rmul_right hdM_nn hlo) ?_
+  exact Rmul_le_Rmul_left hd_nn hlo
+
+/-- **`dMinusQ³ ≤ d³`** (`(d·d)·d`) — the cubed consecutive-log difference bounded BELOW by a rational. -/
+theorem dcube_ge (p T : Nat) (hp : 1 ≤ p)
+    (hT : T ≤ (2 * p + 1) * (2 * p + 1) + 4 * (2 * p + 1)) :
+    Rle (ofQ (mul (mul (dMinusQ T p) (dMinusQ T p)) (dMinusQ T p))
+          (Qmul_den_pos (Qmul_den_pos (dMinusQ_den_pos T p) (dMinusQ_den_pos T p))
+            (dMinusQ_den_pos T p)))
+        (Rmul (Rmul (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
+                    (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp)))
+              (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))) := by
+  have hd_nn : Rnonneg (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp)) :=
+    Rnonneg_Rsub_of_Rle (logN_mono hp (Nat.le_succ p))
+  have hlo := deltaLog_lower_tight p T hp hT
+  have hdM_nn := dMinusQ_nonneg p T
+  refine Rle_trans (Rle_of_Req (Req_symm (Rmul_ofQ_ofQ
+    (Qmul_den_pos (dMinusQ_den_pos T p) (dMinusQ_den_pos T p)) (dMinusQ_den_pos T p)))) ?_
+  refine Rle_trans (Rmul_le_Rmul_right hdM_nn (dsq_ge p T hp hT)) ?_
+  exact Rmul_le_Rmul_left (Rnonneg_Rmul hd_nn hd_nn) hlo
+
 end UOR.Bridge.F1Square.Analysis
