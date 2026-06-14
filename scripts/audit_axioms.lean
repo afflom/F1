@@ -2183,3 +2183,5 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.lhsForm_eq_RsumL
 #print axioms Analysis.decomp_generic
 #print axioms Analysis.sStep_decomp
+#print axioms Analysis.C2_le
+#print axioms Analysis.C2_ge

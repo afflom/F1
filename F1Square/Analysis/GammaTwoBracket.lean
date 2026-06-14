@@ -651,4 +651,34 @@ theorem sStep_decomp (p : Nat) (hp : 1 ≤ p) :
     (decomp_generic (logN (p + 1) (Nat.succ_pos p)) (logN p hp)
       (ofQ (⟨1, p⟩ : Q) hp) (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p)))
 
+-- ===========================================================================
+-- (C3) Coefficient frames.  The decomposition's transcendental factor `d = ln(p+1) − ln p` is
+-- replaced by the rational artanh brackets `dMinusQ ≤ d ≤ dPlusQ` (`GammaOne`), turning the leading
+-- coefficient `C2 = ½(1/p+1/(p+1)) − d` into a two-sided RATIONAL frame — the first step toward a
+-- summable rational tail bound (no transcendentals downstream).
+-- ===========================================================================
+
+/-- **`C2 ≤ ½(1/p+1/(p+1)) − dMinusQ`** — the trapezoidal-error coefficient bounded ABOVE by a
+    rational (`d ≥ dMinusQ`, `C2 = M − d` is decreasing in `d`). -/
+theorem C2_le (p T : Nat) (hp : 1 ≤ p)
+    (hT : T ≤ (2 * p + 1) * (2 * p + 1) + 4 * (2 * p + 1)) :
+    Rle (Rsub (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide))
+            (Radd (ofQ (⟨1, p⟩ : Q) hp) (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p))))
+          (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp)))
+        (Rsub (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide))
+            (Radd (ofQ (⟨1, p⟩ : Q) hp) (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p))))
+          (ofQ (dMinusQ T p) (dMinusQ_den_pos T p))) :=
+  Rsub_le_sub (Rle_of_Req (Req_refl _)) (deltaLog_lower_tight p T hp hT)
+
+/-- **`½(1/p+1/(p+1)) − dPlusQ ≤ C2`** — the trapezoidal-error coefficient bounded BELOW by a
+    rational (`d ≤ dPlusQ`). -/
+theorem C2_ge (p T : Nat) (hp : 1 ≤ p) :
+    Rle (Rsub (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide))
+            (Radd (ofQ (⟨1, p⟩ : Q) hp) (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p))))
+          (ofQ (dPlusQ T p) (dPlusQ_den_pos T p hp)))
+        (Rsub (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide))
+            (Radd (ofQ (⟨1, p⟩ : Q) hp) (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p))))
+          (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))) :=
+  Rsub_le_sub (Rle_of_Req (Req_refl _)) (deltaLog_upper_tight p T hp)
+
 end UOR.Bridge.F1Square.Analysis
