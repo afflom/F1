@@ -2167,3 +2167,19 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.three_mul_eq
 #print axioms Analysis.two_plus_one
 #print axioms Analysis.inner_merge
+
+-- v0.20.0 stage F: γ₂≥−0.02 bracket (C2) — the s_p decomposition keystone (GammaTwoBracket.lean).
+#print axioms Analysis.half_two_cancel
+#print axioms Analysis.third_three_cancel
+#print axioms Analysis.mul3_pull
+#print axioms Analysis.decompForm_eq_RsumL
+#print axioms Analysis.sub_add_cancel_real
+#print axioms Analysis.partA_eq
+#print axioms Analysis.partC_distrib
+#print axioms Analysis.partC1
+#print axioms Analysis.partC2
+#print axioms Analysis.partC3
+#print axioms Analysis.partC_eq
+#print axioms Analysis.lhsForm_eq_RsumL
+#print axioms Analysis.decomp_generic
+#print axioms Analysis.sStep_decomp

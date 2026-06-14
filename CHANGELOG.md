@@ -86,11 +86,23 @@ choice-free (`{propext, Quot.sound}`), audited; the build is warning-free; the g
   QUADRATIC `T_L(m)=(2m²+12m+22)/2^m` — the new ingredient over `γ₁`, whose outer sum was linear.
   Reindex `M(j)=2j+8` with domination `(j+1)(2M²+12M+22) ≤ 2^M` (via `8j²+88j+246 ≤ 2^{j+8}`) gives
   pairwise Cauchy `±1/(j+1)` → `RReg_of_real_bound` → `Rlim`. Choice-free (`{propext, Quot.sound}`),
-  audited. Mirrors the `GammaOne`/`γ₁` regularity endgame column-for-column. The tight numeric
-  bracket (`γ₂ ≥ −0.02`) is the open computational frontier: the dyadic tail is loose (`T_L(8) ≈
-  0.96`) and a tight bracket needs an anchor `N ∼ 10⁴` (`ln²N/N ≲ 0.01`), beyond kernel `decide`'s
-  reach with the current artanh log-evaluator — `γ₂`'s tail is `ln²(N)/N`, intrinsically heavier
-  than `γ₁`'s clean `1/(2N)`.
+  audited. Mirrors the `GammaOne`/`γ₁` regularity endgame column-for-column.
+- **The `γ₂ ≥ −0.02` bracket via DISCRETE Euler–Maclaurin** (`F1Square/Analysis/GammaTwoBracket.lean`,
+  in progress) — the corrected route: NO constructive integration is needed. The trapezoidal anchor
+  `½f(N)` (`f(x)=ln²x/x`) captures the leading `½ln²N/N` tail, leaving `h(N)=g₂(N)−½f(N) → γ₂` whose
+  per-step increment is the **trapezoidal residual** `s_p = ½[ln²(p+1)/(p+1)+ln²p/p] − ⅓[ln³(p+1)−
+  ln³p] = O(ln²p/p³)` (`hSeq`, `sStep`, `hSeq_step_eq`). Evaluators (A)/(B): `lnSqSumLo` (rational
+  lower bound for `Σ(ln k)²/k`), `logCube_le`/`halfSqOver_le` (cubed/squared-log upper bounds). The
+  **keystone decomposition** `sStep p ≈ b²·C2 + b·R1 + R0` (`sStep_decomp`, via `sStep_stage1` +
+  `decomp_generic`) is now PROVEN — where `b=ln p`, `d=ln(p+1)−ln p`, `C2 = ½(1/p+1/(p+1)) − d` is
+  the trapezoidal error of `1/x` (the clean summable `≤ 1/(2p(p+1)(2p+1))` factor), `R1 = d·u1 − d²`,
+  `R0 = ½d²u1 − ⅓d³`. It is a free polynomial identity in the 4 atoms `a,b,u0,u1`, proved by reducing
+  both sides to the SAME 7 canonical monomials with the `RAddNF`+`RMulNF` ring engine (`sq_binom2`,
+  `inner_merge`, `partA_eq`/`partC_eq`, the `½·2=1`/`⅓·3=1` coefficient collapses `half_two_cancel`/
+  `third_three_cancel`) and matching by an explicit, choice-free 7-element permutation. The final
+  `decide` at `N=200`, `T=3`, `D=10⁸` is validated (`h_lo ≥ −14/1000 ≥ −20/1000`, margin ~0.006 vs
+  true residual ~0.0004). REMAINING: the coefficient bounds (rational, no transcendentals), the
+  dyadic tail `Σ_{p≥200}|s_p| ≤ ε`, and the limit assembly `γ₂ = h(199) + tail` → `Pos λ₃`.
 - **The third Li coefficient `λ₃` in closed form** (`F1Square/Analysis/LambdaThree.lean`) — the next
   rung of the genuine λ-ladder, the first to carry `γ₂` (`Rgamma2`). The genuine `λₙ = λₙ^{arith} +
   λₙ^{∞}` is already general; this adds the next η-anchor (deep-research-confirmed

@@ -15,10 +15,11 @@ Pure Lean 4 core, no Mathlib, no `sorry`/`native_decide`, choice-free.
 -/
 
 import F1Square.Analysis.GammaTwo
+import F1Square.Analysis.RMulNF
 
 namespace UOR.Bridge.F1Square.Analysis
 
-set_option maxHeartbeats 1000000
+set_option maxHeartbeats 4000000
 
 -- ===========================================================================
 -- (A) `lnSqSumLo` — a rational LOWER bound for `lnSqSum N = Σ_{k=1}^N (ln k)²/k`.
@@ -315,5 +316,339 @@ theorem inner_merge (b d : Real) :
   -- Radd (3B) (Radd (3bd) d²) ≈ Radd (Radd (3B) (3bd)) d²
   exact Req_symm (Radd_assoc (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul b b))
     (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul b d)) (Rmul d d))
+
+/-- `½·(2·x) ≈ x` — the `RMulNF` coefficient collapse `½·2 = 1` (via `Rmul_ofQ_ofQ` then `decide`). -/
+theorem half_two_cancel (x : Real) :
+    Req (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) (Rmul (ofQ (⟨2, 1⟩ : Q) (by decide)) x)) x := by
+  have hc : Req (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) (ofQ (⟨2, 1⟩ : Q) (by decide))) one :=
+    Req_trans (Rmul_ofQ_ofQ (by decide) (by decide)) (ofQ_congr (by decide) (by decide) (by decide))
+  refine Req_trans (Req_symm (Rmul_assoc (ofQ (⟨1, 2⟩ : Q) (by decide))
+    (ofQ (⟨2, 1⟩ : Q) (by decide)) x)) ?_
+  exact Req_trans (Rmul_congr hc (Req_refl x)) (Rone_mul x)
+
+/-- `⅓·(3·x) ≈ x` — the `RMulNF` coefficient collapse `⅓·3 = 1`. -/
+theorem third_three_cancel (x : Real) :
+    Req (Rmul (ofQ (⟨1, 3⟩ : Q) (by decide)) (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) x)) x := by
+  have hc : Req (Rmul (ofQ (⟨1, 3⟩ : Q) (by decide)) (ofQ (⟨3, 1⟩ : Q) (by decide))) one :=
+    Req_trans (Rmul_ofQ_ofQ (by decide) (by decide)) (ofQ_congr (by decide) (by decide) (by decide))
+  refine Req_trans (Req_symm (Rmul_assoc (ofQ (⟨1, 3⟩ : Q) (by decide))
+    (ofQ (⟨3, 1⟩ : Q) (by decide)) x)) ?_
+  exact Req_trans (Rmul_congr hc (Req_refl x)) (Rone_mul x)
+
+/-- `x·(3·c) ≈ 3·(x·c)` — pull the scalar `3` to the front (for the `⅓·3` collapse in the cube term). -/
+theorem mul3_pull (x c : Real) :
+    Req (Rmul x (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) c))
+        (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul x c)) := by
+  refine Req_trans (Req_symm (Rmul_assoc x (ofQ (⟨3, 1⟩ : Q) (by decide)) c)) ?_
+  exact Req_trans (Rmul_congr (Rmul_comm x (ofQ (⟨3, 1⟩ : Q) (by decide))) (Req_refl c))
+    (Rmul_assoc (ofQ (⟨3, 1⟩ : Q) (by decide)) x c)
+
+-- ===========================================================================
+-- (C2 stage 2 — the decomposition target).  `decompForm a b u0 u1` is the trapezoidal residual in
+-- its **bound-ready** shape `b²·C2 + b·R1 + R0`, with `d = a − b`, `C2 = ½(u0+u1) − d` (the
+-- trapezoidal error of `1/x`, independent of `b`), `R1 = d·u1 − d²`, `R0 = ½d²u1 − ⅓d³`.
+-- ===========================================================================
+
+/-- The **bound-ready decomposition** `b²·(½(u0+u1) − d) + b·(d·u1 − d²) + (½d²u1 − ⅓d³)` of the
+    trapezoidal residual `s_p` (`d = a − b`).  The leading factor `C2 = ½(u0+u1) − d` is the
+    trapezoidal error of `1/x` (the clean `≤ 1/(2p(p+1)(2p+1))` summand). -/
+def decompForm (a b u0 u1 : Real) : Real :=
+  Radd (Radd
+      (Rmul (Rmul b b)
+        (Rsub (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) (Radd u0 u1)) (Rsub a b)))
+      (Rmul b (Rsub (Rmul (Rsub a b) u1) (Rmul (Rsub a b) (Rsub a b)))))
+    (Rsub (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) (Rmul (Rmul (Rsub a b) (Rsub a b)) u1))
+          (Rmul (ofQ (⟨1, 3⟩ : Q) (by decide)) (Rmul (Rmul (Rsub a b) (Rsub a b)) (Rsub a b))))
+
+/-- **`decompForm` expands to the 7 canonical monomials** (`RprodL` form, coefficient `ofQ` first),
+    by distributing only (`d = a − b` is treated as an atom). -/
+theorem decompForm_eq_RsumL (a b u0 u1 : Real) :
+    Req (decompForm a b u0 u1)
+      (RsumL [ RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, u0],
+               RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, u1],
+               Rneg (RprodL [b, b, Rsub a b]),
+               RprodL [b, Rsub a b, u1],
+               Rneg (RprodL [b, Rsub a b, Rsub a b]),
+               RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), Rsub a b, Rsub a b, u1],
+               Rneg (RprodL [ofQ (⟨1, 3⟩ : Q) (by decide), Rsub a b, Rsub a b, Rsub a b]) ]) := by
+  -- P = b²·C2  →  ½b²u0 + ½b²u1 − b²d
+  have hP : Req (Rmul (Rmul b b)
+        (Rsub (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) (Radd u0 u1)) (Rsub a b)))
+      (Radd (Radd (RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, u0])
+                  (RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, u1]))
+            (Rneg (RprodL [b, b, Rsub a b]))) := by
+    refine Req_trans (Rmul_sub_distrib (Rmul b b)
+      (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) (Radd u0 u1)) (Rsub a b)) ?_
+    refine Rsub_congr ?_ (Rmul_eq_RprodL3 b b (Rsub a b))
+    refine Req_trans (Rmul_congr (Req_refl (Rmul b b))
+      (Rmul_distrib (ofQ (⟨1, 2⟩ : Q) (by decide)) u0 u1)) ?_
+    refine Req_trans (Rmul_distrib (Rmul b b)
+      (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) u0) (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) u1)) ?_
+    refine Radd_congr ?_ ?_
+    · exact Req_trans (Rmul_pair_eq_RprodL4 b b (ofQ (⟨1, 2⟩ : Q) (by decide)) u0)
+        (RprodL_perm ((List.Perm.cons b (List.Perm.swap (ofQ (⟨1, 2⟩ : Q) (by decide)) b [u0])).trans
+          (List.Perm.swap (ofQ (⟨1, 2⟩ : Q) (by decide)) b [b, u0])))
+    · exact Req_trans (Rmul_pair_eq_RprodL4 b b (ofQ (⟨1, 2⟩ : Q) (by decide)) u1)
+        (RprodL_perm ((List.Perm.cons b (List.Perm.swap (ofQ (⟨1, 2⟩ : Q) (by decide)) b [u1])).trans
+          (List.Perm.swap (ofQ (⟨1, 2⟩ : Q) (by decide)) b [b, u1])))
+  -- Q = b·R1  →  b·d·u1 − b·d²
+  have hQ : Req (Rmul b (Rsub (Rmul (Rsub a b) u1) (Rmul (Rsub a b) (Rsub a b))))
+      (Radd (RprodL [b, Rsub a b, u1]) (Rneg (RprodL [b, Rsub a b, Rsub a b]))) := by
+    refine Req_trans (Rmul_sub_distrib b (Rmul (Rsub a b) u1) (Rmul (Rsub a b) (Rsub a b))) ?_
+    exact Rsub_congr (Rmul_congr (Req_refl b) (Rmul_eq_RprodL (Rsub a b) u1))
+      (Rmul_congr (Req_refl b) (Rmul_eq_RprodL (Rsub a b) (Rsub a b)))
+  -- R0  →  ½d²u1 − ⅓d³
+  have hR : Req
+      (Rsub (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) (Rmul (Rmul (Rsub a b) (Rsub a b)) u1))
+            (Rmul (ofQ (⟨1, 3⟩ : Q) (by decide)) (Rmul (Rmul (Rsub a b) (Rsub a b)) (Rsub a b))))
+      (Radd (RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), Rsub a b, Rsub a b, u1])
+            (Rneg (RprodL [ofQ (⟨1, 3⟩ : Q) (by decide), Rsub a b, Rsub a b, Rsub a b]))) :=
+    Rsub_congr (Rmul_congr (Req_refl _) (Rmul_eq_RprodL3 (Rsub a b) (Rsub a b) u1))
+      (Rmul_congr (Req_refl _) (Rmul_eq_RprodL3 (Rsub a b) (Rsub a b) (Rsub a b)))
+  -- assemble: decompForm = Radd (Radd P Q) R0
+  refine Req_trans (Radd_congr (Radd_congr hP hQ) hR) ?_
+  refine Req_trans (Radd_congr (Radd_congr
+      (Radd_eq_RsumL3 (RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, u0])
+        (RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, u1]) (Rneg (RprodL [b, b, Rsub a b])))
+      (Radd_eq_RsumL (RprodL [b, Rsub a b, u1]) (Rneg (RprodL [b, Rsub a b, Rsub a b]))))
+      (Radd_eq_RsumL (RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), Rsub a b, Rsub a b, u1])
+        (Rneg (RprodL [ofQ (⟨1, 3⟩ : Q) (by decide), Rsub a b, Rsub a b, Rsub a b])))) ?_
+  refine Req_trans (Radd_congr (Req_symm (RsumL_append
+      [RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, u0],
+       RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, u1], Rneg (RprodL [b, b, Rsub a b])]
+      [RprodL [b, Rsub a b, u1], Rneg (RprodL [b, Rsub a b, Rsub a b])])) (Req_refl _)) ?_
+  exact Req_symm (RsumL_append
+    [RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, u0],
+     RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, u1], Rneg (RprodL [b, b, Rsub a b]),
+     RprodL [b, Rsub a b, u1], Rneg (RprodL [b, Rsub a b, Rsub a b])]
+    [RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), Rsub a b, Rsub a b, u1],
+     Rneg (RprodL [ofQ (⟨1, 3⟩ : Q) (by decide), Rsub a b, Rsub a b, Rsub a b])])
+
+/-- The **stage-1 residual form** (exactly `sStep_stage1`'s RHS, parameterized): `½a²u1 + ½b²u0 −
+    ⅓·(a−b)·(a²+ab+b²)`. -/
+def lhsForm (a b u0 u1 : Real) : Real :=
+  Rsub (Radd (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) (Rmul (Rmul a a) u1))
+             (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) (Rmul (Rmul b b) u0)))
+       (Rmul (ofQ (⟨1, 3⟩ : Q) (by decide))
+         (Rmul (Rsub a b) (Radd (Radd (Rmul a a) (Rmul a b)) (Rmul b b))))
+
+/-- `a ≈ b + (a − b)` — the additive cancellation that substitutes `a = b + d`. -/
+theorem sub_add_cancel_real (a b : Real) : Req a (Radd b (Rsub a b)) := by
+  refine Req_symm ?_
+  show Req (Radd b (Radd a (Rneg b))) a
+  refine Req_trans (Radd_congr (Req_refl b) (Radd_comm a (Rneg b))) ?_
+  refine Req_trans (Req_symm (Radd_assoc b (Rneg b) a)) ?_
+  refine Req_trans (Radd_congr (Radd_neg b) (Req_refl a)) ?_
+  exact Req_trans (Radd_comm zero a) (Radd_zero a)
+
+/-- **PART A** of `lhsForm`: `½·a²·u1 → ½b²u1 + b·d·u1 + ½d²u1` (`a = b+d`, `sq_binom2`, `½·2=1`). -/
+theorem partA_eq (a b u1 : Real) :
+    Req (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) (Rmul (Rmul a a) u1))
+      (Radd (Radd (RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, u1]) (RprodL [b, Rsub a b, u1]))
+            (RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), Rsub a b, Rsub a b, u1])) := by
+  have ha := sub_add_cancel_real a b
+  have haa : Req (Rmul (Rmul a a) u1)
+      (Rmul (Radd (Radd (Rmul b b) (Rmul (ofQ (⟨2, 1⟩ : Q) (by decide)) (Rmul b (Rsub a b))))
+        (Rmul (Rsub a b) (Rsub a b))) u1) :=
+    Rmul_congr (Req_trans (Rmul_congr ha ha) (sq_binom2 b (Rsub a b))) (Req_refl u1)
+  refine Req_trans (Rmul_congr (Req_refl _) haa) ?_
+  refine Req_trans (Rmul_congr (Req_refl _)
+    (Rmul_distrib_right (Radd (Rmul b b) (Rmul (ofQ (⟨2, 1⟩ : Q) (by decide)) (Rmul b (Rsub a b))))
+      (Rmul (Rsub a b) (Rsub a b)) u1)) ?_
+  refine Req_trans (Rmul_congr (Req_refl _)
+    (Radd_congr (Rmul_distrib_right (Rmul b b)
+      (Rmul (ofQ (⟨2, 1⟩ : Q) (by decide)) (Rmul b (Rsub a b))) u1) (Req_refl _))) ?_
+  refine Req_trans (Rmul_distrib (ofQ (⟨1, 2⟩ : Q) (by decide))
+    (Radd (Rmul (Rmul b b) u1)
+      (Rmul (Rmul (ofQ (⟨2, 1⟩ : Q) (by decide)) (Rmul b (Rsub a b))) u1))
+    (Rmul (Rmul (Rsub a b) (Rsub a b)) u1)) ?_
+  refine Req_trans (Radd_congr (Rmul_distrib (ofQ (⟨1, 2⟩ : Q) (by decide))
+    (Rmul (Rmul b b) u1)
+    (Rmul (Rmul (ofQ (⟨2, 1⟩ : Q) (by decide)) (Rmul b (Rsub a b))) u1)) (Req_refl _)) ?_
+  refine Radd_congr (Radd_congr ?_ ?_) ?_
+  · exact Rmul_congr (Req_refl _) (Rmul_eq_RprodL3 b b u1)
+  · refine Req_trans (Rmul_congr (Req_refl _)
+      (Rmul_assoc (ofQ (⟨2, 1⟩ : Q) (by decide)) (Rmul b (Rsub a b)) u1)) ?_
+    refine Req_trans (half_two_cancel (Rmul (Rmul b (Rsub a b)) u1)) ?_
+    exact Rmul_eq_RprodL3 b (Rsub a b) u1
+  · exact Rmul_congr (Req_refl _) (Rmul_eq_RprodL3 (Rsub a b) (Rsub a b) u1)
+
+/-- **PART C distribution**: expose `⅓·(a−b)·(a²+ab+b²)` as `T1 + T2 + T3` (`inner_merge`, distribute). -/
+theorem partC_distrib (a b : Real) :
+    Req
+      (Rmul (ofQ (⟨1, 3⟩ : Q) (by decide))
+        (Rmul (Rsub a b) (Radd (Radd (Rmul a a) (Rmul a b)) (Rmul b b))))
+      (Radd (Radd
+          (Rmul (ofQ (⟨1, 3⟩ : Q) (by decide))
+            (Rmul (Rsub a b) (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul b b))))
+          (Rmul (ofQ (⟨1, 3⟩ : Q) (by decide))
+            (Rmul (Rsub a b) (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul b (Rsub a b))))))
+        (Rmul (ofQ (⟨1, 3⟩ : Q) (by decide))
+          (Rmul (Rsub a b) (Rmul (Rsub a b) (Rsub a b))))) := by
+  have ha := sub_add_cancel_real a b
+  have hinner : Req (Radd (Radd (Rmul a a) (Rmul a b)) (Rmul b b))
+      (Radd (Radd (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul b b))
+                  (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul b (Rsub a b))))
+            (Rmul (Rsub a b) (Rsub a b))) :=
+    Req_trans (Radd_congr (Radd_congr (Rmul_congr ha ha) (Rmul_congr ha (Req_refl b)))
+      (Req_refl (Rmul b b))) (inner_merge b (Rsub a b))
+  refine Req_trans (Rmul_congr (Req_refl _) (Rmul_congr (Req_refl (Rsub a b)) hinner)) ?_
+  refine Req_trans (Rmul_congr (Req_refl _)
+    (Rmul_distrib (Rsub a b)
+      (Radd (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul b b))
+            (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul b (Rsub a b))))
+      (Rmul (Rsub a b) (Rsub a b)))) ?_
+  refine Req_trans (Rmul_congr (Req_refl _)
+    (Radd_congr (Rmul_distrib (Rsub a b) (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul b b))
+      (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul b (Rsub a b)))) (Req_refl _))) ?_
+  refine Req_trans (Rmul_distrib (ofQ (⟨1, 3⟩ : Q) (by decide))
+    (Radd (Rmul (Rsub a b) (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul b b)))
+          (Rmul (Rsub a b) (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul b (Rsub a b)))))
+    (Rmul (Rsub a b) (Rmul (Rsub a b) (Rsub a b)))) ?_
+  exact Radd_congr (Rmul_distrib (ofQ (⟨1, 3⟩ : Q) (by decide))
+    (Rmul (Rsub a b) (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul b b)))
+    (Rmul (Rsub a b) (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul b (Rsub a b))))) (Req_refl _)
+
+/-- `T1 = ⅓·(d·(3·b²)) ≈ b²d` (`⅓·3=1`, normalize). -/
+theorem partC1 (a b : Real) :
+    Req (Rmul (ofQ (⟨1, 3⟩ : Q) (by decide))
+          (Rmul (Rsub a b) (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul b b))))
+        (RprodL [b, b, Rsub a b]) := by
+  refine Req_trans (Rmul_congr (Req_refl _) (mul3_pull (Rsub a b) (Rmul b b))) ?_
+  refine Req_trans (third_three_cancel (Rmul (Rsub a b) (Rmul b b))) ?_
+  exact Req_trans (Rmul_congr (Req_refl (Rsub a b)) (Rmul_eq_RprodL b b))
+    (RprodL_perm ((List.Perm.swap b (Rsub a b) [b]).trans
+      (List.Perm.cons b (List.Perm.swap b (Rsub a b) []))))
+
+/-- `T2 = ⅓·(d·(3·(b·d))) ≈ b·d²` (`⅓·3=1`, normalize). -/
+theorem partC2 (a b : Real) :
+    Req (Rmul (ofQ (⟨1, 3⟩ : Q) (by decide))
+          (Rmul (Rsub a b) (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul b (Rsub a b)))))
+        (RprodL [b, Rsub a b, Rsub a b]) := by
+  refine Req_trans (Rmul_congr (Req_refl _) (mul3_pull (Rsub a b) (Rmul b (Rsub a b)))) ?_
+  refine Req_trans (third_three_cancel (Rmul (Rsub a b) (Rmul b (Rsub a b)))) ?_
+  exact Req_trans (Rmul_congr (Req_refl (Rsub a b)) (Rmul_eq_RprodL b (Rsub a b)))
+    (RprodL_perm (List.Perm.swap b (Rsub a b) [Rsub a b]))
+
+/-- `T3 = ⅓·(d·d²) ≈ ⅓d³` (normalize only). -/
+theorem partC3 (a b : Real) :
+    Req (Rmul (ofQ (⟨1, 3⟩ : Q) (by decide)) (Rmul (Rsub a b) (Rmul (Rsub a b) (Rsub a b))))
+        (RprodL [ofQ (⟨1, 3⟩ : Q) (by decide), Rsub a b, Rsub a b, Rsub a b]) :=
+  Rmul_congr (Req_refl _)
+    (Rmul_congr (Req_refl (Rsub a b)) (Rmul_eq_RprodL (Rsub a b) (Rsub a b)))
+
+/-- **PART C** of `lhsForm`: `⅓·(a−b)·(a²+ab+b²) → b²d + b·d² + ⅓d³` (`inner_merge`, `⅓·3=1`). -/
+theorem partC_eq (a b : Real) :
+    Req
+      (Rmul (ofQ (⟨1, 3⟩ : Q) (by decide))
+        (Rmul (Rsub a b) (Radd (Radd (Rmul a a) (Rmul a b)) (Rmul b b))))
+      (Radd (Radd (RprodL [b, b, Rsub a b]) (RprodL [b, Rsub a b, Rsub a b]))
+            (RprodL [ofQ (⟨1, 3⟩ : Q) (by decide), Rsub a b, Rsub a b, Rsub a b])) :=
+  Req_trans (partC_distrib a b)
+    (Radd_congr (Radd_congr (partC1 a b) (partC2 a b)) (partC3 a b))
+
+/-- **`lhsForm` expands to the same 7 canonical monomials** (`d = a − b` an atom): substitute
+    `a = b + d` (`sq_binom2`/`inner_merge` collapse the cross terms, `½·2`/`⅓·3` cancel). -/
+theorem lhsForm_eq_RsumL (a b u0 u1 : Real) :
+    Req (lhsForm a b u0 u1)
+      (RsumL [ RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, u1],
+               RprodL [b, Rsub a b, u1],
+               RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), Rsub a b, Rsub a b, u1],
+               RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, u0],
+               Rneg (RprodL [b, b, Rsub a b]),
+               Rneg (RprodL [b, Rsub a b, Rsub a b]),
+               Rneg (RprodL [ofQ (⟨1, 3⟩ : Q) (by decide), Rsub a b, Rsub a b, Rsub a b]) ]) := by
+  have hPARTA := partA_eq a b u1
+  have hPARTB : Req (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) (Rmul (Rmul b b) u0))
+      (RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, u0]) :=
+    Rmul_congr (Req_refl _) (Rmul_eq_RprodL3 b b u0)
+  have hPARTC := partC_eq a b
+  -- the negated cube
+  have hnegC : Req
+      (Rneg (Rmul (ofQ (⟨1, 3⟩ : Q) (by decide))
+        (Rmul (Rsub a b) (Radd (Radd (Rmul a a) (Rmul a b)) (Rmul b b)))))
+      (Radd (Radd (Rneg (RprodL [b, b, Rsub a b])) (Rneg (RprodL [b, Rsub a b, Rsub a b])))
+            (Rneg (RprodL [ofQ (⟨1, 3⟩ : Q) (by decide), Rsub a b, Rsub a b, Rsub a b]))) :=
+    Req_trans (Rneg_congr hPARTC)
+      (Req_trans (Rneg_Radd (Radd (RprodL [b, b, Rsub a b]) (RprodL [b, Rsub a b, Rsub a b]))
+        (RprodL [ofQ (⟨1, 3⟩ : Q) (by decide), Rsub a b, Rsub a b, Rsub a b]))
+        (Radd_congr (Rneg_Radd (RprodL [b, b, Rsub a b]) (RprodL [b, Rsub a b, Rsub a b]))
+          (Req_refl _)))
+  -- assemble: lhsForm = Radd (Radd PARTA PARTB) (Rneg PARTC)
+  refine Req_trans (Radd_congr (Radd_congr hPARTA hPARTB) hnegC) ?_
+  refine Req_trans (Radd_congr (Radd_congr
+      (Radd_eq_RsumL3 (RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, u1]) (RprodL [b, Rsub a b, u1])
+        (RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), Rsub a b, Rsub a b, u1]))
+      (RsumL_singleton (RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, u0])))
+      (Radd_eq_RsumL3 (Rneg (RprodL [b, b, Rsub a b])) (Rneg (RprodL [b, Rsub a b, Rsub a b]))
+        (Rneg (RprodL [ofQ (⟨1, 3⟩ : Q) (by decide), Rsub a b, Rsub a b, Rsub a b])))) ?_
+  refine Req_trans (Radd_congr (Req_symm (RsumL_append
+      [RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, u1], RprodL [b, Rsub a b, u1],
+       RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), Rsub a b, Rsub a b, u1]]
+      [RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, u0]])) (Req_refl _)) ?_
+  exact Req_symm (RsumL_append
+    [RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, u1], RprodL [b, Rsub a b, u1],
+     RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), Rsub a b, Rsub a b, u1],
+     RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, u0]]
+    [Rneg (RprodL [b, b, Rsub a b]), Rneg (RprodL [b, Rsub a b, Rsub a b]),
+     Rneg (RprodL [ofQ (⟨1, 3⟩ : Q) (by decide), Rsub a b, Rsub a b, Rsub a b])])
+
+/-- **The keystone free identity**: `lhsForm ≈ decompForm` — the trapezoidal residual equals its
+    bound-ready decomposition `b²·C2 + b·R1 + R0`.  A polynomial identity in the 4 atoms `a,b,u0,u1`
+    (`d = a−b`), proved by reducing both sides to the same 7 canonical monomials and matching by an
+    explicit, choice-free permutation. -/
+theorem decomp_generic (a b u0 u1 : Real) :
+    Req (lhsForm a b u0 u1) (decompForm a b u0 u1) := by
+  -- canonical monomials c1..c7 (LHS order) → decompForm order [c4,c1,c5,c2,c6,c3,c7]
+  -- via an explicit, choice-free 7-element permutation (six adjacent transpositions).
+  have t1 := List.Perm.cons (RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, u1])
+    (List.Perm.cons (RprodL [b, Rsub a b, u1])
+      (List.Perm.swap (RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, u0])
+        (RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), Rsub a b, Rsub a b, u1])
+        [Rneg (RprodL [b, b, Rsub a b]), Rneg (RprodL [b, Rsub a b, Rsub a b]),
+         Rneg (RprodL [ofQ (⟨1, 3⟩ : Q) (by decide), Rsub a b, Rsub a b, Rsub a b])]))
+  have t2 := List.Perm.cons (RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, u1])
+    (List.Perm.swap (RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, u0]) (RprodL [b, Rsub a b, u1])
+      [RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), Rsub a b, Rsub a b, u1],
+       Rneg (RprodL [b, b, Rsub a b]), Rneg (RprodL [b, Rsub a b, Rsub a b]),
+       Rneg (RprodL [ofQ (⟨1, 3⟩ : Q) (by decide), Rsub a b, Rsub a b, Rsub a b])])
+  have t3 := List.Perm.swap (RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, u0])
+    (RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, u1])
+    [RprodL [b, Rsub a b, u1], RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), Rsub a b, Rsub a b, u1],
+     Rneg (RprodL [b, b, Rsub a b]), Rneg (RprodL [b, Rsub a b, Rsub a b]),
+     Rneg (RprodL [ofQ (⟨1, 3⟩ : Q) (by decide), Rsub a b, Rsub a b, Rsub a b])]
+  have t4 := List.Perm.cons (RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, u0])
+    (List.Perm.cons (RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, u1])
+      (List.Perm.cons (RprodL [b, Rsub a b, u1])
+        (List.Perm.swap (Rneg (RprodL [b, b, Rsub a b]))
+          (RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), Rsub a b, Rsub a b, u1])
+          [Rneg (RprodL [b, Rsub a b, Rsub a b]),
+           Rneg (RprodL [ofQ (⟨1, 3⟩ : Q) (by decide), Rsub a b, Rsub a b, Rsub a b])])))
+  have t5 := List.Perm.cons (RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, u0])
+    (List.Perm.cons (RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, u1])
+      (List.Perm.swap (Rneg (RprodL [b, b, Rsub a b])) (RprodL [b, Rsub a b, u1])
+        [RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), Rsub a b, Rsub a b, u1],
+         Rneg (RprodL [b, Rsub a b, Rsub a b]),
+         Rneg (RprodL [ofQ (⟨1, 3⟩ : Q) (by decide), Rsub a b, Rsub a b, Rsub a b])]))
+  have t6 := List.Perm.cons (RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, u0])
+    (List.Perm.cons (RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, u1])
+      (List.Perm.cons (Rneg (RprodL [b, b, Rsub a b]))
+        (List.Perm.cons (RprodL [b, Rsub a b, u1])
+          (List.Perm.swap (Rneg (RprodL [b, Rsub a b, Rsub a b]))
+            (RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), Rsub a b, Rsub a b, u1])
+            [Rneg (RprodL [ofQ (⟨1, 3⟩ : Q) (by decide), Rsub a b, Rsub a b, Rsub a b])]))))
+  exact Req_trans (lhsForm_eq_RsumL a b u0 u1)
+    (Req_trans (RsumL_perm ((t1.trans (t2.trans (t3.trans (t4.trans (t5.trans t6)))))))
+      (Req_symm (decompForm_eq_RsumL a b u0 u1)))
+
+/-- **`sStep p ≈ decompForm`** at the log/reciprocal atoms — instantiating the keystone at
+    `a = ln(p+1)`, `b = ln p`, `u0 = 1/p`, `u1 = 1/(p+1)`. -/
+theorem sStep_decomp (p : Nat) (hp : 1 ≤ p) :
+    Req (sStep p hp)
+      (decompForm (logN (p + 1) (Nat.succ_pos p)) (logN p hp)
+        (ofQ (⟨1, p⟩ : Q) hp) (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p))) :=
+  Req_trans (sStep_stage1 p hp)
+    (decomp_generic (logN (p + 1) (Nat.succ_pos p)) (logN p hp)
+      (ofQ (⟨1, p⟩ : Q) hp) (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p)))
 
 end UOR.Bridge.F1Square.Analysis
