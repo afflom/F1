@@ -127,6 +127,19 @@ choice-free (`{propext, Quot.sound}`), audited; the build is warning-free; the g
   `RsumL_cancel_anywhere` choice-free positional cancellation — no `List.Perm` `decide`, which pulls
   `Classical.choice`). The reusable abelian-group analogue of `ring_uor`; it drives the `γ₂` cubic
   telescoping and every `λₙ` assembly.
+- **The UOR Real multiplicative normalizer `RMulNF`** (`F1Square/Analysis/RMulNF.lean`) — the κ-form
+  companion of `RAddNF`, the second half of a `Real` "ring" engine. Real MULTIPLICATIVE identities had
+  no tactic for the same reason additive ones didn't (`ring_uor` is ℤ/ℚ-only; the pointwise route
+  can't see through `Rmul`'s Bishop reindexing). `RprodL` canonicalizes a `Rmul`-tree to the product
+  of a factor LIST; equality is decided by the multiset (`RprodL_perm`, from the genuine `Rmul`
+  commutativity/associativity). Permutation-only — `Real` has no universal multiplicative inverse, so
+  there is no cancellation layer (all degree-`d` monomial normalization needs is permutation).
+  `Rmul_pair_eq_RprodL4` is the degree-4 flatten; `prod_sq_reassoc` (`(ac)² ≈ a²c²`) and
+  `prod_cross_reassoc` (`(ac)(bd) ≈ (ad)(bc)`) are the validated monomial atoms (the square and the
+  cross-term of `|zw|² = |z|²|w|²`), with the permutations built EXPLICITLY via `List.Perm`
+  constructors (`decide` on `List.Perm` pulls `Classical.choice`). With `RAddNF` this stands in for a
+  `Real` `ring` tactic: expand to monomials, normalize each with `RprodL_perm`, match the sum with
+  `RsumL_perm`. Choice-free, audited.
 - **Honesty-gate rigor fix** (`scripts/honesty_audit.sh`) — load-bearing. Checks 3 (no
   `sorry`/`native_decide`) and 4 (choice-free) used `… | grep -q …` inside an `if`-condition
   under `set -o pipefail`: a matching `grep -q` exits early, SIGPIPEs the upstream `grep`, and
