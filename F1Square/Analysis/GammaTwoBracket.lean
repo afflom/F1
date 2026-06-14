@@ -971,4 +971,76 @@ theorem dMinusU1_le (p : Nat) (hp : 1 ≤ p) :
   push_cast
   ring_uor
 
+/-- `−(X − Y) ≈ Y − X`. -/
+theorem Rneg_Rsub_swap (X Y : Real) : Req (Rneg (Rsub X Y)) (Rsub Y X) :=
+  Req_trans (Rneg_Radd X (Rneg Y))
+    (Req_trans (Radd_congr (Req_refl _) (Rneg_neg Y)) (Radd_comm (Rneg X) Y))
+
+/-- **`b·d ≤ 1`** (`b = log p ≤ p`, `d ≤ 1/p`). -/
+theorem bd_le_one (p : Nat) (hp : 1 ≤ p) :
+    Rle (Rmul (logN p hp) (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))) one := by
+  have hd_nn : Rnonneg (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp)) :=
+    Rnonneg_Rsub_of_Rle (logN_mono hp (Nat.le_succ p))
+  have hpnn : Rnonneg (ofQ (⟨(p : Int), 1⟩ : Q) Nat.one_pos) :=
+    Rnonneg_ofQ Nat.one_pos (by show (0 : Int) ≤ (p : Int); omega)
+  refine Rle_trans (Rmul_le_Rmul_right hd_nn (logN_le_self p hp)) ?_
+  refine Rle_trans (Rmul_le_Rmul_left hpnn (deltaLog_upper p hp)) ?_
+  refine Rle_of_Req (Req_trans (Rmul_ofQ_ofQ (a := (⟨(p : Int), 1⟩ : Q)) (b := (⟨1, p⟩ : Q))
+    Nat.one_pos hp) ?_)
+  exact ofQ_congr (Qmul_den_pos (a := (⟨(p : Int), 1⟩ : Q)) (b := (⟨1, p⟩ : Q)) Nat.one_pos hp)
+    Nat.one_pos
+    (by show Qeq (mul (⟨(p : Int), 1⟩ : Q) (⟨1, p⟩ : Q)) (⟨1, 1⟩ : Q)
+        simp only [Qeq, mul]; push_cast; ring_uor)
+
+/-- **`−R1 = d·(d − u1) ≥ 0`**. -/
+theorem negR1_nonneg (p : Nat) (hp : 1 ≤ p) :
+    Rnonneg (Rmul (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
+      (Rsub (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
+        (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p)))) :=
+  Rnonneg_Rmul (Rnonneg_Rsub_of_Rle (logN_mono hp (Nat.le_succ p)))
+    (Rnonneg_Rsub_of_Rle (deltaLog_lower p hp))
+
+/-- **`b·R1 ≥ −1/(2p(p+1))`** — `b·(−R1) = (b·d)·(d−u1) ≤ 1·(d−u1) ≤ 1/(2p(p+1))`. -/
+theorem bR1_lower (p : Nat) (hp : 1 ≤ p) :
+    Rle (Rneg (ofQ (⟨1, 2 * p * (p + 1)⟩ : Q)
+          (Nat.mul_pos (Nat.mul_pos (by decide) hp) (Nat.succ_pos p))))
+        (Rmul (logN p hp)
+          (Rsub (Rmul (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
+                  (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p)))
+            (Rmul (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
+                  (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))))) := by
+  have key : Rle (Rmul (logN p hp)
+        (Rmul (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
+          (Rsub (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
+            (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p)))))
+      (ofQ (⟨1, 2 * p * (p + 1)⟩ : Q)
+        (Nat.mul_pos (Nat.mul_pos (by decide) hp) (Nat.succ_pos p))) := by
+    refine Rle_trans (Rle_of_Req (Req_symm (Rmul_assoc (logN p hp)
+      (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
+      (Rsub (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
+        (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p)))))) ?_
+    refine Rle_trans (Rmul_le_Rmul_right (Rnonneg_Rsub_of_Rle (deltaLog_lower p hp))
+      (bd_le_one p hp)) ?_
+    exact Rle_trans (Rle_of_Req (Rone_mul _)) (dMinusU1_le p hp)
+  -- d·(d−u1) ≈ −R1, so b·(d·(d−u1)) ≈ −(b·R1)
+  have hswap : Req
+      (Rmul (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
+        (Rsub (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
+          (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p))))
+      (Rneg (Rsub (Rmul (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
+                    (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p)))
+              (Rmul (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
+                    (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))))) :=
+    Req_trans (Rmul_sub_distrib (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
+        (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp)) (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p)))
+      (Req_symm (Rneg_Rsub_swap _ _))
+  have heq := Req_trans (Rmul_congr (Req_refl (logN p hp)) hswap)
+    (Rmul_neg_right (logN p hp)
+      (Rsub (Rmul (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
+              (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p)))
+        (Rmul (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
+              (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp)))))
+  have hk2 := Rle_trans (Rle_of_Req (Req_symm heq)) key
+  exact Rle_trans (Rle_Rneg hk2) (Rle_of_Req (Rneg_neg _))
+
 end UOR.Bridge.F1Square.Analysis

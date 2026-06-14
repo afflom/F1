@@ -2200,3 +2200,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.logN_le_self
 #print axioms Analysis.deltaLog_le_mid
 #print axioms Analysis.dMinusU1_le
+#print axioms Analysis.Rneg_Rsub_swap
+#print axioms Analysis.bd_le_one
+#print axioms Analysis.negR1_nonneg
+#print axioms Analysis.bR1_lower
