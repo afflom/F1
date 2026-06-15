@@ -2213,3 +2213,5 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.hAB_qle
 #print axioms Analysis.sStep_lower_tele
 #print axioms Analysis.hSeq_tele
+#print axioms Analysis.Rsub_sub_self
+#print axioms Analysis.hSeq_lower_const

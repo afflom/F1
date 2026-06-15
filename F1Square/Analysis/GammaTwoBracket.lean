@@ -1267,4 +1267,22 @@ theorem hSeq_tele (N : Nat) (hN : 1 ≤ N) : ∀ k,
     refine Rle_trans (Radd_le_add ih hstep) ?_
     exact Rle_of_Req (Req_symm (sub_add_cancel_real (hSeq (N + k + 1)) (hSeq (N + k))))
 
+/-- `a − (a − b) ≈ b`. -/
+theorem Rsub_sub_self (a b : Real) : Req (Rsub a (Rsub a b)) b := by
+  refine Req_trans (Radd_congr (Req_refl a)
+    (Req_trans (Rneg_Radd a (Rneg b)) (Radd_congr (Req_refl _) (Rneg_neg b)))) ?_
+  refine Req_trans (Req_symm (Radd_assoc a (Rneg a) b)) ?_
+  refine Req_trans (Radd_congr (Radd_neg a) (Req_refl b)) ?_
+  exact Req_trans (Radd_comm zero b) (Radd_zero b)
+
+/-- **`hSeq(N+k) ≥ hSeq(N) − 1/(N+1)`** (uniform in `k`, `N ≥ 1`) — drop the nonneg `+1/(N+k+1)`. -/
+theorem hSeq_lower_const (N : Nat) (hN : 1 ≤ N) (k : Nat) :
+    Rle (Rsub (hSeq N) (ofQ (⟨1, N + 1⟩ : Q) (Nat.succ_pos N))) (hSeq (N + k)) := by
+  have hBkle : Rle (Rsub (ofQ (⟨1, N + 1⟩ : Q) (Nat.succ_pos N))
+        (ofQ (⟨1, N + k + 1⟩ : Q) (Nat.succ_pos (N + k))))
+      (ofQ (⟨1, N + 1⟩ : Q) (Nat.succ_pos N)) := by
+    refine Rle_of_Rnonneg_Rsub (Rnonneg_congr (Req_symm (Rsub_sub_self _ _)) ?_)
+    exact Rnonneg_ofQ (Nat.succ_pos (N + k)) (by show (0 : Int) ≤ 1; decide)
+  exact Rle_trans (Rsub_le_sub (Rle_of_Req (Req_refl (hSeq N))) hBkle) (hSeq_tele N hN k)
+
 end UOR.Bridge.F1Square.Analysis
