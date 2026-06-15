@@ -2217,3 +2217,19 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.hSeq_lower_const
 #print axioms Analysis.hSeq_le_g2Seq
 #print axioms Analysis.Rgamma2_ge_hSeq
+
+-- v0.20.0 stage F: γ₂≥−0.02 bracket — (C4) telescoping tail + (C5) limit + the certified bracket.
+#print axioms Analysis.cube_dom_nat
+#print axioms Analysis.hBA_qle
+#print axioms Analysis.hAB_qle
+#print axioms Analysis.sStep_lower_tele
+#print axioms Analysis.hSeq_tele
+#print axioms Analysis.Rsub_sub_self
+#print axioms Analysis.hSeq_lower_const
+#print axioms Analysis.hSeq_le_g2Seq
+#print axioms Analysis.Rgamma2_ge_hSeq
+#print axioms Analysis.Rsub_ofQ_ofQ
+#print axioms Analysis.gBound2_den_pos
+#print axioms Analysis.hSeq_ge_gBound2
+#print axioms Analysis.gamma2_decide
+#print axioms Analysis.Rgamma2_ge_neg002

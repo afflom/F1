@@ -1323,4 +1323,70 @@ theorem Rgamma2_ge_hSeq {N : Nat} (hN : 1 ≤ N) (hN256 : N ≤ 256) :
     htend) ?_
   exact Rle_of_Req (Req_trans (Radd_comm zero _) (Radd_zero _))
 
+-- ===========================================================================
+-- (C5b) **THE BRACKET: `γ₂ ≥ −0.02`** — `γ₂ ≥ hSeq(199) − 1/200`, with `hSeq(199)` bounded below by
+-- the single rational `gBound2 3 10⁸ 199` (wrapped as a `def` so the giant evaluator term stays
+-- opaque in the flat final proof — the `γ₁`/`gBound` pattern), the residual `1/200`, and one `decide`.
+-- ===========================================================================
+
+/-- `(ofQ a) − (ofQ b) ≈ ofQ(a − b)` — generic, no evaluation (keeps big `a,b` opaque). -/
+theorem Rsub_ofQ_ofQ {a b : Q} (ha : 0 < a.den) (hb : 0 < b.den) :
+    Req (Rsub (ofQ a ha) (ofQ b hb)) (ofQ (add a (neg b)) (add_den_pos ha hb)) :=
+  Req_trans (Radd_congr (Req_refl (ofQ a ha)) (Rneg_ofQ b hb))
+    (Radd_ofQ_ofQ (a := a) (b := neg b) ha hb)
+
+/-- The **rational lower bound on `hSeq N`** (depth `T`, denominator `D`) as a single `Q` (`def`, so
+    the deep evaluator term stays opaque downstream — the `gBound` pattern). -/
+def gBound2 (T D N : Nat) : Q :=
+  add (add (lnSqSumLo T D (N + 1))
+      (neg (mul (⟨1, 3⟩ : Q) (mul (mul (logBound T D N) (logBound T D N)) (logBound T D N)))))
+    (neg (mul (⟨1, 2⟩ : Q) (mul (mul (logBound T D N) (logBound T D N)) (⟨1, N + 1⟩ : Q))))
+
+theorem gBound2_den_pos (T D N : Nat) (hD : 0 < D) : 0 < (gBound2 T D N).den :=
+  add_den_pos (add_den_pos (lnSqSumLo_den_pos T D hD (N + 1))
+      (Qmul_den_pos (by decide) (Qmul_den_pos (Qmul_den_pos (logBound_den_pos T D hD N)
+        (logBound_den_pos T D hD N)) (logBound_den_pos T D hD N))))
+    (Qmul_den_pos (by decide) (Qmul_den_pos (Qmul_den_pos (logBound_den_pos T D hD N)
+      (logBound_den_pos T D hD N)) (Nat.succ_pos N)))
+
+set_option maxHeartbeats 16000000 in
+set_option maxRecDepth 40000 in
+/-- **`ofQ(gBound2 T D N) ≤ hSeq N`** (`T ≤ 21`) — the rational lower bound (`lnSqSumLo_le`,
+    `logCube_le`, `halfSqOver_le`), collapsing the all-`ofQ` Rsub-tower to the single `gBound2`. -/
+theorem hSeq_ge_gBound2 (T D N : Nat) (hD : 0 < D) (hT : T ≤ 21) :
+    Rle (ofQ (gBound2 T D N) (gBound2_den_pos T D N hD)) (hSeq N) := by
+  have Ld := logBound_den_pos T D hD N
+  have hcube : Rle (Rmul (ofQ (⟨1, 3⟩ : Q) (by decide)) (logCube (N + 1) (Nat.succ_pos N)))
+      (ofQ (mul (⟨1, 3⟩ : Q) (mul (mul (logBound T D N) (logBound T D N)) (logBound T D N)))
+        (Qmul_den_pos (by decide) (Qmul_den_pos (Qmul_den_pos Ld Ld) Ld))) :=
+    Rle_trans (Rmul_le_Rmul_left (Rnonneg_ofQ (by decide) (by decide)) (logCube_le T D N hD))
+      (Rle_of_Req (Rmul_ofQ_ofQ (by decide) (Qmul_den_pos (Qmul_den_pos Ld Ld) Ld)))
+  have hlow : Rle
+      (Rsub (Rsub (ofQ (lnSqSumLo T D (N + 1)) (lnSqSumLo_den_pos T D hD (N + 1)))
+          (ofQ (mul (⟨1, 3⟩ : Q) (mul (mul (logBound T D N) (logBound T D N)) (logBound T D N)))
+            (Qmul_den_pos (by decide) (Qmul_den_pos (Qmul_den_pos Ld Ld) Ld))))
+        (ofQ (mul (⟨1, 2⟩ : Q) (mul (mul (logBound T D N) (logBound T D N)) (⟨1, N + 1⟩ : Q)))
+          (Qmul_den_pos (by decide) (Qmul_den_pos (Qmul_den_pos Ld Ld) (Nat.succ_pos N)))))
+      (hSeq N) :=
+    Rsub_le_sub (Rsub_le_sub (lnSqSumLo_le T D hD hT (N + 1)) hcube) (halfSqOver_le T D N hD)
+  exact Rle_trans (Rle_of_Req (Req_symm (Req_of_seq_Qeq (fun n => Qeq_refl _)))) hlow
+
+set_option maxRecDepth 40000 in
+/-- The numeric heart: `−1/50 ≤ gBound2 3 10⁸ 199 − 1/200` — one big-integer kernel `decide` (≈3s). -/
+theorem gamma2_decide :
+    Qle (⟨-1, 50⟩ : Q) (Qsub (gBound2 3 100000000 199) (⟨1, 199 + 1⟩ : Q)) := by decide
+
+/-- **`γ₂ ≥ −1/50` (`= −0.02`)** — the certified bracket on the second Stieltjes constant.  `γ₂ ≥
+    hSeq(199) − 1/200` (`Rgamma2_ge_hSeq`), `hSeq(199) ≥ ofQ(gBound2 3 10⁸ 199)` (`hSeq_ge_gBound2`),
+    `gBound2 3 10⁸ 199 − 1/200 ≥ −1/50` (`gamma2_decide`). -/
+theorem Rgamma2_ge_neg002 : Rle (ofQ (⟨-1, 50⟩ : Q) (by decide)) Rgamma2 := by
+  have hD : 0 < 100000000 := by decide
+  refine Rle_trans ?_ (Rgamma2_ge_hSeq (show 1 ≤ 199 by decide) (show 199 ≤ 256 by decide))
+  refine Rle_trans ?_
+    (Rsub_le_sub (hSeq_ge_gBound2 3 100000000 199 hD (by decide)) (Rle_of_Req (Req_refl _)))
+  exact Rle_trans
+    (Rle_ofQ_ofQ (by decide)
+      (add_den_pos (gBound2_den_pos 3 100000000 199 hD) (Nat.succ_pos 199)) gamma2_decide)
+    (Rle_of_Req (Req_symm (Rsub_ofQ_ofQ (gBound2_den_pos 3 100000000 199 hD) (Nat.succ_pos 199))))
+
 end UOR.Bridge.F1Square.Analysis
