@@ -1,4 +1,4 @@
-# F1 Square — Roadmap to completion (v0.15.0 → v0.20.0)
+# F1 Square — Roadmap to completion (v0.15.0 → v0.21.0)
 
 The genuine-proof layer (`F1Square/`) builds the 𝔽₁ / Riemann-Hypothesis program from first
 principles in **pure Lean 4** (Lean core + UOR-Foundation, **no Mathlib, no `sorry`/`native_decide`,
@@ -11,10 +11,12 @@ proof exists. De-hedging removes *false modesty* about proven results; it never 
 **The gate decides what is asserted, not ambition** — anything that does not close honestly stays an
 explicit interface, exactly as the existing `Li`/`Crux` interfaces do, never faked.
 
-The remaining construction is scoped into five releases (stages **A–E**). Each is multi-commit, green
+The remaining construction is scoped into releases (stages **A–G**). Each is multi-commit, green
 at every commit, axiom-clean, and resolved by analyzing the implementation here plus deep-research where
 the literature is needed. Uncertainty (especially on the geometric frontier) is a research input, not a
-stop sign — the focus is always the **construction of the F1 square**, to completion.
+stop sign — the focus is always the **construction of the F1 square**, to completion. Stages A–F ship
+through v0.20.0; stage **G** (v0.21.0) carries the crux past the located frontier via the arithmetic
+Hodge-index program — the isometric-embedding / missing-object route below.
 
 ## Status recap (`F1SquareStatus`, `F1Square.lean`)
 
@@ -25,8 +27,8 @@ stop sign — the focus is always the **construction of the F1 square**, to comp
 | `classGroupFinitelyGen` | `some true` (**canonical 𝕊** — v0.17.0) | shipped in **C** |
 | `surfaceConstructed` | `some true` (**canonical 𝕊**, monoid-scheme level — v0.17.0) | shipped in **C** |
 | `parallelPencilFinding` | `some true` (**canonical 𝕊** — v0.17.0) | shipped in **C** |
-| `hodgeIndexHolds` (= RH, geometric) | `none` | **F / v0.20.0 shipped**: the dictionary is now DERIVED (the canonical `H¹` lattice, the primitive projection); the gate ran and LOCATED THE FRONTIER (the forced signature did not come out positive — that is RH), so this stays `none`; it flips the instant a faithful proof of the criterion lands |
-| `liPositivityHolds` (= RH, analytic) | `none` | same proposition as the geometric face, through the bridge; the **F / v0.20.0** forced criterion is exactly `λₙ > 0 ∀n` (needs the genuine Stieltjes η-tail = the zeros), so this stays `none` |
+| `hodgeIndexHolds` (= RH, geometric) | `none` | **F / v0.20.0 shipped**: the dictionary is now DERIVED (the canonical `H¹` lattice, the primitive projection); the gate ran and LOCATED THE FRONTIER (the forced signature did not come out positive — that is RH), so this stays `none`; **G / v0.21.0** attacks it via the isometric embedding `ι` of the primitive span into a definite atlas space `L` (the missing-object route); it flips the instant the program reaches its *closed* terminal state (an audited, axiom-clean `‖ι Cₙ‖²_L = 2λₙ` with `L` definite), and stays `none` in the *localized* state |
+| `liPositivityHolds` (= RH, analytic) | `none` | same proposition as the geometric face, through the bridge; the **F / v0.20.0** forced criterion is exactly `λₙ > 0 ∀n` (needs the genuine Stieltjes η-tail = the zeros); **G / v0.21.0** targets it through the same `ι`-existence ⟹ RH implication, so it stays `none` until the program closes |
 
 ---
 
@@ -365,8 +367,113 @@ theorem. The method dictates what to build; the gate decides whether it closes.
 
 ---
 
+## v0.21.0 — (G) Closing the arithmetic Hodge-index crux: the missing object **[planned]**
+
+The release goal is to carry the crux **past the v0.20.0 located frontier** by constructing one
+specific object and letting the Lean kernel decide whether it closes the crux. Closure is equivalent
+to RH, so the program cannot be cheaper than a proof; it is engineered to terminate in one of **two
+faithful states** — a *closed* crux or a *localized* obstruction — and v0.21.0 ships whichever it
+reaches, fully implemented and audited. The bright line is unchanged: `hodgeIndexHolds` /
+`liPositivityHolds` flip `none → some true` **iff** the *closed* state lands axiom-clean.
+
+### The crux, the deficit, and the proven template
+
+- **The crux.** On the genuine spectral square, `⟨Cₙ,Cₙ⟩ = −2λₙ` is a DERIVED dictionary
+  (`intrinsicH1_dict`, v0.20.0). The crux is `⟨Cₙ,Cₙ⟩ ≤ 0 ∀n ⟺ λₙ ≥ 0 ∀n ⟺ RH` (Li). Two facts fix
+  the difficulty: per-`n` certification is a finite head that never reaches `∀n`
+  (`genuine_iff_all_upTo`), and the all-`n` positivity is **cancellation, not magnitude** (the von
+  Mangoldt sum diverges, so no magnitude bound decides it). A proof must produce the sign for all `n`
+  from one structural fact.
+- **The proven template (function field).** `BridgeFF.ff_hodge_iff_hasse` already closes the curve
+  case: `4(x²+axy+qy²) = (2x+ay)² + (4q−a²)y²`, negative-definiteness of *every* direction carried by
+  the single nonnegative term `(4q−a²) ≥ 0` (the Weil bound). One positive-definiteness fact decides
+  the sign for all directions at once — the shape the arithmetic proof must take.
+- **The deficit.** `vanCyc_selfpair_gen` gives `⟨Δ−Γ,Δ−Γ⟩ = Δ²+Γ²−2(Δ·Γ)`; the built-lattice tie
+  zeros `Δ²=Γ²=0` and sets `Δ·Γₙ = λₙ`, collapsing the self-pairing to bare `−2λₙ`. The completed-
+  square slack is gone — there is no `(4q−a²)` analog. Supplying one is the entire program.
+
+### Strategy: the missing object as an isometric embedding
+
+Model the slack as an isometric embedding `ι` of the primitive span into the **negative** of a
+positive-definite atlas space `L`: if `ι` is an isometry with `‖ι Cₙ‖²_L = 2λₙ`, the primitive form is
+negative-semidefinite, so every diagonal `⟨Cₙ,Cₙ⟩ = −‖ι Cₙ‖²_L ≤ 0`, hence `λₙ ≥ 0 ∀n`. Two
+load-bearing corrections: it is the `⟹` direction only (`ι`-existence is *strictly stronger* than RH,
+so a failure rejects the candidate and the atlas route, **never RH**); and an isometry must match the
+full Gram `⟨Cₙ,Cₘ⟩`, not only the diagonal — the off-diagonal lives on the **Frobenius carrier**
+(`Cohomology.lean`, `orbit n = σⁿg`), not the pencil-blind rank-4 lattice.
+
+**Difficulty conservation (why no framing is cheap).** Two gates carry the crux — Gate A (the match
+`‖ι Cₙ‖²_L = 2λₙ`) and Gate B (definiteness of `L`). Gate B makes Gate A's left side nonnegative, so
+Gate A proven under Gate B **is itself RH**. Make `L` manifestly definite (`ℓ²`) and Gate A is the full
+crux; bake `λₙ` into the pairing and Gate B becomes the crux (the smuggling corner the audit forbids).
+The only non-circular content is an exact identity between two independently defined closed forms — `ι`
+from zero-free atlas structure, `λₙ = genuineLamSeq` from the Stieltjes data — exhibiting `λₙ` as a
+manifest sum of squares. **Recorded negative result:** the Cayley candidate `ι Cₙ = (1 − wₚⁿ)` over
+ℓ² is a *relocation* (`‖ι Cₙ‖² − λₙ = Σ (rₚ^{2n} − 1)`, matches ∀n iff every `rₚ = 1` iff RH); its
+mechanism is now FORMAL in F1 (`ZeroGeometry`: `rₚ = 1 ⟺ Re ρ = ½`; `LiGrowth`: the `rₚ^{2n}` growth).
+**Rule established:** `ι Cₙ` must be defined from atlas-intrinsic data with no reference to `wₚ, rₚ, θₚ`.
+
+### Faithfulness invariants (non-negotiable)
+
+Positivity is **output, never input** (`λₙ ≥ 0` appears nowhere as an assumption); `λₙ` on the atlas
+side is the derived `genuineLamSeq`, never the pairing's definition; the kernel forces both gates;
+crux-path axioms stay `{propext, Quot.sound}` (no `native_decide`, no `decide` over infinite content,
+no Mathlib); and `scripts/honesty_audit.sh` / `scripts/audit_axioms.lean` gain a **no-smuggling check**,
+the metric analog of `intrinsicH1_dict`'s "no false dictionary can be supplied".
+
+### The stages (all delivered in v0.21.0, spanning several commits)
+
+| Stage | Deliverable | Falsifier | Output if it survives |
+|---|---|---|---|
+| **G0a. Prerequisite — atlas rule** | atlas-intrinsic, zero-free rule `Cₙ ↦ vector` (candidates: Coxeter order-30, gauge-tower `G_k`, tropical/Kashiwara-crystal); pre-filtered to reproduce Li growth `λₙ ~ ½ n log n` | no n-family reproduces `½ n log n` at leading order | a witness worth testing |
+| **G0b. Prerequisite — full form** | the off-diagonal `⟨Cₙ,Cₘ⟩` on the Frobenius carrier `(ℕ,succ,0)` (`orbit_shiftLength`, `k·log p`), diagonal reusing `vanCyc_selfpair`; analytic counterpart already the Weil pairing `W(gₙ ⋆ ǧₘ)` | the carrier cannot hold the off-diagonal | the full primitive form |
+| **S. Substrate (Lean)** | finite-truncation PSD predicate `WeilPSD B` over existing `RsumN`/`Rmul`/`Rnonneg`; direct limit = "for all `N`"; choice-free, Mathlib-free | the predicate cannot be discharged choice-free / Mathlib-free | the ground Stage 2 stands on |
+| **G0. Numerical kill-test (throwaway)** | compute the full Gram `⟨ι Cₙ, ι Cₘ⟩_L` for `n,m ≤ ~50` vs `−2λₙ` and off-diagonals | diagonal `≠ −2λₙ`, off-diagonal mismatch, or Gram not PD at finite size | a candidate worth formalizing |
+| **G1. Gate A — faithful match (Lean)** | `atlasPair Cₙ Cₙ` equals the genuine form, pairing fixed by atlas structure, no-smuggling audited | match holds only by defining the pairing as the form (smuggling) | the identity, audited |
+| **G2a. E₈ seed (Lean)** | choice-free Gram positivity of the finite seed in F1 idiom | seed not PD without `native_decide` / Mathlib | finite definite anchor |
+| **G2b.0. Tower carries a form (Lean)** | the gauge tower `G_k` carries a compatible inner product, not just a modulus | the tower is only addressing/modulus, no metric | a metric to take the limit of |
+| **G2b.1. Infinite definiteness (Lean, make-or-break)** | direct-limit form positive-definite as `m_k → ∞`; first determine which `Σ` is the spectrum | the limit form is indefinite (a negative entry in the atlas signature `Σ`) | structural slack for all `n` |
+| **G3. Assembly & audit** | flip / hold `hodgeIndexHolds` / `liPositivityHolds`; `#print axioms` | any axiom outside `{propext, Quot.sound}` | crux decided, clean |
+
+Stage G0 is a *necessary* filter, not sufficient: a finite Gram being PD for `n ≤ 50` says nothing
+about the limit, and the `−2λₙ` reference values are only as sharp as the Stieltjes constants
+(`γ, γ₁, γ₂, …`) computed to controlled precision.
+
+### Terminal states (both faithful, both shipped)
+
+- **Closed.** All stages pass, choice-free, audit clean ⟹ `λₙ ≥ 0 ∀n` is a theorem with positivity as
+  OUTPUT, the crux fields flip off `none`, RH is proven via the atlas-supplied Hodge index.
+- **Localized.** A stage fails and the failure point is recorded as the obstruction — no atlas n-family
+  reproduces `½ n log n` (G0), the bridge holds only by smuggling (G1), or the direct limit is
+  indefinite (G2b.1). Each failure is a **theorem or explicit counterexample**, not a stall; the cheap
+  stages kill wrong candidates first. The expected outcome for any single candidate is localization;
+  closure requires a candidate surviving every gate.
+
+### Named risks (each routed to a recorded result)
+
+- **Gate A bridge** — whether any zero-free atlas object encodes `λₙ` is unestablished (§6 shows the
+  naive route circular). **Gate B definiteness** — the atlas base is finite rank (E₈ is rank 8); the
+  primitive span is infinite, so closure needs an infinite-rank definite limit with no negative
+  signature entry in the metric. **Cancellation wall** — no magnitude bound substitutes for structural
+  definiteness; that is why the embedding, not a tail bound, is the route. **Difficulty conservation** —
+  no `(L, ι)` makes both gates easy; the atlas must contribute a genuine theorem to the non-trivial
+  gate. **False negatives** — because `ι`-existence is stronger than RH, a localization rejects the
+  candidate and the atlas route, never RH itself.
+
+### The irreducible gap
+
+Closure of the crux is equivalent to a proof of RH, and no specification turns an open problem into a
+theorem. What this plan guarantees is **no methodological holes**: every stage defined, every failure
+mode named and routed to a recorded result, the two circular corners excluded by difficulty
+conservation and the no-smuggling audit, the substrate cost budgeted, the full form (not its diagonal)
+required before definiteness is claimed. The single remaining unknown is whether the atlas supplies a
+zero-free, manifestly nonnegative formula for `λₙ` — the problem the strategy exists to attack.
+
+---
+
 ## What stays open regardless
 
-If v0.18 / v0.19 / v0.20 do not close the crux axiom-clean, `hodgeIndexHolds` / `liPositivityHolds`
-stay `none` and **RH stays open** — the releases still ship every surrounding construction. The bright
-line is permanent: the crux is de-hedged iff RH is proven, and it is not until it is.
+If v0.18 / v0.19 / v0.20 / v0.21 do not close the crux axiom-clean, `hodgeIndexHolds` /
+`liPositivityHolds` stay `none` and **RH stays open** — the releases still ship every surrounding
+construction (for v0.21.0, the missing-object substrate and a *localized* obstruction theorem). The
+bright line is permanent: the crux is de-hedged iff RH is proven, and it is not until it is.

@@ -2220,3 +2220,25 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.hSeq_ge_gBound2
 #print axioms Analysis.gamma2_decide
 #print axioms Analysis.Rgamma2_ge_neg002
+
+-- v0.21.0 stage G, brick S (the substrate): the finite-truncation PSD predicate `WeilPSD`,
+-- its additive/rank-one structure, the embedding Gram (Gate B free), and the embedding bridge.
+#print axioms Square.Rmul_RsumN_left
+#print axioms Square.RsumN_mul_RsumN
+#print axioms Square.Radd_rearrange4
+#print axioms Square.RsumN_add
+#print axioms Square.RsumN_zero
+#print axioms Square.indic_eq_one
+#print axioms Square.indic_eq_zero
+#print axioms Square.RsumN_indic_mul
+#print axioms Square.WeilPSD_congr
+#print axioms Square.WeilPSD_zero
+#print axioms Square.weilQuad_add
+#print axioms Square.WeilPSD_add
+#print axioms Square.rankOne_term_reassoc
+#print axioms Square.WeilPSD_rankOne
+#print axioms Square.WeilPSD_gramOf
+#print axioms Square.WeilPSD_diag
+#print axioms Square.embeds_to_hodgeNeg
+#print axioms Square.embeds_to_liNonneg
+#print axioms Square.realizesDiag_genuine_iff
