@@ -4,9 +4,9 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html), starting at `v0.0.1`.
 
-## [0.20.0] - 2026-06-13
+## [0.20.0] - 2026-06-15
 
-### Added — stage F: the UOR construction of the crux — the canonical `H¹`-object and the FORCED dictionary (pure Lean 4, no Mathlib, no `sorry`, choice-free)
+### Added — stage F: the UOR construction of the crux (`H¹`-object + FORCED dictionary) and the certified `γ₂ ≥ −0.02` bracket (pure Lean 4, no Mathlib, no `sorry`, choice-free)
 
 The v0.18.0 bridge carried the dictionary `⟨Cₙ,Cₙ⟩ = −2λₙ` as INTERFACE DATA — a `SpectralSquare`
 field that any instance supplied definitionally (`cSq := −2λ`, `dict := rfl`). Stage F removes
@@ -16,7 +16,11 @@ the self-pairing computed from the Gram. **The gate then ran on the constructed 
 THE FRONTIER** — the forced signature did *not* come out positive (proving `λₙ > 0 ∀n` *is* RH), so
 the construction is complete down to one irreducible input (the genuine Stieltjes η-tail = the
 zeros) and `hodgeIndexHolds`/`liPositivityHolds` stay `none` — the gate flips the instant a
-faithful, axiom-clean proof of the criterion lands; until then **RH stays OPEN**. Every theorem is
+faithful, axiom-clean proof of the criterion lands; until then **RH stays OPEN**. Stage F also
+delivers the constructive second Stieltjes constant `γ₂` and **closes its numeric bracket
+`γ₂ ≥ −0.02`** (`Rgamma2_ge_neg002`) — the documented open computational frontier from v0.18.0 — via
+a discrete Euler–Maclaurin construction with a new Real "ring engine" (`RAddNF`+`RMulNF`); this is a
+certified constant bound (evidence), NOT a positivity-of-all-`λₙ` (= RH) claim. Every theorem is
 choice-free (`{propext, Quot.sound}`), audited; the build is warning-free; the gate passes.
 
 - **A1 — the `H¹` carrier by universal property** (`F1Square/Square/Cohomology.lean`): a
@@ -87,22 +91,33 @@ choice-free (`{propext, Quot.sound}`), audited; the build is warning-free; the g
   Reindex `M(j)=2j+8` with domination `(j+1)(2M²+12M+22) ≤ 2^M` (via `8j²+88j+246 ≤ 2^{j+8}`) gives
   pairwise Cauchy `±1/(j+1)` → `RReg_of_real_bound` → `Rlim`. Choice-free (`{propext, Quot.sound}`),
   audited. Mirrors the `GammaOne`/`γ₁` regularity endgame column-for-column.
-- **The `γ₂ ≥ −0.02` bracket via DISCRETE Euler–Maclaurin** (`F1Square/Analysis/GammaTwoBracket.lean`,
-  in progress) — the corrected route: NO constructive integration is needed. The trapezoidal anchor
-  `½f(N)` (`f(x)=ln²x/x`) captures the leading `½ln²N/N` tail, leaving `h(N)=g₂(N)−½f(N) → γ₂` whose
-  per-step increment is the **trapezoidal residual** `s_p = ½[ln²(p+1)/(p+1)+ln²p/p] − ⅓[ln³(p+1)−
-  ln³p] = O(ln²p/p³)` (`hSeq`, `sStep`, `hSeq_step_eq`). Evaluators (A)/(B): `lnSqSumLo` (rational
-  lower bound for `Σ(ln k)²/k`), `logCube_le`/`halfSqOver_le` (cubed/squared-log upper bounds). The
-  **keystone decomposition** `sStep p ≈ b²·C2 + b·R1 + R0` (`sStep_decomp`, via `sStep_stage1` +
-  `decomp_generic`) is now PROVEN — where `b=ln p`, `d=ln(p+1)−ln p`, `C2 = ½(1/p+1/(p+1)) − d` is
-  the trapezoidal error of `1/x` (the clean summable `≤ 1/(2p(p+1)(2p+1))` factor), `R1 = d·u1 − d²`,
-  `R0 = ½d²u1 − ⅓d³`. It is a free polynomial identity in the 4 atoms `a,b,u0,u1`, proved by reducing
-  both sides to the SAME 7 canonical monomials with the `RAddNF`+`RMulNF` ring engine (`sq_binom2`,
-  `inner_merge`, `partA_eq`/`partC_eq`, the `½·2=1`/`⅓·3=1` coefficient collapses `half_two_cancel`/
-  `third_three_cancel`) and matching by an explicit, choice-free 7-element permutation. The final
-  `decide` at `N=200`, `T=3`, `D=10⁸` is validated (`h_lo ≥ −14/1000 ≥ −20/1000`, margin ~0.006 vs
-  true residual ~0.0004). REMAINING: the coefficient bounds (rational, no transcendentals), the
-  dyadic tail `Σ_{p≥200}|s_p| ≤ ε`, and the limit assembly `γ₂ = h(199) + tail` → `Pos λ₃`.
+- **THE CERTIFIED BRACKET `γ₂ ≥ −0.02` via DISCRETE Euler–Maclaurin** (`Rgamma2_ge_neg002`,
+  `F1Square/Analysis/GammaTwoBracket.lean`) — **complete**. The corrected route needs NO constructive
+  integration: the trapezoidal anchor `½f(N)` (`f(x)=ln²x/x`) captures the leading `½ln²N/N` tail,
+  leaving `hSeq(N)=g₂(N)−½f(N) → γ₂` whose per-step increment is the trapezoidal residual `s_p =
+  ½[ln²(p+1)/(p+1)+ln²p/p] − ⅓[ln³(p+1)−ln³p] = O(ln²p/p³)` (`hSeq`, `sStep`, `hSeq_step_eq`). The
+  chain, end to end:
+  - **The keystone decomposition** `sStep p ≈ b²·C2 + b·R1 + R0` (`sStep_decomp`) — `C2 = ½(1/p+1/(p+1))
+    − d` the trapezoidal error of `1/x`, `R1 = d·u1 − d²`, `R0 = ½d²u1 − ⅓d³` (`b=ln p`, `d=ln(p+1)−ln
+    p`). A free polynomial identity in 4 atoms, proved by reducing both sides to the SAME 7 canonical
+    monomials with the `RAddNF`+`RMulNF` ring engine (`sq_binom2`, `inner_merge`, `partA_eq`/`partC_eq`,
+    the `½·2=1`/`⅓·3=1` collapses) matched by an explicit choice-free 7-element permutation.
+  - **`C2 ≥ 0` (trapezoid ≥ integral)** dissolved by a clean coincidence — `dPlusQ(0,p) = M = ½(1/p+1/(p+1))`
+    EXACTLY (`dPlusQ_zero_eq_mid`, a `ring_uor` identity: the trapezoidal midpoint *is* the `T=0` artanh
+    upper bound), so `δ ≤ M` with no series comparison (`C2_nonneg`).
+  - **Per-step lower bound** `s_{j+1} ≥ −1/((j+1)(j+2))` (`sStep_lower_tele`) — all coefficient pieces
+    bounded by rationals (`d ≤ 1/p`, `d − u1 ≤ M − u1 = 1/(2p(p+1))`, `ln p ≤ p`), then `cube_dom_nat`
+    collapses the two terms to one TELESCOPING term (no dyadic machinery needed for the tail).
+  - **Telescoping tail** `hSeq(N+k) ≥ hSeq(N) − (1/(N+1) − 1/(N+k+1))` (`hSeq_tele`, induction) ⟹
+    `hSeq(M) ≥ hSeq(199) − 1/200` for all `M` (`hSeq_lower_const`).
+  - **The limit** `γ₂ ≥ hSeq(199) − 1/200` (`Rgamma2_ge_hSeq`) — each `g2SeqDyadic k = g2Seq(2^{2k+8}) ≥
+    hSeq(2^{2k+8}) ≥ hSeq(199) − 1/200`, so the limit `γ₂ = Rlim g2SeqDyadic` is too (one-sided
+    Archimedean via the `RTendsTo` rate); mirrors `γ₁`'s `Rgamma1_le_gSeq`.
+  - **The numeric heart** — `hSeq(199) ≥ ofQ(gBound2 3 10⁸ 199)` (`hSeq_ge_gBound2`, from
+    `lnSqSumLo_le`/`logCube_le`/`halfSqOver_le`) and `gBound2 3 10⁸ 199 − 1/200 ≥ −1/50`
+    (`gamma2_decide`, one big-integer kernel `decide`, ≈3s, depth `T=3`, denominator `D=10⁸`). The
+    lower bound is wrapped as a `def` (`gBound2`) so the deep evaluator term stays opaque in the flat
+    final proof — the `γ₁`/`gBound` pattern. Choice-free (`{propext, Quot.sound}`), audited.
 - **The third Li coefficient `λ₃` in closed form** (`F1Square/Analysis/LambdaThree.lean`) — the next
   rung of the genuine λ-ladder, the first to carry `γ₂` (`Rgamma2`). The genuine `λₙ = λₙ^{arith} +
   λₙ^{∞}` is already general; this adds the next η-anchor (deep-research-confirmed
@@ -112,9 +127,11 @@ choice-free (`{propext, Quot.sound}`), audited; the build is warning-free; the g
   via `ζ(2), ζ(3)`) needs no new work, so `Rlambda3 = λ₃^{arith} + λ₃^{∞}` is a closed-form
   constructive real. For ANY η-data anchored through `η₂` the genuine ladder meets it at `n = 3`
   (`genuineArith_three`, `genuineLam_three`) exactly as at `n = 1, 2` — the closed form is faithful,
-  not ad hoc. `Pos λ₃` is NOT claimed: it is gated by a tight numeric bracket on `γ₂` (the `η₂`
-  coefficient is `3/2`), the open Euler–Maclaurin sharp-tail frontier (`γ₂`'s `ln²N/N` tail is
-  heavier than `γ₁`'s clean `1/(2N)`). Choice-free, audited. The crux fields stay `none`.
+  not ad hoc. `Pos λ₃` is NOT claimed: the `γ₂` bracket that gates the `η₂` term is now closed
+  (`γ₂ ≥ −0.02`, above), but `λ₃ ≈ 0.0173` is a small difference of `Θ(1)` terms (`λ₃^{arith} ≈ +1.22`,
+  `λ₃^{∞} ≈ −1.20`), so a positivity certificate needs tight two-sided brackets on all of
+  `γ, γ₁, γ₂, γ³, γγ₁` AND the archimedean `λ₃^{∞}` (via `ζ(2), ζ(3)`) — the full `λ₃`-formula numeric
+  assembly, the remaining open work. Choice-free, audited. The crux fields stay `none`.
 - **The Li-term modulus growth law** (`F1Square/Analysis/LiGrowth.lean`) — ties Lever 1 to the Voros
   dichotomy, and is the first end-to-end use of the `RAddNF`+`RMulNF` "ring" engine. `cnormSq_mul`
   proves the Brahmagupta–Fibonacci multiplicativity `|zw|² = |z|²·|w|²` constructively: expand both

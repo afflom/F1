@@ -770,7 +770,7 @@ theorem dcube_ge (p T : Nat) (hp : 1 ≤ p)
 
 /-- **`dPlusQ 0 p = ½(1/p + 1/(p+1))`** (as rationals) — the trapezoidal midpoint equals the `T=0`
     artanh upper bound. -/
-theorem dPlusQ_zero_eq_mid (p : Nat) (hp : 1 ≤ p) :
+theorem dPlusQ_zero_eq_mid (p : Nat) (_hp : 1 ≤ p) :
     Qeq (dPlusQ 0 p) (mul (⟨1, 2⟩ : Q) (add (⟨1, p⟩ : Q) (⟨1, p + 1⟩ : Q))) := by
   show ((dPlusQ 0 p).num) * ((mul (⟨1, 2⟩ : Q) (add (⟨1, p⟩ : Q) (⟨1, p + 1⟩ : Q))).den : Int)
      = ((mul (⟨1, 2⟩ : Q) (add (⟨1, p⟩ : Q) (⟨1, p + 1⟩ : Q))).num)
@@ -1349,7 +1349,6 @@ theorem gBound2_den_pos (T D N : Nat) (hD : 0 < D) : 0 < (gBound2 T D N).den :=
     (Qmul_den_pos (by decide) (Qmul_den_pos (Qmul_den_pos (logBound_den_pos T D hD N)
       (logBound_den_pos T D hD N)) (Nat.succ_pos N)))
 
-set_option maxHeartbeats 16000000 in
 set_option maxRecDepth 40000 in
 /-- **`ofQ(gBound2 T D N) ≤ hSeq N`** (`T ≤ 21`) — the rational lower bound (`lnSqSumLo_le`,
     `logCube_le`, `halfSqOver_le`), collapsing the all-`ofQ` Rsub-tower to the single `gBound2`. -/

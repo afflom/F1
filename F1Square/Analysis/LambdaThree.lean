@@ -16,10 +16,13 @@ archimedean side `λ₃^{∞} = genuineArchSeq 3` (needing `ζ(2), ζ(3)`) is al
 construction — no new work.
 
 WHAT THIS DOES AND DOES NOT DO. This completes the `λ₃` OBJECT (the closed-form constructive real)
-and its consistency with the ladder. It does NOT prove `Pos λ₃`: that needs a tight numeric bracket
-on `γ₂` (the `η₂` coefficient is `3/2`), which is gated by the Euler–Maclaurin sharp-tail machinery
-(γ₂'s `ln²N/N` tail is heavier than γ₁'s clean `1/(2N)`) — the documented open computational
-frontier. The crux fields stay `none`.
+and its consistency with the ladder. The `γ₂` numeric bracket that gates the `η₂` term (coefficient
+`3/2`) is now CLOSED — `Rgamma2_ge_neg002 : γ₂ ≥ −0.02` (`GammaTwoBracket.lean`, the discrete
+Euler–Maclaurin bracket). It still does NOT prove `Pos λ₃`: `λ₃ ≈ 0.0173` is a small difference of
+`Θ(1)` terms (`λ₃^{arith} ≈ +1.22`, `λ₃^{∞} ≈ −1.20`), so a positivity certificate needs TIGHT
+two-sided brackets on all of `γ, γ₁, γ₂, γ³, γγ₁` AND the archimedean `λ₃^{∞}` (via `ζ(2), ζ(3)`) —
+the full `λ₃`-formula numeric assembly, not the single `γ₂` input. That assembly is the remaining
+open work; the crux fields stay `none`.
 
 Pure Lean 4 core, no Mathlib, no `sorry`, choice-free; audited by `scripts/honesty_audit.sh`.
 -/
