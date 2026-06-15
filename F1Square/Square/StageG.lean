@@ -59,4 +59,32 @@ theorem stageG_frontier_located :
   ⟨gateA_is_liNonneg, atlasPair_psd, fun _ F h => FullForm.negPSD_to_hodgeNeg F h,
    limit_indefinite_of_neg_signature, cayley_relocation⟩
 
+-- ===========================================================================
+-- The conditional closure: the implication whose conclusion is the flipped crux.
+-- Its antecedent is the missing object (RH); never asserted, so the fields stay none.
+-- ===========================================================================
+
+/-- **A STRICT atlas embedding** of the genuine square: it realizes the diagonal (Gate A) AND is
+    strictly positive there. This is the missing object of §4 — a zero-free `ι` (Gate B free,
+    `atlasPair_psd`) writing each `2λₙ` as a *strictly positive* manifest sum of squares. -/
+def StrictRealizes (E : StieltjesEta) (ι : AtlasRule) (D : Nat) : Prop :=
+  RealizesDiag (genuineSpectralSquare E) ι D ∧ ∀ n, 0 < n → Pos (gramOf ι D n n)
+
+/-- **THE CONDITIONAL CLOSURE (§4, the `⟹` direction) — extrapolated to a theorem.** A strict
+    atlas-intrinsic embedding realizing the genuine diagonal CLOSES the crux: every `⟨Cₙ,Cₙ⟩ < 0`,
+    i.e. `SpectralCrux (genuineSpectralSquare E)`. This is precisely the implication whose
+    conclusion is the flipped crux field. Its ANTECEDENT `StrictRealizes` is the missing object —
+    which does not exist today and whose production IS a proof of RH (§11) — so it is NEVER
+    asserted and the crux fields stay `none`. The converse fails: `ι`-existence is STRICTLY stronger
+    than RH (§4), so a localization rejects the candidate, never RH. -/
+theorem strictRealizes_closes_crux (E : StieltjesEta) (ι : AtlasRule) (D : Nat)
+    (h : StrictRealizes E ι D) : SpectralCrux (genuineSpectralSquare E) :=
+  fun n hn => Pos_congr (h.1 n hn) (h.2 n hn)
+
+/-- … and hence Li's criterion for the genuine sequence (`= RH`, analytic face), through the
+    v0.18.0 bridge. The hypothesis is RH; this is the gated closure, not a proof. -/
+theorem strictRealizes_is_liCrux (E : StieltjesEta) (ι : AtlasRule) (D : Nat)
+    (h : StrictRealizes E ι D) : LiCrux (genuineLamSeq E.eta) :=
+  (crux_faces_equivalent (genuineSpectralSquare E)).mp (strictRealizes_closes_crux E ι D h)
+
 end UOR.Bridge.F1Square.Square

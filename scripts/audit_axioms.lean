@@ -2290,3 +2290,5 @@ open UOR.Bridge.F1Square
 -- v0.21.0 stage G, brick G3 (assembly and adjudication): the missing-object embedding route,
 -- located — the §9 Localized terminal state, crux fields stay none.
 #print axioms Square.stageG_frontier_located
+#print axioms Square.strictRealizes_closes_crux
+#print axioms Square.strictRealizes_is_liCrux
