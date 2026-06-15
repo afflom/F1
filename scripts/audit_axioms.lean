@@ -2242,3 +2242,10 @@ open UOR.Bridge.F1Square
 #print axioms Square.embeds_to_hodgeNeg
 #print axioms Square.embeds_to_liNonneg
 #print axioms Square.realizesDiag_genuine_iff
+
+-- v0.21.0 stage G, brick G0b (the full primitive form): the symmetric form on the Frobenius
+-- carrier, the genuine-diagonal forcing, the negative-PSD → Hodge bridge, and the inhabitants.
+#print axioms Square.orbit_distinct
+#print axioms Square.FullForm.diag_genuine
+#print axioms Square.FullForm.negPSD_to_hodgeNeg
+#print axioms Square.shiftOffDiag_symm

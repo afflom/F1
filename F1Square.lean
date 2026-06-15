@@ -46,6 +46,7 @@ import F1Square.Square.Cohomology
 import F1Square.Square.WeilLattice
 import F1Square.Square.Forced
 import F1Square.Square.WeilPSD
+import F1Square.Square.FrobForm
 import F1Square.Tropical.Closure
 import F1Square.Tropical.Signature
 import F1Square.Tropical.Spectrum
