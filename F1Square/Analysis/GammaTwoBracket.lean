@@ -1285,4 +1285,42 @@ theorem hSeq_lower_const (N : Nat) (hN : 1 ≤ N) (k : Nat) :
     exact Rnonneg_ofQ (Nat.succ_pos (N + k)) (by show (0 : Int) ≤ 1; decide)
   exact Rle_trans (Rsub_le_sub (Rle_of_Req (Req_refl (hSeq N))) hBkle) (hSeq_tele N hN k)
 
+-- ===========================================================================
+-- (C5) The limit: `γ₂ ≥ hSeq(N) − 1/(N+1)`.  Each `g2SeqDyadic k = g2Seq(2^{2k+8}) ≥ hSeq(2^{2k+8})
+-- ≥ hSeq(N) − 1/(N+1)`, so the limit `γ₂` is too (one-sided Archimedean via the `RTendsTo` rate).
+-- ===========================================================================
+
+/-- **`hSeq N ≤ g2Seq N`** — `g2Seq N = hSeq N + ½(ln(N+1))²/(N+1)` and the correction is `≥ 0`. -/
+theorem hSeq_le_g2Seq (N : Nat) : Rle (hSeq N) (g2Seq N) := by
+  refine Rle_of_Rnonneg_Rsub (Rnonneg_congr (Req_symm (Rsub_sub_self (g2Seq N)
+    (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) (lnSqOver (N + 1) (Nat.succ_pos N))))) ?_)
+  exact Rnonneg_Rmul (Rnonneg_ofQ (by decide) (by decide))
+    (lnSqOver_nonneg (N + 1) (Nat.succ_pos N))
+
+/-- **`γ₂ ≥ hSeq N − 1/(N+1)`** for `N ∈ [1, 256]` — each reindexed `g2SeqDyadic k = g2Seq(2^{2k+8})`
+    (`2^{2k+8} ≥ 256 ≥ N`) is `≥ hSeq(2^{2k+8}) ≥ hSeq N − 1/(N+1)`, so the limit is too. -/
+theorem Rgamma2_ge_hSeq {N : Nat} (hN : 1 ≤ N) (hN256 : N ≤ 256) :
+    Rle (Rsub (hSeq N) (ofQ (⟨1, N + 1⟩ : Q) (Nat.succ_pos N))) Rgamma2 := by
+  apply Rle_of_Rsub_le_all (C := 2)
+  intro k
+  have hN2k : N ≤ 2 ^ (2 * k + 8) := by
+    have h8 : (2 : Nat) ^ 8 ≤ 2 ^ (2 * k + 8) := Nat.pow_le_pow_right (by omega) (by omega)
+    have h256 : (256 : Nat) = 2 ^ 8 := by decide
+    omega
+  have htend : Rle (Rsub (g2SeqDyadic k) Rgamma2) (ofQ (⟨2, k + 1⟩ : Q) (Nat.succ_pos k)) :=
+    RTendsTo_to_Rle (Rlim_tendsTo g2SeqDyadic g2SeqDyadic_RReg) k
+  have hanchor : Rle (Rsub (hSeq N) (ofQ (⟨1, N + 1⟩ : Q) (Nat.succ_pos N))) (g2SeqDyadic k) := by
+    obtain ⟨d, hd⟩ := Nat.le.dest hN2k
+    have h1 : Rle (Rsub (hSeq N) (ofQ (⟨1, N + 1⟩ : Q) (Nat.succ_pos N))) (hSeq (N + d)) :=
+      hSeq_lower_const N hN d
+    rw [hd] at h1
+    exact Rle_trans h1 (hSeq_le_g2Seq (2 ^ (2 * k + 8)))
+  refine Rle_trans (Rle_of_Req (Req_symm (Rsub_split
+    (Rsub (hSeq N) (ofQ (⟨1, N + 1⟩ : Q) (Nat.succ_pos N))) (g2SeqDyadic k) Rgamma2))) ?_
+  refine Rle_trans (Radd_le_add
+    (Rsub_le_of_le_add (Rle_trans hanchor (Rle_of_Req
+      (Req_symm (Req_trans (Radd_comm zero (g2SeqDyadic k)) (Radd_zero (g2SeqDyadic k)))))))
+    htend) ?_
+  exact Rle_of_Req (Req_trans (Radd_comm zero _) (Radd_zero _))
+
 end UOR.Bridge.F1Square.Analysis

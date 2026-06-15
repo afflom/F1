@@ -2215,3 +2215,5 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.hSeq_tele
 #print axioms Analysis.Rsub_sub_self
 #print axioms Analysis.hSeq_lower_const
+#print axioms Analysis.hSeq_le_g2Seq
+#print axioms Analysis.Rgamma2_ge_hSeq
