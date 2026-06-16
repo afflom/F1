@@ -2372,3 +2372,11 @@ open UOR.Bridge.F1Square
 #print axioms Square.coupling_window_archimedean
 #print axioms Square.archimedean_center_positive
 #print axioms Square.archimedean_place_status
+
+-- v0.21.0 stage G — Atlas modular: θ_{E₈^T} = E₄³ = E₆² + 1728Δ (the 24 = dim E₈^T thread to the
+-- modular discriminant Δ = η²⁴), proved by power-series convolution over ℤ.
+#print axioms Square.eisenstein_coeffs_computed
+#print axioms Square.e4sq_is_conv
+#print axioms Square.e4cube_eq_e6sq_plus_1728delta
+#print axioms Square.delta_coeffs
+#print axioms Square.twentyFour_modular
