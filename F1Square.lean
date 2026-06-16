@@ -60,6 +60,7 @@ import F1Square.Square.AtlasAddressing
 import F1Square.Square.AtlasClasses
 import F1Square.Square.AtlasConservation
 import F1Square.Square.AtlasForcing
+import F1Square.Square.AtlasRHConnection
 import F1Square.Tropical.Closure
 import F1Square.Tropical.Signature
 import F1Square.Tropical.Spectrum

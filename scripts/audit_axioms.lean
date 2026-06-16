@@ -2351,3 +2351,9 @@ open UOR.Bridge.F1Square
 #print axioms Square.fourteen_overdetermined
 #print axioms Square.twoForty_overdetermined
 #print axioms Square.eight_overdetermined
+
+-- v0.21.0 stage G — Atlas → RH connection: addressing↔orbit↔explicit-formula weight, and the
+-- three live points where the Atlas feeds the RH program.
+#print axioms Square.orbitShift_one
+#print axioms Square.atlas_shift_eq_weight
+#print axioms Square.atlas_feeds_rh
