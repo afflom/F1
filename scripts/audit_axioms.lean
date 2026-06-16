@@ -2395,3 +2395,7 @@ open UOR.Bridge.F1Square
 #print axioms Square.e8_exponent_count
 #print axioms Square.e8_exponent_sum
 #print axioms Square.e8_coxeter_web
+
+-- v0.21.0 stage G — Atlas synthesis: the forced web (no coincidences) + the honest open boundary.
+#print axioms Square.atlas_forced_web
+#print axioms Square.atlas_web_and_open_crux

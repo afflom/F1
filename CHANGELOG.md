@@ -44,6 +44,24 @@ RH OPEN. Every commit green, axiom-clean `{propext, Quot.sound}`, no `sorry`/`na
   class permutations (§3).
 - `Square/AtlasConservation.lean` — no-loss, round-trip identity, scale-invariance (§4/§5).
 
+### Added — Atlas discovery program (exploration; following discoveries to their next threads)
+- `Square/AtlasForcing.lean` — what makes a value NOT a coincidence: parametric identity
+  (`multSum_eq_dim`: dimension `= T·O` for all `T,O`) or over-determination; the discovery
+  `trace_eq_dim_at_T3` (trace = dimension forced by the extremal `T = 3`).
+- `Square/AtlasRHConnection.lean` — `atlas_shift_eq_weight` (addressing prime ↔ Frobenius orbit ↔
+  `Λ(p)=log p`); `atlas_feeds_rh` (three live points where the Atlas feeds the RH program).
+- `Square/LefschetzCoupling.lean` — the crux refined to its Lefschetz shape: `H² > 0`
+  (`eH_sq_pos`), `vanCyc` primitive (`vanCyc_perp_H`), and `genuine_crux_arch_coupling` (crux ⟺
+  sign of the prime–archimedean coupling `arith(n)+arch(n)`, the `ff_hodge_iff_hasse` shape over ℤ).
+- `Square/ArchimedeanPlace.lean` — the `arch(n)` facet: conquered at the head (`n=1,2`) and in the
+  Connes–Consani window (`α(0) > 0`); open outside (the tail bound).
+- `Square/AtlasModular.lean` — `θ_{E₈^T} = E₄³ = E₆² + 1728·Δ` through order `q⁵` by power-series
+  convolution; `Δ = η²⁴`, the `24 = dim E₈^T` = the modular `24`.
+- `Square/AtlasExceptional.lean` — the Freudenthal–Tits magic square (`R,C,H,O → F₄,E₆,E₇,E₈`); the
+  `dim 𝔤 = rank·(h+1)` law; `dim G₂ = (T−1)(O−1) = 14`; `240 = dim E₈ − rank E₈`.
+- `Square/AtlasCoxeter.lean` — the E₈ exponents are the totatives of the Coxeter number `30`;
+  `rank E₈ = φ(30) = 8 = O`; the `30/8/120/240/248` forced web.
+
 ### Changed
 - `scripts/honesty_audit.sh` — new **no-smuggling** check (the metric analog of `intrinsicH1_dict`):
   the Gate-A pairing must be λ-free.
