@@ -15,16 +15,17 @@ atlas base is finite rank (E₈, brick G2a), the primitive span is infinite. Thi
   a negative entry in the metric"). The direct limit closes Gate B iff its single kernel is
   `WeilPSD`. The OBSTRUCTION is recorded as a theorem (`limit_indefinite_of_neg_signature`): any
   strictly negative diagonal entry of the limit metric — a negative SIGNATURE entry — makes it not
-  `WeilPSD`, so Gate B FAILS. The hypothesized atlas signature `Σ = {10,2,7,−1}` is exhibited as a
-  diagonal metric (`sigmaMetric`) and proven indefinite (`sigmaMetric_not_psd`): its `−1` entry
-  kills definiteness.
+  `WeilPSD`, so Gate B FAILS. The signature `Σ = {10,2,7,−1}` is exhibited as a diagonal metric
+  (`sigmaMetric`) and proven indefinite (`sigmaMetric_not_psd`): its `−1` entry kills definiteness.
 
-HONEST SCOPE (§10). Whether the GENUINE atlas direct limit realizes `Σ = {10,2,7,−1}` (or any
-negative-entry signature) is UNSOURCED in F1 — the atlas signature is not in this repository. So
-this brick does NOT decide Gate B: it builds the tower-with-metric and records, as a theorem, the
-exact obstruction that a negative signature entry would be (the §9 "Localized" terminal mode for the
-make-or-break). It asserts neither that the limit is definite (which would close the crux) nor that
-it is indefinite. The crux fields stay `none`.
+SOURCED (`AtlasSpectrum.lean`). `Σ = {10,2,7,−1}` is now the genuine UOR-Atlas spectrum — the
+operator `M = (O+2)I − T·Π_T − O·Π_O` of Atlas §5, with its multiplicities `{1,2,7,14}` and trace
+`24` verified — and it carries the `−1` (reflection) eigenspace, so the atlas signature IS
+indefinite (`atlasM_indefinite`). Faithful to the Atlas: `M` is balanced-with-negative-space by
+design, and the Atlas's DEFINITE object is the Hurwitz norm (§9), which it does NOT identify with
+the RH form. So the atlas spectral signature does not, by itself, supply Gate B's positive-definite
+limit; the intersection-form/RH positivity stays RH-equivalent and open (Atlas §11/§12/§15), and the
+crux fields stay `none`.
 
 Pure Lean 4 core, no Mathlib, no `sorry`/`native_decide`, choice-free; audited by
 `scripts/honesty_audit.sh`.
@@ -99,10 +100,11 @@ def sigmaDiag : Nat → Real
 /-- The hypothesized signature as a diagonal kernel. -/
 def sigmaMetric (i j : Nat) : Real := if i = j then sigmaDiag i else zero
 
-/-- **The hypothesized signature `Σ = {10,2,7,−1}` is INDEFINITE**: its `−1` entry makes the
-    diagonal metric not `WeilPSD`. So IF the atlas direct limit realizes this `Σ`, Gate B fails —
-    the make-or-break localizes. (Whether the genuine atlas limit has this signature is UNSOURCED
-    in F1; this records the obstruction, not a verdict on RH.) -/
+/-- **The signature `Σ = {10,2,7,−1}` is INDEFINITE**: its `−1` entry makes the diagonal metric not
+    `WeilPSD`. This `Σ` is the genuine UOR-Atlas spectrum (sourced in `AtlasSpectrum.lean`, Atlas
+    §5), so the make-or-break localizes on real atlas data: the atlas spectral signature does not
+    supply Gate B's positive-definite limit. This records the obstruction, not a verdict on RH —
+    the Atlas's definite object is the Hurwitz norm (§9), a different object from the RH form. -/
 theorem sigmaMetric_not_psd : ¬ WeilPSD sigmaMetric :=
   not_WeilPSD_of_neg_diag 3 (Pos_congr (Req_symm (Rneg_neg one)) Pos_one)
 
