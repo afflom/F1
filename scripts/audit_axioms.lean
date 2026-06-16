@@ -2305,3 +2305,14 @@ open UOR.Bridge.F1Square
 
 -- v0.21.0 stage G — gate sanity: the crux gate discriminates (accepts/rejects/closes-on-witness).
 #print axioms Square.crux_gate_faithful
+
+-- v0.21.0 stage G — Atlas characteristics (§1/§5/§10/§11) and the connection to the crux's
+-- negative direction. Understanding the Atlas and its links to established mathematics.
+#print axioms Square.tower_levels
+#print axioms Square.O_eq_two_pow_T
+#print axioms Square.self_intersection_tower
+#print axioms Square.atlas_balance
+#print axioms Square.g2_dim_match
+#print axioms Square.twentyFour_eq
+#print axioms Square.e8_theta_E4
+#print axioms Square.atlas_negative_direction
