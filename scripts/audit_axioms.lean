@@ -2407,3 +2407,8 @@ open UOR.Bridge.F1Square
 -- v0.21.0 stage G — crux frontier n=3: the next conquerable coefficient = Pos Rlambda3.
 #print axioms Square.coupling_n3_iff_pos_lambda3
 #print axioms Square.crux_frontier_n3
+
+-- v0.21.0 stage G — uniform closure: closure is one structural fact, not enumeration (§2 thesis).
+#print axioms Square.enumeration_insufficient
+#print axioms Square.uniform_fact_closes
+#print axioms Square.closure_is_uniform_not_enumeration
