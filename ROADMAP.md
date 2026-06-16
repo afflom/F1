@@ -367,7 +367,44 @@ theorem. The method dictates what to build; the gate decides whether it closes.
 
 ---
 
-## v0.21.0 — (G) Closing the arithmetic Hodge-index crux: the missing object **[planned]**
+## v0.21.0 — (G) Closing the arithmetic Hodge-index crux: the missing object **[shipped — LOCALIZED]**
+
+**Outcome.** The missing-object embedding route is built end to end and the UOR Atlas is formalized
+to the frontier; the gate ran and the crux **did not close** (the §9 *Localized* terminal state).
+`hodgeIndexHolds` / `liPositivityHolds` stay `none`. Delivered (each a green, axiom-clean
+`{propext, Quot.sound}` commit; `scripts/honesty_audit.sh` extended with a no-smuggling check):
+
+- **The embedding route** — `Square/WeilPSD.lean` (Stage S: the finite-truncation PSD predicate, the
+  rank-one/sum-of-squares fact, Gate B free via `WeilPSD_gramOf`, the embedding bridge),
+  `Square/FrobForm.lean` (G0b: the full primitive form on the Frobenius carrier),
+  `Square/AtlasRule.lean` (G0a: the zero-free atlas rule, the growth pre-filter, and the §6 Cayley
+  relocation made formal — `cayley_relocation`), `Square/KillTest.lean` (G0: the decidable kill-test),
+  `Square/GateA.lean` (G1: the λ-free pairing, `gateA_is_liNonneg`, the two-sided no-smuggling
+  guards), `Square/E8Seed.lean` (G2a: the E₈ Gram = `4×` the Cartan matrix, PSD free),
+  `Square/GaugeTower.lean` (G2b: the tower-with-metric and the indefiniteness obstruction),
+  `Square/StageG.lean` (G3: `stageG_frontier_located` and the **conditional closure**
+  `strictRealizes_closes_crux`), `Square/GateSanity.lean` (`crux_gate_faithful`: the gate
+  discriminates and **closes on a genuine witness** — it does not arbitrarily fail).
+- **The UOR Atlas, formalized** (from the `uor-atlas.md` formalization document) —
+  `Square/AtlasSpectrum.lean` (§5/§6.6: the spectral operator `M`, sourcing the signature
+  `Σ = {10,2,7,−1}`, with verified multiplicities `{1,2,7,14}` and trace `24`, and its
+  indefiniteness `atlasM_indefinite`), `Square/AtlasCharacteristics.lean` (§1/§5/§10/§11: the tower,
+  the Euler–Lefschetz self-intersection, the spectral balance, `dim G₂ = 14`, `24 = dim E₈^T`,
+  `θ_{E₈}=E₄`), `Square/AtlasAddressing.lean` (§2/§5/§8/§10/§12: the addressing inverse system, the
+  parametric generation, and the prime skeleton = the explicit-formula prime side `Λ(p)=log p`),
+  `Square/AtlasClasses.lean` (§2/§3: the class structure and the transforms as finite-order
+  permutations), `Square/AtlasConservation.lean` (§4/§5: no-loss, round-trip, scale-invariance).
+
+**What understanding the Atlas revealed (the genuine frontier).** The Atlas's spectral operator `M`
+is *indefinite by design* (its `−1` reflection, dim `14 = dim G₂`, sits in the odd degree where the
+Euler–Lefschetz self-intersection vanishes); its definite object is the Hurwitz norm (§9), which the
+Atlas explicitly does **not** identify with the RH form. So the crux is **not** whole-form
+positive-definiteness — it is negative-semidefiniteness on the *primitive* part (the Lefschetz
+signature), governed by the zeros, exactly as `BridgeFF.ff_hodge_iff_hasse` has it for the curve. The
+Atlas carries the explicit formula's *left side* (the prime skeleton) in full; the open content is
+the coupling to the one missing place (archimedean). The crux stays `none`, RH open.
+
+The original program specification (the two faithful terminal states) follows.
 
 The release goal is to carry the crux **past the v0.20.0 located frontier** by constructing one
 specific object and letting the Lean kernel decide whether it closes the crux. Closure is equivalent

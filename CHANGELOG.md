@@ -4,6 +4,51 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html), starting at `v0.0.1`.
 
+## [0.21.0] - 2026-06-16
+
+Stage G — the arithmetic Hodge-index crux via the missing-object embedding, and the UOR Atlas
+formalized. **Outcome: LOCALIZED** — the route is built end to end and the Atlas is formalized to
+its frontier, but the crux did not close; `hodgeIndexHolds` / `liPositivityHolds` stay `none`,
+RH OPEN. Every commit green, axiom-clean `{propext, Quot.sound}`, no `sorry`/`native_decide`.
+
+### Added — the embedding route
+- `Square/WeilPSD.lean` — the finite-truncation PSD predicate `WeilPSD`; `WeilPSD_rankOne` (a
+  rank-one Gram is the manifest square); `WeilPSD_gramOf` (Gate B free for any embedding into ℝ^D);
+  the embedding bridge `embeds_to_hodgeNeg` / `realizesDiag_genuine_iff`.
+- `Square/FrobForm.lean` — the full primitive form `FullForm` on the Frobenius carrier; the
+  diagonal forced to `−2λₙ`; `negPSD_to_hodgeNeg`; a non-trivial shift-length off-diagonal.
+- `Square/AtlasRule.lean` — the zero-free `AtlasRule`; `atlasRule_growth_filter`; **`cayley_relocation`**
+  (the §6 recorded negative result: a zero-built candidate's match ⟺ RH).
+- `Square/KillTest.lean` — the decidable finite-Gram kill-test (throwaway pre-filter).
+- `Square/GateA.lean` — the λ-free pairing `atlasPair`; `gateA_is_liNonneg` (Gate A under free
+  Gate B is RH); two-sided no-smuggling guards (`gateA_satisfiable`, `gateA_can_fail`).
+- `Square/E8Seed.lean` — the E₈ Gram as an embedding Gram (PSD free), verified `= 4×` the standard
+  E₈ Cartan matrix (`e8_is_cartan`), strictly positive diagonal.
+- `Square/GaugeTower.lean` — the gauge tower carrying a metric; `not_WeilPSD_of_neg_diag` and the
+  make-or-break obstruction `limit_indefinite_of_neg_signature`.
+- `Square/StageG.lean` — `stageG_frontier_located` (the adjudication); the **conditional closure**
+  `strictRealizes_closes_crux` / `strictRealizes_is_liCrux`.
+- `Square/GateSanity.lean` — `crux_gate_faithful`: the crux gate discriminates and **closes on a
+  genuine witness** (it does not arbitrarily fail).
+
+### Added — the UOR Atlas (from the `uor-atlas.md` formalization document)
+- `Square/AtlasSpectrum.lean` — the spectral operator `M = (O+2)I − T·Π_T − O·Π_O` (§5/§6.6),
+  sourcing `Σ = {10,2,7,−1}`; verified multiplicities `{1,2,7,14}` and trace `24`; `atlasM_indefinite`;
+  the Hurwitz norm `atlasNorm_psd` (a different, definite object — §9).
+- `Square/AtlasCharacteristics.lean` — the convergence tower (§1), the Euler–Lefschetz
+  self-intersection `χ(Sᵏ)=1+(−1)ᵏ` vanishing at the process levels (§11), the spectral balance
+  (§5), and the §10 connections (`dim G₂ = 14`, `24 = dim E₈^T`, `θ_{E₈}=E₄`).
+- `Square/AtlasAddressing.lean` — the addressing inverse system (§5), parametric generation (§8),
+  and the prime skeleton = explicit-formula prime side `Λ(p)=log p` (§10/§12).
+- `Square/AtlasClasses.lean` — the class structure (§2) and the transforms `σ,τ,μ` as finite-order
+  class permutations (§3).
+- `Square/AtlasConservation.lean` — no-loss, round-trip identity, scale-invariance (§4/§5).
+
+### Changed
+- `scripts/honesty_audit.sh` — new **no-smuggling** check (the metric analog of `intrinsicH1_dict`):
+  the Gate-A pairing must be λ-free.
+- `F1Square.lean` — v0.21.0 notes on the crux fields; a witness binding the stage-G route, crux none.
+
 ## [0.20.0] - 2026-06-15
 
 ### Added — stage F: the UOR construction of the crux (`H¹`-object + FORCED dictionary) and the certified `γ₂ ≥ −0.02` bracket (pure Lean 4, no Mathlib, no `sorry`, choice-free)

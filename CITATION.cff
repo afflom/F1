@@ -16,8 +16,8 @@ authors:
     family-names: Flom
     email: alex@uor.foundation
     affiliation: UOR Foundation
-version: 0.20.0
-date-released: "2026-06-15"
+version: 0.21.0
+date-released: "2026-06-16"
 license: MIT
 repository-code: "https://github.com/afflom/F1"
 keywords:
