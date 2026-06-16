@@ -2434,3 +2434,10 @@ open UOR.Bridge.F1Square
 -- facets (zero-state laws), not a single facet.
 #print axioms Square.atlas_coherent
 #print axioms Square.coherent_closure_not_single_facet
+
+-- v0.21.0 stage G — Atlas composition algebras: the multiplicative norm at the tower levels (the
+-- 2-, 4-, 8-square identities, Hurwitz) — the §6.3/§9 closed positivity.
+#print axioms Square.two_square
+#print axioms Square.four_square
+#print axioms Square.eight_square
+#print axioms Square.composition_tower

@@ -74,6 +74,7 @@ import F1Square.Square.CoxeterCandidate
 import F1Square.Square.SinglePrime
 import F1Square.Square.AtlasGenerator
 import F1Square.Square.AtlasCoherence
+import F1Square.Square.AtlasComposition
 import F1Square.Tropical.Closure
 import F1Square.Tropical.Signature
 import F1Square.Tropical.Spectrum
