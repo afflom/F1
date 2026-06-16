@@ -70,6 +70,20 @@ RH OPEN. Every commit green, axiom-clean `{propext, Quot.sound}`, no `sorry`/`na
   `enumeration_insufficient` + `uniform_fact_closes`.
 - `Square/CoxeterCandidate.lean` — a §7 named uniform-rule candidate (Coxeter iteration, order 30)
   tested and KILLED by the growth pre-filter (periodic ⟹ bounded ⟹ cannot match `2λₙ ~ n log n`).
+- `Square/SinglePrime.lean` — the Single Prime Hypothesis: the Atlas as one Prime object emanating
+  all structure (`single_generator_emanates`); unity ⟹ uniform closure.
+- `Square/AtlasGenerator.lean` — the shift-length uniform-rule candidate `atlasShiftDiag`; survives
+  the growth filter (unbounded `n log n` class) where Coxeter died.
+- `Square/AtlasCoherence.lean` — coherence (the conserved zero-state) is the closure condition, not
+  a single facet (`atlas_coherent`, `coherent_closure_not_single_facet`).
+- `Square/AtlasComposition.lean` — the composition-algebra norm (§6.3/§9/§10): the 2-, 4-, 8-square
+  identities (`two/four/eight_square`, Hurwitz) — Degen's octonion identity verified by `ring_uor`.
+- `Square/AtlasTopology.lean` — the Betti signature (§6.5) and Bott/Clifford periodicity (§10); the
+  tower forced four ways.
+- `Square/AtlasCalculus.lean` — the seven operators, the free-monoid `Term`, and the catamorphism
+  with its universal property (§3/§4): form determines function (`op_count`, `cata_unique`).
+- `Square/AtlasComplete.lean` — `atlas_complete`: the roll-up witnessing every facet (§1–§15)
+  formalized, as facets of one `{T,O}` object, with the crux honestly open.
 
 ### Changed
 - `scripts/honesty_audit.sh` — new **no-smuggling** check (the metric analog of `intrinsicH1_dict`):
