@@ -2357,3 +2357,11 @@ open UOR.Bridge.F1Square
 #print axioms Square.orbitShift_one
 #print axioms Square.atlas_shift_eq_weight
 #print axioms Square.atlas_feeds_rh
+
+-- v0.21.0 stage G — Lefschetz coupling: the primitive-part refinement (H²>0, vanCyc primitive) and
+-- the crux as the prime–archimedean coupling sign (the ff_hodge_iff_hasse shape over ℤ).
+#print axioms Square.vanCyc_perp_H
+#print axioms Square.eH_sq
+#print axioms Square.eH_sq_pos
+#print axioms Square.genuine_crux_arch_coupling
+#print axioms Square.crux_is_arithmetic_hodge
