@@ -61,6 +61,15 @@ RH OPEN. Every commit green, axiom-clean `{propext, Quot.sound}`, no `sorry`/`na
   `dim 𝔤 = rank·(h+1)` law; `dim G₂ = (T−1)(O−1) = 14`; `240 = dim E₈ − rank E₈`.
 - `Square/AtlasCoxeter.lean` — the E₈ exponents are the totatives of the Coxeter number `30`;
   `rank E₈ = φ(30) = 8 = O`; the `30/8/120/240/248` forced web.
+- `Square/AtlasSynthesis.lean` — `atlas_forced_web`: every Atlas constant a function of `{T,O}=(3,8)`,
+  no coincidences; `atlas_web_and_open_crux`: the honest boundary (the web does not force RH).
+- `Square/AtlasCruxSynthesis.lean` — `atlas_crux_localization`: the Atlas forces the prime side, the
+  crux is the prime–archimedean coupling sign, conquered at head + window, no shortcut.
+- `Square/CruxFrontierN3.lean` — the next coefficient pinned: the `n=3` coupling `> 0 ⟺ Pos Rlambda3`.
+- `Square/UniformClosure.lean` — closure is ONE structural fact, not enumeration (§2 thesis):
+  `enumeration_insufficient` + `uniform_fact_closes`.
+- `Square/CoxeterCandidate.lean` — a §7 named uniform-rule candidate (Coxeter iteration, order 30)
+  tested and KILLED by the growth pre-filter (periodic ⟹ bounded ⟹ cannot match `2λₙ ~ n log n`).
 
 ### Changed
 - `scripts/honesty_audit.sh` — new **no-smuggling** check (the metric analog of `intrinsicH1_dict`):
