@@ -2399,3 +2399,7 @@ open UOR.Bridge.F1Square
 -- v0.21.0 stage G — Atlas synthesis: the forced web (no coincidences) + the honest open boundary.
 #print axioms Square.atlas_forced_web
 #print axioms Square.atlas_web_and_open_crux
+
+-- v0.21.0 stage G — Atlas–crux localization: the Atlas insights connected to the crux; closing
+-- it reduces to the prime-archimedean coupling sign for n≥3 (the archimedean place).
+#print axioms Square.atlas_crux_localization
