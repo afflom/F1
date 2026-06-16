@@ -2327,3 +2327,12 @@ open UOR.Bridge.F1Square
 #print axioms Square.primality_of_bounded
 #print axioms Square.atlasPrime_five_vonMangoldt
 #print axioms Square.atlas_prime_skeleton
+
+-- v0.21.0 stage G — Atlas classes & calculus (§2/§3): the class structure (index, count, stride,
+-- belt extent) and the transforms as finite-order class permutations.
+#print axioms Square.class_count_stride
+#print axioms Square.classIndex_range
+#print axioms Square.belt_extent
+#print axioms Square.sigma_order_four
+#print axioms Square.tau_order_eight
+#print axioms Square.mu_order_two
