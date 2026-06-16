@@ -2423,3 +2423,9 @@ open UOR.Bridge.F1Square
 #print axioms Square.single_prime_binary
 #print axioms Square.single_generator_emanates
 #print axioms Square.sph_closure_is_uniform
+
+-- v0.21.0 stage G — the atlas generator (candidate): the shift-length-facet uniform-rule
+-- candidate; survives the growth filter (unbounded, n log n class) that killed Coxeter.
+#print axioms Square.atlasShiftDiag_mono
+#print axioms Square.atlasShiftDiag_step_ge_one
+#print axioms Square.atlasGenerator_survives_growth
