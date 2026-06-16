@@ -2403,3 +2403,7 @@ open UOR.Bridge.F1Square
 -- v0.21.0 stage G — Atlas–crux localization: the Atlas insights connected to the crux; closing
 -- it reduces to the prime-archimedean coupling sign for n≥3 (the archimedean place).
 #print axioms Square.atlas_crux_localization
+
+-- v0.21.0 stage G — crux frontier n=3: the next conquerable coefficient = Pos Rlambda3.
+#print axioms Square.coupling_n3_iff_pos_lambda3
+#print axioms Square.crux_frontier_n3

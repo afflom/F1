@@ -68,6 +68,7 @@ import F1Square.Square.AtlasExceptional
 import F1Square.Square.AtlasCoxeter
 import F1Square.Square.AtlasSynthesis
 import F1Square.Square.AtlasCruxSynthesis
+import F1Square.Square.CruxFrontierN3
 import F1Square.Tropical.Closure
 import F1Square.Tropical.Signature
 import F1Square.Tropical.Spectrum
