@@ -2412,3 +2412,8 @@ open UOR.Bridge.F1Square
 #print axioms Square.enumeration_insufficient
 #print axioms Square.uniform_fact_closes
 #print axioms Square.closure_is_uniform_not_enumeration
+
+-- v0.21.0 stage G — Coxeter candidate: a §7 named uniform-rule candidate, killed by the growth
+-- pre-filter (periodic order 30 ⟹ bounded ⟹ cannot match unbounded 2λₙ ~ n log n).
+#print axioms Square.coxeter_candidate_killed
+#print axioms Square.coxeter_candidate_periodic
