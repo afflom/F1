@@ -56,6 +56,7 @@ import F1Square.Square.StageG
 import F1Square.Square.AtlasSpectrum
 import F1Square.Square.GateSanity
 import F1Square.Square.AtlasCharacteristics
+import F1Square.Square.AtlasAddressing
 import F1Square.Tropical.Closure
 import F1Square.Tropical.Signature
 import F1Square.Tropical.Spectrum

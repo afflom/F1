@@ -2316,3 +2316,14 @@ open UOR.Bridge.F1Square
 #print axioms Square.twentyFour_eq
 #print axioms Square.e8_theta_E4
 #print axioms Square.atlas_negative_direction
+
+-- v0.21.0 stage G — Atlas addressing (§2/§5/§8/§10/§12): the scale-invariant tower (inverse
+-- system), parametric generation, and the prime skeleton = explicit-formula prime side.
+#print axioms Square.atlasModulus_values
+#print axioms Square.atlasModulus_zero_factored
+#print axioms Square.atlasModulus_dvd_succ
+#print axioms Square.atlasBoundary_zero
+#print axioms Square.atlas_parametric_generation
+#print axioms Square.primality_of_bounded
+#print axioms Square.atlasPrime_five_vonMangoldt
+#print axioms Square.atlas_prime_skeleton
