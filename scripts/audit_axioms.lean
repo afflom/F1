@@ -2417,3 +2417,9 @@ open UOR.Bridge.F1Square
 -- pre-filter (periodic order 30 ⟹ bounded ⟹ cannot match unbounded 2λₙ ~ n log n).
 #print axioms Square.coxeter_candidate_killed
 #print axioms Square.coxeter_candidate_periodic
+
+-- v0.21.0 stage G — the Single Prime Hypothesis: the Atlas as one Prime object emanating all
+-- structure; unity makes crux-closure uniform (one fact, not enumeration).
+#print axioms Square.single_prime_binary
+#print axioms Square.single_generator_emanates
+#print axioms Square.sph_closure_is_uniform
