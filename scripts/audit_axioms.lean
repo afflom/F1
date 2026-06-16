@@ -2388,3 +2388,10 @@ open UOR.Bridge.F1Square
 #print axioms Square.g2_coxeter_atlas
 #print axioms Square.e8_top
 #print axioms Square.twoForty_roots
+
+-- v0.21.0 stage G — Atlas Coxeter: E₈ exponents = totatives of the Coxeter number 30; rank = φ(30)
+-- = 8 = O; the 30/8/120/240/248 forced web.
+#print axioms Square.e8_exponents
+#print axioms Square.e8_exponent_count
+#print axioms Square.e8_exponent_sum
+#print axioms Square.e8_coxeter_web
