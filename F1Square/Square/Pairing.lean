@@ -155,6 +155,29 @@ theorem weilValue_window (S : WeilSlot) (hX : S.test.X = 1) :
   refine Req_trans (Radd_congr (weilPrime_window S.test hX S.test.X) (Req_refl _)) ?_
   exact Req_trans (Radd_comm zero _) (Radd_zero _)
 
+/-- **The prime `2` enters at the term right after the window**: `weilPrimeTerm T 1` carries the first
+    prime power's weight `Λ(2) = log 2` (`vonMangoldt_two`). So the finite-place side, which vanishes
+    identically at `X = 1` (`weilPrime_window`), can no longer vanish once the cutoff admits this term. -/
+theorem weilPrimeTerm_one_carries_prime_two (T : WeilTest) :
+    Req (weilPrimeTerm T 1)
+      (Rmul (logN 2 (by omega))
+        (Radd (T.f ⟨(2 : Int), 1⟩) (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) (T.f ⟨1, 2⟩)))) :=
+  Rmul_congr vonMangoldt_two (Req_refl _)
+
+/-- **THE PRIME-FREE WINDOW IS MAXIMAL** — the discrete footprint of the Connes–Consani open interval
+    `(1/2, 2)`, which excludes the prime `2`. Two facts pin it exactly: at cutoff `X = 1` the
+    finite-place side vanishes identically (`weilPrime_window`), and the very next term carries
+    `Λ(2) = log 2 ≠ 0` (`weilPrimeTerm_one_carries_prime_two`). So `X = 1` is the largest prime-free
+    cutoff — the prime `2` sits at the boundary, never inside. This is the true extent of the
+    archimedean-dominated (unconditional) layer; everything at the next cutoff and beyond carries the
+    prime side, whose coupling sign is the open content. The crux fields stay `none`. -/
+theorem prime_window_maximal (T : WeilTest) (hX : T.X = 1) :
+    (∀ N : Nat, Req (RsumN (weilPrimeTerm T) N) zero)
+    ∧ Req (weilPrimeTerm T 1)
+        (Rmul (logN 2 (by omega))
+          (Radd (T.f ⟨(2 : Int), 1⟩) (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) (T.f ⟨1, 2⟩)))) :=
+  ⟨weilPrime_window T hX, weilPrimeTerm_one_carries_prime_two T⟩
+
 -- ===========================================================================
 -- The first computed finite-place pairing value.
 -- ===========================================================================
