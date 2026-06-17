@@ -150,6 +150,7 @@ import F1Square.Analysis.ZeroGeometry
 import F1Square.Analysis.LambdaThree
 import F1Square.Analysis.RMulNF
 import F1Square.Analysis.LiGrowth
+import F1Square.Analysis.RHWitness
 import F1Square.Analysis.GammaTwoBracket
 
 open UOR.Primitives

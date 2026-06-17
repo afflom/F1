@@ -2151,6 +2151,15 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.cnormSq_nonneg
 #print axioms Analysis.liTerm_dominates
 
+-- the RH witness (Analysis/RHWitness.lean) — the conditional sum-of-nonnegatives form of λₙ.
+#print axioms Analysis.Rnpow_congr
+#print axioms Analysis.Rnpow_one
+#print axioms Analysis.cnormSq_Cnpow_unit
+#print axioms Analysis.witnessTerm_nonneg
+#print axioms Analysis.witnessSum_nonneg
+#print axioms Analysis.onLine_is_unit_modulus
+#print axioms Analysis.rh_witness
+
 -- v0.20.0 stage F: γ₂≥−0.02 bracket evaluators (Analysis/GammaTwoBracket.lean) — parts (A),(B).
 #print axioms Analysis.lnSqSumLo_den_pos
 #print axioms Analysis.lnSqSumLo_le
