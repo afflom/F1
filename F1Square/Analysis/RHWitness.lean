@@ -56,22 +56,33 @@ theorem cnormSq_Cnpow_unit {w : Complex} (h : Req (cnormSq w) one) (n : Nat) :
     Req (cnormSq (Cnpow w n)) one :=
   Req_trans (cnormSq_npow w n) (Req_trans (Rnpow_congr h n) (Rnpow_one n))
 
+/-- **The half-plane strengthening**: `|w|² ≤ 1 ⟹ |wⁿ|² ≤ 1` for every `n`. The non-negativity of the
+    witness needs only the CLOSED condition `|w|² ≤ 1` — i.e. `Re ρ ≥ ½`, the zero on OR right of the
+    critical line (`liRatio_right_of_line`/`liRatio_on_line`) — not unit modulus. The composition norm
+    is monotone under powers (`cnormSq_npow` + `Rnpow_le_Rnpow`), so the whole closed half-plane is
+    covered. (`= 1`, the line, is the boundary case `cnormSq_Cnpow_unit`.) -/
+theorem cnormSq_Cnpow_le_one {w : Complex} (h : Rle (cnormSq w) one) (n : Nat) :
+    Rle (cnormSq (Cnpow w n)) one :=
+  Rle_trans (Rle_of_Req (cnormSq_npow w n))
+    (Rle_trans (Rnpow_le_Rnpow (cnormSq_nonneg w) h n) (Rle_of_Req (Rnpow_one n)))
+
 -- ===========================================================================
 -- The per-zero witness term `1 − Re(wⁿ)` is manifestly non-negative on the line.
 -- ===========================================================================
 
-/-- **THE PER-ZERO WITNESS**: if the Cayley factor `w` has unit modulus (its zero is on the critical
-    line), then the `n`-th Li term `1 − Re(wⁿ)` is `≥ 0` — manifestly, with NO `sqrt`. The argument:
-    `Re(wⁿ)² ≤ Re(wⁿ)² + Im(wⁿ)² = |wⁿ|² = 1`, and `Re(wⁿ)² ≤ 1` with the squared comparison gives
-    `Re(wⁿ) ≤ 1`. This is the manifest `1 − cos(nθ) ≥ 0` of Li's criterion, realized constructively. -/
-theorem witnessTerm_nonneg {w : Complex} (h : Req (cnormSq w) one) (n : Nat) :
+/-- **THE PER-ZERO WITNESS**: if the Cayley factor `w` lies in the closed unit disk `|w|² ≤ 1` (its
+    zero on OR right of the critical line, `Re ρ ≥ ½`), then the `n`-th Li term `1 − Re(wⁿ)` is `≥ 0`
+    — manifestly, with NO `sqrt`. The argument: `Re(wⁿ)² ≤ Re(wⁿ)² + Im(wⁿ)² = |wⁿ|² ≤ 1`, and
+    `Re(wⁿ)² ≤ 1` with the squared comparison gives `Re(wⁿ) ≤ 1`. This is the manifest
+    `1 − cos(nθ) ≥ 0` of Li's criterion, realized constructively, on the whole closed half-plane. -/
+theorem witnessTerm_nonneg {w : Complex} (h : Rle (cnormSq w) one) (n : Nat) :
     Rnonneg (Rsub one (Cnpow w n).re) := by
   have h1 : Rle (Rmul (Cnpow w n).re (Cnpow w n).re) (cnormSq (Cnpow w n)) := by
     show Rle (Rmul (Cnpow w n).re (Cnpow w n).re)
       (Radd (Rmul (Cnpow w n).re (Cnpow w n).re) (Rmul (Cnpow w n).im (Cnpow w n).im))
     exact Rle_self_Radd_right (Rnonneg_Rmul_self (Cnpow w n).im)
   have h2 : Rle (Rmul (Cnpow w n).re (Cnpow w n).re) (Rmul one one) :=
-    Rle_trans h1 (Rle_of_Req (Req_trans (cnormSq_Cnpow_unit h n) (Req_symm (Rmul_one one))))
+    Rle_trans h1 (Rle_trans (cnormSq_Cnpow_le_one h n) (Rle_of_Req (Req_symm (Rmul_one one))))
   exact Rnonneg_Rsub_of_Rle (Rle_of_Rmul_self_le Rnonneg_one h2)
 
 -- ===========================================================================
@@ -86,11 +97,11 @@ def witnessSum (ws : List Complex) (n : Nat) : Real :=
   | [] => zero
   | w :: rest => Radd (Rsub one (Cnpow w n).re) (witnessSum rest n)
 
-/-- **THE WITNESS IS NON-NEGATIVE** (the assembly): if every Cayley factor in `ws` has unit modulus,
-    the witness sum is `≥ 0` for every `n` — a finite sum of the manifest non-negatives
-    `witnessTerm_nonneg`. -/
+/-- **THE WITNESS IS NON-NEGATIVE** (the assembly): if every Cayley factor in `ws` lies in the closed
+    unit disk (`|w|² ≤ 1`, the zero on or right of the line), the witness sum is `≥ 0` for every `n` —
+    a finite sum of the manifest non-negatives `witnessTerm_nonneg`. -/
 theorem witnessSum_nonneg : ∀ (ws : List Complex) (n : Nat),
-    (∀ w, w ∈ ws → Req (cnormSq w) one) → Rnonneg (witnessSum ws n)
+    (∀ w, w ∈ ws → Rle (cnormSq w) one) → Rnonneg (witnessSum ws n)
   | [], _, _ => Rnonneg_zero
   | (w :: rest), n, h =>
       Rnonneg_Radd (witnessTerm_nonneg (h w (List.Mem.head rest)) n)
@@ -108,14 +119,25 @@ theorem onLine_is_unit_modulus (isZero : Complex → Prop) (h : AllZerosOnLine i
     ∀ z, isZero z → Req (csubOneNormSq z) (cnormSq z) :=
   allOnLine_ratios_one isZero h
 
-/-- **THE RH WITNESS (conditional), as one statement.** Given the zeros' Cayley factors all of unit
-    modulus — the geometric form of RH (`onLine_is_unit_modulus`) — the Li coefficient's manifest
-    sum-of-nonnegatives form `Σ (1 − Re(wⁿ))` is `≥ 0` for every `n`. This is the forward direction of
-    Li's criterion, `RH ⟹ λₙ ≥ 0`, with the witness exhibited as a constructive object built from the
-    Atlas composition norm. The hypothesis is never discharged — producing the witness WITHOUT it is
-    the hard direction (RH itself) — so the crux fields stay `none`. -/
+/-- **THE RH WITNESS (conditional), as one statement.** Given the zeros' Cayley factors all in the
+    closed unit disk (`|w|² ≤ 1`, every zero on or right of the line), the Li coefficient's manifest
+    sum-of-nonnegatives form `Σ (1 − Re(wⁿ))` is `≥ 0` for every `n`. This is the witness, exhibited as
+    a constructive object built from the Atlas composition norm. The hypothesis is never discharged —
+    producing the witness WITHOUT it is the hard direction (RH itself) — so the crux fields stay
+    `none`. -/
 theorem rh_witness (ws : List Complex) (n : Nat)
-    (h : ∀ w, w ∈ ws → Req (cnormSq w) one) : Rnonneg (witnessSum ws n) :=
+    (h : ∀ w, w ∈ ws → Rle (cnormSq w) one) : Rnonneg (witnessSum ws n) :=
   witnessSum_nonneg ws n h
+
+/-- **THE ON-LINE FACE (exact RH).** The boundary specialization: every Cayley factor of UNIT modulus
+    (`|w|² = 1`, every zero exactly ON the critical line — RH proper) gives the non-negative witness.
+    This is `RH ⟹ λₙ ≥ 0` in its pure form; `rh_witness` generalizes it to the closed half-plane. By
+    the functional equation a zero `ρ` is mirrored by `1−ρ`, so the half-plane hypothesis can hold for
+    ALL zeros only when every zero is on the line — which is why the closed-disk witness does not
+    secretly weaken the open content: discharging it is still exactly RH. The crux fields stay
+    `none`. -/
+theorem rh_witness_onLine (ws : List Complex) (n : Nat)
+    (h : ∀ w, w ∈ ws → Req (cnormSq w) one) : Rnonneg (witnessSum ws n) :=
+  witnessSum_nonneg ws n (fun w hw => Rle_of_Req (h w hw))
 
 end UOR.Bridge.F1Square.Analysis
