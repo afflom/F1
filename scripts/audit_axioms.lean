@@ -2217,6 +2217,10 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.corrCoreP_mono
 #print axioms Analysis.psiLineReP
 #print axioms Analysis.psiLineReP_mono
+#print axioms Analysis.corrCoreP_ge_partial
+#print axioms Analysis.psiLineReP_16_lower
+#print axioms Analysis.rsLineSlope16_pos
+#print axioms Analysis.rsAngle_increasing_on_band
 
 -- v0.20.0 stage F: γ₂≥−0.02 bracket evaluators (Analysis/GammaTwoBracket.lean) — parts (A),(B).
 #print axioms Analysis.lnSqSumLo_den_pos

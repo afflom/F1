@@ -462,4 +462,56 @@ theorem psiLineReP_mono {sn sd sn' sd' : Nat} (hsd : 1 ≤ sd) (hsd' : 1 ≤ sd'
     Rle (psiLineReP sn sd hsd hs) (psiLineReP sn' sd' hsd' hs') :=
   Radd_le_add (Rle_refl psiQuarter) (corrCoreP_mono hsd hsd' hs hs' hmono)
 
+-- ===========================================================================
+-- θ′ > 0 on the whole UPPER BAND: the climb from a sharper point at s = 16 gives
+-- θ′(s) > 0 for ALL s ∈ [16, 25], not just at the single point s = 25 (τ = 10).
+-- ===========================================================================
+
+/-- **`corrCoreP sn sd ≥ S(N)`** for any partial-sum cutoff `N ≤ 25` — the depth schedule starts at
+    `25 ≥ N`, so every approximant dominates `S(N)` by `corrPP_mono_N`. -/
+theorem corrCoreP_ge_partial {sn sd : Nat} (hsd : 1 ≤ sd) (hs : sn ≤ 25 * sd) {N : Nat} (hN : N ≤ 25) :
+    Rle (ofQ (corrPP sn sd N) (corrPP_den_pos hsd N)) (corrCoreP sn sd hsd hs) := by
+  intro j
+  show Qle (corrPP sn sd N) (add (corrPP sn sd (25 * (j + 1))) ⟨2, j + 1⟩)
+  exact Qle_trans (corrPP_den_pos hsd (25 * (j + 1))) (corrPP_mono_N hsd (by omega))
+    (Qle_self_add (by show (0 : Int) ≤ 2; decide))
+
+/-- **`Re ψ(1/4 + 4i) ≥ 1.18`** (`s = 16`, `τ = 8`; true value `≈ 1.236`): from `ψ(1/4) ≥ −4.32`
+    and `Σ cₙ(16) ≥ 5.5` (the certified 12-term partial sum). Above `log π ≈ 1.1447`, so `θ′(8) > 0`. -/
+theorem psiLineReP_16_lower :
+    Rle (ofQ (⟨118, 100⟩ : Q) (by decide)) (psiLineReP 16 1 (by omega) (by omega)) := by
+  have hcorr : Rle (ofQ (⟨55, 10⟩ : Q) (by decide)) (corrCoreP 16 1 (by omega) (by omega)) :=
+    Rle_trans (Rle_ofQ_ofQ (by decide) (corrPP_den_pos (by omega) 12) (by decide))
+      (corrCoreP_ge_partial (by omega) (by omega) (by decide))
+  have hsum := Radd_le_add psiQuarter_lower hcorr
+  refine Rle_trans ?_ hsum
+  refine Rle_trans (Rle_of_Req (ofQ_congr (by decide)
+    (add_den_pos (by decide) (by decide)) ?_)) (Rle_ofQ_add_Radd (by decide) (by decide))
+  decide
+
+/-- **`θ′(8) > 0`** — the line slope is already positive at `τ = 8` (`s = 16`), inside the window. -/
+theorem rsLineSlope16_pos : Pos (Rsub (psiLineReP 16 1 (by omega) (by omega)) Rlogπc) := by
+  have hlogle : Rle Rlogπc (ofQ (⟨115, 100⟩ : Q) (by decide)) :=
+    Rle_trans Rlogπc_le (Rle_ofQ_ofQ _ (by decide) (by decide))
+  have hstep : Rle (Rsub (ofQ (⟨118, 100⟩ : Q) (by decide)) (ofQ (⟨115, 100⟩ : Q) (by decide)))
+      (Rsub (psiLineReP 16 1 (by omega) (by omega)) Rlogπc) :=
+    Rsub_le_sub psiLineReP_16_lower hlogle
+  refine Pos_of_Rle_ofQ (c := (⟨3, 100⟩ : Q)) (by decide) (by decide) (Rle_trans ?_ hstep)
+  intro n
+  show Qle (⟨3, 100⟩ : Q) (add (add (⟨118, 100⟩ : Q) (neg (⟨115, 100⟩ : Q))) ⟨2, n + 1⟩)
+  simp only [Qle, add, neg]
+  push_cast
+  omega
+
+/-- **THE ANGLE STRICTLY INCREASES ON THE UPPER BAND**: for every rational `s = τ²/4 ∈ [16, 25]`,
+    `θ′ > 0` (`Re ψ(1/4 + i√s) > log π`). The monotone climb (`psiLineReP_mono`) carries the single
+    positive point `θ′(8) > 0` (`rsLineSlope16_pos`) to the whole interval `s ≥ 16` — so the
+    Riemann–Siegel angle's unique minimum lies at `τ < 8`, and beyond it `θ` rises monotonically.
+    A genuine interval of positivity, not a single point; crux fields stay `none`. -/
+theorem rsAngle_increasing_on_band {sn sd : Nat} (hsd : 1 ≤ sd) (hs : sn ≤ 25 * sd)
+    (hband : 16 * sd ≤ sn) : Pos (Rsub (psiLineReP sn sd hsd hs) Rlogπc) :=
+  Pos_mono
+    (Rsub_le_sub (psiLineReP_mono (by omega) hsd (by omega) hs (by omega)) (Rle_refl Rlogπc))
+    rsLineSlope16_pos
+
 end UOR.Bridge.F1Square.Analysis

@@ -117,6 +117,13 @@ classical input is an explicit, audit-visible hypothesis, never an axiom).
   `rsAngle_non_monotone`, the slope `θ′ = ½(Re ψ − log π)` is monotone increasing from `θ′(0) < 0` to
   `θ′(10) > 0` — so `θ` is **convex on the window with a unique minimum**, and the negative-`α` band is a
   single bounded interval. The obstruction's exact shape, made a theorem; crux fields stay `none`.
+- **`θ′ > 0` on the whole upper band** (`Analysis/PsiLine.lean`) — `rsAngle_increasing_on_band`: for
+  *every* rational `s = τ²/4 ∈ [16, 25]`, `θ′ > 0` (`Re ψ(1/4 + i√s) > log π`). The monotone climb
+  carries a single sharper positive point — `rsLineSlope16_pos : θ′(8) > 0` (`Re ψ(1/4 + 4i) ≥ 1.18`
+  from `ψ(1/4) ≥ −4.32` and the certified `Σ cₙ(16) ≥ 5.5`) — to the entire interval `s ≥ 16`. So the
+  Riemann–Siegel angle's unique minimum sits at `τ < 8`, and beyond it `θ` rises monotonically: a genuine
+  interval of positivity, not a single point. (`corrCoreP_ge_partial` generalizes the partial-sum lower
+  bracket to any cutoff `N ≤ 25`.) Crux fields stay `none`.
 - **Erratum** — corrected the stale `λ₃ ≈ 0.0173` / `λ₃^∞ ≈ −1.20` (a computational error) to the
   standard Li value `λ₃ ≈ 0.2076` / `λ₃^∞ ≈ −1.013` across `LambdaThree.lean`, `CruxFrontierN3.lean`,
   `Attempt.lean`, `ROADMAP.md`, and the v0.20.0 changelog entry; recorded the precision analysis (the
