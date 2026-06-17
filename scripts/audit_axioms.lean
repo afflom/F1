@@ -182,6 +182,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.psiQuarterCore_lower
 #print axioms Analysis.psiQuarter
 #print axioms Analysis.psiQuarter_lower
+#print axioms Analysis.psiQuarterCore_upper
+#print axioms Analysis.psiQuarter_upper
 
 -- v0.19.0 the genuine-pairing arc — α(0) > 0: Burnol's window-center positivity
 -- certificate, computed (Analysis/BurnolAlpha.lean). Evidence, not the universal; crux none.
@@ -2190,6 +2192,12 @@ open UOR.Bridge.F1Square
 #print axioms Square.hodgeIndex_iff_RH
 #print axioms Analysis.riemannHypothesisStrip_iff
 #print axioms Square.hodgeIndex_iff_riemannHypothesis
+
+-- the Riemann–Siegel center-slope obstruction (Analysis/RiemannSiegel.lean) — θ′(0) < 0, the
+-- non-monotonicity Connes–Consani name as the barrier to semi-local Weil positivity. Obstruction,
+-- not a route through it; crux none.
+#print axioms Analysis.Rnonneg_Rlog_pi
+#print axioms Analysis.rsCenterSlope_neg
 
 -- v0.20.0 stage F: γ₂≥−0.02 bracket evaluators (Analysis/GammaTwoBracket.lean) — parts (A),(B).
 #print axioms Analysis.lnSqSumLo_den_pos

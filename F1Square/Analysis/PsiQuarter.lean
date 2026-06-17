@@ -211,4 +211,38 @@ theorem psiQuarter_lower : Rle (ofQ (⟨-432, 100⟩ : Q) (by decide)) psiQuarte
     decide
   exact Rle_trans hsplit hsum
 
+-- ===========================================================================
+-- The complementary UPPER brackets (for the Riemann–Siegel center slope, where
+-- `ψ(1/4)` must be bounded ABOVE — the opposite direction to the α(0) certificate).
+-- ===========================================================================
+
+/-- **The core upper bracket**: `core ≤ −3` (true value `≈ −3.6498`). Every partial sum dominates its
+    first term `pqP 1 = 3` (`pqP_mono`), so `core.seq n = −S(n+2) ≤ −3`. The complement of
+    `psiQuarterCore_lower`, needed where `ψ(1/4)` must be bounded from above. -/
+theorem psiQuarterCore_upper : Rle psiQuarterCore (ofQ (⟨-3, 1⟩ : Q) (by decide)) := by
+  intro n
+  show Qle (neg (pqP (n + 2))) (add (⟨-3, 1⟩ : Q) ⟨2, n + 1⟩)
+  have h3 : Qle (⟨3, 1⟩ : Q) (pqP (n + 2)) :=
+    Qle_trans (pqP_den_pos 1) (by decide) (pqP_mono (by omega))
+  have hA : Qle (neg (pqP (n + 2))) (⟨-3, 1⟩ : Q) := by
+    show -(pqP (n + 2)).num * (1 : Int) ≤ (-3 : Int) * ((pqP (n + 2)).den : Int)
+    have h3I : (3 : Int) * ((pqP (n + 2)).den : Int) ≤ (pqP (n + 2)).num * 1 := h3
+    omega
+  have hB : Qle (⟨-3, 1⟩ : Q) (add (⟨-3, 1⟩ : Q) ⟨2, n + 1⟩) :=
+    Qle_self_add (by show (0 : Int) ≤ 2; decide)
+  exact Qle_trans (b := (⟨-3, 1⟩ : Q)) (by decide) hA hB
+
+/-- **The ψ(1/4) upper bracket**: `ψ(1/4) ≤ −3` (true value `≈ −4.2270`), from `−γ ≤ −0.54`
+    (`Rgamma_h_lower`) and `core ≤ −3`. The complement of `psiQuarter_lower`; the input to the
+    Riemann–Siegel center-slope obstruction (`ψ(1/4) < log π`). -/
+theorem psiQuarter_upper : Rle psiQuarter (ofQ (⟨-3, 1⟩ : Q) (by decide)) := by
+  have hconv : Rle (Rneg (ofQ (⟨54, 100⟩ : Q) (by decide))) (ofQ (⟨-54, 100⟩ : Q) (by decide)) :=
+    fun n => Qle_self_add (by show (0 : Int) ≤ 2; decide)
+  have hneg_gamma : Rle (Rneg Rgamma_h) (ofQ (⟨-54, 100⟩ : Q) (by decide)) :=
+    Rle_trans (Rneg_le Rgamma_h_lower) hconv
+  have hsum := Radd_le_add hneg_gamma psiQuarterCore_upper
+  refine Rle_trans hsum ?_
+  refine Rle_trans (Rle_of_Req (Radd_ofQ_ofQ (by decide) (by decide))) ?_
+  exact Rle_ofQ_ofQ (by decide) (by decide) (by decide)
+
 end UOR.Bridge.F1Square.Analysis

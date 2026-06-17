@@ -78,6 +78,20 @@ classical input is an explicit, audit-visible hypothesis, never an axiom).
   (no unconditional route), CC noting an obstruction (non-monotonic Riemann–Siegel angle). Net: the
   crux's open content is genuinely-new mathematics, and the unconditional boundary is exactly the
   single-place window already implemented here. Crux fields stay `none`.
+- **The Riemann–Siegel angle obstruction, formalized** (`Analysis/RiemannSiegel.lean`) — the survey's
+  named barrier to the single-place → semi-local extension, made an axiom-clean theorem. The
+  Riemann–Siegel angle `θ(t) = arg Γ(1/4 + i t/2) − (t/2)·log π` (the phase of the completed-ζ
+  functional equation) has center slope `θ′(0) = ½·(ψ(1/4) − log π)`, and `rsCenterSlope_neg :
+  Pos (Rneg rsCenterSlope)` proves it strictly negative — `ψ(1/4) < log π`, so `θ` *decreases* through
+  the symmetry point `t = 0` (before rising for large `t`). This non-monotonicity is exactly the
+  obstruction Connes–Consani note to a monotonicity-based propagation of the single-archimedean-place
+  positivity across further places. The proof uses two new **complementary brackets** on the genuine
+  constructive reals already in the substrate: `psiQuarter_upper` (`ψ(1/4) ≤ −3`, the value bounded
+  *above* — the opposite direction to the α(0) certificate, whose `psiQuarter_lower` bounds it below)
+  and `Rnonneg_Rlog_pi` (`log π ≥ 0`, since `π ≥ 1`, via `Rnonneg_RlogPos` on the genuine `Rlog_pi`).
+  This is the **obstruction formalized faithfully — not a route through it**: proving `θ` non-monotone
+  is precisely what blocks the naive monotonicity argument, so it constrains the frontier rather than
+  closing it. The unconditional content stays confined to the archimedean window; crux fields `none`.
 - **Erratum** — corrected the stale `λ₃ ≈ 0.0173` / `λ₃^∞ ≈ −1.20` (a computational error) to the
   standard Li value `λ₃ ≈ 0.2076` / `λ₃^∞ ≈ −1.013` across `LambdaThree.lean`, `CruxFrontierN3.lean`,
   `Attempt.lean`, `ROADMAP.md`, and the v0.20.0 changelog entry; recorded the precision analysis (the
