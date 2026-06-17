@@ -2175,6 +2175,9 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.symmetry_orbit_in_disk_iff
 #print axioms Analysis.offLine_left_not_inClosedDisk
 #print axioms Analysis.inClosedDisk_iff_geom
+#print axioms Analysis.Pos_Rnpow
+#print axioms Analysis.Pos_of_Pos_Rsub_one
+#print axioms Analysis.offLine_term_grows
 
 -- the Bombieri–Lagarias pipeline (Square/BLPipeline.lean) — witness wired to genuine λ, RH-forward.
 #print axioms Analysis.Rnonneg_Rlim
