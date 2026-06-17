@@ -6,9 +6,12 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
-Post-v0.21.0 research thread — the constructive **RH witness** and the **ξ-zero symmetry group** on
-the Li growth ratio. All axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`,
-choice-free; the no-smuggling audit passes; the crux fields stay `none` (RH open).
+Post-v0.21.0 research thread — the constructive **RH witness**, the **ξ-zero symmetry group**, the
+**Bombieri–Lagarias pipeline** wiring the witness to the genuine `λ` (Li's criterion, both
+directions), the **arithmetic Hodge index ⟺ RH** equivalence stated about the *constructed* ζ, and
+the **Voros off-line** analysis. All axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`,
+choice-free; the no-smuggling audit passes; the crux fields stay `none` (RH open throughout — every
+classical input is an explicit, audit-visible hypothesis, never an axiom).
 
 - **The RH witness** (`F1Square/Analysis/RHWitness.lean`) — the constructive witness of RH's forward
   direction (`RH ⟹ λₙ ≥ 0`), exhibited as an object. On the critical line a zero's Cayley factor
@@ -29,6 +32,37 @@ choice-free; the no-smuggling audit passes; the crux fields stay `none` (RH open
   (`inClosedDisk_Cconj`); `symmetry_orbit_in_disk_iff` shows the whole orbit lies in the disk iff on the
   line — the structural reason RH's "all zeros in the disk" equals "all zeros on the line". Does not
   prove the zeros are there (RH, untouched).
+- **The Voros off-line branch, constructively** (`Reflection.lean`, `Analysis/OffLineGrowth.lean`) —
+  `offLine_left_not_inClosedDisk`: a zero left of the line leaves the closed Cayley disk
+  (`liRatio_left_of_line` ⟹ `|w|² > 1`), the geometric seed of the off-line branch, *proven*.
+  `offLine_term_grows`: its witness term's squared modulus then strictly grows (`|wⁿ⁺¹|²−|wⁿ|² > 0`);
+  `witnessTerm_tempered`: on the closed disk the term is bounded in `[0,2]`; `voros_term_dichotomy`
+  packages the tempered-vs-exponential alternative at the term level. The step from exponential growth
+  to a negative coefficient (phase + saddle-point over the sum) stays the classical interface.
+- **The Bombieri–Lagarias pipeline + Li's criterion, both directions** (`Square/BLPipeline.lean`) —
+  `Rnonneg_Rlim` (non-negativity passes to a Bishop limit) is the new constructive core. `BLZeroSum`
+  carries the BL zero-sum representation and the on-line unit-modulus fact as explicit hypotheses;
+  `bl_rh_implies_liNonneg` is the forward direction `RH ⟹ LiNonneg(genuineLamSeq)`. `LiBridge` adds
+  the Voros dichotomy (a constructive `∨`, choice-free — grounded as an *asymptotic* theorem,
+  Voros/Lagarias + the `n ≳ T²/t` threshold); `liNonneg_implies_onLine` is the reverse; `li_criterion`
+  is the full equivalence `LiNonneg(genuineLamSeq) ⟺ AllZerosOnLine`. Both classical inputs are
+  explicit `LiBridge` fields, audit-visible; the equivalence is axiom-clean.
+- **RH stated about the constructed ζ** (`Analysis/RiemannZero.lean`) — `NontrivialZero` bundles a
+  strip point with its `CzetaStrip` convergence certificate and a vanishing proof, making the genuine
+  zero set a clean predicate (`isZeroOfZeta`); `RiemannHypothesisStrip := ∀ Z, Re Z.s = ½` is RH for
+  the ζ this repo builds, formalized as the open statement it is; `riemannHypothesisStrip_iff` ties it
+  to the pipeline's `AllZerosOnLine`.
+- **The arithmetic Hodge index ⟺ RH** (`Square/AtlasAnalyticFace.lean`) — `hodgeIndex_iff_RH`:
+  `SpectralHodgeNeg(𝕊) ⟺ AllZerosOnLine` (via `genuine_hodgeNeg_iff` + `li_criterion`);
+  `hodgeIndex_iff_riemannHypothesis`: `SpectralHodgeNeg(𝕊) ⟺ RiemannHypothesisStrip` — the F1-square
+  Hodge index equated end to end to RH about the constructed ζ. `atlas_coupling_analytic_face` bundles
+  the geometric and analytic faces.
+- **The prime-free window is maximal** (`Square/Pairing.lean`) — `prime_window_maximal`: the conquered
+  prime-free window is at `X = 1`; the prime `2` enters at the next term (`Λ(2) = log 2`), the discrete
+  Connes–Consani interval `(1/2, 2)`.
+- **The atlas spectral signature** (`Square/AtlasSpectrum.lean`) — `atlasM_signature`: signature
+  `(10,14)`; `atlasM_not_hodge_signature`: ten positive directions ≠ the Hodge form's one, so the
+  spectral operator is structurally distinct from the crux's intersection form.
 - **Erratum** — corrected the stale `λ₃ ≈ 0.0173` / `λ₃^∞ ≈ −1.20` (a computational error) to the
   standard Li value `λ₃ ≈ 0.2076` / `λ₃^∞ ≈ −1.013` across `LambdaThree.lean`, `CruxFrontierN3.lean`,
   `Attempt.lean`, `ROADMAP.md`, and the v0.20.0 changelog entry; recorded the precision analysis (the
