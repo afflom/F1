@@ -735,6 +735,9 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rsub_le_sub
 #print axioms Analysis.arctanSum_diag_ge
 #print axioms Analysis.arctanSum_diag_le
+#print axioms Analysis.arctanSum_diag_ge_at
+#print axioms Analysis.arctanSum_diag_le_at
+#print axioms Analysis.Rpi_lower_three
 #print axioms Analysis.Rarctan_ge
 #print axioms Analysis.Rarctan_le
 #print axioms Analysis.Qmul_sub_left

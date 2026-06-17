@@ -233,6 +233,70 @@ theorem arctanSum_diag_le (t : Q) (htd : 0 < t.den) {ρ : Q} (hρ0 : 0 ≤ ρ.nu
         (Qeq_le (Qmul_sub_right _ _ _)))
   exact Qmul_le_cancel_right hWn hWd (Qle_of_Qsub_le_Qsub_right (Qmul_den_pos h0d hWd) hmain')
 
+/-- **Lower pointwise bracket at depth `a`** (the sharp version): `L ≤ arctanSum t (Rₙ)` whenever
+    `(arctanSum t a − L)·(1−ρ²) ≥ ρ^{2a+3}` and `a ≤ Rₙ`. Deeper `a` ⟹ smaller tail `ρ^{2a+3}` ⟹
+    `L` can sit just below the true `arctan t`. (`arctanSum_diag_ge` is the `a = 1` case.) -/
+theorem arctanSum_diag_ge_at (t : Q) (htd : 0 < t.den) {ρ : Q} (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den)
+    (hlt : ρ.num.toNat < ρ.den) (htρ : Qle (Qabs t) ρ) (a : Nat) {L : Q} (hLd : 0 < L.den)
+    (hcond : Qle (qpow ρ (2 * a + 3)) (mul (Qsub (arctanSum t a) L) (Qsub ⟨1, 1⟩ (mul ρ ρ))))
+    {n : Nat} (haR : a ≤ Rartanh_R ρ n) :
+    Qle L (arctanSum t (Rartanh_R ρ n)) := by
+  have hWn : 0 < (Qsub (⟨1, 1⟩ : Q) (mul ρ ρ)).num := W_pos hρ0 hρd hlt
+  have hWd : 0 < (Qsub (⟨1, 1⟩ : Q) (mul ρ ρ)).den := Qsub_den_pos Nat.one_pos (Nat.mul_pos hρd hρd)
+  have hWnn : 0 ≤ (Qsub (⟨1, 1⟩ : Q) (mul ρ ρ)).num := Int.le_of_lt hWn
+  have hRd : 0 < (arctanSum t (Rartanh_R ρ n)).den := arctanSum_den_pos htd _
+  have hAd : 0 < (arctanSum t a).den := arctanSum_den_pos htd a
+  have hsign : Qle (Qsub (arctanSum t a) (arctanSum t (Rartanh_R ρ n)))
+      (Qabs (Qsub (arctanSum t (Rartanh_R ρ n)) (arctanSum t a))) := by
+    have hs := Qle_self_Qabs (Qsub (arctanSum t a) (arctanSum t (Rartanh_R ρ n)))
+    rwa [Qabs_Qsub_comm] at hs
+  have htrunc := arctanSum_trunc htd hρ0 hρd htρ hWnn haR
+  have hmain : Qle (mul (Qsub (arctanSum t a) (arctanSum t (Rartanh_R ρ n)))
+        (Qsub ⟨1, 1⟩ (mul ρ ρ)))
+      (mul (Qsub (arctanSum t a) L) (Qsub ⟨1, 1⟩ (mul ρ ρ))) :=
+    Qle_trans (Qmul_den_pos (Qabs_den_pos (Qsub_den_pos hRd hAd)) hWd)
+      (Qmul_le_mul_right hWnn hsign)
+      (Qle_trans (qpow_den_pos hρd _) htrunc hcond)
+  have hmain' : Qle (Qsub (mul (arctanSum t a) (Qsub ⟨1, 1⟩ (mul ρ ρ)))
+        (mul (arctanSum t (Rartanh_R ρ n)) (Qsub ⟨1, 1⟩ (mul ρ ρ))))
+      (Qsub (mul (arctanSum t a) (Qsub ⟨1, 1⟩ (mul ρ ρ)))
+        (mul L (Qsub ⟨1, 1⟩ (mul ρ ρ)))) :=
+    Qle_trans (Qmul_den_pos (Qsub_den_pos hAd hRd) hWd)
+      (Qeq_le (Qeq_symm (Qmul_sub_right _ _ _)))
+      (Qle_trans (Qmul_den_pos (Qsub_den_pos hAd hLd) hWd) hmain
+        (Qeq_le (Qmul_sub_right _ _ _)))
+  exact Qmul_le_cancel_right hWn hWd (Qle_of_Qsub_le_Qsub_left (Qmul_den_pos hAd hWd) hmain')
+
+/-- **Upper pointwise bracket at depth `a`** (the sharp version): `arctanSum t (Rₙ) ≤ U` whenever
+    `(U − arctanSum t a)·(1−ρ²) ≥ ρ^{2a+3}` and `a ≤ Rₙ`. (`arctanSum_diag_le` is the `a = 0` case.) -/
+theorem arctanSum_diag_le_at (t : Q) (htd : 0 < t.den) {ρ : Q} (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den)
+    (hlt : ρ.num.toNat < ρ.den) (htρ : Qle (Qabs t) ρ) (a : Nat) {U : Q} (hUd : 0 < U.den)
+    (hcond : Qle (qpow ρ (2 * a + 3)) (mul (Qsub U (arctanSum t a)) (Qsub ⟨1, 1⟩ (mul ρ ρ))))
+    {n : Nat} (haR : a ≤ Rartanh_R ρ n) :
+    Qle (arctanSum t (Rartanh_R ρ n)) U := by
+  have hWn : 0 < (Qsub (⟨1, 1⟩ : Q) (mul ρ ρ)).num := W_pos hρ0 hρd hlt
+  have hWd : 0 < (Qsub (⟨1, 1⟩ : Q) (mul ρ ρ)).den := Qsub_den_pos Nat.one_pos (Nat.mul_pos hρd hρd)
+  have hWnn : 0 ≤ (Qsub (⟨1, 1⟩ : Q) (mul ρ ρ)).num := Int.le_of_lt hWn
+  have hRd : 0 < (arctanSum t (Rartanh_R ρ n)).den := arctanSum_den_pos htd _
+  have hAd : 0 < (arctanSum t a).den := arctanSum_den_pos htd a
+  have hsign : Qle (Qsub (arctanSum t (Rartanh_R ρ n)) (arctanSum t a))
+      (Qabs (Qsub (arctanSum t (Rartanh_R ρ n)) (arctanSum t a))) := Qle_self_Qabs _
+  have htrunc := arctanSum_trunc htd hρ0 hρd htρ hWnn haR
+  have hmain : Qle (mul (Qsub (arctanSum t (Rartanh_R ρ n)) (arctanSum t a))
+        (Qsub ⟨1, 1⟩ (mul ρ ρ)))
+      (mul (Qsub U (arctanSum t a)) (Qsub ⟨1, 1⟩ (mul ρ ρ))) :=
+    Qle_trans (Qmul_den_pos (Qabs_den_pos (Qsub_den_pos hRd hAd)) hWd)
+      (Qmul_le_mul_right hWnn hsign)
+      (Qle_trans (qpow_den_pos hρd _) htrunc hcond)
+  have hmain' : Qle (Qsub (mul (arctanSum t (Rartanh_R ρ n)) (Qsub ⟨1, 1⟩ (mul ρ ρ)))
+        (mul (arctanSum t a) (Qsub ⟨1, 1⟩ (mul ρ ρ))))
+      (Qsub (mul U (Qsub ⟨1, 1⟩ (mul ρ ρ))) (mul (arctanSum t a) (Qsub ⟨1, 1⟩ (mul ρ ρ)))) :=
+    Qle_trans (Qmul_den_pos (Qsub_den_pos hRd hAd) hWd)
+      (Qeq_le (Qeq_symm (Qmul_sub_right _ _ _)))
+      (Qle_trans (Qmul_den_pos (Qsub_den_pos hUd hAd) hWd) hmain
+        (Qeq_le (Qmul_sub_right _ _ _)))
+  exact Qmul_le_cancel_right hWn hWd (Qle_of_Qsub_le_Qsub_right (Qmul_den_pos hAd hWd) hmain')
+
 /-- **Upper bracket**: a rational `U` with `(U − arctanSum t 0)·(1−ρ²) ≥ ρ³` is `≥ arctan t`. -/
 theorem Rarctan_le (t : Q) (htd : 0 < t.den) {ρ : Q} (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den)
     (hlt : ρ.num.toNat < ρ.den) (htρ : Qle (Qabs t) ρ) {U : Q} (hUd : 0 < U.den)
@@ -355,6 +419,32 @@ theorem Rpi_lower : Rle (ofQ (Qsub (mul ⟨16, 1⟩ ⟨1, 8⟩) (mul ⟨4, 1⟩ 
 
 /-- **`Pos π`** — π > 0. -/
 theorem Rpi_pos : Pos Rpi := Pos_of_Rle_ofQ (by decide) (by decide) Rpi_lower
+
+/-- The π reindex is at least `3` (it is `12·(20j+20) ≥ 240`), so depth `a = 3` is admissible
+    at every diagonal index used by `Rpi_seq`. -/
+private theorem three_le_Rpi_reindex (j : Nat) : 3 ≤ Rartanh_R (⟨1, 2⟩ : Q) (20 * j + 19) := by
+  unfold Rartanh_R
+  show 3 ≤ (2 * 2 + 4 * 2) * (20 * j + 19 + 1)
+  omega
+
+/-- **π ≥ 3**, the sharp Machin lower bracket — from `arctan(1/5) ≥ 97/500` and
+    `arctan(1/239) ≤ 7/1000` at truncation depth `a = 3` (tail `(1/2)⁹ = 1/512`), giving
+    `π ≥ 16·(97/500) − 4·(7/1000) = 3.076 ≥ 3`. The sharp companion to `Rpi_lower` (`π ≥ 6/5`),
+    built on the depth-parameterized brackets `arctanSum_diag_ge_at`/`arctanSum_diag_le_at`. -/
+theorem Rpi_lower_three : Rle (ofQ (⟨3, 1⟩ : Q) (by decide)) Rpi := by
+  intro n
+  have hL5 : Qle (⟨97, 500⟩ : Q) (arctanSum ⟨1, 5⟩ (Rpi_g n)) :=
+    arctanSum_diag_ge_at ⟨1, 5⟩ (by decide) (ρ := ⟨1, 2⟩) (by decide) (by decide) (by decide)
+      (by decide) 3 (by decide) (by decide) (three_le_Rpi_reindex n)
+  have hU239 : Qle (arctanSum ⟨1, 239⟩ (Rpi_g n)) (⟨7, 1000⟩ : Q) :=
+    arctanSum_diag_le_at ⟨1, 239⟩ (by decide) (ρ := ⟨1, 2⟩) (by decide) (by decide) (by decide)
+      (by decide) 3 (by decide) (by decide) (three_le_Rpi_reindex n)
+  have hmid : Qle (Qsub (mul ⟨16, 1⟩ (⟨97, 500⟩ : Q)) (mul ⟨4, 1⟩ (⟨7, 1000⟩ : Q))) (Rpi_seq n) :=
+    Qsub_le_2 (Qmul_le_mul_left (by decide) hL5) (Qmul_le_mul_left (by decide) hU239)
+  show Qle (⟨3, 1⟩ : Q) (add (Rpi_seq n) ⟨2, n + 1⟩)
+  exact Qle_trans (Rpi_seq_den_pos n)
+    (Qle_trans (by decide) (by decide) hmid)
+    (Qle_self_add (by show (0 : Int) ≤ 2; decide))
 
 /-- **log 2** — `log` of the concrete positive real `2` (witness at index 0). -/
 def Rlog2 : Real := RlogPos (ofQ ⟨2, 1⟩ (by decide)) 0 (by decide)
