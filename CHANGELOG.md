@@ -63,6 +63,21 @@ classical input is an explicit, audit-visible hypothesis, never an axiom).
 - **The atlas spectral signature** (`Square/AtlasSpectrum.lean`) — `atlasM_signature`: signature
   `(10,14)`; `atlasM_not_hodge_signature`: ten positive directions ≠ the Hodge form's one, so the
   spectral operator is structurally distinct from the crux's intersection form.
+- **Literature reconnaissance — the frontier, sourced (2020–2026 survey, adversarially verified).** A
+  deep multi-source survey (102 agents, 3-vote verification per claim) confirms the program's honest
+  frontier with citations: **every** Li/Keiper-coefficient positivity statement is *exactly equivalent
+  to RH* — Li's criterion `RH ⟺ λₙ ≥ 0` (Bombieri–Lagarias 1999; Lagarias, *Ann. Inst. Fourier* 57,
+  2007; Selberg class, Mazhouda 2015; model-space/de Branges reformulation, Suzuki 2023, arXiv
+  2301.05779) — so there is **no known unconditional bridge** to global positivity. The off-line ⟹
+  `λₙ < 0` step is *asymptotic*, via steepest descents/Darboux on a superzeta integral (Voros, arXiv
+  1403.4558 / 2204.01036 / math/0404213), with the violation regime astronomically far out (`n ≳ T²/t
+  ≈ 10²⁵` given RH verified to `T₀ ≈ 2.4·10¹²`) — confirming the `LiBridge.dichotomy` grounding. The
+  ONLY unconditional positivity is the **single archimedean-place** Weil positivity (Connes–Consani,
+  *Selecta* 2021, arXiv 2006.13771) — the prime-free Sonine window, which this repo formalizes as
+  `prime_window_maximal` / `archimedean_center_positive`; its semi-local generalization *implies* RH
+  (no unconditional route), CC noting an obstruction (non-monotonic Riemann–Siegel angle). Net: the
+  crux's open content is genuinely-new mathematics, and the unconditional boundary is exactly the
+  single-place window already implemented here. Crux fields stay `none`.
 - **Erratum** — corrected the stale `λ₃ ≈ 0.0173` / `λ₃^∞ ≈ −1.20` (a computational error) to the
   standard Li value `λ₃ ≈ 0.2076` / `λ₃^∞ ≈ −1.013` across `LambdaThree.lean`, `CruxFrontierN3.lean`,
   `Attempt.lean`, `ROADMAP.md`, and the v0.20.0 changelog entry; recorded the precision analysis (the
