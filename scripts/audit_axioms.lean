@@ -2182,6 +2182,7 @@ open UOR.Bridge.F1Square
 #print axioms Square.liNonneg_implies_onLine
 #print axioms Square.li_criterion
 #print axioms Square.atlas_coupling_analytic_face
+#print axioms Square.hodgeIndex_iff_RH
 
 -- v0.20.0 stage F: γ₂≥−0.02 bracket evaluators (Analysis/GammaTwoBracket.lean) — parts (A),(B).
 #print axioms Analysis.lnSqSumLo_den_pos

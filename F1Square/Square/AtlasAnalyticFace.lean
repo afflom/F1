@@ -23,6 +23,7 @@ Pure Lean 4 core, no Mathlib, no `sorry`/`native_decide`, choice-free; audited b
 
 import F1Square.Square.BLPipeline
 import F1Square.Square.LefschetzCoupling
+import F1Square.Square.Forced
 
 namespace UOR.Bridge.F1Square.Square
 
@@ -39,5 +40,18 @@ theorem atlas_coupling_analytic_face (E : StieltjesEta) (L : LiBridge E) :
         ↔ ∀ n, 0 < n → Pos (Radd (genuineArithSeq E.eta n) (genuineArchSeq n)))
     ∧ (LiNonneg (genuineLamSeq E.eta) ↔ AllZerosOnLine L.isZero) :=
   ⟨genuine_crux_arch_coupling E, li_criterion E L⟩
+
+/-- **THE ARITHMETIC HODGE INDEX ⟺ RH** — the statement the whole F1-square program aims at, now a
+    single connected equivalence. The geometric **Hodge-index non-negativity** of the genuine square
+    (`SpectralHodgeNeg`, `−⟨Cₙ,Cₙ⟩ ≥ 0 ∀n`) equals **Li non-negativity** (`genuine_hodgeNeg_iff`,
+    the v0.17.0/v0.18.0 bridge), which — given the classical `LiBridge` (Bombieri–Lagarias + Voros) —
+    equals **all zeros on the critical line** (`li_criterion`). So the arithmetic Hodge index on
+    `𝕊 = Spec ℤ ×_𝔽₁ Spec ℤ` holds **iff RH**, the chain running geometry → Li coefficients → zeros,
+    both directions, through the constructive witness. The classical inputs are the explicit `LiBridge`
+    hypotheses (audit-visible); the single open input is `AllZerosOnLine` = RH. Axiom-clean; the crux
+    fields stay `none`. -/
+theorem hodgeIndex_iff_RH (E : StieltjesEta) (L : LiBridge E) :
+    SpectralHodgeNeg (genuineSpectralSquare E) ↔ AllZerosOnLine L.isZero :=
+  Iff.trans (genuine_hodgeNeg_iff E) (li_criterion E L)
 
 end UOR.Bridge.F1Square.Square
