@@ -303,9 +303,10 @@ constructed (`Rgamma2`) and its numeric bracket certified via discrete Euler–M
 constructive integration): the trapezoidal-corrected `hSeq → γ₂` has a summable residual whose
 per-step bound telescopes (`s_{j+1} ≥ −1/((j+1)(j+2))`), and a single big-integer `decide` at depth
 `T=3`, denominator `D=10⁸` certifies `hSeq(199) − 1/200 ≥ −1/50`. This is a certified CONSTANT bound
-(evidence), not positivity-of-all-`λₙ`. `Pos λ₃` remains open: `λ₃ ≈ 0.0173` is a small difference
-of `Θ(1)` terms, needing the full `λ₃`-formula numeric assembly (tight brackets on `γ, γ₁, γ₂, γ³,
-γγ₁` and the archimedean `λ₃^{∞}`), not the single `γ₂` input.
+(evidence), not positivity-of-all-`λₙ`. `Pos λ₃` remains open: `λ₃ ≈ 0.2076` (margin ≈ 0.21) is a
+heavily-cancelled combination of `Θ(1)` terms, needing all of `γ, γ₁, γ₂, ζ(2), ζ(3), log 4π` to
+~0.1–0.3% relative precision — the binding constraint is `γ₁` (currently bracketed an order of
+magnitude too loose), not the single `γ₂` input.
 
 The full construction map, as originally scoped, follows.
 

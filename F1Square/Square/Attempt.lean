@@ -22,7 +22,8 @@ THE FRONTIER, made exact (`crux_attempt_frontier`): given the two certified slic
 crux is EQUIVALENT to `∀ n ≥ 3, λₙ > 0`. The next certifiable slice (`λ₃`) needs the second
 Stieltjes constant `γ₂` — now BUILT (v0.20.0, `Rgamma2`) with its numeric bracket `γ₂ ≥ −0.02`
 CLOSED (`Rgamma2_ge_neg002`); the `λ₃` positivity certificate further needs the full
-`λ₃`-formula numeric assembly (`λ₃ ≈ 0.0173` is a small difference of `Θ(1)` terms), and each
+`λ₃`-formula numeric assembly (`λ₃ ≈ 0.2076` is a heavily-cancelled combination of `Θ(1)` terms,
+`γ₁` binding — see `Analysis/LambdaThree.lean`), and each
 further slice needs the next `γⱼ`. No finite run reaches the crux (`liPositive_iff_all_upTo`,
 `spectral_iff_all_upTo`) — the universal `∀ n` is the open content. (v0.19.0 made the
 universal's shape exact on the dominance face: `crux_closure_route` — this certified head

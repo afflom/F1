@@ -8,12 +8,17 @@ and this brick pins it exactly: for η-data anchored through `η₂` (the `γ₂
 coupling at `n = 3` is positive iff the concrete closed form `Rlambda3` is positive
 (`coupling_n3_iff_pos_lambda3`, via `genuineLam_three`). So the `n = 3` conquest IS `Pos Rlambda3`.
 
-WHAT REMAINS (the open numeric frontier, honestly). `Rlambda3 ≈ 0.0173` is a small difference of
-`Θ(1)` terms (`λ₃^arith ≈ +1.22`, `λ₃^∞ ≈ −1.20`). A `Pos Rlambda3` certificate needs TIGHT two-sided
-brackets on `γ, γ₁, γ₂, ζ(2), ζ(3), log 4π`. The repo currently has: `γ` two-sided
-(`Rgamma_h_lower/upper`), `γ₁` upper (`Rgamma1_le_neg445`), `γ₂` lower (`Rgamma2_ge_neg002`), `ζ(2)`
-lower (`zeta2_lower`), partial `ζ(3)`. STILL MISSING for `n = 3`: a `γ₁` LOWER bound, a `γ₂` UPPER
-bound, a `ζ(2)` UPPER bound, and a two-sided `ζ(3)` — each a `GammaTwoBracket`-scale construction.
+WHAT REMAINS (the open numeric frontier, honestly). `Rlambda3 ≈ 0.2076` (the standard Li value),
+with `λ₃^arith ≈ +1.22` and `λ₃^∞ ≈ −1.013` — an absolute margin ≈ 0.21, NOT razor-thin. But the
+closed form has HEAVY cancellation (the archimedean block `−(3/2)log4π + (9/4)ζ(2) − (7/8)ζ(3) ≈
+−3.80 + 3.70 − 1.05` collapses three `Θ(3.8)` constants to `Θ(1)`), so a `Pos Rlambda3` certificate
+needs ALL of `γ, γ₁, γ₂, ζ(2), ζ(3), log 4π` to ~0.1–0.3% RELATIVE precision at once. The DOMINANT
+loss is `γ₁`, not `γ`: `−6γ₁` is `+0.437` truly, but the existing `γ₁ ≤ −0.0445` (`Rgamma1_le_neg445`)
+yields only `+0.267` — burning 0.17 of the margin, an order of magnitude too loose vs. the true
+`−0.0728`. The repo has `γ` two-sided (`Rgamma_h_lower/upper`), `γ₁` upper (loose), `γ₂` lower
+(`Rgamma2_ge_neg002`), `ζ(2)` lower (`zeta2_lower`), partial `ζ(3)`. STILL MISSING: a TIGHT two-sided
+`γ₁` (the bottleneck), a `γ₂` UPPER bound, a `ζ(2)` UPPER bound, and a two-sided `ζ(3)` — each a
+`GammaTwoBracket`-scale construction. See the precision analysis in `Analysis/LambdaThree.lean`.
 
 This is genuine progress (the `n = 3` target is now a single concrete `Pos Rlambda3`), and it is
 HONEST about the boundary: extending `n` one coefficient at a time conquers more ground but never

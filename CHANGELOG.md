@@ -4,6 +4,36 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html), starting at `v0.0.1`.
 
+## [Unreleased]
+
+Post-v0.21.0 research thread — the constructive **RH witness** and the **ξ-zero symmetry group** on
+the Li growth ratio. All axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`,
+choice-free; the no-smuggling audit passes; the crux fields stay `none` (RH open).
+
+- **The RH witness** (`F1Square/Analysis/RHWitness.lean`) — the constructive witness of RH's forward
+  direction (`RH ⟹ λₙ ≥ 0`), exhibited as an object. On the critical line a zero's Cayley factor
+  `w = 1−1/ρ` has unit modulus; unit modulus survives every power via the Atlas composition norm
+  (`cnormSq_npow` over `cnormSq_mul`, the Brahmagupta–Fibonacci / Hurwitz two-square identity), so
+  `|wⁿ|² = 1`, hence `Re(wⁿ) ≤ 1` with NO `sqrt` (`Rle_of_Rmul_self_le`). Each Li term `1 − Re(wⁿ)` is
+  thus manifestly `≥ 0` (`witnessTerm_nonneg`), and the finite witness sum `Σ (1 − Re(wⁿ))` is `≥ 0`
+  for every `n` (`witnessSum_nonneg`, `rh_witness`). Strengthened from unit modulus to the **closed
+  half-plane** `|w|² ≤ 1` (`Re ρ ≥ ½`, `cnormSq_Cnpow_le_one` via `Rnpow_le_Rnpow`); `rh_witness_onLine`
+  is the boundary (on-line) face. The hypothesis IS RH (`onLine_is_unit_modulus`) and is never
+  discharged — producing the witness unconditionally is RH itself.
+- **The functional-equation reflection + conjugation symmetry** (`F1Square/Analysis/Reflection.lean`)
+  — the completed-ζ 4-fold zero symmetry `{ρ, ρ̄, 1−ρ, 1−ρ̄}` realized on the Li growth ratio as exact
+  `Real` algebra. Reflection `ρ↦1−ρ`: `cnormSq(1−ρ) = csubOneNormSq ρ`, `csubOneNormSq(1−ρ) = cnormSq ρ`
+  (via `Rneg_sq`/`Rneg_Rsub`), so the mirror Cayley ratios are reciprocal (`r(ρ)·r(1−ρ) = 1`), and
+  `mirror_both_in_disk_iff`: a zero and its mirror are both in the closed Cayley disk iff `|ρ−1|² = |ρ|²`
+  (unit modulus, on the line). Conjugation `ρ↦ρ̄` (`Cconj`) preserves both moduli, hence disk-membership
+  (`inClosedDisk_Cconj`); `symmetry_orbit_in_disk_iff` shows the whole orbit lies in the disk iff on the
+  line — the structural reason RH's "all zeros in the disk" equals "all zeros on the line". Does not
+  prove the zeros are there (RH, untouched).
+- **Erratum** — corrected the stale `λ₃ ≈ 0.0173` / `λ₃^∞ ≈ −1.20` (a computational error) to the
+  standard Li value `λ₃ ≈ 0.2076` / `λ₃^∞ ≈ −1.013` across `LambdaThree.lean`, `CruxFrontierN3.lean`,
+  `Attempt.lean`, `ROADMAP.md`, and the v0.20.0 changelog entry; recorded the precision analysis (the
+  binding constraint is `γ₁`, not `γ`; six constants need ~0.1–0.3% relative precision).
+
 ## [0.21.0] - 2026-06-16
 
 Stage G — the arithmetic Hodge-index crux via the missing-object embedding, and the UOR Atlas
@@ -214,10 +244,12 @@ choice-free (`{propext, Quot.sound}`), audited; the build is warning-free; the g
   constructive real. For ANY η-data anchored through `η₂` the genuine ladder meets it at `n = 3`
   (`genuineArith_three`, `genuineLam_three`) exactly as at `n = 1, 2` — the closed form is faithful,
   not ad hoc. `Pos λ₃` is NOT claimed: the `γ₂` bracket that gates the `η₂` term is now closed
-  (`γ₂ ≥ −0.02`, above), but `λ₃ ≈ 0.0173` is a small difference of `Θ(1)` terms (`λ₃^{arith} ≈ +1.22`,
-  `λ₃^{∞} ≈ −1.20`), so a positivity certificate needs tight two-sided brackets on all of
-  `γ, γ₁, γ₂, γ³, γγ₁` AND the archimedean `λ₃^{∞}` (via `ζ(2), ζ(3)`) — the full `λ₃`-formula numeric
-  assembly, the remaining open work. Choice-free, audited. The crux fields stay `none`.
+  (`γ₂ ≥ −0.02`, above), but `λ₃ ≈ 0.2076` (`λ₃^{arith} ≈ +1.22`, `λ₃^{∞} ≈ −1.013`; margin ≈ 0.21) is
+  a heavily-cancelled combination of `Θ(1)` terms, so a positivity certificate needs all of
+  `γ, γ₁, γ₂, ζ(2), ζ(3), log 4π` to ~0.1–0.3% relative precision (the binding constraint is `γ₁`) —
+  the full `λ₃`-formula numeric assembly, the remaining open work. Choice-free, audited. The crux
+  fields stay `none`. (Erratum: earlier drafts of this entry stated `λ₃ ≈ 0.0173` / `λ₃^{∞} ≈ −1.20`,
+  a computational error; the correct standard Li value is `0.2076`.)
 - **The Li-term modulus growth law** (`F1Square/Analysis/LiGrowth.lean`) — ties Lever 1 to the Voros
   dichotomy, and is the first end-to-end use of the `RAddNF`+`RMulNF` "ring" engine. `cnormSq_mul`
   proves the Brahmagupta–Fibonacci multiplicativity `|zw|² = |z|²·|w|²` constructively: expand both
