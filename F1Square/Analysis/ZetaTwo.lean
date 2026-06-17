@@ -4,7 +4,7 @@ F1 square — the **lower bracket `ζ(2) ≥ 1.63`** (a constituent of `Pos λ�
 `ζ(s) = Σ_{i≥1} 1/iˢ` (`Zeta.zeta`) has **non-negative** terms, so every partial sum is a lower bound:
 `ζ(s) ≥ zetaSum s N` (`zeta_ge_partial`), because the omitted tail is `≥ 0` (and within `1/(n+1)` of the
 approximant, by `zetaabs_bound`). At `N = 70` the rational partial sum already exceeds `1.63`
-(`Σ_{k=1}^{70} 1/k² ≈ 1.6347`; one `decide`), giving `ζ(2) ≥ 163/100`. (Plain `Σ 1/k²` decides cheaply —
+(`Σ_{k=1}^{70} 1/k² ≈ 1.6307`; one `decide`), giving `ζ(2) ≥ 163/100`. (Plain `Σ 1/k²` decides cheaply —
 no `lcm`-denominator blow-up, unlike the alternating `γ`-series.)
 
 Pure Lean 4, no Mathlib, no `sorry`/`native_decide`, choice-free.

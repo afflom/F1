@@ -151,7 +151,7 @@ theorem li_decomposition_two_realized :
       exact Req_refl _
 
 /-- **The two-slice positivity evidence**: both genuine slices of the realized Li sequence are
-    certified positive (certified lower bounds `λ₁ ≥ 0.0231`, `λ₂ ≥ 0.0043`; true values
+    certified positive (certified lower bounds `λ₁ ≥ 0.0042`, `λ₂ ≥ 0.0043`; true values
     `λ₁ ≈ 0.0230957`, `λ₂ ≈ 0.0923457`) — evidence for Li's criterion at `n = 1, 2`, NOT the
     crux (`λₙ > 0 ∀ n` = RH stays open). -/
 theorem liTwo_evidence : Pos (liLamSeqTwo 1) ∧ Pos (liLamSeqTwo 2) :=

@@ -10,10 +10,11 @@ Every constituent is now a constructive real with a *kernel-certified* bracket:
   • `1 + γ − γ² ≥ 1.2244`  — the **parabola** `(γ − 0.34)(0.66 − γ) ≥ 0` on `γ ∈ [0.54, 0.66]`
     (`Rgamma_h_lower`/`Rgamma_h_upper`), expanded to `γ − γ² ≥ 0.2244` (`parab_gen`),
   • `−2γ₁ ≥ 0.089`         — from `γ₁ ≤ −0.0445` (`Rgamma1_le_neg445`, the v0.16.0 γ₁ numeric),
-  • `−log 4π ≥ −2.531556`  — from `log 2 ≤ 0.6931` (`Rlog2c_le`) and `log π ≤ 1.1453` (`Rlogπc_le`),
+  • `−log 4π ≥ −2.5316`    — from `log 2 ≤ 0.6931` (`Rlog2c_le`) and `log π ≤ 1.1453` (`Rlogπc_le`),
   • `¾·ζ(2) ≥ 1.2225`      — from `ζ(2) ≥ 1.63` (`zeta2_lower`).
 
-Summing the rational brackets gives `λ₂ ≥ 0.004344 > 0` — razor-thin but kernel-decidable. This is the
+Summing the rational brackets gives `λ₂ ≥ 0.0043 > 0` (exactly `43/10000`) — razor-thin but
+kernel-decidable. This is the
 `n = 2` slice of Li's criterion as **evidence**; it is NOT the crux (`λₙ > 0 ∀ n` = RH stays open, the
 `liPositivityHolds` field remains `none`).
 
@@ -75,7 +76,8 @@ theorem parab_gen (a : Real)
 -- `λ₂` and its positivity.
 -- ===========================================================================
 
-/-- The rational upper bound for `log 4π = 2·log 2 + log π` (`≈ 2.531556`), from `Rlog2c_le`/`Rlogπc_le`. -/
+/-- The rational upper bound for `log 4π = 2·log 2 + log π` (`≈ 2.5310`, certified `≤ 2.5316 =
+    25316/10000` in the `λ₂` proof), from `Rlog2c_le`/`Rlogπc_le`. -/
 private def log4pib : Q :=
   add (add (mul ⟨2, 1⟩ (add (artSum ⟨1, 3⟩ 8) ⟨1, 8 * npow 3 (2 * 8 + 1)⟩))
            (mul ⟨2, 1⟩ (add (artSum ⟨1, 3⟩ 8) ⟨1, 8 * npow 3 (2 * 8 + 1)⟩)))

@@ -39,7 +39,7 @@ FAITHFULNESS (the standing cautions, all enforced):
     (`T4`/§3.4: that construction is the program's remaining frontier). The fields
     `hodgeIndexHolds`/`liPositivityHolds` stay `none`.
   • `spectralTwoSlice` below is the INHABITING instance: its `lam` carries the genuine
-    certified `λ₁, λ₂` (v0.14.0/v0.16.0; certified `λ₁ ≥ 0.0231`, `λ₂ ≥ 0.0043` — the
+    certified `λ₁, λ₂` (v0.14.0/v0.16.0; certified `λ₁ ≥ 0.0042`, `λ₂ ≥ 0.0043` — the
     true values are `λ₁ ≈ 0.0230957`, `λ₂ ≈ 0.0923457`, Keiper 1992/Coffey 2005,
     independently re-verified) and its `cSq` is defined THROUGH the dictionary —
     it demonstrates the interface is real and gives the geometric face its first two
@@ -204,7 +204,7 @@ def spectralTwoSlice : SpectralSquare where
 
 /-- **The geometric face's first two genuine negativity slices** (the stage-D evidence):
     the primitive classes attached to the certified `λ₁` and `λ₂` (certified lower bounds
-    `0.0231` and `0.0043`; true values `≈ 0.0231` and `≈ 0.0923`) have strictly negative
+    `0.0042` and `0.0043`; true values `≈ 0.0231` and `≈ 0.0923`) have strictly negative
     self-intersection — `⟨C₁,C₁⟩ < 0` and `⟨C₂,C₂⟩ < 0`, through the bridge from
     `Rlambda1_pos`/`Rlambda2_pos`. Evidence, not the crux. -/
 theorem spectral_evidence_two :
