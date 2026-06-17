@@ -2338,6 +2338,8 @@ open UOR.Bridge.F1Square
 #print axioms Square.blockEig_spectrum
 #print axioms Square.atlasTrace_eq
 #print axioms Square.atlasMult
+#print axioms Square.atlasM_signature
+#print axioms Square.atlasM_not_hodge_signature
 #print axioms Square.atlasDim_eq
 #print axioms Square.atlasM_neg_entry
 #print axioms Square.atlasM_indefinite

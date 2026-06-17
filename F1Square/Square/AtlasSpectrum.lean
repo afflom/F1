@@ -87,6 +87,25 @@ theorem atlasMult :
 /-- The dimension of the carrier `V_T ⊗ V_O` is `T·O = 24`. -/
 theorem atlasDim_eq : (List.range 24).length = 24 := by decide
 
+/-- **THE ATLAS SPECTRAL SIGNATURE IS `(10, 14)`** — `10` positive eigendirections (`λ = 10, 7, 2`,
+    multiplicities `1, 2, 7`) and `14` negative (`λ = −1`). Computed. This is a structural feature that
+    distinguishes `atlasM` from the crux's intersection form: a Hodge-index / Lefschetz form has
+    signature `(1, ρ−1)` — exactly ONE positive direction (`H² > 0`) and negative-definite on the
+    primitive complement. `atlasM` has TEN positive directions, so it is a genuinely DIFFERENT
+    indefinite object; the spectral operator alone cannot be the crux's intersection form (its definite
+    companion is the Hurwitz norm §9, not the RH form). Crux fields stay `none`. -/
+theorem atlasM_signature :
+    ((List.range 24).filter (fun i => decide (0 < atlasEig i))).length = 10
+    ∧ ((List.range 24).filter (fun i => decide (atlasEig i < 0))).length = 14 := by decide
+
+/-- **`atlasM` is NOT of Hodge-index signature**: it has strictly more than one positive eigendirection
+    (ten, `atlasM_signature`), whereas a Hodge-index form has exactly one. So the spectral operator is
+    structurally distinct from the crux's intersection form — sharpening, as a theorem, why the
+    spectral facet alone does not carry the crux. -/
+theorem atlasM_not_hodge_signature :
+    1 < ((List.range 24).filter (fun i => decide (0 < atlasEig i))).length := by
+  rw [atlasM_signature.1]; decide
+
 -- ===========================================================================
 -- The operator as a metric, and its indefiniteness (the sourced make-or-break).
 -- ===========================================================================
