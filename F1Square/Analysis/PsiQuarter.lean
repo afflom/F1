@@ -245,4 +245,59 @@ theorem psiQuarter_upper : Rle psiQuarter (ofQ (⟨-3, 1⟩ : Q) (by decide)) :=
   refine Rle_trans (Rle_of_Req (Radd_ofQ_ofQ (by decide) (by decide))) ?_
   exact Rle_ofQ_ofQ (by decide) (by decide) (by decide)
 
+/-- The integer core of the `n < 6` branch (`S(n+2) ≥ S(2) = 3.3`, slack covers the gap), with the
+    nonlinear `m·pn` discharged by a factored `ring_uor` key. -/
+private theorem core_upper_step_lt6 (m pn pd : Int) (hpd : 0 ≤ pd) (h2I : 33 * pd ≤ pn * 10)
+    (hm6 : m ≤ 6) (hm1 : 1 ≤ m) : -pn * (100 * m) ≤ (-346 * m + 200) * pd := by
+  have hP : (0 : Int) ≤ 10 * m * (10 * pn - 33 * pd) :=
+    Int.mul_nonneg (Int.mul_nonneg (by decide) (by omega)) (by omega)
+  have hQ : (0 : Int) ≤ pd * (200 - 16 * m) := Int.mul_nonneg hpd (by omega)
+  have hkey : (-346 * m + 200) * pd - (-pn * (100 * m))
+      = 10 * m * (10 * pn - 33 * pd) + pd * (200 - 16 * m) := by ring_uor
+  omega
+
+/-- The integer core of the `n ≥ 6` branch (`S(n+2) ≥ S(8) ≥ 3.46`), nonlinear `m·pn` factored out. -/
+private theorem core_upper_step_ge6 (m pn pd : Int) (hpd : 0 ≤ pd) (h8I : 346 * pd ≤ pn * 100)
+    (hm0 : 0 ≤ m) : -pn * (100 * m) ≤ (-346 * m + 200) * pd := by
+  have hP : (0 : Int) ≤ m * (100 * pn - 346 * pd) := Int.mul_nonneg hm0 (by omega)
+  have hkey : (-346 * m + 200) * pd - (-pn * (100 * m))
+      = m * (100 * pn - 346 * pd) + 200 * pd := by ring_uor
+  omega
+
+/-- **The sharp core upper bracket**: `core ≤ −3.46` (true value `≈ −3.6498`). For `n ≥ 6` the
+    approximant `−S(n+2)` is dominated using `S(8) ≥ 3.46`; for `n < 6` the slack `2/(n+1)` covers the
+    gap to `S(2) = 3.3`. The nonlinear `n·S.num` terms are discharged by factored `ring_uor` keys. -/
+theorem psiQuarterCore_upper_tight : Rle psiQuarterCore (ofQ (⟨-346, 100⟩ : Q) (by decide)) := by
+  intro n
+  show Qle (neg (pqP (n + 2))) (add (⟨-346, 100⟩ : Q) ⟨2, n + 1⟩)
+  have hpd0 : (0 : Int) ≤ ((pqP (n + 2)).den : Int) := Int.ofNat_nonneg _
+  simp only [Qle, neg, add]
+  push_cast
+  rcases Nat.lt_or_ge n 6 with h | h
+  · have h2I : 33 * ((pqP (n + 2)).den : Int) ≤ (pqP (n + 2)).num * 10 := by
+      have hh : Qle (⟨33, 10⟩ : Q) (pqP (n + 2)) :=
+        Qle_trans (pqP_den_pos 2) (by decide) (pqP_mono (by omega))
+      have hx := hh; simp only [Qle] at hx; push_cast at hx; omega
+    exact core_upper_step_lt6 ((n : Int) + 1) (pqP (n + 2)).num ((pqP (n + 2)).den : Int)
+      hpd0 h2I (by omega) (by omega)
+  · have h8I : 346 * ((pqP (n + 2)).den : Int) ≤ (pqP (n + 2)).num * 100 := by
+      have hh : Qle (⟨346, 100⟩ : Q) (pqP (n + 2)) :=
+        Qle_trans (pqP_den_pos 8) (by decide) (pqP_mono (by omega))
+      have hx := hh; simp only [Qle] at hx; push_cast at hx; omega
+    exact core_upper_step_ge6 ((n : Int) + 1) (pqP (n + 2)).num ((pqP (n + 2)).den : Int)
+      hpd0 h8I (by omega)
+
+/-- **The sharp ψ(1/4) upper bracket**: `ψ(1/4) ≤ −4` (true value `≈ −4.2270`), from `−γ ≤ −0.54`
+    (`Rgamma_h_lower`) and `core ≤ −3.46`. Tightens `psiQuarter_upper` (`≤ −3`); the input to the
+    Burnol-multiplier indefiniteness bound. -/
+theorem psiQuarter_upper_tight : Rle psiQuarter (ofQ (⟨-4, 1⟩ : Q) (by decide)) := by
+  have hconv : Rle (Rneg (ofQ (⟨54, 100⟩ : Q) (by decide))) (ofQ (⟨-54, 100⟩ : Q) (by decide)) :=
+    fun n => Qle_self_add (by show (0 : Int) ≤ 2; decide)
+  have hneg_gamma : Rle (Rneg Rgamma_h) (ofQ (⟨-54, 100⟩ : Q) (by decide)) :=
+    Rle_trans (Rneg_le Rgamma_h_lower) hconv
+  have hsum := Radd_le_add hneg_gamma psiQuarterCore_upper_tight
+  refine Rle_trans hsum ?_
+  refine Rle_trans (Rle_of_Req (Radd_ofQ_ofQ (by decide) (by decide))) ?_
+  exact Rle_ofQ_ofQ (by decide) (by decide) (by decide)
+
 end UOR.Bridge.F1Square.Analysis
