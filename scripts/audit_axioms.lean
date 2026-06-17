@@ -738,6 +738,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.arctanSum_diag_ge_at
 #print axioms Analysis.arctanSum_diag_le_at
 #print axioms Analysis.Rpi_lower_three
+#print axioms Analysis.Rpi_seq_ge_three
+#print axioms Analysis.tmap_ge_half
 #print axioms Analysis.Rarctan_ge
 #print axioms Analysis.Rarctan_le
 #print axioms Analysis.Qmul_sub_left
@@ -748,6 +750,10 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rpi_seq_den_pos
 #print axioms Analysis.Rpi_regular
 #print axioms Analysis.Rpi_pos
+-- the log π LOWER bound (Analysis/LogPiLower.lean), resting on π ≥ 3.
+#print axioms Analysis.RpiTmap_ge_half
+#print axioms Analysis.Rartanh_RpiTmap_ge_half
+#print axioms Analysis.Rlogpi_ge_one
 
 -- v0.14.0 (wip) — γ₀ (Euler–Mascheroni) via the alternating ζ-series.
 #print axioms Analysis.AltSum_succ

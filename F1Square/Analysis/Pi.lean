@@ -431,8 +431,7 @@ private theorem three_le_Rpi_reindex (j : Nat) : 3 ≤ Rartanh_R (⟨1, 2⟩ : Q
     `arctan(1/239) ≤ 7/1000` at truncation depth `a = 3` (tail `(1/2)⁹ = 1/512`), giving
     `π ≥ 16·(97/500) − 4·(7/1000) = 3.076 ≥ 3`. The sharp companion to `Rpi_lower` (`π ≥ 6/5`),
     built on the depth-parameterized brackets `arctanSum_diag_ge_at`/`arctanSum_diag_le_at`. -/
-theorem Rpi_lower_three : Rle (ofQ (⟨3, 1⟩ : Q) (by decide)) Rpi := by
-  intro n
+theorem Rpi_seq_ge_three (n : Nat) : Qle (⟨3, 1⟩ : Q) (Rpi_seq n) := by
   have hL5 : Qle (⟨97, 500⟩ : Q) (arctanSum ⟨1, 5⟩ (Rpi_g n)) :=
     arctanSum_diag_ge_at ⟨1, 5⟩ (by decide) (ρ := ⟨1, 2⟩) (by decide) (by decide) (by decide)
       (by decide) 3 (by decide) (by decide) (three_le_Rpi_reindex n)
@@ -441,10 +440,27 @@ theorem Rpi_lower_three : Rle (ofQ (⟨3, 1⟩ : Q) (by decide)) Rpi := by
       (by decide) 3 (by decide) (by decide) (three_le_Rpi_reindex n)
   have hmid : Qle (Qsub (mul ⟨16, 1⟩ (⟨97, 500⟩ : Q)) (mul ⟨4, 1⟩ (⟨7, 1000⟩ : Q))) (Rpi_seq n) :=
     Qsub_le_2 (Qmul_le_mul_left (by decide) hL5) (Qmul_le_mul_left (by decide) hU239)
-  show Qle (⟨3, 1⟩ : Q) (add (Rpi_seq n) ⟨2, n + 1⟩)
-  exact Qle_trans (Rpi_seq_den_pos n)
-    (Qle_trans (by decide) (by decide) hmid)
-    (Qle_self_add (by show (0 : Int) ≤ 2; decide))
+  exact Qle_trans (by decide) (by decide) hmid
+
+theorem Rpi_lower_three : Rle (ofQ (⟨3, 1⟩ : Q) (by decide)) Rpi := fun n =>
+  Qle_trans (Rpi_seq_den_pos n) (Rpi_seq_ge_three n) (Qle_self_add (by show (0 : Int) ≤ 2; decide))
+
+/-- **`tmap(q) ≥ 1/2` for `q ≥ 3`**: `(q−1)/(q+1) ≥ 1/2 ⟺ q ≥ 3`. The cleared inequality reduces to
+    `q.den·(q.num − 3·q.den) ≥ 0`. The lower companion of `tmap_abs_le`; the `RpiTmap ≥ 1/2` input. -/
+theorem tmap_ge_half {q : Q} (hqd : 0 < q.den) (hq : Qle (⟨3, 1⟩ : Q) q) :
+    Qle (⟨1, 2⟩ : Q) (tmap q) := by
+  have hqn : 3 * (q.den : Int) ≤ q.num := by
+    have h := hq; simp only [Qle] at h; push_cast at h; omega
+  have hdpos : (0 : Int) < (q.den : Int) := by exact_mod_cast hqd
+  simp only [tmap, Qle, mul, Qsub, Qinv, add, neg]
+  push_cast
+  rw [Int.toNat_of_nonneg (show (0 : Int) ≤ q.num * 1 + 1 * (q.den : Int) by omega)]
+  have hnn : (0 : Int) ≤ (q.den : Int) * (q.num - 3 * (q.den : Int)) :=
+    Int.mul_nonneg (Int.ofNat_nonneg _) (by omega)
+  have hd : (q.num * 1 + -1 * (q.den : Int)) * ((q.den : Int) * 1) * 2
+        - 1 * ((q.den : Int) * 1 * (q.num * 1 + 1 * (q.den : Int)))
+      = (q.den : Int) * (q.num - 3 * (q.den : Int)) := by ring_uor
+  omega
 
 /-- **log 2** — `log` of the concrete positive real `2` (witness at index 0). -/
 def Rlog2 : Real := RlogPos (ofQ ⟨2, 1⟩ (by decide)) 0 (by decide)
