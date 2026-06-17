@@ -139,4 +139,28 @@ theorem symmetry_orbit_in_disk_iff (z : Complex) :
     have hpair := (mirror_both_in_disk_iff z).mpr heq
     exact ⟨hpair.1, (inClosedDisk_Cconj z).mpr hpair.1, hpair.2⟩
 
+-- ===========================================================================
+-- The off-line branch of the Voros dichotomy, constructively: a zero left of the line leaves the disk.
+-- ===========================================================================
+
+/-- **A zero LEFT of the critical line leaves the closed Cayley disk** — proven, no interface: `Re z < ½`
+    forces `|z−1|² > |z|²` (`liRatio_left_of_line`), i.e. its Cayley factor has `|w|² > 1`, so the
+    witness's per-zero hypothesis `InClosedDisk` FAILS. This is the constructive geometric seed of the
+    Voros dichotomy's off-line branch: the only thing left to the `[CLASSICAL]` saddle-point is that a
+    factor outside the disk forces some `λₙ < 0` — the geometry itself is a theorem here. -/
+theorem offLine_left_not_inClosedDisk (z : Complex) (h : Pos (Rsub half z.re)) :
+    ¬ InClosedDisk z := fun hin =>
+  not_Pos_of_Rnonneg_neg
+    (Rnonneg_congr (Req_symm (Rneg_Rsub (csubOneNormSq z) (cnormSq z)))
+      (Rnonneg_Rsub_of_Rle hin))
+    (liRatio_left_of_line z h)
+
+/-- **The geometric dichotomy meets the witness**: on the line the Cayley factor is in the closed disk
+    (`liRatio_on_line` ⟹ `InClosedDisk`), and left of the line it is not
+    (`offLine_left_not_inClosedDisk`). So the witness's hypothesis tracks position exactly — the only
+    zeros it fails to cover are the genuinely off-line (left) ones. -/
+theorem inClosedDisk_iff_geom (z : Complex) :
+    (OnCriticalLine z → InClosedDisk z) ∧ (Pos (Rsub half z.re) → ¬ InClosedDisk z) :=
+  ⟨fun h => Rle_of_Req (liRatio_on_line z h), offLine_left_not_inClosedDisk z⟩
+
 end UOR.Bridge.F1Square.Analysis

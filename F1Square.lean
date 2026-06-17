@@ -79,6 +79,7 @@ import F1Square.Square.AtlasTopology
 import F1Square.Square.AtlasCalculus
 import F1Square.Square.AtlasComplete
 import F1Square.Square.BLPipeline
+import F1Square.Square.AtlasAnalyticFace
 import F1Square.Tropical.Closure
 import F1Square.Tropical.Signature
 import F1Square.Tropical.Spectrum
