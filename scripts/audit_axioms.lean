@@ -2212,6 +2212,11 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.psiLineRe5_lower
 #print axioms Analysis.rsLineSlope10_pos
 #print axioms Analysis.rsAngle_non_monotone
+-- the parameterized kernel Re ψ(1/4+iτ/2) over s ∈ [0,25] and the monotone climb (θ convex).
+#print axioms Analysis.corrCoreP
+#print axioms Analysis.corrCoreP_mono
+#print axioms Analysis.psiLineReP
+#print axioms Analysis.psiLineReP_mono
 
 -- v0.20.0 stage F: γ₂≥−0.02 bracket evaluators (Analysis/GammaTwoBracket.lean) — parts (A),(B).
 #print axioms Analysis.lnSqSumLo_den_pos

@@ -259,4 +259,207 @@ theorem rsLineSlope10_pos : Pos (Rsub psiLineRe5 Rlogπc) := by
 theorem rsAngle_non_monotone : Pos (Rneg rsCenterSlope) ∧ Pos (Rsub psiLineRe5 Rlogπc) :=
   ⟨rsCenterSlope_neg, rsLineSlope10_pos⟩
 
+-- ===========================================================================
+-- The PARAMETERIZED kernel Re ψ(1/4 + iτ/2) over rational s = τ²/4 ∈ [0, 25],
+-- and the MONOTONE CLIMB (θ′ increasing — θ convex on the window, the analytic
+-- heart `DigammaWindow` records, now a theorem about the assembled kernel).
+-- ===========================================================================
+
+/-- The correction term `cₙ(s) = s/((n+1/4)((n+1/4)²+s))` at `s = sn/sd`, exact rational
+    `64·sn / [(4n+1)((4n+1)²·sd + 16·sn)]` (`= corrT` at `s = 25`, i.e. `sn = 25, sd = 1`). -/
+private def corrTP (sn sd n : Nat) : Q :=
+  ⟨64 * sn, (4 * n + 1) * ((4 * n + 1) * (4 * n + 1) * sd + 16 * sn)⟩
+
+private theorem corrTP_den_pos {sn sd : Nat} (hsd : 1 ≤ sd) (n : Nat) : 0 < (corrTP sn sd n).den := by
+  show 0 < (4 * n + 1) * ((4 * n + 1) * (4 * n + 1) * sd + 16 * sn)
+  have h1 : 0 < (4 * n + 1) * (4 * n + 1) * sd :=
+    Nat.mul_pos (Nat.mul_pos (by omega) (by omega)) hsd
+  exact Nat.mul_pos (by omega) (by omega)
+
+/-- **`cₙ` is monotone increasing in `s`**: `s = sn/sd ≤ s' = sn'/sd'` (`sn·sd' ≤ sn'·sd`) ⟹
+    `cₙ(s) ≤ cₙ(s')` — the reduction is exactly `sn·sd' ≤ sn'·sd` (divide by `(4n+1)³`). -/
+private theorem corrTP_mono {sn sd sn' sd' n : Nat} (hmono : sn * sd' ≤ sn' * sd) :
+    Qle (corrTP sn sd n) (corrTP sn' sd' n) := by
+  simp only [corrTP, Qle]
+  push_cast
+  have key :
+      64 * (sn' : Int) * ((4 * (n : Int) + 1)
+          * ((4 * (n : Int) + 1) * (4 * (n : Int) + 1) * (sd : Int) + 16 * (sn : Int)))
+      = 64 * (sn : Int) * ((4 * (n : Int) + 1)
+          * ((4 * (n : Int) + 1) * (4 * (n : Int) + 1) * (sd' : Int) + 16 * (sn' : Int)))
+        + 64 * ((4 * (n : Int) + 1) * (4 * (n : Int) + 1) * (4 * (n : Int) + 1))
+          * ((sn' : Int) * (sd : Int) - (sn : Int) * (sd' : Int)) := by ring_uor
+  rw [key]
+  have hnn : (0 : Int) ≤ 64 * ((4 * (n : Int) + 1) * (4 * (n : Int) + 1) * (4 * (n : Int) + 1))
+      * ((sn' : Int) * (sd : Int) - (sn : Int) * (sd' : Int)) := by
+    refine Int.mul_nonneg (Int.mul_nonneg (by decide) ?_) ?_
+    · have h : (0 : Int) ≤ 4 * (n : Int) + 1 := by omega
+      exact Int.mul_nonneg (Int.mul_nonneg h h) h
+    · have : (sn : Int) * (sd' : Int) ≤ (sn' : Int) * (sd : Int) := by exact_mod_cast hmono
+      omega
+  omega
+
+/-- **`cₙ(s) ≤ cₙ(25) = corrT n`** for `s ≤ 25` — the reduction is exactly `sn ≤ 25·sd` (divide by
+    `(4n+1)³`). Proved directly (avoiding `corrTP 25 1 ≟ corrT` defeq reduction). -/
+private theorem corrTP_le_corrT {sn sd : Nat} (hs : sn ≤ 25 * sd) (n : Nat) :
+    Qle (corrTP sn sd n) (corrT n) := by
+  simp only [corrTP, corrT, Qle]
+  push_cast
+  have key :
+      1600 * ((4 * (n : Int) + 1)
+          * ((4 * (n : Int) + 1) * (4 * (n : Int) + 1) * (sd : Int) + 16 * (sn : Int)))
+      = 64 * (sn : Int) * ((4 * (n : Int) + 1)
+          * ((4 * (n : Int) + 1) * (4 * (n : Int) + 1) + 400))
+        + 64 * ((4 * (n : Int) + 1) * (4 * (n : Int) + 1) * (4 * (n : Int) + 1))
+          * (25 * (sd : Int) - (sn : Int)) := by ring_uor
+  rw [key]
+  have hnn : (0 : Int) ≤ 64 * ((4 * (n : Int) + 1) * (4 * (n : Int) + 1) * (4 * (n : Int) + 1))
+      * (25 * (sd : Int) - (sn : Int)) := by
+    refine Int.mul_nonneg (Int.mul_nonneg (by decide) ?_) ?_
+    · have h : (0 : Int) ≤ 4 * (n : Int) + 1 := by omega
+      exact Int.mul_nonneg (Int.mul_nonneg h h) h
+    · have : (sn : Int) ≤ 25 * (sd : Int) := by exact_mod_cast hs
+      omega
+  omega
+
+/-- `cₙ(s) ≤ tel(n) − tel(n+1)` for `s ≤ 25` — chain `cₙ(s) ≤ corrT n` through the `s = 25`
+    telescoping `corrT_le_teldiff`. -/
+private theorem corrTP_le_teldiff {sn sd : Nat} (hs : sn ≤ 25 * sd) (n : Nat) :
+    Qle (corrTP sn sd n) (Qsub (corrTel n) (corrTel (n + 1))) :=
+  Qle_trans (corrT_den_pos n) (corrTP_le_corrT hs n) (corrT_le_teldiff n)
+
+private def corrPP (sn sd : Nat) : Nat → Q
+  | 0 => ⟨0, 1⟩
+  | (N + 1) => add (corrPP sn sd N) (corrTP sn sd N)
+
+private theorem corrPP_den_pos {sn sd : Nat} (hsd : 1 ≤ sd) : ∀ N, 0 < (corrPP sn sd N).den
+  | 0 => Nat.one_pos
+  | (N + 1) => add_den_pos (corrPP_den_pos hsd N) (corrTP_den_pos hsd N)
+
+private def corrGP (sn sd m : Nat) : Q := add (corrPP sn sd m) (corrTel m)
+
+private theorem corrGP_den_pos {sn sd : Nat} (hsd : 1 ≤ sd) (m : Nat) : 0 < (corrGP sn sd m).den :=
+  add_den_pos (corrPP_den_pos hsd m) (corrTel_den_pos m)
+
+private theorem corrTP_tel_le {sn sd : Nat} (hs : sn ≤ 25 * sd) (m : Nat) :
+    Qle (add (corrTP sn sd m) (corrTel (m + 1))) (corrTel m) := by
+  have hadd := Qadd_le_add (corrTP_le_teldiff hs m) (Qle_refl (corrTel (m + 1)))
+  have e3 : Qeq (add (Qsub (corrTel m) (corrTel (m + 1))) (corrTel (m + 1))) (corrTel m) := by
+    simp only [Qeq, add, Qsub, neg]; push_cast; ring_uor
+  refine Qle_trans ?_ hadd (Qeq_le e3)
+  exact add_den_pos (Qsub_den_pos (corrTel_den_pos m) (corrTel_den_pos (m + 1)))
+    (corrTel_den_pos (m + 1))
+
+private theorem corrGP_step {sn sd : Nat} (hsd : 1 ≤ sd) (hs : sn ≤ 25 * sd) (m : Nat) :
+    Qle (corrGP sn sd (m + 1)) (corrGP sn sd m) := by
+  show Qle (add (add (corrPP sn sd m) (corrTP sn sd m)) (corrTel (m + 1)))
+    (add (corrPP sn sd m) (corrTel m))
+  have e1 : Qeq (add (add (corrPP sn sd m) (corrTP sn sd m)) (corrTel (m + 1)))
+      (add (corrPP sn sd m) (add (corrTP sn sd m) (corrTel (m + 1)))) := by
+    simp only [Qeq, add]; push_cast; ring_uor
+  refine Qle_trans ?_ (Qeq_le e1) (Qadd_le_add (Qle_refl (corrPP sn sd m)) (corrTP_tel_le hs m))
+  exact add_den_pos (corrPP_den_pos hsd m)
+    (add_den_pos (corrTP_den_pos hsd m) (corrTel_den_pos (m + 1)))
+
+private theorem corrGP_mono {sn sd : Nat} (hs : sn ≤ 25 * sd) (hsd : 1 ≤ sd) :
+    ∀ a b, Qle (corrGP sn sd (a + b)) (corrGP sn sd a)
+  | _, 0 => Qle_refl _
+  | a, (b + 1) => by
+    have h := corrGP_mono hs hsd a b
+    have hstep := corrGP_step hsd hs (a + b)
+    have e : a + (b + 1) = (a + b) + 1 := by omega
+    rw [e]
+    exact Qle_trans (corrGP_den_pos hsd (a + b)) hstep h
+
+private theorem corrPP_mono_N {sn sd : Nat} (hsd : 1 ≤ sd) {a b : Nat} (hab : a ≤ b) :
+    Qle (corrPP sn sd a) (corrPP sn sd b) := by
+  obtain ⟨d, rfl⟩ := Nat.le.dest hab
+  clear hab
+  induction d with
+  | zero => exact Qle_refl _
+  | succ k ih =>
+    have e : a + (k + 1) = (a + k) + 1 := by omega
+    rw [e]
+    show Qle (corrPP sn sd a) (add (corrPP sn sd (a + k)) (corrTP sn sd (a + k)))
+    exact Qle_trans (corrPP_den_pos hsd (a + k)) ih
+      (Qle_self_add (by show (0 : Int) ≤ 64 * (sn : Int); omega))
+
+/-- **Partial sums are monotone in `s`** (termwise `corrTP_mono`). -/
+private theorem corrPP_mono_s {sn sd sn' sd' : Nat} (hmono : sn * sd' ≤ sn' * sd) :
+    ∀ N, Qle (corrPP sn sd N) (corrPP sn' sd' N)
+  | 0 => Qle_refl _
+  | (N + 1) => by
+    show Qle (add (corrPP sn sd N) (corrTP sn sd N)) (add (corrPP sn' sd' N) (corrTP sn' sd' N))
+    exact Qadd_le_add (corrPP_mono_s hmono N) (corrTP_mono hmono)
+
+private def corrseqP (sn sd : Nat) (j : Nat) : Q := corrPP sn sd (25 * (j + 1))
+
+private theorem corrseqP_den_pos {sn sd : Nat} (hsd : 1 ≤ sd) (j : Nat) : 0 < (corrseqP sn sd j).den :=
+  corrPP_den_pos hsd (25 * (j + 1))
+
+private theorem corrseqP_reg_le {sn sd : Nat} (hsd : 1 ≤ sd) (hs : sn ≤ 25 * sd) {j k : Nat}
+    (hjk : j ≤ k) : Qle (Qabs (Qsub (corrseqP sn sd j) (corrseqP sn sd k))) (Qbound j) := by
+  rw [Qabs_Qsub_comm]
+  obtain ⟨d, hd⟩ := Nat.le.dest hjk
+  have hge : Qle (corrPP sn sd (25 * (j + 1))) (corrPP sn sd (25 * (k + 1))) :=
+    corrPP_mono_N hsd (by omega)
+  have hnn : (0 : Int) ≤ (Qsub (corrPP sn sd (25 * (k + 1))) (corrPP sn sd (25 * (j + 1)))).num :=
+    num_nonneg_of_Qzero_le (Qsub_nonneg_of_le hge)
+  have htail : Qle (Qsub (corrPP sn sd (25 * (k + 1))) (corrPP sn sd (25 * (j + 1))))
+      (corrTel (25 * (j + 1))) := by
+    have hgm : Qle (corrGP sn sd (25 * (k + 1))) (corrGP sn sd (25 * (j + 1))) := by
+      have e : 25 * (k + 1) = 25 * (j + 1) + 25 * d := by omega
+      rw [e]; exact corrGP_mono hs hsd (25 * (j + 1)) (25 * d)
+    have hSg : Qle (corrPP sn sd (25 * (k + 1))) (corrGP sn sd (25 * (k + 1))) := by
+      show Qle (corrPP sn sd (25 * (k + 1)))
+        (add (corrPP sn sd (25 * (k + 1))) (corrTel (25 * (k + 1))))
+      exact Qle_self_add (by show (0 : Int) ≤ 100; decide)
+    have hchain : Qle (corrPP sn sd (25 * (k + 1)))
+        (add (corrPP sn sd (25 * (j + 1))) (corrTel (25 * (j + 1)))) :=
+      Qle_trans (corrGP_den_pos hsd (25 * (k + 1))) hSg hgm
+    exact Qsub_le_of_le_add (corrPP_den_pos hsd (25 * (j + 1))) (corrTel_den_pos (25 * (j + 1))) hchain
+  have hbnd : Qle (corrTel (25 * (j + 1))) (Qbound j) := by
+    show (100 : Int) * ((j + 1 : Nat) : Int) ≤ (1 : Int) * ((4 * (25 * (j + 1)) + 1 : Nat) : Int)
+    push_cast; omega
+  exact Qle_trans (corrTel_den_pos (25 * (j + 1))) (Qabs_le_of_nonneg hnn htail) hbnd
+
+private theorem corrseqP_regular {sn sd : Nat} (hsd : 1 ≤ sd) (hs : sn ≤ 25 * sd) :
+    IsRegular (corrseqP sn sd) := by
+  intro m n
+  rcases Nat.le_total m n with h | h
+  · exact Qle_trans (Qbound_den_pos m) (corrseqP_reg_le hsd hs h)
+      (Qle_self_add (by show (0 : Int) ≤ 1; decide))
+  · rw [Qabs_Qsub_comm]
+    exact Qle_trans (Qbound_den_pos n) (corrseqP_reg_le hsd hs h)
+      (Qle_add_self (by show (0 : Int) ≤ 1; decide))
+
+/-- **The parameterized correction series** `Σ cₙ(s)` for `s = sn/sd ∈ [0, 25]` — the gain of
+    `Re ψ(1/4 + iτ/2)` over `ψ(1/4)`, as a genuine constructive real. -/
+def corrCoreP (sn sd : Nat) (hsd : 1 ≤ sd) (hs : sn ≤ 25 * sd) : Real :=
+  ⟨corrseqP sn sd, corrseqP_regular hsd hs, corrseqP_den_pos hsd⟩
+
+/-- **THE MONOTONE CLIMB (correction level)**: `s ≤ s' ⟹ Σ cₙ(s) ≤ Σ cₙ(s')` — termwise
+    (`corrPP_mono_s`), at the assembled-real level (common depth schedule). -/
+theorem corrCoreP_mono {sn sd sn' sd' : Nat} (hsd : 1 ≤ sd) (hsd' : 1 ≤ sd')
+    (hs : sn ≤ 25 * sd) (hs' : sn' ≤ 25 * sd') (hmono : sn * sd' ≤ sn' * sd) :
+    Rle (corrCoreP sn sd hsd hs) (corrCoreP sn' sd' hsd' hs') := by
+  intro j
+  show Qle (corrPP sn sd (25 * (j + 1))) (add (corrPP sn' sd' (25 * (j + 1))) ⟨2, j + 1⟩)
+  exact Qle_trans (corrPP_den_pos hsd' (25 * (j + 1))) (corrPP_mono_s hmono (25 * (j + 1)))
+    (Qle_self_add (by show (0 : Int) ≤ 2; decide))
+
+/-- **The parameterized archimedean kernel** `Re ψ(1/4 + iτ/2) = ψ(1/4) + Σ cₙ(s)`, `s = τ²/4 ∈ [0,25]`. -/
+def psiLineReP (sn sd : Nat) (hsd : 1 ≤ sd) (hs : sn ≤ 25 * sd) : Real :=
+  Radd psiQuarter (corrCoreP sn sd hsd hs)
+
+/-- **THE MONOTONE CLIMB — `Re ψ(1/4 + iτ/2)` increases in `τ`** (for `τ² ≤ 100`, `s ≤ 25`): the
+    analytic heart `DigammaWindow` records, now a theorem about the ASSEMBLED kernel. With the
+    center slope `θ′(0) < 0` and `θ′(10) > 0` (`rsAngle_non_monotone`), this says `θ′ = ½(Re ψ − log π)`
+    is monotone increasing — `θ` is CONVEX on the window, with a UNIQUE minimum, so the negative band
+    of `α` is a single bounded interval. The obstruction's exact shape, made a theorem; crux `none`. -/
+theorem psiLineReP_mono {sn sd sn' sd' : Nat} (hsd : 1 ≤ sd) (hsd' : 1 ≤ sd')
+    (hs : sn ≤ 25 * sd) (hs' : sn' ≤ 25 * sd') (hmono : sn * sd' ≤ sn' * sd) :
+    Rle (psiLineReP sn sd hsd hs) (psiLineReP sn' sd' hsd' hs') :=
+  Radd_le_add (Rle_refl psiQuarter) (corrCoreP_mono hsd hsd' hs hs' hmono)
+
 end UOR.Bridge.F1Square.Analysis

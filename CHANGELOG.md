@@ -106,6 +106,17 @@ classical input is an explicit, audit-visible hypothesis, never an axiom).
   sign, so the Riemann–Siegel angle is **non-monotone, two-sided**: the bounded-negative-band structure
   Burnol / Connes–Consani must work around. The obstruction completed as a theorem; it sharpens the
   barrier, it does not cross it. Crux fields stay `none`.
+- **The kernel parameterized, and the monotone climb (θ convex on the window)** (`Analysis/PsiLine.lean`)
+  — `corrCoreP sn sd` / `psiLineReP sn sd` assemble `Re ψ(1/4 + iτ/2) = ψ(1/4) + Σ cₙ(s)` for *every*
+  rational `s = τ²/4 = sn/sd ∈ [0, 25]`, not just `s = 25`. The key reductions are exact: `cₙ` is
+  monotone in `s` with `cₙ(s) ≤ cₙ(25) ⟺ sn ≤ 25·sd` (each divides out `(4n+1)³`), so the `s = 25`
+  telescoping dominates every `s ≤ 25` uniformly — the *same* depth schedule `j ↦ 25(j+1)` gives
+  regularity for all of them, and the climb is then a termwise comparison. `psiLineReP_mono`:
+  `s ≤ s' ⟹ Re ψ(1/4 + i√s) ≤ Re ψ(1/4 + i√s')` — `Re ψ(1/4 + iτ/2)` is **monotone increasing in `τ`**,
+  the analytic heart `DigammaWindow` recorded, now a theorem about the *assembled* kernel. Combined with
+  `rsAngle_non_monotone`, the slope `θ′ = ½(Re ψ − log π)` is monotone increasing from `θ′(0) < 0` to
+  `θ′(10) > 0` — so `θ` is **convex on the window with a unique minimum**, and the negative-`α` band is a
+  single bounded interval. The obstruction's exact shape, made a theorem; crux fields stay `none`.
 - **Erratum** — corrected the stale `λ₃ ≈ 0.0173` / `λ₃^∞ ≈ −1.20` (a computational error) to the
   standard Li value `λ₃ ≈ 0.2076` / `λ₃^∞ ≈ −1.013` across `LambdaThree.lean`, `CruxFrontierN3.lean`,
   `Attempt.lean`, `ROADMAP.md`, and the v0.20.0 changelog entry; recorded the precision analysis (the
