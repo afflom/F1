@@ -1066,4 +1066,30 @@ theorem wvalR_tmap_bound (a b Ma Mb : Q) (had : 0 < a.den) (hbd : 0 < b.den)
     (Qeq_le (Qabs_Qeq (Qeq_symm hbridge)))
     (tmap_abs_le (Qmul_den_pos had hbd) hMabd hab1 hMab1 habM habMge)
 
+/-- **`tmap` maps `[1,∞)` into `[0,1)`**: for `q ≥ 1`, `0 ≤ (tmap q).num` and `(tmap q).num.toNat <
+    (tmap q).den` (i.e. `0 ≤ tmap q < 1`). The sign+bound facts the addition law needs of the `Rlog`
+    `artanh` arguments `tmap(x.seq)` when `x.seq ≥ 1` (discharges `Rlog_mul_via`'s `hs0`/`hslt`). -/
+theorem tmap_nonneg_lt_one (q : Q) (hqd : 0 < q.den) (hq : Qle (⟨1, 1⟩ : Q) q) :
+    0 ≤ (tmap q).num ∧ (tmap q).num.toNat < (tmap q).den := by
+  have hqn : (q.den : Int) ≤ q.num := by have := hq; simp only [Qle] at this; omega
+  have hd0 : (0 : Int) < q.den := by exact_mod_cast hqd
+  have hnum : (tmap q).num = (q.num - (q.den : Int)) * q.den := by
+    unfold tmap mul Qsub Qinv add neg; push_cast; ring_uor
+  have hdenI : ((tmap q).den : Int) = (q.den : Int) * (q.num + q.den) := by
+    show (((tmap q).den : Nat) : Int) = _
+    unfold tmap mul Qsub Qinv add neg
+    push_cast [Int.toNat_of_nonneg (show (0 : Int) ≤ q.num * 1 + 1 * (q.den : Int) by omega)]
+    ring_uor
+  have hnn : 0 ≤ (tmap q).num := by rw [hnum]; exact Int.mul_nonneg (by omega) (Int.ofNat_nonneg _)
+  refine ⟨hnn, ?_⟩
+  have htn : ((tmap q).num.toNat : Int) = (q.num - (q.den : Int)) * q.den := by
+    rw [Int.toNat_of_nonneg hnn]; exact hnum
+  have hlt : ((tmap q).num.toNat : Int) < ((tmap q).den : Int) := by
+    rw [htn, hdenI]
+    have key : (q.den : Int) * (q.num + q.den) - (q.num - q.den) * q.den = 2 * (q.den * q.den) := by
+      ring_uor
+    have hpos : (0 : Int) < 2 * (q.den * q.den) := by have := Int.mul_pos hd0 hd0; omega
+    omega
+  exact_mod_cast hlt
+
 end UOR.Bridge.F1Square.Analysis
