@@ -105,6 +105,20 @@ audit-visible hypothesis, never an axiom).
   `RarctanR_diag_le` reuse the shared sign-independent machinery (`Rartanh_R`, `geoEvenSum`,
   `geoEven_bound`, `artanh_reindex`, `qpow_geom_bound`, `arctanSum_trunc`). RH-independent
   interface-shrinking toward discharging `bl`; the crux fields stay `none`.
+- **Burnol's correction — the sharpest UNCONDITIONAL Weil-positivity mechanism** (`Square/SonineProjection.lean`).
+  A deep-research survey (101 agents, 3-vote adversarial verification) identified the sharpest
+  unconditional (NOT RH-equivalent) Weil-positivity theorem: Burnol's support-restricted positivity
+  (arXiv math/0101068). Since `α(τ) → +∞` at `±∞` the negative band is bounded, so `∃Aε>0` with
+  `Aε·cos(ετ) + α(τ) ≥ 0 ∀τ`, and `cos(ετ)` integrates to zero on the window `[1/c,c]` —
+  positivity recovered on the window, unconditionally. Discretized here: `multForm_psd_via_correction`
+  (a correction making the multiplier pointwise `≥0` and vanishing on the support of the test family
+  ⟹ the pairing is `≥0`, unconditional), and the Burnol instance `burnolCorr` /
+  `burnol_corrected_nonneg` (the `α(2)<0` band lifted to `α(2)+(−α(2))=0`, the corrected multiplier
+  pointwise nonneg) / `burnol_pairing_psd_via_correction` (window positivity via the correction).
+  The unconditional ceiling is the single archimedean place; full positivity (the multi-place /
+  `f↔f̂` coupling) is RH and stays open. (Verified context: Connes–Consani Selecta 2021 single-place
+  bound `W∞ ≥ Tr(ϑ(g)Sϑ(g)*) − c|ĝ(0)|²`, `c=4γ/log2`; the precise gap is the Beurling
+  inner-function condition — the ratio-of-local-factors multipliers are not inner.)
 - **The Sonine projection — Weil positivity recovered on the band complement**
   (`Square/SonineProjection.lean`). The crux frontier, formalized. With the natural finite routes
   foreclosed (component isolation RH-equivalent; pointwise single-place positivity refuted; free SOS
