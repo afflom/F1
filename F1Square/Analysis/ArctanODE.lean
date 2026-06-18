@@ -981,4 +981,65 @@ theorem arctanCoeff_fabs_le_one (k : Nat) : Qle (fabs arctanCoeff k) ⟨1, 1⟩ 
     simp only [Qabs, Qle, mul]; push_cast; omega
   · rw [if_neg h]; simp only [Qabs, Qle]; push_cast
 
+-- ===========================================================================
+-- Corner decay for arctanCoeff (the sin∘arctan value-bridge wall): mirrors the
+-- kdbl machinery with arctan constants (2ᵐ not 4ᵐ, since |arctanCoeffₖ| ≤ 1).
+-- ===========================================================================
+
+/-- **Per-coefficient power bound**: `(|arctanCoeff|ᵐ)ₖ ≤ 2ᵐ·2ᵏ` (the `arctan` analog of
+    `fpow_fabs_kdbl_bound`; cleaner since `|arctanCoeffₖ| ≤ 1`, not `2`). -/
+theorem fpow_fabs_arctan_bound (m k : Nat) :
+    Qle (fpow (fabs arctanCoeff) m k) ⟨(2 : Int) ^ m * 2 ^ k, 1⟩ := by
+  induction m generalizing k with
+  | zero =>
+      show Qle (fone k) ⟨(2 : Int) ^ 0 * 2 ^ k, 1⟩
+      by_cases h : k = 0
+      · subst h; rw [show fone 0 = (⟨1, 1⟩ : Q) from by simp [fone]]; decide
+      · rw [show fone k = (⟨0, 1⟩ : Q) from by simp [fone, h]]
+        show (0 : Int) * 1 ≤ ((2 : Int) ^ 0 * 2 ^ k) * 1
+        have h2 : (0 : Int) ≤ (2 : Int) ^ 0 * 2 ^ k := by exact_mod_cast Nat.zero_le (2 ^ 0 * 2 ^ k)
+        omega
+  | succ m ih =>
+      have hterm : ∀ i, Qle (mul (fabs arctanCoeff i) (fpow (fabs arctanCoeff) m (k - i)))
+          (mul (⟨(2 : Int) ^ m, 1⟩ : Q) ⟨2 ^ (k - i), 1⟩) := by
+        intro i
+        refine Qle_trans (Qmul_den_pos Nat.one_pos Nat.one_pos)
+          (Qmul_le_mul (fabs_den_pos (fun j => arctanCoeff_den_pos j) i) Nat.one_pos
+            (fpow_den_pos (fun j => fabs_den_pos (fun l => arctanCoeff_den_pos l) j) m (k - i))
+            (fabs_nonneg arctanCoeff i) (fpow_num_nonneg (fun j => fabs_nonneg arctanCoeff j) m (k - i))
+            (arctanCoeff_fabs_le_one i) (ih (k - i)))
+          (Qeq_le (by simp only [Qeq, mul]; push_cast; ring_uor))
+      show Qle (Fsum (fun i => mul (fabs arctanCoeff i) (fpow (fabs arctanCoeff) m (k - i))) k)
+        ⟨(2 : Int) ^ (m + 1) * 2 ^ k, 1⟩
+      refine Qle_trans (Fsum_den_pos (fun i => Qmul_den_pos Nat.one_pos Nat.one_pos) k)
+        (Fsum_le_Fsum hterm k) ?_
+      refine Qle_trans (Qmul_den_pos Nat.one_pos (Fsum_den_pos (fun _ => Nat.one_pos) k))
+        (Qeq_le (Fsum_mul_left Nat.one_pos (fun _ => Nat.one_pos) k)) ?_
+      refine Qle_trans (Qmul_den_pos Nat.one_pos Nat.one_pos)
+        (Qeq_le (Qmul_congr (Qeq_refl _) (Qeq_trans (Fsum_den_pos (fun _ => Nat.one_pos) k)
+          (Qeq_symm (Fsum_reverse (f := fun j => (⟨(2 : Int) ^ j, 1⟩ : Q)) (fun _ => Nat.one_pos) k))
+          (pow2_sum k)))) ?_
+      show ((2 : Int) ^ m * (2 ^ (k + 1) - 1)) * 1 ≤ ((2 : Int) ^ (m + 1) * 2 ^ k) * 1
+      rw [show (2 : Int) ^ (m + 1) = 2 ^ m * 2 from by rw [Int.pow_succ],
+          show (2 : Int) ^ (k + 1) = 2 ^ k * 2 from by rw [Int.pow_succ]]
+      have hgen : ∀ A B : Int, 0 ≤ A → (A * (B * 2 - 1)) * 1 ≤ (A * 2 * B) * 1 := by
+        intro A B hA
+        have key : (A * 2 * B) * 1 - (A * (B * 2 - 1)) * 1 = A := by ring_uor
+        omega
+      exact hgen ((2 : Int) ^ m) ((2 : Int) ^ k) (by exact_mod_cast Nat.zero_le (2 ^ m))
+
+/-- **Per-term geometric domination**: the `k`-th `|arctanCoeff|ᵐ` evaluation term is `≤ 2ᵐ·(2ρ)ᵏ`. -/
+theorem fpow_arctan_term_bound (ρ : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num) (m k : Nat) :
+    Qle (mul (fpow (fabs arctanCoeff) m k) (qpow ρ k))
+      (mul (⟨(2 : Int) ^ m, 1⟩ : Q) (qpow (mul ⟨2, 1⟩ ρ) k)) := by
+  refine Qle_trans (Qmul_den_pos Nat.one_pos (qpow_den_pos hρd k))
+    (Qmul_le_mul_right (qpow_nonneg hρ0 k) (fpow_fabs_arctan_bound m k)) ?_
+  refine Qeq_le (Qeq_trans (Qmul_den_pos Nat.one_pos (Qmul_den_pos Nat.one_pos (qpow_den_pos hρd k)))
+    (Qeq_trans (Qmul_den_pos Nat.one_pos (qpow_den_pos hρd k))
+      (by simp only [Qeq, mul] : Qeq (mul (⟨(2 : Int) ^ m * 2 ^ k, 1⟩ : Q) (qpow ρ k))
+        (mul (mul (⟨(2 : Int) ^ m, 1⟩ : Q) ⟨(2 : Int) ^ k, 1⟩) (qpow ρ k)))
+      (Qmul_assoc ⟨(2 : Int) ^ m, 1⟩ ⟨(2 : Int) ^ k, 1⟩ (qpow ρ k)))
+    (Qmul_congr (Qeq_refl _) (Qeq_trans (Qmul_den_pos (qpow_den_pos (by decide) k) (qpow_den_pos hρd k))
+      (Qmul_congr (Qeq_symm (qpow_two_nat k)) (Qeq_refl _)) (Qeq_symm (qpow_mul ⟨2, 1⟩ ρ (by decide) hρd k)))))
+
 end UOR.Bridge.F1Square.Analysis
