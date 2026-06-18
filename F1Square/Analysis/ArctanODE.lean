@@ -18,6 +18,7 @@ Pure Lean 4 core, no Mathlib, no `sorry`/`native_decide`, choice-free; audited b
 -/
 
 import F1Square.Analysis.ExpLog
+import F1Square.Analysis.Arctan
 
 namespace UOR.Bridge.F1Square.Analysis
 
@@ -814,6 +815,54 @@ theorem gen_per_m_bound (b : Nat → Q) (hb : ∀ i, 0 < (b i).den) (w : Q) (hwd
           (Qabs_den_pos (gcornerB_den b hb w hwd (m + 1) M)))
         (Qadd_le_add (bound1 (Qsub_den_pos (hpd (m + 1)) (hqm (m + 1)))) (Qle_refl _)) ?_
       exact Qadd_le_add ih (Qle_refl _)
+
+-- ===========================================================================
+-- Bridge to the existing arctan real: peval arctanCoeff = arctanSum (hence RarctanR).
+-- ===========================================================================
+
+/-- The odd-degree term of `peval arctanCoeff` is the `arctan` series term: `arctanCoeff_{2n+1}·t^{2n+1}
+    ≈ arctanTerm t n` (both `(−1)ⁿ·t^{2n+1}/(2n+1)`). -/
+theorem arctanCoeff_term_odd (t : Q) (n : Nat) :
+    Qeq (mul (arctanCoeff (2 * n + 1)) (qpow t (2 * n + 1))) (arctanTerm t n) := by
+  unfold arctanCoeff arctanTerm artTerm
+  rw [if_pos (by omega : (2 * n + 1) % 2 = 1), show (2 * n + 1) / 2 = n from by omega]
+  simp only [Qeq, mul]; push_cast; ring_uor
+
+/-- The even-degree term of `peval arctanCoeff` vanishes: `arctanCoeff_{2n+2}·t^{2n+2} ≈ 0`. -/
+theorem arctanCoeff_term_even (t : Q) (n : Nat) :
+    Qeq (mul (arctanCoeff (2 * n + 2)) (qpow t (2 * n + 2))) ⟨0, 1⟩ := by
+  unfold arctanCoeff
+  rw [if_neg (by omega : ¬ (2 * n + 2) % 2 = 1)]
+  show Qeq (mul (⟨0, 1⟩ : Q) (qpow t (2 * n + 2))) ⟨0, 1⟩
+  simp only [Qeq, mul]; omega
+
+/-- **Bridge to `arctanSum`**: `peval arctanCoeff t (2N+1) ≈ arctanSum t N` — the degree-indexed
+    power-series evaluation of the `arctan` coefficients IS the `n`-indexed `arctan` partial sum (even
+    terms vanish, odd terms `= arctanTerm`). Connects the formal-PS machinery to `RarctanR`. -/
+theorem peval_arctanCoeff_eq_arctanSum (t : Q) (htd : 0 < t.den) (N : Nat) :
+    Qeq (peval arctanCoeff t (2 * N + 1)) (arctanSum t N) := by
+  have hg : ∀ k, 0 < (mul (arctanCoeff k) (qpow t k)).den :=
+    fun k => Qmul_den_pos (arctanCoeff_den_pos k) (qpow_den_pos htd k)
+  induction N with
+  | zero =>
+    show Qeq (add (mul (arctanCoeff 0) (qpow t 0)) (mul (arctanCoeff 1) (qpow t 1))) (arctanTerm t 0)
+    have he : Qeq (mul (arctanCoeff 0) (qpow t 0)) ⟨0, 1⟩ := by
+      have h0 : arctanCoeff 0 = ⟨0, 1⟩ := by unfold arctanCoeff; rw [if_neg (by decide)]
+      rw [h0]; simp only [Qeq, mul]; omega
+    exact Qeq_trans (add_den_pos Nat.one_pos (arctanTerm_den_pos htd 0))
+      (Qadd_congr he (arctanCoeff_term_odd t 0)) (Qzero_add (arctanTerm t 0))
+  | succ n ih =>
+    rw [show 2 * (n + 1) + 1 = 2 * n + 1 + 1 + 1 from by omega]
+    show Qeq (add (add (peval arctanCoeff t (2 * n + 1)) (mul (arctanCoeff (2 * n + 2)) (qpow t (2 * n + 2))))
+        (mul (arctanCoeff (2 * n + 3)) (qpow t (2 * n + 3))))
+      (add (arctanSum t n) (arctanTerm t (n + 1)))
+    have ho : Qeq (mul (arctanCoeff (2 * n + 3)) (qpow t (2 * n + 3))) (arctanTerm t (n + 1)) := by
+      have h := arctanCoeff_term_odd t (n + 1)
+      rwa [show 2 * (n + 1) + 1 = 2 * n + 3 from by omega] at h
+    refine Qeq_trans (add_den_pos (add_den_pos (arctanSum_den_pos htd n) Nat.one_pos)
+        (arctanTerm_den_pos htd (n + 1)))
+      (Qadd_congr (Qadd_congr ih (arctanCoeff_term_even t n)) ho) ?_
+    exact Qadd_congr (Qadd_zero_right (arctanSum t n)) (Qeq_refl _)
 
 /-- **Geometric domination of the arctan coefficients**: `|arctanCoeffₖ| ≤ 1` for every `k` (the
     coefficient is `(−1)^{k/2}/k` at odd `k`, else `0`). The convergence input for the composition

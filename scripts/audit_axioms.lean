@@ -850,6 +850,9 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.peval_sinComp_swap
 #print axioms Analysis.peval_cosComp_swap
 #print axioms Analysis.qpow_neg_one_abs
+#print axioms Analysis.arctanCoeff_term_odd
+#print axioms Analysis.arctanCoeff_term_even
+#print axioms Analysis.peval_arctanCoeff_eq_arctanSum
 #print axioms Analysis.arctanCoeff_fabs_le_one
 #print axioms Analysis.gcornerB_den
 #print axioms Analysis.e_rec_alg2
