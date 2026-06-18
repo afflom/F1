@@ -143,6 +143,7 @@ import F1Square.Analysis.GenuineLi
 import F1Square.Analysis.PsiQuarter
 import F1Square.Analysis.LogPiLower
 import F1Square.Analysis.BurnolAlpha
+import F1Square.Analysis.BurnolAlphaTwo
 import F1Square.Analysis.DigammaWindow
 import F1Square.Analysis.RMax
 import F1Square.Analysis.RSum

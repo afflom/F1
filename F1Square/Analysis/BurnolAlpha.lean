@@ -37,7 +37,7 @@ namespace UOR.Bridge.F1Square.Analysis
 
 /-- The base `2` as a constructive real with the positivity witness at index `0`
     (`2 > 1 = 1/(0+1)`). -/
-private theorem two_seq_pos : Qlt (Qbound 0) ((ofQ (⟨2, 1⟩ : Q) (by decide)).seq 0) := by
+theorem two_seq_pos : Qlt (Qbound 0) ((ofQ (⟨2, 1⟩ : Q) (by decide)).seq 0) := by
   show Qlt (⟨1, 1⟩ : Q) (⟨2, 1⟩ : Q); decide
 
 /-- **`√2 = exp(½·log 2)`** — the constructive square root of `2` (no sqrt primitive). -/

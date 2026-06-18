@@ -2239,6 +2239,14 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.psiLineReP_one_upper
 #print axioms Analysis.archKernel_at_two_below_logpi
 
+-- v0.21.0 frontier: α(2) < 0 — Burnol's archimedean multiplier is INDEFINITE (Analysis/BurnolAlphaTwo.lean).
+-- √2 ≤ 3/2 via the exp∘log inverse (sqrt2² = 2), then |cos|≤1 + h₊(2)<0 give the pointwise sign.
+#print axioms Analysis.two_seq_pos
+#print axioms Analysis.sqrt2_mul_self
+#print axioms Analysis.sqrt2_le_three_halves
+#print axioms Analysis.sqrt2_nonneg
+#print axioms Analysis.burnolAlphaTwo_neg
+
 -- v0.20.0 stage F: γ₂≥−0.02 bracket evaluators (Analysis/GammaTwoBracket.lean) — parts (A),(B).
 #print axioms Analysis.lnSqSumLo_den_pos
 #print axioms Analysis.lnSqSumLo_le
