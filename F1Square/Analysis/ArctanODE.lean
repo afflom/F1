@@ -919,6 +919,55 @@ theorem DN_sin_eq (t : Q) (htd : 0 < t.den) (M : Nat) :
   exact Fsum_congr (fun m => Qeq_symm (Qmul_sub_left_loc (sinCoeff m)
     (peval (fpow arctanCoeff m) t M) (qpow (peval arctanCoeff t M) m))) M
 
+/-- **Per-`m` error ≤ corner sum**: `|peval(arctanᵐ,t,M) − qᵐ| ≤ Σ_{j≤M}|cornerⱼ|` for `m ≤ M`
+    (`q = peval arctanCoeff t M`, `|q| ≤ 1`). `m = 0` is `0`; `m = k+1` is `gen_per_m_bound` extended
+    by `Fsum_mono_len`. -/
+theorem e_le_T_arctan (t : Q) (htd : 0 < t.den) (M : Nat)
+    (hq1 : Qle (Qabs (peval arctanCoeff t M)) ⟨1, 1⟩) (m : Nat) (hm : m ≤ M) :
+    Qle (Qabs (Qsub (peval (fpow arctanCoeff m) t M) (qpow (peval arctanCoeff t M) m)))
+      (Fsum (fun j => Qabs (gcornerB arctanCoeff t j M)) M) := by
+  have hgd : ∀ j, 0 < (Qabs (gcornerB arctanCoeff t j M)).den :=
+    fun j => Qabs_den_pos (gcornerB_den arctanCoeff arctanCoeff_den_pos t htd j M)
+  have hg0 : ∀ j, 0 ≤ (Qabs (gcornerB arctanCoeff t j M)).num := fun j => Qabs_num_nonneg _
+  cases m with
+  | zero =>
+    have hsub : Qeq (Qsub (peval (fpow arctanCoeff 0) t M) (qpow (peval arctanCoeff t M) 0)) ⟨0, 1⟩ := by
+      show Qeq (Qsub (peval fone t M) ⟨1, 1⟩) ⟨0, 1⟩
+      refine Qeq_trans (Qsub_den_pos Nat.one_pos Nat.one_pos)
+        (Qsub_congr (peval_fone t htd M) (Qeq_refl _)) (by decide)
+    have he0 : Qeq (Qabs (Qsub (peval (fpow arctanCoeff 0) t M) (qpow (peval arctanCoeff t M) 0))) ⟨0, 1⟩ :=
+      Qeq_trans (by decide) (Qabs_Qeq hsub) (by decide)
+    exact Qle_trans Nat.one_pos (Qeq_le he0) (Qzero_le_loc (Fsum_num_nonneg hg0 M))
+  | succ k =>
+    refine Qle_trans (Fsum_den_pos hgd k)
+      (gen_per_m_bound arctanCoeff arctanCoeff_den_pos t htd M hq1 k) ?_
+    exact Fsum_mono_len hg0 hgd (by omega : k ≤ M)
+
+/-- **The `DN` bound**: `|peval(sin∘arctan,t,M) − peval(sin,q,M)| ≤ Σ_{m≤M} Σ_{j≤M}|cornerⱼ|`
+    (`= (M+1)·(corner sum)`), `q = peval arctanCoeff t M`. The `sin∘arctan` value convergence is now
+    reduced to the corner decay `Σⱼ|gcornerB arctanCoeff t j M| → 0`. -/
+theorem DN_sin_abs_le (t : Q) (htd : 0 < t.den) (M : Nat)
+    (hq1 : Qle (Qabs (peval arctanCoeff t M)) ⟨1, 1⟩) :
+    Qle (Qabs (Qsub (peval (fcomp sinCoeff arctanCoeff) t M)
+          (peval sinCoeff (peval arctanCoeff t M) M)))
+      (Fsum (fun _ => Fsum (fun j => Qabs (gcornerB arctanCoeff t j M)) M) M) := by
+  have herr : ∀ m, 0 < (Qsub (peval (fpow arctanCoeff m) t M) (qpow (peval arctanCoeff t M) m)).den :=
+    fun m => Qsub_den_pos (peval_den_pos (fpow_den_pos arctanCoeff_den_pos m) htd M)
+      (qpow_den_pos (peval_den_pos arctanCoeff_den_pos htd M) m)
+  have hSE : ∀ m, 0 < (mul (sinCoeff m)
+      (Qsub (peval (fpow arctanCoeff m) t M) (qpow (peval arctanCoeff t M) m))).den :=
+    fun m => Qmul_den_pos (sinCoeff_den_pos m) (herr m)
+  refine Qle_trans (Qabs_den_pos (Fsum_den_pos hSE M)) (Qeq_le (Qabs_Qeq (DN_sin_eq t htd M))) ?_
+  refine Qle_trans (Fsum_den_pos (fun m => Qabs_den_pos (hSE m)) M) (Fsum_abs_le hSE M) ?_
+  refine Fsum_le_congr (fun m hm => ?_)
+  refine Qle_trans (Qmul_den_pos (Qabs_den_pos (sinCoeff_den_pos m)) (Qabs_den_pos (herr m)))
+    (Qeq_le (by rw [Qabs_mul]; exact Qeq_refl _ :
+      Qeq (Qabs (mul (sinCoeff m) (Qsub (peval (fpow arctanCoeff m) t M) (qpow (peval arctanCoeff t M) m))))
+        (mul (Qabs (sinCoeff m)) (Qabs (Qsub (peval (fpow arctanCoeff m) t M) (qpow (peval arctanCoeff t M) m)))))) ?_
+  refine Qle_trans (Qmul_den_pos Nat.one_pos (Qabs_den_pos (herr m)))
+    (Qmul_le_mul_right (Qabs_num_nonneg _) (sinCoeff_abs_le_one m)) ?_
+  exact Qle_trans (Qabs_den_pos (herr m)) (Qeq_le (Qone_mul _)) (e_le_T_arctan t htd M hq1 m hm)
+
 /-- **Geometric domination of the arctan coefficients**: `|arctanCoeffₖ| ≤ 1` for every `k` (the
     coefficient is `(−1)^{k/2}/k` at odd `k`, else `0`). The convergence input for the composition
     value bridge: combined with `peval_mono` it bounds `peval (fabs arctanCoeff) ρ M` by a geometric
