@@ -96,6 +96,20 @@ audit-visible hypothesis, never an axiom).
   every zero's Cayley factor in the closed unit disk (via `li_criterion_disk`) — so the geometric
   Hodge index, Li-positivity, the on-line condition, and the witness's closed-disk geometry are ONE
   connected proposition.
+- **Track 1 — the rational `artanh` addition law** (`Analysis/ArtanhAdd.lean`), the arithmetic heart of
+  log-multiplicativity `log(xy) = log x + log y` (hence of `Clog` additivity, hence of the Hadamard
+  `log ξ`). `Rexp_twoArtanh_general` packages the heavy `Rexp_two_artanh_ofQ` parameter thicket **once**
+  for an arbitrary rational `0 ≤ τ < 1` (the radius-`ρ = τ` analog of `Rexp_twoArtanhRecip`, now at a
+  *general* base): with `τ = p/q`, `d = q−p`, the target `g = (q+p)/d = (1+τ)/(1−τ)` and the budget
+  `C = (2L+4)q²` clears with slack `(2L+4)q²·d(j+1)²·(d−1) ≥ 0` — clean because `d ≥ 1` (two private
+  `Int` lemmas `twoArtanhGen_hM2_int`/`_hBC_int`, the `ring_uor`-slack + `omega` pattern). Then
+  `TwoArtanh_add_rat` proves `2·artanh c = 2·artanh a + 2·artanh b` for rationals `0 ≤ a,b,c < 1`,
+  gated on the multiplicativity side-condition `(1+c)/(1−c) = ((1+a)/(1−a))·((1+b)/(1−b))` (which is
+  exactly `c = (a+b)/(1+ab)`): three instances of `Rexp_twoArtanh_general` feed the exp-injectivity
+  additivity core `Req_add_of_exp_values` (`RArctanCongr.lean`). With the continuity `RarctanR_congr`
+  (rational→real lift) this is the route to real log-multiplicativity. `Rnonneg_TwoArtanhConst` records
+  `2·artanh τ ≥ 0` for `τ ≥ 0`. RH-independent interface-shrinking toward discharging `bl`; the crux
+  fields stay `none`.
 - **Track 1, brick 1 — arctan at a general REAL argument** (`Analysis/RArctan.lean`). The forced-first
   prerequisite of the `Γ(s/2) → ξ → Hadamard` stack that discharges the `bl` seam: complex `Clog` on
   the right half-plane needs `arg(z) = arctan(Im z / Re z)` at a general real ratio, and the repo had

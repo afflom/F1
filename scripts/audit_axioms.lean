@@ -745,6 +745,10 @@ open UOR.Bridge.F1Square
 -- v0.22.0 Track 1: arctan continuity (Analysis/RArctanCongr.lean) — lifts rational identities to real.
 #print axioms Analysis.RarctanR_congr
 #print axioms Analysis.Req_add_of_exp_values
+-- v0.22.0 Track 1: rational artanh addition law (Analysis/ArtanhAdd.lean) — heart of log-multiplicativity.
+#print axioms Analysis.Rnonneg_TwoArtanhConst
+#print axioms Analysis.Rexp_twoArtanh_general
+#print axioms Analysis.TwoArtanh_add_rat
 -- v0.22.0 Track 1: the complex argument on the principal sector (Analysis/ComplexArg.lean).
 #print axioms Analysis.Carg_ofReal_pos
 -- v0.22.0 Track 1: the complex logarithm Clog on the principal sector (Analysis/ComplexLog.lean).
