@@ -1048,4 +1048,22 @@ theorem Rlog_mul_via (c tx ty txy : Real) (σ : Q)
     (Rartanh (wvalReal tx ty σ hσd hσ0 hσhalf hbx hby) σ hσ0 hσd hσlt hbW)
     (Rartanh txy σ hσ0 hσd hσlt hbtxy) hadd hcong
 
+/-- **`wvalR(tmap a, tmap b)` is bounded by `tmap(Ma·Mb)`** — the `hbw` bound for the concrete
+    `Rlog_mul`, via the identity `wvalR(tmap a, tmap b) = tmap(a·b)` (`tmap_mul_wvalR`) and `tmap`'s
+    monotone bound `tmap_abs_le` (since `a·b ≤ Ma·Mb`). This is why the addition map stays in-radius:
+    the combined argument is `tmap` of the product. -/
+theorem wvalR_tmap_bound (a b Ma Mb : Q) (had : 0 < a.den) (hbd : 0 < b.den)
+    (ha1 : 0 < (add a ⟨1, 1⟩).num) (hb1 : 0 < (add b ⟨1, 1⟩).num)
+    (hab1 : 0 < (add (mul a b) ⟨1, 1⟩).num)
+    (hD : 0 < ((tmap a).den : Int) * (tmap b).den + (tmap a).num * (tmap b).num)
+    (hMabd : 0 < (mul Ma Mb).den) (hMab1 : 0 < (add (mul Ma Mb) ⟨1, 1⟩).num)
+    (habM : Qle (mul a b) (mul Ma Mb)) (habMge : Qle (⟨1, 1⟩ : Q) (mul (mul a b) (mul Ma Mb))) :
+    Qle (Qabs (wvalR (tmap a) (tmap b))) (tmap (mul Ma Mb)) := by
+  have hbridge : Qeq (tmap (mul a b)) (wvalR (tmap a) (tmap b)) :=
+    tmap_mul_wvalR a b had hbd ha1 hb1 hab1 hD
+  refine Qle_trans (Qabs_den_pos (Qmul_den_pos (Qsub_den_pos (Qmul_den_pos had hbd) Nat.one_pos)
+      (Qinv_den_pos hab1)))
+    (Qeq_le (Qabs_Qeq (Qeq_symm hbridge)))
+    (tmap_abs_le (Qmul_den_pos had hbd) hMabd hab1 hMab1 habM habMge)
+
 end UOR.Bridge.F1Square.Analysis
