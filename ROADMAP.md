@@ -509,42 +509,52 @@ zero-free, manifestly nonnegative formula for `λₙ` — the problem the strate
 
 ---
 
-## v0.22.0 — Track 1: discharging the classical interfaces, and the Sonine-projection frontier **[planned]**
+## v0.22.0 — the final release: both tracks, and frontier research to exhaustion **[in progress]**
 
-v0.21.0 localized the crux; the post-tag thread (the RH witness, the BL pipeline, the
-Reflection/Voros geometry, and the **`α(2) < 0` obstruction** — Burnol's archimedean multiplier proven
-pointwise *indefinite* on the band) sharpened the frontier to its true classical shape. Two distinct
-senses of "missing component" remain, and v0.22.0 is scoped to **Track 1** (the discharge work); the
-**Track 2** crux frontier (the `α`-band sign / Sonine projection) is roadmapped here as research, not
-committed scope.
+**v0.22.0 is the last planned release. No further releases follow it.** v0.21.0 localized the crux;
+the post-tag thread (the RH witness, the BL pipeline, the Reflection/Voros geometry, and the
+**`α(2) < 0` obstruction** — Burnol's archimedean multiplier proven pointwise *indefinite* on the band)
+sharpened the frontier to its true classical shape. v0.22.0 carries **both** tracks below and does
+**not** arbitrarily limit its approach: any route that can advance the crux is in scope.
+
+Like v0.21.0, the discipline is **exhaustion**: every known avenue in Track 1 and Track 2 is completed,
+and the frontier research continues — new routes, new candidate objects, whatever the mathematics
+admits — **until one of two things happens: the crux closes (RH proven, the gate flips), or we decide
+the work is complete enough to publish as v0.22.0.** We do not yet know which, or when that point comes;
+it is a judgement made against the work, not a pre-set scope. There is no third "give up" state — the
+release ships whichever faithful terminal state the program reaches, exactly as v0.21.0 did.
 
 - **Track 1 — make `hodgeIndex_iff_riemannHypothesis` unconditional-but-for-RH.** The
   `li_criterion` equivalence currently rests on two explicit, audit-visible `LiBridge` hypotheses:
   (i) the **Bombieri–Lagarias zero-sum** `λₙ = Σ_ρ (1 − (1 − 1/ρ)ⁿ)` about the *genuine* `λ`
   (classical, BL 1999), and (ii) the **Voros dichotomy** (tempered `½n(log n−1+γ−log 2π)` vs
   exponential, *MPAG* 2006). Track 1 discharges these from the constructed ζ / explicit formula where
-  the literature makes them theorems, shrinking the classical interface to RH alone. Deliverables:
+  the literature makes them theorems, shrinking the classical interface to RH alone. Known deliverables:
   the zero-sum derived for the constructed `genuineLamSeq`; the Voros alternative grounded as the
   asymptotic theorem it is (the `n ≳ T²/t` threshold made constructive); the off-line ⟹ negative-`λ`
-  step kept as the *single* remaining classical seam (phase equidistribution + saddle-point over the
-  sum), explicitly labelled.
-- **Related (research, not committed) — the `α`-band / Sonine-projection crux.** `α(2) < 0` proves
-  the bare multiplier is indefinite, so single-place positivity provably does **not** extend — the
+  step (phase equidistribution + saddle-point over the sum) pushed as far as the substrate allows,
+  with whatever remains classical explicitly labelled.
+- **Track 2 — the crux frontier: the `α`-band sign / Sonine projection.** `α(2) < 0` proves the bare
+  multiplier is indefinite, so single-place positivity provably does **not** extend — the
   Connes–Consani / Burnol resolution is the **Sonine-space projection** (infinite-dimensional), where
   positivity is recovered after projecting onto the prime-free window. Formalizing that projection is
-  the genuine crux frontier and stays open; it is *not* a route through `α ≥ 0` (which is false). Any
-  work here is gated exactly as the existing interfaces are — it flips a crux field only on an audited,
-  axiom-clean proof, never on ambition.
+  the genuine crux frontier. It is *not* a route through `α ≥ 0` (which is false); it is the construction
+  of the projection under which the windowed positivity holds. This is the make-or-break work, carried
+  to exhaustion alongside any other route that can reach the crux.
 
-Every v0.22.0 commit stays green, axiom-clean (`{propext, Quot.sound}`), `sorry`/`native_decide`-free,
-choice-free, and no-smuggling-clean. The bright line is unchanged: crux fields stay `none` until RH
-itself is proven.
+The bright line is unchanged and permanent: `hodgeIndexHolds` / `liPositivityHolds` flip
+`none → some true` **iff** a genuine, audited, axiom-clean proof of the criterion lands; they stay
+`none` otherwise. Every v0.22.0 commit stays green, axiom-clean (`{propext, Quot.sound}`),
+`sorry`/`native_decide`-free, choice-free, and no-smuggling-clean.
 
 ---
 
 ## What stays open regardless
 
-If v0.18 / v0.19 / v0.20 / v0.21 do not close the crux axiom-clean, `hodgeIndexHolds` /
-`liPositivityHolds` stay `none` and **RH stays open** — the releases still ship every surrounding
-construction (for v0.21.0, the missing-object substrate and a *localized* obstruction theorem). The
-bright line is permanent: the crux is de-hedged iff RH is proven, and it is not until it is.
+If the crux does not close axiom-clean, `hodgeIndexHolds` / `liPositivityHolds` stay `none` and
+**RH stays open** — the releases still ship every surrounding construction (for v0.21.0, the
+missing-object substrate and a *localized* obstruction theorem; for v0.22.0, the discharged interfaces
+and however far the Sonine-projection frontier reaches). The bright line is permanent: the crux is
+de-hedged iff RH is proven, and it is not until it is. **v0.22.0 is the terminal release** — it ships
+when the crux closes or when the work is judged complete to publish, with no further releases planned
+beyond it.
