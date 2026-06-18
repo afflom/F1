@@ -123,6 +123,22 @@ audit-visible hypothesis, never an axiom).
   (constant `6`, vs `artanh`'s `4`, on the certified denominator estimate `vval_lip1_den`), and the real
   map `vvalReal` with regularity (`12n+11` reindex absorbing the two Lipschitz-`6` terms, since
   `12·Qbound(12n+11) = Qbound n`). RH-independent; the crux fields stay `none`.
+- **Track 1 — ★ the formal identity `sin∘arctan = t·(cos∘arctan)`** (`Analysis/ArctanODE.lean`,
+  `sin_arctan_eq`), the formal-power-series shadow of `tan(arctan t) = t` (the sole remaining gap for
+  argument-additivity). A complete constructive formal-PS ODE toolkit, built from scratch on the
+  `fderiv`/`fmul`/`fcomp` calculus (`ExpLog.lean`): the `sin`/`cos` coefficient ODEs
+  (`sin_fderiv : sin′=cos`, `cos_fderiv : cos′=−sin`), the composition chain-rule ODEs
+  (`sinComp_deriv : (sin∘arctan)′=(cos∘arctan)·A′`, `cosComp_deriv : (cos∘arctan)′=−(sin∘arctan)·A′`,
+  via `fcomp_chain`), the convolution evaluators (`fmul_Xident : (t·H)(k+1)=H(k)`,
+  `fmul_onePlusSq : ((1+t²)·H)(k+2)=H(k+2)+H(k)`, `onePlusSq_geomAlt : (1+t²)·A′=1`,
+  `absorb_onePlusSq_geomAlt : (1+t²)·(P·A′)=P`, `X_sq_eq_sq2 : X²=t²`), and the **formal ODE-uniqueness
+  lemma** `ode_unique` (the discrete `(1+t²)H′=t·H ∧ H(0)=0 ⟹ H=0`, via the coefficient recurrence
+  `(k+3)H(k+3)=−k·H(k+1)` and a triple-invariant induction). The capstone applies `ode_unique` to
+  `G = sin∘arctan − t·(cos∘arctan)`: `Gseq_ode` shows `(1+t²)G′ = t·G` (both sides collapse to the
+  common form `X·S − t²·C`), `Gseq_zero` gives `G(0)=0`, so `G ≈ 0`. **Finding:** this is the formal
+  half; lifting it to the value identity `Rsin(arctan t) = t·Rcos(arctan t)` needs the composition-series
+  value bridge (convergence/rearrangement, template `Rartanh_double_real_via`/`dcomp_artSum`). RH-*independent*
+  analytic infrastructure; crux fields stay `none`.
 - **Track 1 — the formal `arctan` ODE `A′(t) = 1/(1+t²)`** (`Analysis/ArctanODE.lean`), the
   alternating sibling of `dgeom_ode`: the arctan coefficient sequence `arctanCoeff` has formal
   derivative `fderiv arctanCoeff = geomAlt` (`arctan_fderiv`, the `1/(1+t²)` coefficients), with the
