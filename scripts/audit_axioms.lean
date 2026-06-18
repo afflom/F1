@@ -727,6 +727,12 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rarctan_diag_le
 #print axioms Analysis.Rarctan_regular
 #print axioms Analysis.Rarctan
+-- v0.22.0 Track 1 brick 1: arctan at a general REAL argument (Analysis/RArctan.lean) — the
+-- forced-first prerequisite for complex Clog / Γ(s/2), mirroring real-argument Rartanh.
+#print axioms Analysis.arctanTerm_diff_bound
+#print axioms Analysis.arctanSum_Lip_le
+#print axioms Analysis.RarctanR_diag_le
+#print axioms Analysis.RarctanR_regular
 #print axioms Analysis.Qle_of_Qsub_le_Qsub_left
 #print axioms Analysis.Qle_of_Qsub_le_Qsub_right
 #print axioms Analysis.Rlt_Qbound_of_Rle_ofQ

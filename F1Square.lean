@@ -105,6 +105,7 @@ import F1Square.Analysis.ExpRealAdd
 import F1Square.Analysis.CosSin
 import F1Square.Analysis.Log
 import F1Square.Analysis.Arctan
+import F1Square.Analysis.RArctan
 import F1Square.Analysis.Pi
 import F1Square.Analysis.Euler
 import F1Square.Analysis.GammaAccel
