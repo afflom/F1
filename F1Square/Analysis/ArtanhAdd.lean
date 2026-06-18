@@ -108,6 +108,46 @@ theorem Rexp_twoArtanh_general (τ : Q) (hτd : 0 < τ.den) (hτ0 : 0 ≤ τ.num
     exact twoArtanhGen_hBC_int ((expM_U (2 * τ.den) (2 * (2 * τ.den))).num.toNat : Int)
       (τ.den : Int) τ.num (j : Int) (Int.ofNat_nonneg _) (by omega) (by omega) (Int.ofNat_nonneg _)
 
+/-- **`exp(2·artanh τ) = (1+τ)/(1−τ)` at a FREE radius `ρ ≥ |τ|`** (`0 ≤ τ < 1`). The radius-general
+    form of `Rexp_twoArtanh_general` (which fixed `ρ = τ`); the radius enters only the depth reindex
+    (absorbed by `Rexp_two_artanh_via`), so the `hg`/`hKF`/`hM2`/`hBC` goals are identical. Needed so the
+    diagonal addition can put all three artanh's at one common radius. -/
+theorem Rexp_twoArtanh_general_rho (τ ρ : Q) (hτd : 0 < τ.den) (hτ0 : 0 ≤ τ.num)
+    (hτlt : τ.num.toNat < τ.den) (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den)
+    (hρlt : ρ.num.toNat < ρ.den) (hb : Qle (Qabs τ) ρ) :
+    Req (RexpReal (TwoArtanhConst τ ρ hτd hρ0 hρd hρlt hb))
+      (ofQ (⟨(τ.den : Int) + τ.num, τ.den - τ.num.toNat⟩ : Q)
+        (by show 0 < τ.den - τ.num.toNat; omega)) := by
+  have hpI : (τ.num.toNat : Int) = τ.num := Int.toNat_of_nonneg hτ0
+  have hdI : ((τ.den - τ.num.toNat : Nat) : Int) = (τ.den : Int) - τ.num := by
+    rw [Int.ofNat_sub (Nat.le_of_lt hτlt), hpI]
+  have hdpos : 0 < τ.den - τ.num.toNat := by omega
+  refine Rexp_two_artanh_ofQ τ ρ
+    (⟨(τ.den : Int) + τ.num, τ.den - τ.num.toNat⟩ : Q)
+    (⟨(τ.den : Int), τ.den - τ.num.toNat⟩ : Q)
+    (2 * τ.den) ((expM_U (2 * τ.den) (2 * (2 * τ.den))).num.toNat)
+    ((2 * (expM_U (2 * τ.den) (2 * (2 * τ.den))).num.toNat + 4) * τ.den * τ.den)
+    hτd hτ0 ?_ hτlt hρ0 hρd hρlt hb
+    hdpos ?_ hdpos (by show (0 : Int) ≤ τ.den; exact Int.ofNat_nonneg _) ?_ rfl ?_ ?_
+  · show Qle τ ⟨1, 1⟩; simp only [Qle]; push_cast; omega
+  · show Qeq (mul (⟨(τ.den : Int) + τ.num, τ.den - τ.num.toNat⟩ : Q) (Qsub ⟨1, 1⟩ τ)) (add ⟨1, 1⟩ τ)
+    simp only [Qeq, mul, Qsub, add, neg]; push_cast [hdI]; ring_uor
+  · refine Qeq_le ?_
+    show Qeq (⟨1, 1⟩ : Q) (mul (⟨(τ.den : Int), τ.den - τ.num.toNat⟩ : Q) (Qsub ⟨1, 1⟩ τ))
+    simp only [Qeq, mul, Qsub, add, neg]; push_cast [hdI]; ring_uor
+  · show Qle (mul (⟨(τ.den : Int), τ.den - τ.num.toNat⟩ : Q) ⟨2, 1⟩) ⟨2 * τ.den, 1⟩
+    simp only [Qle, mul]; push_cast [hdI]
+    exact twoArtanhGen_hM2_int (τ.den : Int) τ.num (by omega) (by omega)
+  · intro j
+    show Qle (add (mul ⟨((expM_U (2 * τ.den) (2 * (2 * τ.den))).num.toNat : Int), 1⟩
+            (mul (⟨(τ.den : Int), τ.den - τ.num.toNat⟩ : Q) (mul ⟨2, 1⟩ (⟨(τ.den : Int), j + 1⟩ : Q))))
+          (mul (⟨(τ.den : Int), τ.den - τ.num.toNat⟩ : Q) (mul ⟨4, 1⟩ (⟨(τ.den : Int), j + 1⟩ : Q))))
+        (⟨((2 * (expM_U (2 * τ.den) (2 * (2 * τ.den))).num.toNat + 4) * τ.den * τ.den : Int), j + 1⟩ : Q)
+    simp only [Qle, add, mul]
+    push_cast [hdI]
+    exact twoArtanhGen_hBC_int ((expM_U (2 * τ.den) (2 * (2 * τ.den))).num.toNat : Int)
+      (τ.den : Int) τ.num (j : Int) (Int.ofNat_nonneg _) (by omega) (by omega) (Int.ofNat_nonneg _)
+
 -- ===========================================================================
 -- The rational artanh addition law: 2·artanh c = 2·artanh a + 2·artanh b, gated on the
 -- multiplicativity of the (1+τ)/(1−τ) values (which is exactly c = (a+b)/(1+ab)).
@@ -231,6 +271,33 @@ theorem TwoArtanh_add_wval (a b : Q)
   TwoArtanh_add_rat a b (wval a b) had ha0 halt hbd hb0 hblt
     (wval_den_pos a b had hbd) (wval_num_nonneg a b ha0 hb0) (wval_lt a b had ha0 halt hbd hb0 hblt)
     (wval_hg a b had ha0 halt hbd hb0 hblt)
+
+/-- **The artanh addition law at a common free radius σ** — `2·artanh(wval a b) = 2·artanh a +
+    2·artanh b` with all three `artanh`'s evaluated at one radius `σ` (≥ each `|·|`). The radius-general
+    form of `TwoArtanh_add_wval`, needed so the real-lift diagonal can compare the three series at a
+    common truncation depth. -/
+theorem TwoArtanh_add_wval_rho (a b σ : Q)
+    (had : 0 < a.den) (ha0 : 0 ≤ a.num) (halt : a.num.toNat < a.den)
+    (hbd : 0 < b.den) (hb0 : 0 ≤ b.num) (hblt : b.num.toNat < b.den)
+    (hσ0 : 0 ≤ σ.num) (hσd : 0 < σ.den) (hσlt : σ.num.toNat < σ.den)
+    (hba : Qle (Qabs a) σ) (hbb : Qle (Qabs b) σ) (hbc : Qle (Qabs (wval a b)) σ) :
+    Req (TwoArtanhConst (wval a b) σ (wval_den_pos a b had hbd) hσ0 hσd hσlt hbc)
+        (Radd (TwoArtanhConst a σ had hσ0 hσd hσlt hba)
+              (TwoArtanhConst b σ hbd hσ0 hσd hσlt hbb)) := by
+  have hda : 0 < a.den - a.num.toNat := by omega
+  have hdb : 0 < b.den - b.num.toNat := by omega
+  have hdc : 0 < (wval a b).den - (wval a b).num.toNat := by
+    have := wval_lt a b had ha0 halt hbd hb0 hblt; omega
+  exact Req_add_of_exp_values hda hdb hdc
+    (Rexp_twoArtanh_general_rho a σ had ha0 halt hσ0 hσd hσlt hba)
+    (Rexp_twoArtanh_general_rho b σ hbd hb0 hblt hσ0 hσd hσlt hbb)
+    (Rexp_twoArtanh_general_rho (wval a b) σ (wval_den_pos a b had hbd)
+      (wval_num_nonneg a b ha0 hb0) (wval_lt a b had ha0 halt hbd hb0 hblt) hσ0 hσd hσlt hbc)
+    (wval_hg a b had ha0 halt hbd hb0 hblt)
+    (Rnonneg_TwoArtanhConst a σ had hσ0 hσd hσlt hba ha0)
+    (Rnonneg_TwoArtanhConst b σ hbd hσ0 hσd hσlt hbb hb0)
+    (Rnonneg_TwoArtanhConst (wval a b) σ (wval_den_pos a b had hbd) hσ0 hσd hσlt hbc
+      (wval_num_nonneg a b ha0 hb0))
 
 -- ===========================================================================
 -- The binary Lipschitz core for the REAL lift of the addition law.
