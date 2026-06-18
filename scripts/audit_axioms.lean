@@ -733,6 +733,11 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.arctanSum_Lip_le
 #print axioms Analysis.RarctanR_diag_le
 #print axioms Analysis.RarctanR_regular
+#print axioms Analysis.arctanTerm_zero_num
+#print axioms Analysis.arctanTerm_zero
+#print axioms Analysis.arctanSum_zero_num
+#print axioms Analysis.arctanSum_zero
+#print axioms Analysis.RarctanR_zero
 -- v0.22.0 Track 1: tmap closed forms at a rational argument (Analysis/RexpLogRat.lean).
 #print axioms Analysis.tmap_rat_num
 #print axioms Analysis.tmap_rat_den

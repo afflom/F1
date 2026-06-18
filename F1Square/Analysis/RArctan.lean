@@ -165,4 +165,40 @@ def RarctanR (t : Real) (ρ : Q) (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den) (hlt 
   ⟨RarctanR_seq t ρ, RarctanR_regular t hρ0 hρd hlt hb,
     fun j => arctanSum_den_pos (t.den_pos _) (Rartanh_R ρ j)⟩
 
+-- ===========================================================================
+-- `arctan 0 = 0` — the value at the origin (needed for `arg` of a positive real).
+-- ===========================================================================
+
+/-- The `n`-th arctan term at `0` has numerator `0`. -/
+theorem arctanTerm_zero_num (n : Nat) : (arctanTerm (⟨0, 1⟩ : Q) n).num = 0 := by
+  show (mul (qpow (⟨-1, 1⟩ : Q) n) (mul (qpow (⟨0, 1⟩ : Q) (2 * n + 1)) ⟨1, 2 * n + 1⟩)).num = 0
+  have h : (qpow (⟨0, 1⟩ : Q) (2 * n + 1)).num = 0 := qpow_zero_succ_num (2 * n)
+  simp only [mul]; rw [h]; simp
+
+/-- The `n`-th arctan term at `0` is `0`. -/
+theorem arctanTerm_zero (n : Nat) : Qeq (arctanTerm (⟨0, 1⟩ : Q) n) (⟨0, 1⟩ : Q) := by
+  simp only [Qeq]; rw [arctanTerm_zero_num]; simp
+
+/-- The arctan partial sum at `0` has numerator `0`. -/
+theorem arctanSum_zero_num : ∀ N, (arctanSum (⟨0, 1⟩ : Q) N).num = 0
+  | 0 => arctanTerm_zero_num 0
+  | (n + 1) => by
+      show (add (arctanSum (⟨0, 1⟩ : Q) n) (arctanTerm (⟨0, 1⟩ : Q) (n + 1))).num = 0
+      simp only [add]; rw [arctanSum_zero_num n, arctanTerm_zero_num (n + 1)]; simp
+
+/-- The arctan partial sum at `0` is `0`. -/
+theorem arctanSum_zero (N : Nat) : Qeq (arctanSum (⟨0, 1⟩ : Q) N) (⟨0, 1⟩ : Q) := by
+  simp only [Qeq]; rw [arctanSum_zero_num]; simp
+
+/-- **`arctan 0 = 0`** — the real-argument arctan vanishes at the origin (every approximant is the
+    partial sum at the constant `0`, which is `0`). -/
+theorem RarctanR_zero (ρ : Q) (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den) (hlt : ρ.num.toNat < ρ.den)
+    (hb : ∀ n, Qle (Qabs ((zero).seq n)) ρ) : Req (RarctanR zero ρ hρ0 hρd hlt hb) zero := by
+  apply Req_of_seq_Qeq
+  intro n
+  show Qeq (arctanSum ((zero).seq (Rartanh_R ρ n)) (Rartanh_R ρ n)) ((zero).seq n)
+  have hz : (zero : Real).seq (Rartanh_R ρ n) = (⟨0, 1⟩ : Q) := rfl
+  have hz2 : (zero : Real).seq n = (⟨0, 1⟩ : Q) := rfl
+  rw [hz, hz2]; exact arctanSum_zero (Rartanh_R ρ n)
+
 end UOR.Bridge.F1Square.Analysis
