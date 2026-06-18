@@ -96,6 +96,20 @@ audit-visible hypothesis, never an axiom).
   every zero's Cayley factor in the closed unit disk (via `li_criterion_disk`) — so the geometric
   Hodge index, Li-positivity, the on-line condition, and the witness's closed-disk geometry are ONE
   connected proposition.
+- **The Sonine projection — Weil positivity recovered on the band complement**
+  (`Square/SonineProjection.lean`). The crux frontier, formalized. With the natural finite routes
+  foreclosed (component isolation RH-equivalent; pointwise single-place positivity refuted; free SOS
+  for `2λₙ` = RH), what is left standing is a PROJECTION: positivity of the *whole* Weil pairing
+  recovered on the Sonine complement (Connes–Consani / Burnol). Extrapolated from the proven
+  α-indefiniteness and the Atlas signature geometry: `multForm α` is the discrete Weil multiplier form
+  `Σ_τ α(τ)|g(τ)|²` diagonalized; `weilQuad_multForm` collapses it to `Σ_i c_i² α(i)` (via `RsumN_sift`);
+  `multForm_psd_iff` — the whole form is PSD ⟺ the multiplier has no negative band; and the load-bearing
+  **`multForm_psd_on_complement`** — UNCONDITIONALLY, if the test family vanishes on the negative band,
+  the pairing is `≥ 0` (positivity recovered on the Sonine complement, a theorem, no RH). The Burnol
+  instance (`burnol_pairing_indefinite` / `burnol_pairing_psd_on_sonine` / `burnol_sonine_dichotomy`):
+  the bare pairing is indefinite (the `α(2)<0` band is real), but projecting off the band (`c(1)=0`)
+  recovers positivity via `α(0)>0`. What is unconditional (band-complement positivity) vs what is RH
+  (extending it to the whole space via the genuine Sonine `f↔f̂` coupling) is now explicit. Crux `none`.
 - **The Burnol multiplier is indefinite — pointwise single-place positivity REFUTED**
   (`Analysis/BurnolAlphaTwo.lean`). `α(0) > 0` (`burnolAlphaZero_pos`, window center) and `α(2) < 0`
   (`burnolAlphaTwo_neg`, off-center) were both proven; this packages the frontier statement they
