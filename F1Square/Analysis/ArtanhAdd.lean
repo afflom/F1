@@ -814,4 +814,43 @@ theorem tmul_wvalReal_via (x y txy wxy : Real) (ρ : Q) (hρd : 0 < ρ.den) (hρ
   refine Qle_trans (add_den_pos (Nat.succ_pos n) (Nat.succ_pos n)) (Qadd_le_add leg1 leg2) ?_
   apply Qeq_le; exact Qadd_same_den_loc 16 16 (n + 1)
 
+/-- **artSum arg-variation (via wvalR)**: `|artSum(wvalR a b, M) − artSum(wvalR a' b', M)| ≤
+    8·(|a−a'| + |b−b'|)` for `|a|,|b|,|a'|,|b'| ≤ ρ` (`ρ² ≤ ½`) and `|wvalR ·| ≤ σ ≤ 1/2`. The binary
+    analog of `artSum_uval_argdiff`: `artSum_Lip_le` + `geoEvenSum_le_two`, then the wval map's two
+    one-sided Lipschitz bounds (`wval_lip1`/`wval_lip2`) through the mixed midpoint `wvalR a' b`. -/
+theorem artSum_wval_argdiff (ρ σ a b a' b' : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num)
+    (hρ2 : Qle (mul ρ ρ) ⟨1, 2⟩) (hσ0 : 0 ≤ σ.num) (hσd : 0 < σ.den)
+    (hσ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul σ σ)))
+    (had : 0 < a.den) (hbd : 0 < b.den) (ha'd : 0 < a'.den) (hb'd : 0 < b'.den)
+    (ha : Qle (Qabs a) ρ) (hb : Qle (Qabs b) ρ) (ha' : Qle (Qabs a') ρ) (hb' : Qle (Qabs b') ρ)
+    (hwσ : Qle (Qabs (wvalR a b)) σ) (hw'σ : Qle (Qabs (wvalR a' b')) σ) (M : Nat) :
+    Qle (Qabs (Qsub (artSum (wvalR a b) M) (artSum (wvalR a' b') M)))
+        (mul ⟨8, 1⟩ (add (Qabs (Qsub a a')) (Qabs (Qsub b b')))) := by
+  have hwd : 0 < (wvalR a b).den := wvalR_den_pos a b (wval_inner_pos ρ a b hρd hρ0 had hbd ha hb hρ2)
+  have hw'd : 0 < (wvalR a' b').den :=
+    wvalR_den_pos a' b' (wval_inner_pos ρ a' b' hρd hρ0 ha'd hb'd ha' hb' hρ2)
+  have hw2d : 0 < (wvalR a' b).den :=
+    wvalR_den_pos a' b (wval_inner_pos ρ a' b hρd hρ0 ha'd hbd ha' hb hρ2)
+  -- Lipschitz of artSum in its argument
+  refine Qle_trans (Qmul_den_pos (geoEvenSum_den_pos hσd M) (Qabs_den_pos (Qsub_den_pos hwd hw'd)))
+    (artSum_Lip_le hwd hw'd hσd hwσ hw'σ M) ?_
+  refine Qle_trans (Qmul_den_pos Nat.one_pos (Qabs_den_pos (Qsub_den_pos hwd hw'd)))
+    (Qmul_le_mul_right (Qabs_num_nonneg _) (geoEvenSum_le_two hσ0 hσd hσ2 M)) ?_
+  -- |wvalR a b − wvalR a' b'| ≤ |wvalR a b − wvalR a' b| + |wvalR a' b − wvalR a' b'| ≤ 4|a−a'| + 4|b−b'|
+  have hleg1 : Qle (Qabs (Qsub (wvalR a b) (wvalR a' b))) (mul ⟨4, 1⟩ (Qabs (Qsub a a'))) :=
+    wval_lip1 ρ a a' b hρd hρ0 had ha'd hbd ha ha' hb hρ2
+  have hleg2 : Qle (Qabs (Qsub (wvalR a' b) (wvalR a' b'))) (mul ⟨4, 1⟩ (Qabs (Qsub b b'))) :=
+    wval_lip2 ρ a' b b' hρd hρ0 ha'd hbd hb'd ha' hb hb' hρ2
+  refine Qle_trans (Qmul_den_pos Nat.one_pos (add_den_pos
+      (Qabs_den_pos (Qsub_den_pos hwd hw2d)) (Qabs_den_pos (Qsub_den_pos hw2d hw'd))))
+    (Qmul_le_mul_left (by decide) (Qabs_sub_triangle hwd hw2d hw'd)) ?_
+  refine Qle_trans (Qmul_den_pos Nat.one_pos (add_den_pos
+      (Qmul_den_pos Nat.one_pos (Qabs_den_pos (Qsub_den_pos had ha'd)))
+      (Qmul_den_pos Nat.one_pos (Qabs_den_pos (Qsub_den_pos hbd hb'd)))))
+    (Qmul_le_mul_left (by decide) (Qadd_le_add hleg1 hleg2)) ?_
+  apply Qeq_le
+  show Qeq (mul ⟨2, 1⟩ (add (mul ⟨4, 1⟩ (Qabs (Qsub a a'))) (mul ⟨4, 1⟩ (Qabs (Qsub b b')))))
+    (mul ⟨8, 1⟩ (add (Qabs (Qsub a a')) (Qabs (Qsub b b'))))
+  simp only [Qeq, mul, add]; push_cast; ring_uor
+
 end UOR.Bridge.F1Square.Analysis
