@@ -30,6 +30,7 @@ Pure Lean 4 core, no Mathlib, no `sorry`/`native_decide`, choice-free; audited b
 -/
 
 import F1Square.Analysis.LiGrowth
+import F1Square.Analysis.RHWitness
 
 namespace UOR.Bridge.F1Square.Analysis
 
@@ -126,5 +127,24 @@ theorem cone_sub_npow_factor (w : Complex) : ∀ n,
 theorem witnessTerm_eq_linear (w : Complex) (n : Nat) :
     Req (Rsub one (Cnpow w n).re) (Cmul (Cadd Cone (Cneg w)) (cgeomSum w n)).re :=
   (cone_sub_npow_factor w n).1
+
+/-- The witness sum in **linearized form**: each summand is `Re((1−w)·Σ_{k<n} wᵏ)` — the per-zero
+    contribution with the moment `1/ρ = 1−w` factored out. -/
+def witnessSumLinear (ws : List Complex) (n : Nat) : Real :=
+  match ws with
+  | [] => zero
+  | w :: rest =>
+      Radd (Cmul (Cadd Cone (Cneg w)) (cgeomSum w n)).re (witnessSumLinear rest n)
+
+/-- **THE WITNESS SUM, LINEARIZED** (the pipeline object): `witnessSum ws n = Σ_w Re((1−w)·Σ_{k<n} wᵏ)`.
+    The Bombieri–Lagarias `bl` interface equates `λₙ` to the limit of `witnessSum` over the zeros; this
+    rewrites that object with the moment `1/ρ` factored out of every term — the per-zero (left) side of
+    the explicit formula, summed. The classical content (the moments `Σ_ρ ρ^{−k}` equal the `−ζ′/ζ`
+    data `ηⱼ` plus the archimedean place) is untouched; crux fields stay `none`. -/
+theorem witnessSum_eq_linear : ∀ (ws : List Complex) (n : Nat),
+    Req (witnessSum ws n) (witnessSumLinear ws n)
+  | [], _ => Req_refl _
+  | (w :: rest), n =>
+      Radd_congr (witnessTerm_eq_linear w n) (witnessSum_eq_linear rest n)
 
 end UOR.Bridge.F1Square.Analysis

@@ -2195,6 +2195,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.cmul_cneg
 #print axioms Analysis.cone_sub_npow_factor
 #print axioms Analysis.witnessTerm_eq_linear
+#print axioms Analysis.witnessSum_eq_linear
 
 -- the functional-equation reflection at the Li growth-ratio level (Analysis/Reflection.lean).
 #print axioms Analysis.cnormSq_Creflect
