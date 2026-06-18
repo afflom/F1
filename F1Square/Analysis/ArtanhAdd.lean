@@ -575,4 +575,60 @@ def wvalReal (s t : Real) (ρ : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num) (h�
       (add (Qbound m) (Qbound n))
     simp only [Qeq, mul, add, Qbound]; push_cast; ring_uor
 
+/-- The pure-`Int` identity behind `wvalR_rel` (clean atoms for `ring_uor`). -/
+private theorem wvalR_rel_poly (pa qa pb qb : Int) :
+    (1 * (qa * qb) + pa * pb * 1) * (pa * qb + pb * qa) * (qa * qb)
+      = (pa * qb + pb * qa) * (1 * (qa * qb) * (qa * qb + pa * pb)) := by ring_uor
+
+/-- **The defining relation of `wvalR`**: `(1 + a·b)·wvalR a b = a + b` (cleared), for `1 + ab > 0`.
+    The binary analog of `uval_rel`. -/
+theorem wvalR_rel (a b : Q) (h : 0 < (a.den : Int) * b.den + a.num * b.num) :
+    Qeq (mul (add ⟨1, 1⟩ (mul a b)) (wvalR a b)) (add a b) := by
+  have hbridge : ((((a.den : Int) * b.den + a.num * b.num).toNat : Int))
+      = (a.den : Int) * b.den + a.num * b.num := Int.toNat_of_nonneg (Int.le_of_lt h)
+  simp only [Qeq, mul, add, wvalR]
+  push_cast [hbridge]
+  exact wvalR_rel_poly a.num (a.den : Int) b.num (b.den : Int)
+
+/-- The pure-`Int` core identity behind `tmap_mul_wvalR` (4 fresh vars, dodging the `ring_uor`
+    cast-reifier issue): `(1 + tmap x·tmap y)·tmap(xy) = tmap x + tmap y` fully cleared. -/
+private theorem tmap_wval_core (px qx py qy : Int) :
+    (1 * (qx * 1 * (px * 1 + 1 * qx) * (qy * 1 * (py * 1 + 1 * qy))) +
+          (px * 1 + -1 * qx) * (qx * 1) * ((py * 1 + -1 * qy) * (qy * 1)) * 1) *
+        ((px * py * 1 + -1 * (qx * qy)) * (qx * qy * 1)) *
+      (qx * 1 * (px * 1 + 1 * qx) * (qy * 1 * (py * 1 + 1 * qy)))
+      = ((px * 1 + -1 * qx) * (qx * 1) * (qy * 1 * (py * 1 + 1 * qy)) +
+          (py * 1 + -1 * qy) * (qy * 1) * (qx * 1 * (px * 1 + 1 * qx))) *
+        (1 * (qx * 1 * (px * 1 + 1 * qx) * (qy * 1 * (py * 1 + 1 * qy))) *
+          (qx * qy * 1 * (px * py * 1 + 1 * (qx * qy)))) := by ring_uor
+
+/-- **The `tmap`–`wvalR` multiplication identity**: `tmap(x·y) = wvalR(tmap x, tmap y)`, the binary
+    analog of `tmap_sq_uval` and the bridge from `log(xy)` to the addition map (since
+    `wvalR(tmap x, tmap y) = (xy−1)/(xy+1) = tmap(xy)`). Cleared via the defining relations of both
+    sides plus `Qmul_cancel_left`, exactly as `tmap_sq_uval`. -/
+theorem tmap_mul_wvalR (x y : Q) (hxd : 0 < x.den) (hyd : 0 < y.den)
+    (hx1 : 0 < (add x ⟨1, 1⟩).num) (hy1 : 0 < (add y ⟨1, 1⟩).num)
+    (hxy1 : 0 < (add (mul x y) ⟨1, 1⟩).num)
+    (hD : 0 < ((tmap x).den : Int) * (tmap y).den + (tmap x).num * (tmap y).num) :
+    Qeq (tmap (mul x y)) (wvalR (tmap x) (tmap y)) := by
+  have htdx : 0 < (tmap x).den := Qmul_den_pos (Qsub_den_pos hxd Nat.one_pos) (Qinv_den_pos hx1)
+  have htdy : 0 < (tmap y).den := Qmul_den_pos (Qsub_den_pos hyd Nat.one_pos) (Qinv_den_pos hy1)
+  have hcd : 0 < (add ⟨1, 1⟩ (mul (tmap x) (tmap y))).den :=
+    add_den_pos Nat.one_pos (Qmul_den_pos htdx htdy)
+  have hcn : 0 < (add ⟨1, 1⟩ (mul (tmap x) (tmap y))).num := by
+    show 0 < 1 * (((tmap x).den * (tmap y).den : Nat) : Int) + (tmap x).num * (tmap y).num * 1
+    push_cast; omega
+  have rel1 : Qeq (mul (add ⟨1, 1⟩ (mul (tmap x) (tmap y))) (tmap (mul x y)))
+      (add (tmap x) (tmap y)) := by
+    have hx1c := hx1; have hy1c := hy1; have hxy1c := hxy1
+    simp only [mul, add] at hx1c hy1c hxy1c
+    push_cast at hx1c hy1c hxy1c
+    simp only [tmap, mul, add, Qsub, neg, Qinv, Qeq]
+    push_cast [Int.toNat_of_nonneg (Int.le_of_lt hx1c), Int.toNat_of_nonneg (Int.le_of_lt hy1c),
+      Int.toNat_of_nonneg (Int.le_of_lt hxy1c)]
+    exact tmap_wval_core x.num (x.den : Int) y.num (y.den : Int)
+  exact Qmul_cancel_left hcn hcd
+    (Qeq_trans (add_den_pos htdx htdy) rel1
+      (Qeq_symm (wvalR_rel (tmap x) (tmap y) hD)))
+
 end UOR.Bridge.F1Square.Analysis
