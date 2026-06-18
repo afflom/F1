@@ -806,6 +806,10 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.geomAlt_recurrence
 #print axioms Analysis.geomAlt_zero
 #print axioms Analysis.geomAlt_one
+#print axioms Analysis.sinCoeff_den_pos
+#print axioms Analysis.cosCoeff_den_pos
+#print axioms Analysis.sin_fderiv
+#print axioms Analysis.cos_fderiv
 -- v0.22.0 Track 1: the complex argument on the principal sector (Analysis/ComplexArg.lean).
 #print axioms Analysis.Carg_ofReal_pos
 -- v0.22.0 Track 1: the complex logarithm Clog on the principal sector (Analysis/ComplexLog.lean).
