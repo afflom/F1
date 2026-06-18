@@ -66,7 +66,9 @@ audit-visible hypothesis, never an axiom).
   `1 − wⁿ = (1−w)·Σ_{k<n} wᵏ` for complex `w`, by induction; with `w = 1−1/ρ` (`liRatio`), `1−w = 1/ρ`,
   so it exhibits the first moment `1/ρ` as an explicit factor of every per-zero Li contribution.
   `witnessTerm_eq_linear` — the real part: the `RHWitness` per-zero term
-  `1 − Re(wⁿ) = Re((1−w)·Σ_{k<n} wᵏ)`. Summed over zeros this expresses `λₙ` through the power moments
+  `1 − Re(wⁿ) = Re((1−w)·Σ_{k<n} wᵏ)`; `witnessSum_eq_linear` lifts it to the pipeline object,
+  `witnessSum ws n = Σ_w Re((1−w)·Σ_{k<n} wᵏ)` (the sum the BL `bl` interface equates to `λₙ`).
+  Summed over zeros this expresses `λₙ` through the power moments
   `Σ_ρ ρ^{−k}`; that those moments equal the `−ζ′/ζ` Taylor data `ηⱼ` plus the archimedean place (the
   explicit formula / Hadamard factorization) stays the classical interface. Also adds the small complex
   commutative-ring lemmas the substrate had not yet needed (`cmul_czero`, `cadd_zero`, `cmul_cneg`, the
