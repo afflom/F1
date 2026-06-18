@@ -2421,6 +2421,18 @@ open UOR.Bridge.F1Square
 #print axioms Square.strictRealizes_closes_crux
 #print axioms Square.strictRealizes_is_liCrux
 
+-- v0.22.0 Track 2 — the Sonine projection (Square/SonineProjection.lean): the Weil multiplier form,
+-- its diagonal collapse, positivity recovered UNCONDITIONALLY on the band complement, and the Burnol
+-- instance (bare pairing indefinite; positive on the Sonine complement). The crux = the band coupling.
+#print axioms Square.multForm_diag
+#print axioms Square.RsumN_sift
+#print axioms Square.weilQuad_multForm
+#print axioms Square.multForm_psd_iff
+#print axioms Square.multForm_psd_on_complement
+#print axioms Square.burnol_pairing_indefinite
+#print axioms Square.burnol_pairing_psd_on_sonine
+#print axioms Square.burnol_sonine_dichotomy
+
 -- v0.21.0 stage G — the UOR Atlas spectral operator (sourced Σ = {10,2,7,−1}, Atlas §5/§6.6):
 -- verified spectrum/trace, the indefiniteness (the sourced make-or-break), and the definite norm.
 #print axioms Square.blockEig_spectrum
