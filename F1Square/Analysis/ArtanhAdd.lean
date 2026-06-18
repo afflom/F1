@@ -1233,4 +1233,42 @@ theorem Rlog_mul (x y : Real) (B : Q) (hBd : 0 < B.den) (hBge : Qle (⟨1, 1⟩ 
   exact Req_trans
     (Radd_congr (Rmul_congr (Req_refl _) hradx) (Rmul_congr (Req_refl _) hrady)) hvia
 
+-- ===========================================================================
+-- The arctan ADDITION map `vval a b = (a+b)/(1−ab)` (the `Carg`/`arg` analog of `wvalR`), for the
+-- forthcoming `Clog` additivity (imaginary part `arg(zw) = arg z + arg w`). The sign flip `1−ab`
+-- (vs `wvalR`'s `1+ab`) is the difference between `arctan` (oscillatory) and `artanh`. The cleared
+-- one-sided difference factors as `(Δ-cross)·(1 + other²)` (vs `wvalR`'s `1 − other²`): the certified
+-- Lipschitz core. (The combination ENGINE differs: artanh had the real identity exp(2·artanh τ) =
+-- (1+τ)/(1−τ); arctan has no real-exponential engine, so its addition awaits a tangent/complex route.)
+-- ===========================================================================
+
+/-- **The `arctan`/`tan` addition map** `vval a b = (a+b)/(1−ab)`, division-free (numerator
+    `pa·qb + pb·qa`, denominator `qa·qb − pa·pb`, the latter under `.toNat` — positive when `ab < 1`). -/
+def vval (a b : Q) : Q :=
+  ⟨a.num * (b.den : Int) + b.num * (a.den : Int), ((a.den : Int) * b.den - a.num * b.num).toNat⟩
+
+@[simp] theorem vval_num (a b : Q) :
+    (vval a b).num = a.num * (b.den : Int) + b.num * (a.den : Int) := rfl
+@[simp] theorem vval_den (a b : Q) :
+    (vval a b).den = ((a.den : Int) * b.den - a.num * b.num).toNat := rfl
+
+/-- **`vval a b` has positive denominator** when `1 − ab > 0` (`(a.den·b.den : Int) − a.num·b.num > 0`),
+    which holds for `|a·b| < 1`. -/
+theorem vval_den_pos (a b : Q) (h : 0 < (a.den : Int) * b.den - a.num * b.num) :
+    0 < (vval a b).den := by rw [vval_den]; omega
+
+/-- **Binary cleared difference, first argument** for the `arctan` map: `N(a,c)·D(b,c) − N(b,c)·D(a,c)
+    = (pa·qb − pb·qa)·(qc² + pc²)` where `N(x,y) = px·qy+py·qx`, `D(x,y) = qx·qy − px·py`. The factor is
+    `1 + c²` (vs `wvalR`'s `1 − c²`), so the one-sided variation is Lipschitz with constant `1 + c²`.
+    Certified by `ring_uor`. -/
+theorem vval_argdiff1_cleared (pa qa pb qb pc qc : Int) :
+    (pa * qc + pc * qa) * (qb * qc - pb * pc) - (pb * qc + pc * qb) * (qa * qc - pa * pc)
+      = (pa * qb - pb * qa) * (qc * qc + pc * pc) := by ring_uor
+
+/-- **Binary cleared difference, second argument** for the `arctan` map (symmetric companion):
+    `(pc·qd − pd·qc)·(qa² + pa²)`. Certified by `ring_uor`. -/
+theorem vval_argdiff2_cleared (pa qa pc qc pd qd : Int) :
+    (pa * qc + pc * qa) * (qa * qd - pa * pd) - (pa * qd + pd * qa) * (qa * qc - pa * pc)
+      = (pc * qd - pd * qc) * (qa * qa + pa * pa) := by ring_uor
+
 end UOR.Bridge.F1Square.Analysis
