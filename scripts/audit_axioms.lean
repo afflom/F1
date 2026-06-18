@@ -2177,6 +2177,13 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.rh_witness
 #print axioms Analysis.rh_witness_onLine
 
+-- the constructive Cayley transform (Analysis/CayleyMap.lean) — discharges the witness's
+-- on-line unit-modulus antecedent from the geometry (|1−1/ρ|² = 1 when Re ρ = ½).
+#print axioms Analysis.cnormSq_congr
+#print axioms Analysis.cnormSq_recip
+#print axioms Analysis.cnormSq_sub_one
+#print axioms Analysis.cnormSq_liRatio_on_line
+
 -- the functional-equation reflection at the Li growth-ratio level (Analysis/Reflection.lean).
 #print axioms Analysis.cnormSq_Creflect
 #print axioms Analysis.csubOneNormSq_Creflect
@@ -2197,6 +2204,7 @@ open UOR.Bridge.F1Square
 -- the Bombieri–Lagarias pipeline (Square/BLPipeline.lean) — witness wired to genuine λ, RH-forward.
 #print axioms Analysis.Rnonneg_Rlim
 #print axioms Square.bl_rh_implies_liNonneg
+#print axioms Square.bl_rh_implies_liNonneg_ofZeros
 #print axioms Square.liNonneg_implies_onLine
 #print axioms Square.li_criterion
 #print axioms Square.atlas_coupling_analytic_face

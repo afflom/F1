@@ -31,6 +31,7 @@ Pure Lean 4 core, no Mathlib, no `sorry`/`native_decide`, choice-free; audited b
 -/
 
 import F1Square.Analysis.RHWitness
+import F1Square.Analysis.CayleyMap
 import F1Square.Analysis.Complete
 import F1Square.Analysis.GenuineLi
 import F1Square.Li
@@ -103,6 +104,57 @@ theorem bl_rh_implies_liNonneg (E : StieltjesEta) (B : BLZeroSum E)
       (Rlim (fun M => witnessSum ((List.range M).map B.zeroCayley) n) (B.reg n)) :=
     Rnonneg_Rlim (B.reg n) hpart
   exact Rnonneg_congr (Req_symm (B.bl n hn)) hlim
+
+/-- **The `onLine_unit` leg, DISCHARGED — `BLZeroSum` from genuine zero data.** This constructor
+    builds a `BLZeroSum` whose Cayley factors are the GENUINE constructive Cayley transforms
+    `liRatio ρₖ = 1 − 1/ρₖ` (`CayleyMap.lean`) of an enumerated zero family, with `onLine_unit`
+    DERIVED (`cnormSq_liRatio_on_line`) rather than assumed: on the line `|1−1/ρ|² = 1` is a
+    consequence of the Li growth-ratio geometry (`liRatio_on_line`), not an independent input.
+
+    The inputs that remain are exactly the genuine classical core (no RH, no positivity hidden):
+    * `zeroEnum`/`henum` — an enumeration of the nontrivial zeros (the genuine analytic zero set);
+    * `cw`/`hcw` — per-zero positivity witnesses for `|ρₖ|²` (`ρₖ ≠ 0`, a true geometric fact, since
+      nontrivial zeros have `0 < Re < 1`);
+    * `reg`/`bl` — `[CLASSICAL, Bombieri–Lagarias 1999]` the partial witness sums converge and `λₙ` is
+      their limit (an EQUALITY; no sign claim).
+
+    So the BL interface is shrunk to its irreducible classical content; `onLine_unit` is no longer a
+    hypothesis. Feeding this to `bl_rh_implies_liNonneg` still needs `AllZerosOnLine` (RH), so the crux
+    fields stay `none`. -/
+def blZeroSum_ofZeros (E : StieltjesEta)
+    (isZero : Complex → Prop)
+    (zeroEnum : Nat → Complex)
+    (cw : Nat → Nat)
+    (hcw : ∀ j, Qlt (Qbound (cw j)) ((CnormSq (zeroEnum j)).seq (cw j)))
+    (henum : ∀ j, isZero (zeroEnum j))
+    (reg : ∀ n, RReg (fun M =>
+      witnessSum ((List.range M).map (fun j => liRatio (zeroEnum j) (cw j) (hcw j))) n))
+    (bl : ∀ n, 0 < n → Req (genuineLamSeq E.eta n)
+      (Rlim (fun M =>
+        witnessSum ((List.range M).map (fun j => liRatio (zeroEnum j) (cw j) (hcw j))) n) (reg n))) :
+    BLZeroSum E where
+  isZero := isZero
+  zeroCayley := fun j => liRatio (zeroEnum j) (cw j) (hcw j)
+  onLine_unit := fun hRH j =>
+    cnormSq_liRatio_on_line (zeroEnum j) (cw j) (hcw j) (hRH (zeroEnum j) (henum j))
+  reg := reg
+  bl := bl
+
+/-- **The forward direction from genuine zero data**: with `onLine_unit` discharged via the Cayley
+    map, `RH ⟹ λₙ ≥ 0` follows from the genuine classical core alone (the zero enumeration and the BL
+    zero-sum). A convenience wrapper around `bl_rh_implies_liNonneg ∘ blZeroSum_ofZeros`; the RH input
+    `AllZerosOnLine` is still required and never discharged, so the crux fields stay `none`. -/
+theorem bl_rh_implies_liNonneg_ofZeros (E : StieltjesEta)
+    (isZero : Complex → Prop) (zeroEnum : Nat → Complex) (cw : Nat → Nat)
+    (hcw : ∀ j, Qlt (Qbound (cw j)) ((CnormSq (zeroEnum j)).seq (cw j)))
+    (henum : ∀ j, isZero (zeroEnum j))
+    (reg : ∀ n, RReg (fun M =>
+      witnessSum ((List.range M).map (fun j => liRatio (zeroEnum j) (cw j) (hcw j))) n))
+    (bl : ∀ n, 0 < n → Req (genuineLamSeq E.eta n)
+      (Rlim (fun M =>
+        witnessSum ((List.range M).map (fun j => liRatio (zeroEnum j) (cw j) (hcw j))) n) (reg n)))
+    (hRH : AllZerosOnLine isZero) : LiNonneg (genuineLamSeq E.eta) :=
+  bl_rh_implies_liNonneg E (blZeroSum_ofZeros E isZero zeroEnum cw hcw henum reg bl) hRH
 
 /-- **The Voros dichotomy interface — the reverse direction.** Extends `BLZeroSum` with the genuine
     classical fact for `λₙ ≥ 0 ⟹ RH`:
