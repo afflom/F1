@@ -117,6 +117,18 @@ audit-visible hypothesis, never an axiom).
     bridges are discharged). `TwoArtanh_add_wval` then gives the addition law in directly-usable form
     `2·artanh(wval a b) = 2·artanh a + 2·artanh b` with the `hg` side-condition discharged once and the
     sum-argument `c = wval a b` computed — leaving only trivial positivity obligations for callers.
+  - **Binary Lipschitz core for the real lift** (`wval_argdiff1_cleared`/`wval_argdiff2_cleared`,
+    `wvalR`/`wvalR_den_pos`/`wvalR_argdiff1`/`wvalR_argdiff2`). Structural finding: the unary doubling
+    lift `Rartanh_double_real_via` works through a *single-variable* polynomial composition
+    (`dcomp_artSum`/`peval (fcomp acoef kdbl)`), which binary addition lacks — so its real lift needs a
+    genuine two-variable continuity argument over a sign-robust binary map. The certified algebraic
+    heart: each one-sided variation of `(s+t)/(1+st)` factors as `(Δ-cross)·(1 − other²)` — pure-`Int`
+    `ring_uor` identities, the analog of `uval_diff_cleared`. The sign-robust real-map basis `wvalR`
+    (the *whole* `1+ab` numerator under `.toNat`, positive for `|a|,|b| < 1`, unlike `wval` which is
+    `≥0`-only) is wired to those identities by `wvalR_argdiff1`/`_argdiff2`: the `Qsub` numerator of a
+    one-sided map difference equals `(Qsub a b).num·(qc²−pc²)` resp. `(Qsub c d).num·(qa²−pa²)`. (The
+    forthcoming `wval_lip` bound, `wvalReal` regularity, and the two-variable diagonal addition build on
+    these.)
   RH-independent interface-shrinking toward discharging `bl`; the crux fields stay `none`.
 - **Track 1, brick 1 — arctan at a general REAL argument** (`Analysis/RArctan.lean`). The forced-first
   prerequisite of the `Γ(s/2) → ξ → Hadamard` stack that discharges the `bl` seam: complex `Clog` on

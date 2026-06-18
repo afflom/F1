@@ -261,4 +261,65 @@ theorem wval_argdiff2_cleared (pa qa pc qc pd qd : Int) :
     (pa * qc + pc * qa) * (qa * qd + pa * pd) - (pa * qd + pd * qa) * (qa * qc + pa * pc)
       = (pc * qd - pd * qc) * (qa * qa - pa * pa) := by ring_uor
 
+/-- **The sign-robust binary addition map** `wvalR a b = (a+b)/(1+ab)`, with denominator `(1+ab)`'s
+    *whole* numerator under `.toNat` (positive whenever `|a|,|b| < 1`, i.e. `1+ab > 0`) — unlike `wval`
+    (which puts only the `a.num·b.num` term under `.toNat`, correct only for `a, b ≥ 0`). This is the
+    basis for the real binary map `wvalReal` (whose approximant signs wobble). -/
+def wvalR (a b : Q) : Q :=
+  ⟨a.num * (b.den : Int) + b.num * (a.den : Int), ((a.den : Int) * b.den + a.num * b.num).toNat⟩
+
+@[simp] theorem wvalR_num (a b : Q) :
+    (wvalR a b).num = a.num * (b.den : Int) + b.num * (a.den : Int) := rfl
+@[simp] theorem wvalR_den (a b : Q) :
+    (wvalR a b).den = ((a.den : Int) * b.den + a.num * b.num).toNat := rfl
+
+/-- **`wvalR a b` has positive denominator** when `1 + ab > 0` (`(a.den·b.den : Int) + a.num·b.num > 0`),
+    which holds for `|a|, |b| < 1`. -/
+theorem wvalR_den_pos (a b : Q) (h : 0 < (a.den : Int) * b.den + a.num * b.num) :
+    0 < (wvalR a b).den := by
+  rw [wvalR_den]; omega
+
+/-- The pure-`Int` form of `wvalR_argdiff1` (post-`simp` arrangement, clean atoms for `ring_uor`). -/
+private theorem wvalR_argdiff1_poly (pa qa pb qb pc qc : Int) :
+    (pa * qc + pc * qa) * (qb * qc + pb * pc) + -(pb * qc + pc * qb) * (qa * qc + pa * pc)
+      = (pa * qb + -pb * qa) * (qc * qc - pc * pc) := by ring_uor
+
+/-- **First-argument difference of the real binary map, cleared**: the numerator of
+    `wvalR a c − wvalR b c` is `(a − b)·(1 − c²)` in unreduced cross-product form,
+    `(Qsub a b).num · (qc² − pc²)` — wiring `wval_argdiff1_cleared` to an actual `Qsub` of map values.
+    The toNat denominators resolve via `1+ac, 1+bc > 0`. -/
+theorem wvalR_argdiff1 (a b c : Q)
+    (hac : 0 < (a.den : Int) * c.den + a.num * c.num)
+    (hbc : 0 < (b.den : Int) * c.den + b.num * c.num) :
+    (Qsub (wvalR a c) (wvalR b c)).num
+      = (Qsub a b).num * ((c.den : Int) * c.den - c.num * c.num) := by
+  have hAd : ((wvalR a c).den : Int) = (a.den : Int) * c.den + a.num * c.num := by
+    rw [wvalR_den]; exact Int.toNat_of_nonneg (Int.le_of_lt hac)
+  have hBd : ((wvalR b c).den : Int) = (b.den : Int) * c.den + b.num * c.num := by
+    rw [wvalR_den]; exact Int.toNat_of_nonneg (Int.le_of_lt hbc)
+  simp only [Qsub, add, neg, wvalR_num]
+  rw [hAd, hBd]
+  exact wvalR_argdiff1_poly a.num (a.den : Int) b.num (b.den : Int) c.num (c.den : Int)
+
+/-- The pure-`Int` form of `wvalR_argdiff2` (post-`simp` arrangement, clean atoms for `ring_uor`). -/
+private theorem wvalR_argdiff2_poly (pa qa pc qc pd qd : Int) :
+    (pa * qc + pc * qa) * (qa * qd + pa * pd) + -(pa * qd + pd * qa) * (qa * qc + pa * pc)
+      = (pc * qd + -pd * qc) * (qa * qa - pa * pa) := by ring_uor
+
+/-- **Second-argument difference of the real binary map, cleared**: the numerator of
+    `wvalR a c − wvalR a d` is `(c − d)·(1 − a²)` in unreduced cross-product form,
+    `(Qsub c d).num · (qa² − pa²)` (the symmetric companion of `wvalR_argdiff1`). -/
+theorem wvalR_argdiff2 (a c d : Q)
+    (hac : 0 < (a.den : Int) * c.den + a.num * c.num)
+    (had : 0 < (a.den : Int) * d.den + a.num * d.num) :
+    (Qsub (wvalR a c) (wvalR a d)).num
+      = (Qsub c d).num * ((a.den : Int) * a.den - a.num * a.num) := by
+  have hCd : ((wvalR a c).den : Int) = (a.den : Int) * c.den + a.num * c.num := by
+    rw [wvalR_den]; exact Int.toNat_of_nonneg (Int.le_of_lt hac)
+  have hDd : ((wvalR a d).den : Int) = (a.den : Int) * d.den + a.num * d.num := by
+    rw [wvalR_den]; exact Int.toNat_of_nonneg (Int.le_of_lt had)
+  simp only [Qsub, add, neg, wvalR_num]
+  rw [hCd, hDd]
+  exact wvalR_argdiff2_poly a.num (a.den : Int) c.num (c.den : Int) d.num (d.den : Int)
+
 end UOR.Bridge.F1Square.Analysis
