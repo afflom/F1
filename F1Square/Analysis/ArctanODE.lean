@@ -352,4 +352,81 @@ theorem fmul_onePlusSq_one (H : Nat → Q) (hH : ∀ i, 0 < (H i).den) :
   exact Qeq_trans (add_den_pos (hH 1) (by decide))
     (Qadd_congr h0 h1) (Qadd_zero_right (H 1))
 
+-- ===========================================================================
+-- Formal ODE uniqueness:  (1+t²)·H′ = t·H  and  H(0)=0  imply  H = 0.
+-- ===========================================================================
+
+/-- **Strip a positive integer coefficient**: `c·x ≈ 0` with `c > 0` forces `x ≈ 0`. -/
+theorem Qmul_pos_strip (c : Int) (hc : 0 < c) (x : Q) (h : Qeq (mul ⟨c, 1⟩ x) ⟨0, 1⟩) :
+    Qeq x ⟨0, 1⟩ := by
+  have hcx : c * x.num = 0 := by
+    have hh : (c * x.num) * ((1 : Nat) : Int) = (0 : Int) * (((1 : Nat) * x.den : Nat) : Int) := h
+    simpa using hh
+  have hx0 : x.num = 0 := by
+    rcases Int.mul_eq_zero.mp hcx with h1 | h1
+    · omega
+    · exact h1
+  show x.num * ((1 : Nat) : Int) = 0 * ((x.den : Nat) : Int)
+  rw [hx0]; simp
+
+/-- `c·0 ≈ 0` for the formal scalar `⟨c,1⟩`. -/
+theorem Qmul_const_zero (c : Int) (x : Q) (hx : Qeq x ⟨0, 1⟩) : Qeq (mul ⟨c, 1⟩ x) ⟨0, 1⟩ := by
+  refine Qeq_trans (Qmul_den_pos Nat.one_pos Nat.one_pos) (Qmul_congr (Qeq_refl _) hx) ?_
+  show Qeq (mul (⟨c, 1⟩ : Q) ⟨0, 1⟩) ⟨0, 1⟩
+  simp only [Qeq, mul]; ring_uor
+
+/-- From `a + b ≈ 0` and `b ≈ 0` conclude `a ≈ 0`. -/
+theorem Qadd_right_zero_cancel (a b : Q) (ha : 0 < a.den) (hbd : 0 < b.den)
+    (hab : Qeq (add a b) ⟨0, 1⟩) (hb : Qeq b ⟨0, 1⟩) : Qeq a ⟨0, 1⟩ := by
+  have s1 : Qeq a (add a ⟨0, 1⟩) := Qeq_symm (Qadd_zero_right a)
+  have s2 : Qeq (add a ⟨0, 1⟩) (add a b) := Qadd_congr (Qeq_refl a) (Qeq_symm hb)
+  exact Qeq_trans (add_den_pos ha Nat.one_pos) s1
+    (Qeq_trans (add_den_pos ha hbd) s2 hab)
+
+/-- `fderiv H k ≈ 0` forces `H(k+1) ≈ 0` (strip the coefficient `k+1 > 0`). -/
+theorem fderiv_strip (H : Nat → Q) (k : Nat) (h : Qeq (fderiv H k) ⟨0, 1⟩) :
+    Qeq (H (k + 1)) ⟨0, 1⟩ :=
+  Qmul_pos_strip ((k : Int) + 1) (by omega) (H (k + 1)) h
+
+/-- **Formal ODE uniqueness**: if `H` satisfies the homogeneous ODE `(1+t²)·H′ ≈ t·H` (coefficientwise,
+    `fmul onePlusSq (fderiv H) ≈ fmul Xident H`) and `H(0) ≈ 0`, then `H ≈ 0`. The coefficient recurrence
+    `(k+3)·H(k+3) ≈ −k·H(k+1)` (with seeds `H(0)=H(1)=H(2)=0` from the low-degree relation) forces every
+    coefficient to vanish — a triple-invariant induction. The discrete analog of `H′ = a·H, H(0)=0 ⟹ H=0`. -/
+theorem ode_unique (H : Nat → Q) (hH : ∀ i, 0 < (H i).den) (hH0 : Qeq (H 0) ⟨0, 1⟩)
+    (hrel : ∀ k, Qeq (fmul onePlusSq (fderiv H) k) (fmul Xident H k)) :
+    ∀ k, Qeq (H k) ⟨0, 1⟩ := by
+  have hfd : ∀ i, 0 < (fderiv H i).den := fun i => fderiv_den_pos hH i
+  -- seed H 1: from the relation at 0
+  have hfd0 : Qeq (fderiv H 0) ⟨0, 1⟩ :=
+    Qeq_trans (fmul_den_pos onePlusSq_den_pos hfd 0)
+      (Qeq_symm (fmul_onePlusSq_zero (fderiv H)))
+      (Qeq_trans (fmul_den_pos Xident_den_pos hH 0) (hrel 0) (fmul_Xident_zero H))
+  have hH1 : Qeq (H 1) ⟨0, 1⟩ := fderiv_strip H 0 hfd0
+  -- seed H 2: from the relation at 1
+  have hfd1 : Qeq (fderiv H 1) ⟨0, 1⟩ :=
+    Qeq_trans (fmul_den_pos onePlusSq_den_pos hfd 1)
+      (Qeq_symm (fmul_onePlusSq_one (fderiv H) hfd))
+      (Qeq_trans (fmul_den_pos Xident_den_pos hH 1) (hrel 1)
+        (Qeq_trans (hH 0) (fmul_Xident H hH 0) hH0))
+  have hH2 : Qeq (H 2) ⟨0, 1⟩ := fderiv_strip H 1 hfd1
+  -- recurrence: H(m+1) ≈ 0 ⟹ H(m+3) ≈ 0
+  have hrec : ∀ m, Qeq (H (m + 1)) ⟨0, 1⟩ → Qeq (H (m + 3)) ⟨0, 1⟩ := by
+    intro m hm1
+    have hsum : Qeq (add (fderiv H (m + 2)) (fderiv H m)) ⟨0, 1⟩ :=
+      Qeq_trans (fmul_den_pos onePlusSq_den_pos hfd (m + 2))
+        (Qeq_symm (fmul_onePlusSq (fderiv H) hfd m))
+        (Qeq_trans (fmul_den_pos Xident_den_pos hH (m + 2)) (hrel (m + 2))
+          (Qeq_trans (hH (m + 1)) (fmul_Xident H hH (m + 1)) hm1))
+    have hfdm : Qeq (fderiv H m) ⟨0, 1⟩ := Qmul_const_zero ((m : Int) + 1) (H (m + 1)) hm1
+    have hfd2 : Qeq (fderiv H (m + 2)) ⟨0, 1⟩ :=
+      Qadd_right_zero_cancel (fderiv H (m + 2)) (fderiv H m) (hfd (m + 2)) (hfd m) hsum hfdm
+    exact fderiv_strip H (m + 2) hfd2
+  -- triple-invariant induction
+  have key : ∀ k, Qeq (H k) ⟨0, 1⟩ ∧ Qeq (H (k + 1)) ⟨0, 1⟩ ∧ Qeq (H (k + 2)) ⟨0, 1⟩ := by
+    intro k
+    induction k with
+    | zero => exact ⟨hH0, hH1, hH2⟩
+    | succ n ih => exact ⟨ih.2.1, ih.2.2, hrec n ih.2.1⟩
+  intro k; exact (key k).1
+
 end UOR.Bridge.F1Square.Analysis

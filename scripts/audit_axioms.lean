@@ -828,6 +828,11 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.fmul_onePlusSq
 #print axioms Analysis.fmul_onePlusSq_zero
 #print axioms Analysis.fmul_onePlusSq_one
+#print axioms Analysis.Qmul_pos_strip
+#print axioms Analysis.Qmul_const_zero
+#print axioms Analysis.Qadd_right_zero_cancel
+#print axioms Analysis.fderiv_strip
+#print axioms Analysis.ode_unique
 -- v0.22.0 Track 1: the complex argument on the principal sector (Analysis/ComplexArg.lean).
 #print axioms Analysis.Carg_ofReal_pos
 -- v0.22.0 Track 1: the complex logarithm Clog on the principal sector (Analysis/ComplexLog.lean).
