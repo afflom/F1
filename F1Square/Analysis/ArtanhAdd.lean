@@ -492,4 +492,87 @@ theorem wval_lip1 (ρ a b c : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num)
   rw [eL, eR]
   exact Int.mul_le_mul_of_nonneg_left hden hn
 
+/-- **`wvalR` is symmetric**: `wvalR a b = wvalR b a` (both numerator and denominator symmetric under
+    `add`/`mul` commutativity). Lets the second-argument Lipschitz bound reduce to the first. -/
+theorem wvalR_comm (a b : Q) : wvalR a b = wvalR b a := by
+  have hn : a.num * (b.den : Int) + b.num * (a.den : Int)
+      = b.num * (a.den : Int) + a.num * (b.den : Int) := by ring_uor
+  have hd : (a.den : Int) * b.den + a.num * b.num
+      = (b.den : Int) * a.den + b.num * a.num := by ring_uor
+  unfold wvalR
+  rw [hn, hd]
+
+/-- **Binary Lipschitz bound, second argument**: `|wvalR a c − wvalR a d| ≤ 4·|c − d|` — free from
+    `wval_lip1` by `wvalR_comm` (the second-argument variation is the first under symmetry). -/
+theorem wval_lip2 (ρ a c d : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num)
+    (had : 0 < a.den) (hcd : 0 < c.den) (hdd : 0 < d.den)
+    (ha : Qle (Qabs a) ρ) (hc : Qle (Qabs c) ρ) (hd : Qle (Qabs d) ρ)
+    (hρ2 : Qle (mul ρ ρ) ⟨1, 2⟩) :
+    Qle (Qabs (Qsub (wvalR a c) (wvalR a d))) (mul ⟨4, 1⟩ (Qabs (Qsub c d))) := by
+  rw [wvalR_comm a c, wvalR_comm a d]
+  exact wval_lip1 ρ c d a hρd hρ0 hcd hdd had hc hd ha hρ2
+
+/-- **The real binary addition map** `wvalReal s t = (s+t)/(1+s·t)`, for reals `s, t` with `|s|,|t| ≤ ρ`,
+    `ρ² ≤ ½`. Diagonal `wvalR (s.seq (8n+7)) (t.seq (8n+7))`: the `8n+7` reindex absorbs the *two*
+    Lipschitz-`4` terms (one per argument, via `wval_lip1`/`wval_lip2` + triangle) into the regularity
+    modulus, since `8·Qbound(8n+7) = Qbound n`. The analog of `uvalReal` for the addition map. -/
+def wvalReal (s t : Real) (ρ : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num) (hρ2 : Qle (mul ρ ρ) ⟨1, 2⟩)
+    (hbs : ∀ n, Qle (Qabs (s.seq n)) ρ) (hbt : ∀ n, Qle (Qabs (t.seq n)) ρ) : Real where
+  seq := fun n => wvalR (s.seq (8 * n + 7)) (t.seq (8 * n + 7))
+  den_pos := by
+    intro n
+    apply wvalR_den_pos
+    have hh := wval_halfbound ρ (s.seq (8 * n + 7)) (t.seq (8 * n + 7)) hρd hρ0
+      (s.den_pos _) (t.den_pos _) (hbs _) (hbt _) hρ2
+    have hp := Int.mul_pos (show (0 : Int) < (s.seq (8 * n + 7)).den by exact_mod_cast s.den_pos _)
+      (show (0 : Int) < (t.seq (8 * n + 7)).den by exact_mod_cast t.den_pos _)
+    omega
+  reg := by
+    intro m n
+    have hDsv : ∀ k, 0 < (wvalR (s.seq k) (t.seq k)).den := by
+      intro k
+      apply wvalR_den_pos
+      have hh := wval_halfbound ρ (s.seq k) (t.seq k) hρd hρ0 (s.den_pos _) (t.den_pos _)
+        (hbs k) (hbt k) hρ2
+      have hp := Int.mul_pos (show (0 : Int) < (s.seq k).den by exact_mod_cast s.den_pos _)
+        (show (0 : Int) < (t.seq k).den by exact_mod_cast t.den_pos _)
+      omega
+    have hDmid : 0 < (wvalR (s.seq (8 * n + 7)) (t.seq (8 * m + 7))).den := by
+      apply wvalR_den_pos
+      have hh := wval_halfbound ρ (s.seq (8 * n + 7)) (t.seq (8 * m + 7)) hρd hρ0
+        (s.den_pos _) (t.den_pos _) (hbs _) (hbt _) hρ2
+      have hp := Int.mul_pos (show (0 : Int) < (s.seq (8 * n + 7)).den by exact_mod_cast s.den_pos _)
+        (show (0 : Int) < (t.seq (8 * m + 7)).den by exact_mod_cast t.den_pos _)
+      omega
+    show Qle (Qabs (Qsub (wvalR (s.seq (8 * m + 7)) (t.seq (8 * m + 7)))
+        (wvalR (s.seq (8 * n + 7)) (t.seq (8 * n + 7))))) (add (Qbound m) (Qbound n))
+    -- bound each leg by 4·(reindexed reg modulus)
+    have hT1 : Qle (Qabs (Qsub (wvalR (s.seq (8 * m + 7)) (t.seq (8 * m + 7)))
+          (wvalR (s.seq (8 * n + 7)) (t.seq (8 * m + 7)))))
+        (mul ⟨4, 1⟩ (add (Qbound (8 * m + 7)) (Qbound (8 * n + 7)))) :=
+      Qle_trans (Qmul_den_pos Nat.one_pos (Qabs_den_pos (Qsub_den_pos (s.den_pos _) (s.den_pos _))))
+        (wval_lip1 ρ (s.seq (8 * m + 7)) (s.seq (8 * n + 7)) (t.seq (8 * m + 7)) hρd hρ0
+          (s.den_pos _) (s.den_pos _) (t.den_pos _) (hbs _) (hbs _) (hbt _) hρ2)
+        (Qmul_le_mul_left (by decide) (s.reg (8 * m + 7) (8 * n + 7)))
+    have hT2 : Qle (Qabs (Qsub (wvalR (s.seq (8 * n + 7)) (t.seq (8 * m + 7)))
+          (wvalR (s.seq (8 * n + 7)) (t.seq (8 * n + 7)))))
+        (mul ⟨4, 1⟩ (add (Qbound (8 * m + 7)) (Qbound (8 * n + 7)))) :=
+      Qle_trans (Qmul_den_pos Nat.one_pos (Qabs_den_pos (Qsub_den_pos (t.den_pos _) (t.den_pos _))))
+        (wval_lip2 ρ (s.seq (8 * n + 7)) (t.seq (8 * m + 7)) (t.seq (8 * n + 7)) hρd hρ0
+          (s.den_pos _) (t.den_pos _) (t.den_pos _) (hbs _) (hbt _) (hbt _) hρ2)
+        (Qmul_le_mul_left (by decide) (t.reg (8 * m + 7) (8 * n + 7)))
+    -- triangle through wvalR (s_{8n+7}) (t_{8m+7})
+    refine Qle_trans (add_den_pos (Qabs_den_pos (Qsub_den_pos (hDsv (8 * m + 7)) hDmid))
+        (Qabs_den_pos (Qsub_den_pos hDmid (hDsv (8 * n + 7)))))
+      (Qabs_sub_triangle (hDsv (8 * m + 7)) hDmid (hDsv (8 * n + 7))) ?_
+    refine Qle_trans (add_den_pos
+        (Qmul_den_pos Nat.one_pos (add_den_pos (Qbound_den_pos _) (Qbound_den_pos _)))
+        (Qmul_den_pos Nat.one_pos (add_den_pos (Qbound_den_pos _) (Qbound_den_pos _))))
+      (Qadd_le_add hT1 hT2) ?_
+    apply Qeq_le
+    show Qeq (add (mul ⟨4, 1⟩ (add (Qbound (8 * m + 7)) (Qbound (8 * n + 7))))
+        (mul ⟨4, 1⟩ (add (Qbound (8 * m + 7)) (Qbound (8 * n + 7)))))
+      (add (Qbound m) (Qbound n))
+    simp only [Qeq, mul, add, Qbound]; push_cast; ring_uor
+
 end UOR.Bridge.F1Square.Analysis
