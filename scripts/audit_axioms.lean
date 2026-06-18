@@ -2184,6 +2184,18 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.cnormSq_sub_one
 #print axioms Analysis.cnormSq_liRatio_on_line
 
+-- the per-zero Li linearization (Analysis/LiLinearize.lean) — the geometric factorization
+-- 1−wⁿ = (1−w)·Σwᵏ exhibiting the moment 1/ρ; the explicit-formula framework's algebraic core.
+#print axioms Analysis.cadd_congr
+#print axioms Analysis.cneg_congr
+#print axioms Analysis.cmul_congr
+#print axioms Analysis.cadd_zero
+#print axioms Analysis.czero_cadd
+#print axioms Analysis.cmul_czero
+#print axioms Analysis.cmul_cneg
+#print axioms Analysis.cone_sub_npow_factor
+#print axioms Analysis.witnessTerm_eq_linear
+
 -- the functional-equation reflection at the Li growth-ratio level (Analysis/Reflection.lean).
 #print axioms Analysis.cnormSq_Creflect
 #print axioms Analysis.csubOneNormSq_Creflect
