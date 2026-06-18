@@ -543,4 +543,103 @@ theorem corrCoreP_zero : Req (corrCoreP 0 1 (by omega) (by omega)) zero :=
 theorem psiLineReP_zero : Req (psiLineReP 0 1 (by omega) (by omega)) psiQuarter :=
   Req_trans (Radd_congr (Req_refl psiQuarter) corrCoreP_zero) (Radd_zero psiQuarter)
 
+-- ===========================================================================
+-- A TIGHT upper bound `Σ cₙ(1) ≤ 4.2` (s = 1), via the sharper K=s=1 telescoping
+-- tel'(n) = 16/((4n+1)²+16) (valid for n ≥ 2). Bounds Re ψ(1/4 + i) from above —
+-- the kernel-value input to the Burnol multiplier indefiniteness `α(2) < 0`.
+-- ===========================================================================
+
+private theorem le_add_right_of_nonneg {a b : Int} (h : 0 ≤ b) : a ≤ a + b := by omega
+
+private theorem sq_nonneg_int (a : Int) : 0 ≤ a * a := by
+  rcases Int.le_total 0 a with h | h
+  · exact Int.mul_nonneg h h
+  · have h' : (0 : Int) ≤ -a := by omega
+    have := Int.mul_nonneg h' h'; simpa using this
+
+private theorem quad_nonneg_ge2 {n : Int} (hn : 2 ≤ n) : 0 ≤ 16 * n * n - 8 * n - 35 := by
+  have h0 : (0 : Int) ≤ n * (n - 2) := Int.mul_nonneg (by omega) (by omega)
+  have hk : 16 * n * n - 8 * n - 35 = 16 * (n * (n - 2)) + 24 * n - 35 := by ring_uor
+  rw [hk]; omega
+
+private def corrTel1 (n : Nat) : Q := ⟨16, (4 * n + 1) * (4 * n + 1) + 16⟩
+
+private theorem corrTel1_den_pos (n : Nat) : 0 < (corrTel1 n).den := by
+  show 0 < (4 * n + 1) * (4 * n + 1) + 16; omega
+
+/-- `cₙ(1) ≤ tel'(n) − tel'(n+1)` for `n ≥ 2` — the cleared inequality is `16n² − 8n − 35 ≥ 0`. -/
+private theorem corrTP1_le_teldiff1 {n : Nat} (hn : 2 ≤ n) :
+    Qle (corrTP 1 1 n) (Qsub (corrTel1 n) (corrTel1 (n + 1))) := by
+  simp only [corrTP, corrTel1, Qsub, Qle, add, neg]
+  push_cast
+  have key :
+      (16 * ((4 * ((n : Int) + 1) + 1) * (4 * ((n : Int) + 1) + 1) + 16)
+          + -16 * ((4 * (n : Int) + 1) * (4 * (n : Int) + 1) + 16))
+        * ((4 * (n : Int) + 1) * ((4 * (n : Int) + 1) * (4 * (n : Int) + 1) * 1 + 16))
+      = 64 * (((4 * (n : Int) + 1) * (4 * (n : Int) + 1) + 16)
+          * ((4 * ((n : Int) + 1) + 1) * (4 * ((n : Int) + 1) + 1) + 16))
+        + 64 * ((4 * (n : Int) + 1) * (4 * (n : Int) + 1) + 16)
+          * (16 * (n : Int) * (n : Int) - 8 * (n : Int) - 35) := by ring_uor
+  rw [key]
+  have hnn : (0 : Int) ≤ 64 * ((4 * (n : Int) + 1) * (4 * (n : Int) + 1) + 16)
+      * (16 * (n : Int) * (n : Int) - 8 * (n : Int) - 35) :=
+    Int.mul_nonneg (Int.mul_nonneg (by decide)
+      (by have := sq_nonneg_int (4 * (n : Int) + 1); omega)) (quad_nonneg_ge2 (by exact_mod_cast hn))
+  exact le_add_right_of_nonneg hnn
+
+private def corrGP1 (m : Nat) : Q := add (corrPP 1 1 m) (corrTel1 m)
+
+private theorem corrGP1_den_pos (m : Nat) : 0 < (corrGP1 m).den :=
+  add_den_pos (corrPP_den_pos (by omega) m) (corrTel1_den_pos m)
+
+private theorem corrTP1_tel1_le {m : Nat} (hm : 2 ≤ m) :
+    Qle (add (corrTP 1 1 m) (corrTel1 (m + 1))) (corrTel1 m) := by
+  have hadd := Qadd_le_add (corrTP1_le_teldiff1 hm) (Qle_refl (corrTel1 (m + 1)))
+  have e3 : Qeq (add (Qsub (corrTel1 m) (corrTel1 (m + 1))) (corrTel1 (m + 1))) (corrTel1 m) := by
+    simp only [Qeq, add, Qsub, neg]; push_cast; ring_uor
+  refine Qle_trans ?_ hadd (Qeq_le e3)
+  exact add_den_pos (Qsub_den_pos (corrTel1_den_pos m) (corrTel1_den_pos (m + 1)))
+    (corrTel1_den_pos (m + 1))
+
+private theorem corrGP1_step {m : Nat} (hm : 2 ≤ m) : Qle (corrGP1 (m + 1)) (corrGP1 m) := by
+  show Qle (add (add (corrPP 1 1 m) (corrTP 1 1 m)) (corrTel1 (m + 1)))
+    (add (corrPP 1 1 m) (corrTel1 m))
+  have e1 : Qeq (add (add (corrPP 1 1 m) (corrTP 1 1 m)) (corrTel1 (m + 1)))
+      (add (corrPP 1 1 m) (add (corrTP 1 1 m) (corrTel1 (m + 1)))) := by
+    simp only [Qeq, add]; push_cast; ring_uor
+  refine Qle_trans ?_ (Qeq_le e1) (Qadd_le_add (Qle_refl (corrPP 1 1 m)) (corrTP1_tel1_le hm))
+  exact add_den_pos (corrPP_den_pos (by omega) m)
+    (add_den_pos (corrTP_den_pos (by omega) m) (corrTel1_den_pos (m + 1)))
+
+private theorem corrGP1_mono {a : Nat} (ha : 2 ≤ a) : ∀ b, Qle (corrGP1 (a + b)) (corrGP1 a)
+  | 0 => Qle_refl _
+  | (b + 1) => by
+    have h := corrGP1_mono ha b
+    have hstep := corrGP1_step (show 2 ≤ a + b by omega)
+    have e : a + (b + 1) = (a + b) + 1 := by omega
+    rw [e]
+    exact Qle_trans (corrGP1_den_pos (a + b)) hstep h
+
+private theorem corrPP1_tail {a b : Nat} (ha : 2 ≤ a) (hab : a ≤ b) :
+    Qle (corrPP 1 1 b) (add (corrPP 1 1 a) (corrTel1 a)) := by
+  obtain ⟨d, hd⟩ := Nat.le.dest hab
+  have hgm : Qle (corrGP1 b) (corrGP1 a) := by rw [← hd]; exact corrGP1_mono ha d
+  have hSg : Qle (corrPP 1 1 b) (corrGP1 b) := by
+    show Qle (corrPP 1 1 b) (add (corrPP 1 1 b) (corrTel1 b))
+    exact Qle_self_add (by show (0 : Int) ≤ 16; decide)
+  exact Qle_trans (corrGP1_den_pos b) hSg hgm
+
+/-- **`Σ cₙ(1) ≤ 4.2`** (true value `≈ 4.197`): the tail past the 12-term partial sum is bounded by
+    `tel'(12) = 16/2417 ≈ 0.0066` (the `K=s=1` telescoping), so `corrCoreP 1 1 ≤ S(12) + tel'(12) ≤
+    4.2`. The upper input for `Re ψ(1/4 + i) = ψ(1/4) + Σ cₙ(1) ≤ −4 + 4.2 = 0.2`. -/
+theorem corrCoreP_one_upper :
+    Rle (corrCoreP 1 1 (by omega) (by omega)) (ofQ (⟨422, 100⟩ : Q) (by decide)) := by
+  intro j
+  show Qle (corrPP 1 1 (25 * (j + 1))) (add (⟨422, 100⟩ : Q) ⟨2, j + 1⟩)
+  have htail : Qle (corrPP 1 1 (25 * (j + 1))) (add (corrPP 1 1 12) (corrTel1 12)) :=
+    corrPP1_tail (by omega) (by omega)
+  have hval : Qle (add (corrPP 1 1 12) (corrTel1 12)) (⟨422, 100⟩ : Q) := by decide
+  exact Qle_trans (corrGP1_den_pos 12) htail
+    (Qle_trans (by decide) hval (Qle_self_add (by show (0 : Int) ≤ 2; decide)))
+
 end UOR.Bridge.F1Square.Analysis
