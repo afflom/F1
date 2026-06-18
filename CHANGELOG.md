@@ -50,6 +50,27 @@ audit-visible hypothesis, never an axiom).
   Voros/Lagarias + the `n ≳ T²/t` threshold); `liNonneg_implies_onLine` is the reverse; `li_criterion`
   is the full equivalence `LiNonneg(genuineLamSeq) ⟺ AllZerosOnLine`. Both classical inputs are
   explicit `LiBridge` fields, audit-visible; the equivalence is axiom-clean.
+- **The constructive Cayley transform — the `onLine_unit` leg DISCHARGED** (`Analysis/CayleyMap.lean`,
+  `Square/BLPipeline.lean`). The BL pipeline had carried the on-line unit-modulus fact `|1−1/ρ|² = 1`
+  as an explicit `BLZeroSum` hypothesis; it is not independent content — it is forced by the Li
+  growth-ratio geometry. `CayleyMap.lean` builds the genuine map `liRatio ρ = (ρ−1)·(1/ρ)` over the
+  constructive complex reciprocal (`Cinv`) and proves its modulus law: `cnormSq_recip`
+  (`|ρ|²·|1/ρ|² = 1`, from `Cmul_Cinv` through `cnormSq_mul`, no explicit `Rinv` algebra) and
+  `cnormSq_liRatio_on_line` (`Re ρ = ½ ⟹ |liRatio ρ|² = 1`, via `liRatio_on_line`). `blZeroSum_ofZeros`
+  then builds a `BLZeroSum` from genuine zero data with `onLine_unit` **derived**, not assumed — so the
+  BL interface is shrunk to its irreducible classical core (the explicit-formula zero-sum `bl` + its
+  convergence `reg`); `bl_rh_implies_liNonneg_ofZeros` is the forward direction from that shrunk
+  interface. No `sqrt`, choice-free.
+- **The closed-disk witness hypothesis IS RH (set-level closure)** (`Analysis/Reflection.lean`,
+  `Square/BLPipeline.lean`). `rh_witness_onLine` carried, in prose, that the half-plane (closed Cayley
+  disk) witness does not secretly weaken RH; this upgrades it to a theorem. `double_inj` — doubling is
+  injective (`x+x = y+y ⟹ x = y`, the constructive "divide by 2" via `half_double`); `onLine_of_ratios_eq`
+  / `onLine_iff_ratios_eq` — the converse of `liRatio_on_line` (`|ρ−1|² = |ρ|² ⟹ Re ρ = ½`), so unit
+  Cayley modulus is EQUIVALENT to being on the line; `ReflClosed` + `allInClosedDisk_iff_allOnLine` —
+  for a reflection-closed zero set, "every Cayley factor in the closed disk" (the witness hypothesis)
+  ⟺ `AllZerosOnLine`. Composed in `li_criterion_disk`: `λₙ ≥ 0 ∀n ⟺ every zero's Cayley factor lies in
+  the closed unit disk` — Li's criterion in the witness's own geometry, the most natural geometric
+  phrasing of RH on this substrate.
 - **RH stated about the constructed ζ** (`Analysis/RiemannZero.lean`) — `NontrivialZero` bundles a
   strip point with its `CzetaStrip` convergence certificate and a vanishing proof, making the genuine
   zero set a clean predicate (`isZeroOfZeta`); `RiemannHypothesisStrip := ∀ Z, Re Z.s = ½` is RH for
