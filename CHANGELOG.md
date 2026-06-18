@@ -8,10 +8,13 @@ All notable changes to this project are documented here. The format is based on
 
 Post-v0.21.0 research thread — the constructive **RH witness**, the **ξ-zero symmetry group**, the
 **Bombieri–Lagarias pipeline** wiring the witness to the genuine `λ` (Li's criterion, both
-directions), the **arithmetic Hodge index ⟺ RH** equivalence stated about the *constructed* ζ, and
-the **Voros off-line** analysis. All axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`,
-choice-free; the no-smuggling audit passes; the crux fields stay `none` (RH open throughout — every
-classical input is an explicit, audit-visible hypothesis, never an axiom).
+directions), the **arithmetic Hodge index ⟺ RH** equivalence stated about the *constructed* ζ, the
+**Voros off-line** analysis, and the **Burnol-multiplier obstruction** — the Riemann–Siegel angle's
+non-monotone window and its capstone `α(2) < 0` (the archimedean multiplier is pointwise *indefinite*,
+so single-place positivity provably does not extend — the obstruction, never a false `α ≥ 0`). All
+axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; the no-smuggling audit
+passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
+audit-visible hypothesis, never an axiom).
 
 - **The RH witness** (`F1Square/Analysis/RHWitness.lean`) — the constructive witness of RH's forward
   direction (`RH ⟹ λₙ ≥ 0`), exhibited as an object. On the critical line a zero's Cayley factor

@@ -545,7 +545,7 @@ theorem psiLineReP_zero : Req (psiLineReP 0 1 (by omega) (by omega)) psiQuarter 
   Req_trans (Radd_congr (Req_refl psiQuarter) corrCoreP_zero) (Radd_zero psiQuarter)
 
 -- ===========================================================================
--- A TIGHT upper bound `Σ cₙ(1) ≤ 4.2` (s = 1), via the sharper K=s=1 telescoping
+-- A TIGHT upper bound `Σ cₙ(1) ≤ 4.22` (s = 1), via the sharper K=s=1 telescoping
 -- tel'(n) = 16/((4n+1)²+16) (valid for n ≥ 2). Bounds Re ψ(1/4 + i) from above —
 -- the kernel-value input to the Burnol multiplier indefiniteness `α(2) < 0`.
 -- ===========================================================================
@@ -630,9 +630,9 @@ private theorem corrPP1_tail {a b : Nat} (ha : 2 ≤ a) (hab : a ≤ b) :
     exact Qle_self_add (by show (0 : Int) ≤ 16; decide)
   exact Qle_trans (corrGP1_den_pos b) hSg hgm
 
-/-- **`Σ cₙ(1) ≤ 4.2`** (true value `≈ 4.197`): the tail past the 12-term partial sum is bounded by
+/-- **`Σ cₙ(1) ≤ 4.22`** (true value `≈ 4.21`): the tail past the 12-term partial sum is bounded by
     `tel'(12) = 16/2417 ≈ 0.0066` (the `K=s=1` telescoping), so `corrCoreP 1 1 ≤ S(12) + tel'(12) ≤
-    4.2`. The upper input for `Re ψ(1/4 + i) = ψ(1/4) + Σ cₙ(1) ≤ −4 + 4.2 = 0.2`. -/
+    4.22`. The upper input for `Re ψ(1/4 + i) = ψ(1/4) + Σ cₙ(1) ≤ −4 + 4.22 = 0.22`. -/
 theorem corrCoreP_one_upper :
     Rle (corrCoreP 1 1 (by omega) (by omega)) (ofQ (⟨422, 100⟩ : Q) (by decide)) := by
   intro j

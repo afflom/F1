@@ -59,9 +59,10 @@ def burnolAlphaTwo : Real :=
 
 /-- **`α(2) < 0` — Burnol's multiplier is indefinite.** With `|cos| ≤ 1`, `8√2 ≤ 12` (`√2 ≤ 3/2`),
     `1/(1+16) = 1/17`, the oscillating term is `≤ 12/17 ≈ 0.706`; and `h₊(2) = Re ψ(1/4+i) − log π ≤
-    0.22 − 1 = −0.78`. So `α(2) ≤ 12/17 − 78/100 = 126/1700 ... < 0` — wait, `12/17 − 0.78 < 0`. The
-    bare multiplier is NOT pointwise non-negative (Burnol "a further idea seems necessary"; CC need the
-    Sonine projection): the obstruction to extending single-place positivity, mechanized. Crux `none`. -/
+    0.22 − 1 = −0.78`. So `α(2) ≤ 12/17 − 78/100 < 0`; equivalently `−α(2) ≥ 78/100 − 12/17 = 126/1700 >
+    1/100 > 0` (the bound proven). The bare multiplier is NOT pointwise non-negative (Burnol "a further
+    idea seems necessary"; CC need the Sonine projection): the obstruction to extending single-place
+    positivity, mechanized. Crux `none`. -/
 theorem burnolAlphaTwo_neg : Pos (Rneg burnolAlphaTwo) := by
   show Pos (Rneg (Radd (Rmul (Rmul (ofQ (⟨8, 1⟩ : Q) (by decide)) sqrt2)
              (Rmul (Rcos (Rmul (ofQ (⟨2, 1⟩ : Q) (by decide)) Rlog2)) (ofQ (⟨1, 17⟩ : Q) (by decide))))
