@@ -429,6 +429,40 @@ theorem ode_unique (H : Nat → Q) (hH : ∀ i, 0 < (H i).den) (hH0 : Qeq (H 0) 
     | succ n ih => exact ⟨ih.2.1, ih.2.2, hrec n ih.2.1⟩
   intro k; exact (key k).1
 
+/-- The formal Cauchy product is right-linear over negation: `a·(−b) ≈ −(a·b)`. -/
+theorem fmul_neg_right (a b : Nat → Q) (ha : ∀ i, 0 < (a i).den) (hb : ∀ i, 0 < (b i).den) (k : Nat) :
+    Qeq (fmul a (fun i => neg (b i)) k) (neg (fmul a b k)) := by
+  refine Qeq_trans (fmul_den_pos (fun i => neg_den_pos (hb i)) ha k)
+    (fmul_comm a (fun i => neg (b i)) ha (fun i => neg_den_pos (hb i)) k) ?_
+  refine Qeq_trans (neg_den_pos (fmul_den_pos hb ha k)) (fmul_neg_left b a hb ha k) ?_
+  exact Qneg_congr (fmul_comm b a hb ha k)
+
+/-- `X² ≈ t²` (`fmul Xident Xident ≈ sq2`): both are `1` at degree `2`, else `0`. -/
+theorem X_sq_eq_sq2 (k : Nat) : Qeq (fmul Xident Xident k) (sq2 k) := by
+  by_cases h2 : k = 2
+  · subst h2
+    refine Qeq_trans (Qmul_den_pos (Xident_den_pos 1) (Xident_den_pos (2 - 1)))
+      (Fsum_single (f := fun i => mul (Xident i) (Xident (2 - i)))
+        (fun i => Qmul_den_pos (Xident_den_pos i) (Xident_den_pos _)) (j := 1) ?_ (k := 2) (by omega)) ?_
+    · intro i hi1
+      show Qeq (mul (Xident i) (Xident (2 - i))) ⟨0, 1⟩
+      unfold Xident; rw [if_neg hi1]; simp only [Qeq, mul]; omega
+    · show Qeq (mul (Xident 1) (Xident (2 - 1))) (sq2 2)
+      unfold Xident sq2; rw [if_pos rfl, if_pos rfl]; decide
+  · show Qeq (Fsum (fun i => mul (Xident i) (Xident (k - i))) k) (sq2 k)
+    have hterm : ∀ i, i ≤ k → Qeq (mul (Xident i) (Xident (k - i))) ⟨0, 1⟩ := by
+      intro i _
+      by_cases hi1 : i = 1
+      · subst hi1
+        have hz : Xident (k - 1) = ⟨0, 1⟩ := by unfold Xident; rw [if_neg (by omega)]
+        rw [hz]; simp only [Qeq, mul]; omega
+      · unfold Xident; rw [if_neg hi1]; simp only [Qeq, mul]; omega
+    have hzeros : Qeq (Fsum (fun i => mul (Xident i) (Xident (k - i))) k) ⟨0, 1⟩ :=
+      Qeq_trans (Fsum_den_pos (fun _ => Nat.one_pos) k)
+        (Fsum_congr_le (g := fun _ => (⟨0, 1⟩ : Q)) hterm) (Fsum_zeros k)
+    have hsq2 : sq2 k = ⟨0, 1⟩ := by unfold sq2; rw [if_neg h2]
+    rw [hsq2]; exact hzeros
+
 /-- Formal derivative of a pointwise difference: `(S − T)′ = S′ − T′`. -/
 theorem fderiv_sub (S T : Nat → Q) (k : Nat) :
     Qeq (fderiv (fun j => Qsub (S j) (T j)) k) (Qsub (fderiv S k) (fderiv T k)) :=
@@ -457,5 +491,20 @@ theorem onePlusSq_geomAlt : ∀ k, Qeq (fmul onePlusSq geomAlt k) (fone k)
       have h := fmul_onePlusSq geomAlt geomAlt_den_pos m
       exact Qeq_trans (add_den_pos (geomAlt_den_pos (m + 2)) (geomAlt_den_pos m)) h
         (geomAlt_recurrence m)
+
+/-- **Absorption**: `(1+t²)·(P·A′) ≈ P` — since `(1+t²)·A′ = 1` (`onePlusSq_geomAlt`). The key
+    simplification in the `G`-ODE derivation: `(1+t²)·(C·geomAlt) = C`, etc. -/
+theorem absorb_onePlusSq_geomAlt (P : Nat → Q) (hP : ∀ i, 0 < (P i).den) (k : Nat) :
+    Qeq (fmul onePlusSq (fmul P geomAlt) k) (P k) := by
+  refine Qeq_trans (fmul_den_pos (fun i => fmul_den_pos hP geomAlt_den_pos i) onePlusSq_den_pos k)
+    (fmul_comm onePlusSq (fmul P geomAlt) onePlusSq_den_pos
+      (fun i => fmul_den_pos hP geomAlt_den_pos i) k) ?_
+  refine Qeq_trans (fmul_den_pos hP (fun i => fmul_den_pos geomAlt_den_pos onePlusSq_den_pos i) k)
+    (fmul_assoc P geomAlt onePlusSq hP geomAlt_den_pos onePlusSq_den_pos k) ?_
+  refine Qeq_trans (fmul_den_pos hP (fun i => fone_den_pos i) k)
+    (fmul_congr_right (b := fmul geomAlt onePlusSq) (b' := fone)
+      (fun i => Qeq_trans (fmul_den_pos onePlusSq_den_pos geomAlt_den_pos i)
+        (fmul_comm geomAlt onePlusSq geomAlt_den_pos onePlusSq_den_pos i) (onePlusSq_geomAlt i)) k) ?_
+  exact fmul_one P hP k
 
 end UOR.Bridge.F1Square.Analysis
