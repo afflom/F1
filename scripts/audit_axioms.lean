@@ -744,6 +744,10 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.RarctanR_of_num_zero
 -- v0.22.0 Track 1: the complex argument on the principal sector (Analysis/ComplexArg.lean).
 #print axioms Analysis.Carg_ofReal_pos
+-- v0.22.0 Track 1: the complex logarithm Clog on the principal sector (Analysis/ComplexLog.lean).
+#print axioms Analysis.Clog_re
+#print axioms Analysis.Clog_im
+#print axioms Analysis.Clog_ofReal_pos_im
 -- v0.22.0 Track 1: tmap closed forms at a rational argument (Analysis/RexpLogRat.lean).
 #print axioms Analysis.tmap_rat_num
 #print axioms Analysis.tmap_rat_den
