@@ -1295,4 +1295,281 @@ theorem vval_lip1_den (qa pa qb pb qc pc : Int) (hqa : 0 < qa) (hqb : 0 < qb) (h
       = (qc * qc - 2 * (pc * pc)) * (qa * qb) := by ring_uor
   omega
 
+/-- The pure-`Int` form of `vval_argdiff1` (post-`simp` arrangement, clean atoms for `ring_uor`).
+    Mirrors `wvalR_argdiff1_poly` with the `arctan` denominator sign `qx·qy − px·py` and numerator
+    factor `qc² + pc²`. -/
+private theorem vval_argdiff1_poly (pa qa pb qb pc qc : Int) :
+    (pa * qc + pc * qa) * (qb * qc - pb * pc) + -(pb * qc + pc * qb) * (qa * qc - pa * pc)
+      = (pa * qb + -pb * qa) * (qc * qc + pc * pc) := by ring_uor
+
+/-- **First-argument difference of the `arctan` addition map, cleared**: the numerator of
+    `vval a c − vval b c` is `(a − b)·(1 + c²)` in unreduced cross-product form,
+    `(Qsub a b).num · (qc² + pc²)`. The `toNat` denominators resolve via `1−ac, 1−bc > 0`. -/
+theorem vval_argdiff1 (a b c : Q)
+    (hac : 0 < (a.den : Int) * c.den - a.num * c.num)
+    (hbc : 0 < (b.den : Int) * c.den - b.num * c.num) :
+    (Qsub (vval a c) (vval b c)).num
+      = (Qsub a b).num * ((c.den : Int) * c.den + c.num * c.num) := by
+  have hAd : ((vval a c).den : Int) = (a.den : Int) * c.den - a.num * c.num := by
+    rw [vval_den]; exact Int.toNat_of_nonneg (Int.le_of_lt hac)
+  have hBd : ((vval b c).den : Int) = (b.den : Int) * c.den - b.num * c.num := by
+    rw [vval_den]; exact Int.toNat_of_nonneg (Int.le_of_lt hbc)
+  simp only [Qsub, add, neg, vval_num]
+  rw [hAd, hBd]
+  exact vval_argdiff1_poly a.num (a.den : Int) b.num (b.den : Int) c.num (c.den : Int)
+
+/-- The pure-`Int` form of `vval_argdiff2` (post-`simp` arrangement, clean atoms for `ring_uor`). -/
+private theorem vval_argdiff2_poly (pa qa pc qc pd qd : Int) :
+    (pa * qc + pc * qa) * (qa * qd - pa * pd) + -(pa * qd + pd * qa) * (qa * qc - pa * pc)
+      = (pc * qd + -pd * qc) * (qa * qa + pa * pa) := by ring_uor
+
+/-- **Second-argument difference of the `arctan` addition map, cleared**: the numerator of
+    `vval a c − vval a d` is `(c − d)·(1 + a²)` in unreduced cross-product form,
+    `(Qsub c d).num · (qa² + pa²)` (the symmetric companion of `vval_argdiff1`). -/
+theorem vval_argdiff2 (a c d : Q)
+    (hac : 0 < (a.den : Int) * c.den - a.num * c.num)
+    (had : 0 < (a.den : Int) * d.den - a.num * d.num) :
+    (Qsub (vval a c) (vval a d)).num
+      = (Qsub c d).num * ((a.den : Int) * a.den + a.num * a.num) := by
+  have hCd : ((vval a c).den : Int) = (a.den : Int) * c.den - a.num * c.num := by
+    rw [vval_den]; exact Int.toNat_of_nonneg (Int.le_of_lt hac)
+  have hDd : ((vval a d).den : Int) = (a.den : Int) * d.den - a.num * d.num := by
+    rw [vval_den]; exact Int.toNat_of_nonneg (Int.le_of_lt had)
+  simp only [Qsub, add, neg, vval_num]
+  rw [hCd, hDd]
+  exact vval_argdiff2_poly a.num (a.den : Int) c.num (c.den : Int) d.num (d.den : Int)
+
+/-- **The denominator half-bound from the radius (arctan map)**: for `|a|, |c| ≤ ρ` with `ρ² ≤ ½`,
+    the shifted denominator `1 − ac` clears half: `qa·qc ≤ 2·(qa·qc − pa·pc)` (i.e. `2·pa·pc ≤ qa·qc`).
+    Identical to `wval_halfbound` up to the final sign — the internal estimate is `2·|pa·pc| ≤ qa·qc`,
+    which bounds `2·pa·pc` from above just as it bounds `−2·pa·pc`. -/
+theorem vval_halfbound (ρ a c : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num)
+    (had : 0 < a.den) (hcd : 0 < c.den)
+    (ha : Qle (Qabs a) ρ) (hc : Qle (Qabs c) ρ) (hρ2 : Qle (mul ρ ρ) ⟨1, 2⟩) :
+    (a.den : Int) * c.den ≤ 2 * ((a.den : Int) * c.den - a.num * c.num) := by
+  simp only [Qle, Qabs] at ha hc
+  simp only [Qle, mul] at hρ2
+  push_cast at hρ2
+  have hrd : (0 : Int) < ρ.den := by exact_mod_cast hρd
+  have hqa : (0 : Int) < a.den := by exact_mod_cast had
+  have hqc : (0 : Int) < c.den := by exact_mod_cast hcd
+  have hpos1 : (0 : Int) ≤ (c.num.natAbs : Int) * ρ.den :=
+    Int.mul_nonneg (Int.ofNat_nonneg _) (Int.le_of_lt hrd)
+  have hpos2 : (0 : Int) ≤ ρ.num * a.den := Int.mul_nonneg hρ0 (Int.le_of_lt hqa)
+  have hprod : ((a.num.natAbs : Int) * ρ.den) * ((c.num.natAbs : Int) * ρ.den)
+      ≤ (ρ.num * a.den) * (ρ.num * c.den) := Int.mul_le_mul ha hc hpos1 hpos2
+  have eL : ((a.num.natAbs : Int) * ρ.den) * ((c.num.natAbs : Int) * ρ.den)
+      = ((a.num.natAbs : Int) * c.num.natAbs) * ((ρ.den : Int) * ρ.den) := by ring_uor
+  have eR : (ρ.num * a.den) * (ρ.num * c.den)
+      = (ρ.num * ρ.num) * ((a.den : Int) * c.den) := by ring_uor
+  rw [eL, eR] at hprod
+  have hnatmul : ((a.num.natAbs : Int) * c.num.natAbs) = ((a.num * c.num).natAbs : Int) := by
+    rw [Int.natAbs_mul]; push_cast; ring_uor
+  rw [hnatmul] at hprod
+  have hrd2pos : (0 : Int) < (ρ.den : Int) * ρ.den := Int.mul_pos hrd hrd
+  have hqac : (0 : Int) ≤ (a.den : Int) * c.den := Int.le_of_lt (Int.mul_pos hqa hqc)
+  have hstep : (2 * ((a.num * c.num).natAbs : Int)) * ((ρ.den : Int) * ρ.den)
+      ≤ ((ρ.den : Int) * ρ.den) * ((a.den : Int) * c.den) := by
+    have h1 : 2 * (((a.num * c.num).natAbs : Int) * ((ρ.den : Int) * ρ.den))
+        ≤ 2 * ((ρ.num * ρ.num) * ((a.den : Int) * c.den)) := by omega
+    have h2 : 2 * ((ρ.num * ρ.num) * ((a.den : Int) * c.den))
+        ≤ ((ρ.den : Int) * ρ.den) * ((a.den : Int) * c.den) := by
+      have hmul := Int.mul_le_mul_of_nonneg_right (by omega : ρ.num * ρ.num * 2 ≤ 1 * ((ρ.den : Int) * ρ.den)) hqac
+      have e2 : (ρ.num * ρ.num * 2) * ((a.den : Int) * c.den)
+          = 2 * ((ρ.num * ρ.num) * ((a.den : Int) * c.den)) := by ring_uor
+      have e3 : (1 * ((ρ.den : Int) * ρ.den)) * ((a.den : Int) * c.den)
+          = ((ρ.den : Int) * ρ.den) * ((a.den : Int) * c.den) := by ring_uor
+      rw [e2, e3] at hmul; exact hmul
+    have e4 : (2 * ((a.num * c.num).natAbs : Int)) * ((ρ.den : Int) * ρ.den)
+        = 2 * (((a.num * c.num).natAbs : Int) * ((ρ.den : Int) * ρ.den)) := by ring_uor
+    rw [e4]; exact Int.le_trans h1 h2
+  have hcancel : 2 * ((a.num * c.num).natAbs : Int) ≤ (a.den : Int) * c.den := by
+    have hcomm : ((ρ.den : Int) * ρ.den) * (2 * ((a.num * c.num).natAbs : Int))
+        ≤ ((ρ.den : Int) * ρ.den) * ((a.den : Int) * c.den) := by
+      have e5 : ((ρ.den : Int) * ρ.den) * (2 * ((a.num * c.num).natAbs : Int))
+          = (2 * ((a.num * c.num).natAbs : Int)) * ((ρ.den : Int) * ρ.den) := by ring_uor
+      rw [e5]; exact hstep
+    exact Int.le_of_mul_le_mul_left hcomm hrd2pos
+  omega
+
+/-- **`2·c² ≤ 1` from the radius** (`2·pc² ≤ qc²`) for `|c| ≤ ρ`, `ρ² ≤ ½`. The strengthening of
+    `wval_csq_le` (which gave only `pc² ≤ qc²`) that the `arctan` Lipschitz core `vval_lip1_den`
+    requires. Squaring the abs bound `|pc|·qρ ≤ pρ·qc` gives `pc²·qρ² ≤ pρ²·qc²`; doubling and the
+    radius bound `2pρ² ≤ qρ²` yield `2pc²·qρ² ≤ qρ²·qc²`; cancel `qρ²`. -/
+theorem vval_csq_le (ρ c : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num) (hcd : 0 < c.den)
+    (hc : Qle (Qabs c) ρ) (hρ2 : Qle (mul ρ ρ) ⟨1, 2⟩) :
+    2 * (c.num * c.num) ≤ (c.den : Int) * c.den := by
+  simp only [Qle, Qabs] at hc
+  simp only [Qle, mul] at hρ2
+  push_cast at hρ2
+  have hrd : (0 : Int) < ρ.den := by exact_mod_cast hρd
+  have hqc : (0 : Int) < c.den := by exact_mod_cast hcd
+  have hpos1 : (0 : Int) ≤ (c.num.natAbs : Int) * ρ.den :=
+    Int.mul_nonneg (Int.ofNat_nonneg _) (Int.le_of_lt hrd)
+  have hpos2 : (0 : Int) ≤ ρ.num * c.den := Int.mul_nonneg hρ0 (Int.le_of_lt hqc)
+  have hprod : ((c.num.natAbs : Int) * ρ.den) * ((c.num.natAbs : Int) * ρ.den)
+      ≤ (ρ.num * c.den) * (ρ.num * c.den) := Int.mul_le_mul hc hc hpos1 hpos2
+  have eL : ((c.num.natAbs : Int) * ρ.den) * ((c.num.natAbs : Int) * ρ.den)
+      = ((c.num.natAbs : Int) * c.num.natAbs) * ((ρ.den : Int) * ρ.den) := by ring_uor
+  have eR : (ρ.num * c.den) * (ρ.num * c.den)
+      = (ρ.num * ρ.num) * ((c.den : Int) * c.den) := by ring_uor
+  rw [eL, eR] at hprod
+  have hnatmul : ((c.num.natAbs : Int) * c.num.natAbs) = c.num * c.num :=
+    Int.natAbs_mul_self' c.num
+  rw [hnatmul] at hprod
+  have hrd2pos : (0 : Int) < (ρ.den : Int) * ρ.den := Int.mul_pos hrd hrd
+  have hqcc : (0 : Int) ≤ (c.den : Int) * c.den := Int.le_of_lt (Int.mul_pos hqc hqc)
+  -- 2·pc²·qρ² ≤ 2·pρ²·qc² ≤ qρ²·qc²
+  have hstep : (2 * (c.num * c.num)) * ((ρ.den : Int) * ρ.den)
+      ≤ ((ρ.den : Int) * ρ.den) * ((c.den : Int) * c.den) := by
+    have h1 : 2 * ((c.num * c.num) * ((ρ.den : Int) * ρ.den))
+        ≤ 2 * ((ρ.num * ρ.num) * ((c.den : Int) * c.den)) := by omega
+    have h2 : 2 * ((ρ.num * ρ.num) * ((c.den : Int) * c.den))
+        ≤ ((ρ.den : Int) * ρ.den) * ((c.den : Int) * c.den) := by
+      have hmul := Int.mul_le_mul_of_nonneg_right (by omega : ρ.num * ρ.num * 2 ≤ 1 * ((ρ.den : Int) * ρ.den)) hqcc
+      have e2 : (ρ.num * ρ.num * 2) * ((c.den : Int) * c.den)
+          = 2 * ((ρ.num * ρ.num) * ((c.den : Int) * c.den)) := by ring_uor
+      have e3 : (1 * ((ρ.den : Int) * ρ.den)) * ((c.den : Int) * c.den)
+          = ((ρ.den : Int) * ρ.den) * ((c.den : Int) * c.den) := by ring_uor
+      rw [e2, e3] at hmul; exact hmul
+    have e4 : (2 * (c.num * c.num)) * ((ρ.den : Int) * ρ.den)
+        = 2 * ((c.num * c.num) * ((ρ.den : Int) * ρ.den)) := by ring_uor
+    rw [e4]; exact Int.le_trans h1 h2
+  have hcancel : 2 * (c.num * c.num) ≤ (c.den : Int) * c.den := by
+    have hcomm : ((ρ.den : Int) * ρ.den) * (2 * (c.num * c.num))
+        ≤ ((ρ.den : Int) * ρ.den) * ((c.den : Int) * c.den) := by
+      have e5 : ((ρ.den : Int) * ρ.den) * (2 * (c.num * c.num))
+          = (2 * (c.num * c.num)) * ((ρ.den : Int) * ρ.den) := by ring_uor
+      rw [e5]; exact hstep
+    exact Int.le_of_mul_le_mul_left hcomm hrd2pos
+  exact hcancel
+
+/-- **`vval` is symmetric**: `vval a b = vval b a` — numerator and denominator both symmetric. -/
+theorem vval_comm (a b : Q) : vval a b = vval b a := by
+  have hn : a.num * (b.den : Int) + b.num * (a.den : Int)
+      = b.num * (a.den : Int) + a.num * (b.den : Int) := by ring_uor
+  have hd : (a.den : Int) * b.den - a.num * b.num
+      = (b.den : Int) * a.den - b.num * a.num := by ring_uor
+  unfold vval
+  rw [hn, hd]
+
+/-- **`1 − ab > 0` from the radius** (`(a.den·b.den : Int) − a.num·b.num > 0`): for `|a|,|b| ≤ ρ`,
+    `ρ² ≤ ½`. The `vval_den_pos` hypothesis, derived from the radius bound. -/
+theorem vval_inner_pos (ρ a b : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num)
+    (had : 0 < a.den) (hbd : 0 < b.den) (ha : Qle (Qabs a) ρ) (hb : Qle (Qabs b) ρ)
+    (hρ2 : Qle (mul ρ ρ) ⟨1, 2⟩) : 0 < (a.den : Int) * b.den - a.num * b.num := by
+  have hh := vval_halfbound ρ a b hρd hρ0 had hbd ha hb hρ2
+  have hp := Int.mul_pos (show (0 : Int) < a.den by exact_mod_cast had)
+    (show (0 : Int) < b.den by exact_mod_cast hbd)
+  omega
+
+/-- **Binary Lipschitz bound, first argument (arctan map)**: `|vval a c − vval b c| ≤ 6·|a − b|` for
+    `|a|,|b|,|c| ≤ ρ` with `ρ² ≤ ½`. The cleared numerator `(a−b)·(1+c²)` (`vval_argdiff1`) over the
+    denominator estimate `vval_lip1_den` (half-bound `vval_halfbound`, `2c² ≤ 1` via `vval_csq_le`)
+    yields constant `6`. -/
+theorem vval_lip1 (ρ a b c : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num)
+    (had : 0 < a.den) (hbd : 0 < b.den) (hcd : 0 < c.den)
+    (ha : Qle (Qabs a) ρ) (hb : Qle (Qabs b) ρ) (hc : Qle (Qabs c) ρ)
+    (hρ2 : Qle (mul ρ ρ) ⟨1, 2⟩) :
+    Qle (Qabs (Qsub (vval a c) (vval b c))) (mul ⟨6, 1⟩ (Qabs (Qsub a b))) := by
+  have hqa : (0 : Int) < a.den := by exact_mod_cast had
+  have hqb : (0 : Int) < b.den := by exact_mod_cast hbd
+  have hqc : (0 : Int) < c.den := by exact_mod_cast hcd
+  have hHac := vval_halfbound ρ a c hρd hρ0 had hcd ha hc hρ2
+  have hHbc := vval_halfbound ρ b c hρd hρ0 hbd hcd hb hc hρ2
+  have hac : 0 < (a.den : Int) * c.den - a.num * c.num := by have := Int.mul_pos hqa hqc; omega
+  have hbc : 0 < (b.den : Int) * c.den - b.num * c.num := by have := Int.mul_pos hqb hqc; omega
+  have hND := vval_argdiff1 a b c hac hbc
+  have hcsq := vval_csq_le ρ c hρd hρ0 hcd hc hρ2
+  have hden := vval_lip1_den (a.den : Int) a.num (b.den : Int) b.num (c.den : Int) c.num
+    hqa hqb hqc hHac hHbc hcsq
+  have hqcpc : (0 : Int) ≤ (c.den : Int) * c.den + c.num * c.num := by
+    have h1 : (0 : Int) ≤ (c.den : Int) * c.den := Int.le_of_lt (Int.mul_pos hqc hqc)
+    have h2 : (0 : Int) ≤ c.num * c.num := by rw [← Int.natAbs_mul_self]; exact Int.ofNat_nonneg _
+    omega
+  have hn : (0 : Int) ≤ ((Qsub a b).num.natAbs : Int) := Int.ofNat_nonneg _
+  have hSabs : ((Qsub (vval a c) (vval b c)).num.natAbs : Int)
+      = ((Qsub a b).num.natAbs : Int) * ((c.den : Int) * c.den + c.num * c.num) := by
+    rw [hND, Int.natAbs_mul]; push_cast; rw [Int.natAbs_of_nonneg hqcpc]
+  have hSden : ((Qsub (vval a c) (vval b c)).den : Int)
+      = ((a.den : Int) * c.den - a.num * c.num) * ((b.den : Int) * c.den - b.num * c.num) := by
+    have e : (Qsub (vval a c) (vval b c)).den = (vval a c).den * (vval b c).den := rfl
+    rw [e, Int.natCast_mul, vval_den, vval_den,
+      Int.toNat_of_nonneg (Int.le_of_lt hac), Int.toNat_of_nonneg (Int.le_of_lt hbc)]
+  have hTd : (Qsub a b).den = a.den * b.den := rfl
+  simp only [Qle, Qabs, mul]
+  rw [hSabs, hSden, hTd]
+  push_cast
+  have eL : ((Qsub a b).num.natAbs : Int) * ((c.den : Int) * c.den + c.num * c.num)
+        * (1 * ((a.den : Int) * b.den))
+      = ((Qsub a b).num.natAbs : Int)
+          * (((c.den : Int) * c.den + c.num * c.num) * ((a.den : Int) * b.den)) := by ring_uor
+  have eR : 6 * ((Qsub a b).num.natAbs : Int)
+        * (((a.den : Int) * c.den - a.num * c.num) * ((b.den : Int) * c.den - b.num * c.num))
+      = ((Qsub a b).num.natAbs : Int)
+          * (6 * (((a.den : Int) * c.den - a.num * c.num) * ((b.den : Int) * c.den - b.num * c.num))) := by
+    ring_uor
+  rw [eL, eR]
+  exact Int.mul_le_mul_of_nonneg_left hden hn
+
+/-- **Binary Lipschitz bound, second argument (arctan map)**: `|vval a c − vval a d| ≤ 6·|c − d|` —
+    free from `vval_lip1` by `vval_comm`. -/
+theorem vval_lip2 (ρ a c d : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num)
+    (had : 0 < a.den) (hcd : 0 < c.den) (hdd : 0 < d.den)
+    (ha : Qle (Qabs a) ρ) (hc : Qle (Qabs c) ρ) (hd : Qle (Qabs d) ρ)
+    (hρ2 : Qle (mul ρ ρ) ⟨1, 2⟩) :
+    Qle (Qabs (Qsub (vval a c) (vval a d))) (mul ⟨6, 1⟩ (Qabs (Qsub c d))) := by
+  rw [vval_comm a c, vval_comm a d]
+  exact vval_lip1 ρ c d a hρd hρ0 hcd hdd had hc hd ha hρ2
+
+/-- **The real `arctan` addition map** `vvalReal s t = (s+t)/(1−s·t)`, for reals `s, t` with `|s|,|t| ≤ ρ`,
+    `ρ² ≤ ½`. Diagonal `vval (s.seq (12n+11)) (t.seq (12n+11))`: the `12n+11` reindex absorbs the *two*
+    Lipschitz-`6` terms (one per argument, via `vval_lip1`/`vval_lip2` + triangle) into the regularity
+    modulus, since `12·Qbound(12n+11) = Qbound n`. The `arctan` analog of `wvalReal`. -/
+def vvalReal (s t : Real) (ρ : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num) (hρ2 : Qle (mul ρ ρ) ⟨1, 2⟩)
+    (hbs : ∀ n, Qle (Qabs (s.seq n)) ρ) (hbt : ∀ n, Qle (Qabs (t.seq n)) ρ) : Real where
+  seq := fun n => vval (s.seq (12 * n + 11)) (t.seq (12 * n + 11))
+  den_pos := by
+    intro n
+    apply vval_den_pos
+    exact vval_inner_pos ρ (s.seq (12 * n + 11)) (t.seq (12 * n + 11)) hρd hρ0
+      (s.den_pos _) (t.den_pos _) (hbs _) (hbt _) hρ2
+  reg := by
+    intro m n
+    have hDsv : ∀ k, 0 < (vval (s.seq k) (t.seq k)).den := by
+      intro k
+      exact vval_den_pos _ _ (vval_inner_pos ρ (s.seq k) (t.seq k) hρd hρ0
+        (s.den_pos _) (t.den_pos _) (hbs k) (hbt k) hρ2)
+    have hDmid : 0 < (vval (s.seq (12 * n + 11)) (t.seq (12 * m + 11))).den :=
+      vval_den_pos _ _ (vval_inner_pos ρ (s.seq (12 * n + 11)) (t.seq (12 * m + 11)) hρd hρ0
+        (s.den_pos _) (t.den_pos _) (hbs _) (hbt _) hρ2)
+    show Qle (Qabs (Qsub (vval (s.seq (12 * m + 11)) (t.seq (12 * m + 11)))
+        (vval (s.seq (12 * n + 11)) (t.seq (12 * n + 11))))) (add (Qbound m) (Qbound n))
+    have hT1 : Qle (Qabs (Qsub (vval (s.seq (12 * m + 11)) (t.seq (12 * m + 11)))
+          (vval (s.seq (12 * n + 11)) (t.seq (12 * m + 11)))))
+        (mul ⟨6, 1⟩ (add (Qbound (12 * m + 11)) (Qbound (12 * n + 11)))) :=
+      Qle_trans (Qmul_den_pos Nat.one_pos (Qabs_den_pos (Qsub_den_pos (s.den_pos _) (s.den_pos _))))
+        (vval_lip1 ρ (s.seq (12 * m + 11)) (s.seq (12 * n + 11)) (t.seq (12 * m + 11)) hρd hρ0
+          (s.den_pos _) (s.den_pos _) (t.den_pos _) (hbs _) (hbs _) (hbt _) hρ2)
+        (Qmul_le_mul_left (by decide) (s.reg (12 * m + 11) (12 * n + 11)))
+    have hT2 : Qle (Qabs (Qsub (vval (s.seq (12 * n + 11)) (t.seq (12 * m + 11)))
+          (vval (s.seq (12 * n + 11)) (t.seq (12 * n + 11)))))
+        (mul ⟨6, 1⟩ (add (Qbound (12 * m + 11)) (Qbound (12 * n + 11)))) :=
+      Qle_trans (Qmul_den_pos Nat.one_pos (Qabs_den_pos (Qsub_den_pos (t.den_pos _) (t.den_pos _))))
+        (vval_lip2 ρ (s.seq (12 * n + 11)) (t.seq (12 * m + 11)) (t.seq (12 * n + 11)) hρd hρ0
+          (s.den_pos _) (t.den_pos _) (t.den_pos _) (hbs _) (hbt _) (hbt _) hρ2)
+        (Qmul_le_mul_left (by decide) (t.reg (12 * m + 11) (12 * n + 11)))
+    refine Qle_trans (add_den_pos (Qabs_den_pos (Qsub_den_pos (hDsv (12 * m + 11)) hDmid))
+        (Qabs_den_pos (Qsub_den_pos hDmid (hDsv (12 * n + 11)))))
+      (Qabs_sub_triangle (hDsv (12 * m + 11)) hDmid (hDsv (12 * n + 11))) ?_
+    refine Qle_trans (add_den_pos
+        (Qmul_den_pos Nat.one_pos (add_den_pos (Qbound_den_pos _) (Qbound_den_pos _)))
+        (Qmul_den_pos Nat.one_pos (add_den_pos (Qbound_den_pos _) (Qbound_den_pos _))))
+      (Qadd_le_add hT1 hT2) ?_
+    apply Qeq_le
+    show Qeq (add (mul ⟨6, 1⟩ (add (Qbound (12 * m + 11)) (Qbound (12 * n + 11))))
+        (mul ⟨6, 1⟩ (add (Qbound (12 * m + 11)) (Qbound (12 * n + 11)))))
+      (add (Qbound m) (Qbound n))
+    simp only [Qeq, mul, add, Qbound]; push_cast; ring_uor
+
 end UOR.Bridge.F1Square.Analysis
