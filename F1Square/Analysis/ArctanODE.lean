@@ -712,4 +712,23 @@ theorem peval_cosComp_swap (t : Q) (htd : 0 < t.den) (M : Nat) :
       (Fsum (fun m => mul (cosCoeff m) (peval (fpow arctanCoeff m) t M)) M) :=
   peval_fcomp_swap cosCoeff arctanCoeff cosCoeff_den_pos arctanCoeff_den_pos arctanCoeff_zero t htd M
 
+/-- `|(−1)ⁿ| = 1`: the alternating sign series has unit absolute value at every power. -/
+theorem qpow_neg_one_abs (n : Nat) : Qabs (qpow (⟨-1, 1⟩ : Q) n) = ⟨1, 1⟩ := by
+  induction n with
+  | zero => rfl
+  | succ m ih => rw [qpow_succ, Qabs_mul, ih]; rfl
+
+/-- **Geometric domination of the arctan coefficients**: `|arctanCoeffₖ| ≤ 1` for every `k` (the
+    coefficient is `(−1)^{k/2}/k` at odd `k`, else `0`). The convergence input for the composition
+    value bridge: combined with `peval_mono` it bounds `peval (fabs arctanCoeff) ρ M` by a geometric
+    sum, giving the absolute convergence of the `arctan` powers inside the radius. -/
+theorem arctanCoeff_fabs_le_one (k : Nat) : Qle (fabs arctanCoeff k) ⟨1, 1⟩ := by
+  show Qle (Qabs (arctanCoeff k)) ⟨1, 1⟩
+  unfold arctanCoeff
+  by_cases h : k % 2 = 1
+  · rw [if_pos h, Qabs_mul, qpow_neg_one_abs]
+    have hk1 : 1 ≤ k := by omega
+    simp only [Qabs, Qle, mul]; push_cast; omega
+  · rw [if_neg h]; simp only [Qabs, Qle]; push_cast
+
 end UOR.Bridge.F1Square.Analysis
