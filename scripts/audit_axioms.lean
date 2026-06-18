@@ -2211,6 +2211,7 @@ open UOR.Bridge.F1Square
 #print axioms Square.bl_rh_implies_liNonneg_ofZeros
 #print axioms Square.liNonneg_implies_onLine
 #print axioms Square.li_criterion
+#print axioms Square.li_criterion_disk
 #print axioms Square.atlas_coupling_analytic_face
 #print axioms Square.hodgeIndex_iff_RH
 #print axioms Analysis.riemannHypothesisStrip_iff

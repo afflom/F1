@@ -32,6 +32,7 @@ Pure Lean 4 core, no Mathlib, no `sorry`/`native_decide`, choice-free; audited b
 
 import F1Square.Analysis.RHWitness
 import F1Square.Analysis.CayleyMap
+import F1Square.Analysis.Reflection
 import F1Square.Analysis.Complete
 import F1Square.Analysis.GenuineLi
 import F1Square.Li
@@ -201,5 +202,18 @@ theorem liNonneg_implies_onLine (E : StieltjesEta) (L : LiBridge E)
 theorem li_criterion (E : StieltjesEta) (L : LiBridge E) :
     LiNonneg (genuineLamSeq E.eta) ↔ AllZerosOnLine L.isZero :=
   ⟨liNonneg_implies_onLine E L, bl_rh_implies_liNonneg E L.toBLZeroSum⟩
+
+/-- **LI'S CRITERION IN THE WITNESS'S OWN GEOMETRY**: for a reflection-closed zero set,
+    `λₙ ≥ 0 ∀n ⟺ every zero's Cayley factor lies in the closed unit disk` (`|1−1/ρ|² ≤ 1`). This is
+    the most natural geometric phrasing of RH on this substrate — it composes `li_criterion`
+    (`LiNonneg ⟺ AllZerosOnLine`) with the set-level closure `allInClosedDisk_iff_allOnLine`
+    (`closed-disk ⟺ on-line`, the functional-equation reflection at work). The closed-disk side is
+    exactly the hypothesis the manifest sum-of-nonnegatives witness (`witnessSum_nonneg`) consumes —
+    so this says, precisely, that the witness applies to the whole zero set iff Li-positivity holds.
+    Discharging either side is RH; the crux fields stay `none`. -/
+theorem li_criterion_disk (E : StieltjesEta) (L : LiBridge E)
+    (hcl : ReflClosed L.isZero) :
+    LiNonneg (genuineLamSeq E.eta) ↔ (∀ z, L.isZero z → InClosedDisk z) :=
+  Iff.trans (li_criterion E L) (allInClosedDisk_iff_allOnLine L.isZero hcl).symm
 
 end UOR.Bridge.F1Square.Square
