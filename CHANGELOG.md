@@ -96,6 +96,15 @@ audit-visible hypothesis, never an axiom).
   every zero's Cayley factor in the closed unit disk (via `li_criterion_disk`) — so the geometric
   Hodge index, Li-positivity, the on-line condition, and the witness's closed-disk geometry are ONE
   connected proposition.
+- **Track 1, brick 1 — arctan at a general REAL argument** (`Analysis/RArctan.lean`). The forced-first
+  prerequisite of the `Γ(s/2) → ξ → Hadamard` stack that discharges the `bl` seam: complex `Clog` on
+  the right half-plane needs `arg(z) = arctan(Im z / Re z)` at a general real ratio, and the repo had
+  only rational-argument `Rarctan` (truncation-only). `RarctanR t ρ` lifts arctan to a real argument
+  (`|t| ≤ ρ < 1`), mirroring the real-argument `Rartanh`: since `arctanTerm t n = (−1)ⁿ·artTerm t n`,
+  the sign vanishes under `Qabs`, so `arctanTerm_diff_bound`, `arctanSum_Lip_le`, and the diagonal
+  `RarctanR_diag_le` reuse the shared sign-independent machinery (`Rartanh_R`, `geoEvenSum`,
+  `geoEven_bound`, `artanh_reindex`, `qpow_geom_bound`, `arctanSum_trunc`). RH-independent
+  interface-shrinking toward discharging `bl`; the crux fields stay `none`.
 - **The Sonine projection — Weil positivity recovered on the band complement**
   (`Square/SonineProjection.lean`). The crux frontier, formalized. With the natural finite routes
   foreclosed (component isolation RH-equivalent; pointwise single-place positivity refuted; free SOS
