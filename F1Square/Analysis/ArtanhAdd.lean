@@ -140,4 +140,96 @@ theorem TwoArtanh_add_rat (a b c : Q)
     (Rnonneg_TwoArtanhConst b b hbd hb0 hbd hblt (Qeq_le (Qabs_of_nonneg hb0)) hb0)
     (Rnonneg_TwoArtanhConst c c hcd hc0 hcd hclt (Qeq_le (Qabs_of_nonneg hc0)) hc0)
 
+-- ===========================================================================
+-- The division-free addition map `wval a b = (a+b)/(1+ab)` and its multiplicativity identity,
+-- which discharges the `hg` side-condition of `TwoArtanh_add_rat` once and for all.
+-- ===========================================================================
+
+/-- **The `artanh`/`tanh` addition map** `wval a b = (a+b)/(1+ab)`, in division-free unreduced form:
+    numerator `pa·qb + pb·qa`, denominator `qa·qb + pa·pb` (where `a = pa/qa`, `b = pb/qb`). -/
+def wval (a b : Q) : Q :=
+  ⟨a.num * (b.den : Int) + b.num * (a.den : Int), a.den * b.den + (a.num * b.num).toNat⟩
+
+@[simp] theorem wval_num (a b : Q) : (wval a b).num = a.num * (b.den : Int) + b.num * (a.den : Int) := rfl
+@[simp] theorem wval_den (a b : Q) : (wval a b).den = a.den * b.den + (a.num * b.num).toNat := rfl
+
+/-- `wval a b` has positive denominator (`qa·qb > 0`). -/
+theorem wval_den_pos (a b : Q) (had : 0 < a.den) (hbd : 0 < b.den) : 0 < (wval a b).den := by
+  rw [wval_den]; exact Nat.lt_of_lt_of_le (Nat.mul_pos had hbd) (Nat.le_add_right _ _)
+
+/-- `wval a b` has non-negative numerator (for `a, b ≥ 0`). -/
+theorem wval_num_nonneg (a b : Q) (ha0 : 0 ≤ a.num) (hb0 : 0 ≤ b.num) : 0 ≤ (wval a b).num := by
+  rw [wval_num]
+  exact Int.add_nonneg (Int.mul_nonneg ha0 (Int.ofNat_nonneg _)) (Int.mul_nonneg hb0 (Int.ofNat_nonneg _))
+
+/-- **`wval a b < 1`** for `0 ≤ a, b < 1`: `pa·qb + pb·qa < qa·qb + pa·pb`, the slack being
+    `(qa−pa)(qb−pb) > 0` (the `a, b < 1` margins). -/
+theorem wval_lt (a b : Q) (_had : 0 < a.den) (ha0 : 0 ≤ a.num) (halt : a.num.toNat < a.den)
+    (_hbd : 0 < b.den) (hb0 : 0 ≤ b.num) (hblt : b.num.toNat < b.den) :
+    (wval a b).num.toNat < (wval a b).den := by
+  have hpaI : (a.num.toNat : Int) = a.num := Int.toNat_of_nonneg ha0
+  have hpbI : (b.num.toNat : Int) = b.num := Int.toNat_of_nonneg hb0
+  have ha1 : a.num < (a.den : Int) := by omega
+  have hb1 : b.num < (b.den : Int) := by omega
+  have hnum0 : 0 ≤ (wval a b).num := wval_num_nonneg a b ha0 hb0
+  -- it suffices to show the Int inequality (wval).num < (wval).den
+  have hkey : (wval a b).num < ((wval a b).den : Int) := by
+    rw [wval_num, wval_den]
+    have hPP : ((a.num * b.num).toNat : Int) = a.num * b.num :=
+      Int.toNat_of_nonneg (Int.mul_nonneg ha0 hb0)
+    push_cast [hPP]
+    have hslack : 0 < ((a.den : Int) - a.num) * ((b.den : Int) - b.num) :=
+      Int.mul_pos (by omega) (by omega)
+    have key : ((a.den : Int) - a.num) * ((b.den : Int) - b.num)
+        = ((a.den : Int) * b.den + a.num * b.num)
+            - (a.num * (b.den : Int) + b.num * (a.den : Int)) := by ring_uor
+    omega
+  omega
+
+/-- The pure-`Int` polynomial identity behind `wval_hg` (clean atoms for `ring_uor`, no `Nat.cast`):
+    both sides clear to `(qa+pa)(qb+pb)(qa−pa)(qb−pb)`. -/
+private theorem wval_hg_poly (qa pa qb pb : Int) :
+    (qa * qb + pa * pb + (pa * qb + pb * qa)) * ((qa - pa) * (qb - pb))
+      = (qa + pa) * (qb + pb) * (qa * qb + pa * pb - (pa * qb + pb * qa)) := by ring_uor
+
+/-- **The multiplicativity identity** `(1+wval)/(1−wval) = ((1+a)/(1−a))·((1+b)/(1−b))` — exactly the
+    `hg` of `TwoArtanh_add_rat` for `c = wval a b`. Both sides clear to `(qa+pa)(qb+pb)·(qa−pa)(qb−pb)`. -/
+theorem wval_hg (a b : Q) (had : 0 < a.den) (ha0 : 0 ≤ a.num) (halt : a.num.toNat < a.den)
+    (hbd : 0 < b.den) (hb0 : 0 ≤ b.num) (hblt : b.num.toNat < b.den) :
+    Qeq (⟨((wval a b).den : Int) + (wval a b).num, (wval a b).den - (wval a b).num.toNat⟩ : Q)
+        (mul (⟨(a.den : Int) + a.num, a.den - a.num.toNat⟩ : Q)
+             (⟨(b.den : Int) + b.num, b.den - b.num.toNat⟩ : Q)) := by
+  have hpaI : (a.num.toNat : Int) = a.num := Int.toNat_of_nonneg ha0
+  have hpbI : (b.num.toNat : Int) = b.num := Int.toNat_of_nonneg hb0
+  have hgA : ((a.den - a.num.toNat : Nat) : Int) = (a.den : Int) - a.num := by
+    rw [Int.ofNat_sub (Nat.le_of_lt halt), hpaI]
+  have hgB : ((b.den - b.num.toNat : Nat) : Int) = (b.den : Int) - b.num := by
+    rw [Int.ofNat_sub (Nat.le_of_lt hblt), hpbI]
+  have hPP : ((a.num * b.num).toNat : Int) = a.num * b.num :=
+    Int.toNat_of_nonneg (Int.mul_nonneg ha0 hb0)
+  have hWnum : ((wval a b).num.toNat : Int) = a.num * (b.den : Int) + b.num * (a.den : Int) := by
+    rw [Int.toNat_of_nonneg (wval_num_nonneg a b ha0 hb0), wval_num]
+  have hWden : ((wval a b).den : Int) = (a.den : Int) * b.den + a.num * b.num := by
+    rw [wval_den]; push_cast [hPP]; ring_uor
+  have hWlt : (wval a b).num.toNat ≤ (wval a b).den := Nat.le_of_lt (wval_lt a b had ha0 halt hbd hb0 hblt)
+  simp only [Qeq, mul]
+  rw [Int.ofNat_sub hWlt, hWnum, hWden, wval_num]
+  push_cast [hgA, hgB]
+  exact wval_hg_poly (a.den : Int) a.num (b.den : Int) b.num
+
+/-- **The `artanh` addition law in directly-usable form**: `2·artanh(wval a b) = 2·artanh a + 2·artanh b`
+    for rationals `0 ≤ a, b < 1`, with the sum-argument `c = wval a b = (a+b)/(1+ab)` computed and the
+    `hg` side-condition discharged by `wval_hg`. -/
+theorem TwoArtanh_add_wval (a b : Q)
+    (had : 0 < a.den) (ha0 : 0 ≤ a.num) (halt : a.num.toNat < a.den)
+    (hbd : 0 < b.den) (hb0 : 0 ≤ b.num) (hblt : b.num.toNat < b.den) :
+    Req (TwoArtanhConst (wval a b) (wval a b)
+          (wval_den_pos a b had hbd) (wval_num_nonneg a b ha0 hb0) (wval_den_pos a b had hbd)
+          (wval_lt a b had ha0 halt hbd hb0 hblt) (Qeq_le (Qabs_of_nonneg (wval_num_nonneg a b ha0 hb0))))
+        (Radd (TwoArtanhConst a a had ha0 had halt (Qeq_le (Qabs_of_nonneg ha0)))
+              (TwoArtanhConst b b hbd hb0 hbd hblt (Qeq_le (Qabs_of_nonneg hb0)))) :=
+  TwoArtanh_add_rat a b (wval a b) had ha0 halt hbd hb0 hblt
+    (wval_den_pos a b had hbd) (wval_num_nonneg a b ha0 hb0) (wval_lt a b had ha0 halt hbd hb0 hblt)
+    (wval_hg a b had ha0 halt hbd hb0 hblt)
+
 end UOR.Bridge.F1Square.Analysis

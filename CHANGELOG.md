@@ -108,8 +108,16 @@ audit-visible hypothesis, never an axiom).
   exactly `c = (a+b)/(1+ab)`): three instances of `Rexp_twoArtanh_general` feed the exp-injectivity
   additivity core `Req_add_of_exp_values` (`RArctanCongr.lean`). With the continuity `RarctanR_congr`
   (rational→real lift) this is the route to real log-multiplicativity. `Rnonneg_TwoArtanhConst` records
-  `2·artanh τ ≥ 0` for `τ ≥ 0`. RH-independent interface-shrinking toward discharging `bl`; the crux
-  fields stay `none`.
+  `2·artanh τ ≥ 0` for `τ ≥ 0`.
+  - **`wval` — the division-free addition map** `(a+b)/(1+ab)` (numerator `pa·qb+pb·qa`, denominator
+    `qa·qb+pa·pb`), with `wval_den_pos`/`wval_num_nonneg`/`wval_lt` (the last via the slack
+    `(qa−pa)(qb−pb) > 0`, the `a,b < 1` margins) and the multiplicativity identity `wval_hg`
+    (`(1+wval)/(1−wval) = ((1+a)/(1−a))·((1+b)/(1−b))`, both sides clearing to
+    `(qa+pa)(qb+pb)(qa−pa)(qb−pb)` — a pure-`Int` `ring_uor` identity once the `Nat.cast`/`toNat`
+    bridges are discharged). `TwoArtanh_add_wval` then gives the addition law in directly-usable form
+    `2·artanh(wval a b) = 2·artanh a + 2·artanh b` with the `hg` side-condition discharged once and the
+    sum-argument `c = wval a b` computed — leaving only trivial positivity obligations for callers.
+  RH-independent interface-shrinking toward discharging `bl`; the crux fields stay `none`.
 - **Track 1, brick 1 — arctan at a general REAL argument** (`Analysis/RArctan.lean`). The forced-first
   prerequisite of the `Γ(s/2) → ξ → Hadamard` stack that discharges the `bl` seam: complex `Clog` on
   the right half-plane needs `arg(z) = arctan(Im z / Re z)` at a general real ratio, and the repo had
