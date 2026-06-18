@@ -999,4 +999,53 @@ theorem Rartanh_add_real_via (s t X1 X2 Y : Real) (σ : Q) (R_Y : Nat → Nat)
   refine Qle_trans (add_den_pos (Nat.succ_pos n) (Nat.succ_pos n)) (Qadd_le_add hlegA hlegB) ?_
   apply Qeq_le; exact Qadd_same_den_loc 2 32 (n + 1)
 
+/-- **Log-multiplication (abstract `×2` wiring)**: from `X1 + X2 = Xadd` and `Xadd ≈ R`, the scaled
+    `c·X1 + c·X2 = c·R`. The binary analog of `Rlog_double_algebra`, via `Rmul_distrib`. -/
+theorem Rlog_mul_algebra (c X1 X2 Xadd R : Real)
+    (hadd : Req (Radd X1 X2) Xadd) (hcong : Req Xadd R) :
+    Req (Radd (Rmul c X1) (Rmul c X2)) (Rmul c R) :=
+  Req_trans (Req_symm (Rmul_distrib c X1 X2)) (Rmul_congr (Req_refl c) (Req_trans hadd hcong))
+
+/-- **Log-multiplication (abstract wiring)**: with the `t`-reals `tx, ty, txy` all at a common radius
+    `σ` (`σ² ≤ ½`, non-negative sequences) and `txy ≈ wvalReal tx ty` (from `tmul_wvalReal_via`), the two
+    `c·Rartanh` reals — `c·Rlog x + c·Rlog y` and `c·Rlog (xy)` — agree. Chains `Rartanh_add_real_via`
+    (the real addition), `Rartanh_congr` (the argument identity), `Rlog_mul_algebra` (the `×2`
+    distribution). Pure wiring, no new analysis (cf. `Rlog_sq_via`). -/
+theorem Rlog_mul_via (c tx ty txy : Real) (σ : Q)
+    (hσ0 : 0 ≤ σ.num) (hσd : 0 < σ.den) (hσlt : σ.num.toNat < σ.den)
+    (hσhalf : Qle (mul σ σ) ⟨1, 2⟩)
+    (hs0 : ∀ m, 0 ≤ (tx.seq m).num) (ht0 : ∀ m, 0 ≤ (ty.seq m).num)
+    (hslt : ∀ m, (tx.seq m).num.toNat < (tx.seq m).den)
+    (htlt : ∀ m, (ty.seq m).num.toNat < (ty.seq m).den)
+    (hbx : ∀ m, Qle (Qabs (tx.seq m)) σ) (hby : ∀ m, Qle (Qabs (ty.seq m)) σ)
+    (hbw : ∀ i, Qle (Qabs (wvalR (tx.seq i) (ty.seq i))) σ) (hbtxy : ∀ m, Qle (Qabs (txy.seq m)) σ)
+    (htmul : Req txy (wvalReal tx ty σ hσd hσ0 hσhalf hbx hby)) :
+    Req (Radd (Rmul c (Rartanh tx σ hσ0 hσd hσlt hbx)) (Rmul c (Rartanh ty σ hσ0 hσd hσlt hby)))
+        (Rmul c (Rartanh txy σ hσ0 hσd hσlt hbtxy)) := by
+  have hσ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul σ σ)) := by
+    have h := hσhalf; simp only [Qle, Qsub, add, neg, mul] at h ⊢; push_cast at h ⊢; omega
+  have hbW : ∀ n, Qle (Qabs ((wvalReal tx ty σ hσd hσ0 hσhalf hbx hby).seq n)) σ :=
+    fun n => hbw (8 * n + 7)
+  have hRY : ∀ n, n ≤ 8 * Rartanh_R σ n + 7 := by
+    intro n
+    have hk : 1 ≤ σ.den * σ.den + 4 * σ.den := Nat.le_trans (by omega) (Nat.le_add_left _ _)
+    have : n ≤ Rartanh_R σ n := by
+      unfold Rartanh_R
+      calc n ≤ 1 * (n + 1) := by omega
+        _ ≤ (σ.den * σ.den + 4 * σ.den) * (n + 1) := Nat.mul_le_mul_right _ hk
+    omega
+  have hadd : Req (Radd (Rartanh tx σ hσ0 hσd hσlt hbx) (Rartanh ty σ hσ0 hσd hσlt hby))
+      (Rartanh (wvalReal tx ty σ hσd hσ0 hσhalf hbx hby) σ hσ0 hσd hσlt hbW) :=
+    Rartanh_add_real_via tx ty (Rartanh tx σ hσ0 hσd hσlt hbx) (Rartanh ty σ hσ0 hσd hσlt hby)
+      (Rartanh (wvalReal tx ty σ hσd hσ0 hσhalf hbx hby) σ hσ0 hσd hσlt hbW)
+      σ (fun n => 8 * Rartanh_R σ n + 7) hσ0 hσd hσlt hσ2 hRY hs0 ht0 hslt htlt hbx hby hbw
+      (fun _ => rfl) (fun _ => rfl) (fun _ => rfl)
+  have hcong : Req (Rartanh (wvalReal tx ty σ hσd hσ0 hσhalf hbx hby) σ hσ0 hσd hσlt hbW)
+      (Rartanh txy σ hσ0 hσd hσlt hbtxy) :=
+    Rartanh_congr (wvalReal tx ty σ hσd hσ0 hσhalf hbx hby) txy σ hσ0 hσd hσlt hσ2 hbW hbtxy
+      (Req_symm htmul)
+  exact Rlog_mul_algebra c (Rartanh tx σ hσ0 hσd hσlt hbx) (Rartanh ty σ hσ0 hσd hσlt hby)
+    (Rartanh (wvalReal tx ty σ hσd hσ0 hσhalf hbx hby) σ hσ0 hσd hσlt hbW)
+    (Rartanh txy σ hσ0 hσd hσlt hbtxy) hadd hcong
+
 end UOR.Bridge.F1Square.Analysis

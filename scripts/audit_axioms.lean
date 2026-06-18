@@ -778,6 +778,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.RartanhConst_add_wval_rho
 #print axioms Analysis.wval_eq_wvalR
 #print axioms Analysis.Rartanh_add_real_via
+#print axioms Analysis.Rlog_mul_algebra
+#print axioms Analysis.Rlog_mul_via
 -- v0.22.0 Track 1: the complex argument on the principal sector (Analysis/ComplexArg.lean).
 #print axioms Analysis.Carg_ofReal_pos
 -- v0.22.0 Track 1: the complex logarithm Clog on the principal sector (Analysis/ComplexLog.lean).
