@@ -113,6 +113,29 @@ audit-visible hypothesis, never an axiom).
   the `artanh` arguments `tmap(·)` are non-negative — `tmap_nonneg_lt_one`; `hbw` via
   `wvalR_tmap_seq_bound`; radius alignment `ρ_B → ρ_{B²}` via `Rartanh_radius_indep`). RH-independent
   interface-shrinking toward `bl`; the crux fields stay `none`.
+- **Track 1 — the real `arctan` addition map `vvalReal = (s+t)/(1−s·t)`** (`Analysis/ArtanhAdd.lean`),
+  the argument-addition substrate for `Clog`'s imaginary half (`arg(zw) = arg z + arg w`). The full
+  `arctan` analog of the `wval`/`artanh` Lipschitz stack: the division-free map `vval a b` with its
+  cleared one-sided differences (`vval_argdiff1`/`vval_argdiff2`, factor `1+c²` vs `artanh`'s `1−c²`),
+  the radius half-bound `vval_halfbound` (denominator `1−ac`), the strengthened `2c² ≤ 1`
+  (`vval_csq_le`, which the `arctan` Lipschitz core needs vs `artanh`'s `c² ≤ 1`), symmetry `vval_comm`,
+  inner-positivity `vval_inner_pos` (`1−ab > 0`), the binary Lipschitz bounds `vval_lip1`/`vval_lip2`
+  (constant `6`, vs `artanh`'s `4`, on the certified denominator estimate `vval_lip1_den`), and the real
+  map `vvalReal` with regularity (`12n+11` reindex absorbing the two Lipschitz-`6` terms, since
+  `12·Qbound(12n+11) = Qbound n`). RH-independent; the crux fields stay `none`.
+- **Track 1 — the formal `arctan` ODE `A′(t) = 1/(1+t²)`** (`Analysis/ArctanODE.lean`), the
+  alternating sibling of `dgeom_ode`: the arctan coefficient sequence `arctanCoeff` has formal
+  derivative `fderiv arctanCoeff = geomAlt` (`arctan_fderiv`, the `1/(1+t²)` coefficients), with the
+  `(1+t²)`-annihilation `geomAlt(k+2) + geomAlt(k) ≈ 0` (`geomAlt_recurrence`) and boundary
+  `geomAlt 0 = 1`, `geomAlt 1 = 0`. Built on the `fderiv`/`fmul` formal-power-series calculus
+  (`ExpLog.lean`). **Finding (sharp diagnosis):** unlike the `artanh` exp engine — whose geometric
+  series is *exactly rational-summable* to `(1+w)/(1−w)`, giving an exact value identity — the `arctan`
+  series is *not* rational-summable, so this formal ODE does **not** collapse to a value identity. The
+  one remaining gap for argument-addition (hence `Clog`'s imaginary half) is precisely the value-level
+  inverse-function fact `tan(arctan t) = t` (equivalently `Rsin(arctan t) = t·Rcos(arctan t)`); the
+  `vval` algebra, `Rsin_add`/`Rcos_add`, and `Rcos_sq_add_sin_sq` are all already in place around it, so
+  only the formal-PS → value (fundamental-theorem-of-calculus) bridge — seeded by `arctan_fderiv` —
+  remains. RH-*independent* analytic infrastructure; the crux fields stay `none`.
 - **Track 1 — the rational `artanh` addition law** (`Analysis/ArtanhAdd.lean`), the arithmetic heart of
   log-multiplicativity `log(xy) = log x + log y` (hence of `Clog` additivity, hence of the Hadamard
   `log ξ`). `Rexp_twoArtanh_general` packages the heavy `Rexp_two_artanh_ofQ` parameter thicket **once**

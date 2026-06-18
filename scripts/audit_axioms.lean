@@ -799,6 +799,13 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.vval_lip1
 #print axioms Analysis.vval_lip2
 #print axioms Analysis.vvalReal
+-- v0.22.0 Track 1: the formal arctan ODE A′=1/(1+t²) (Analysis/ArctanODE.lean).
+#print axioms Analysis.arctanCoeff_den_pos
+#print axioms Analysis.geomAlt_den_pos
+#print axioms Analysis.arctan_fderiv
+#print axioms Analysis.geomAlt_recurrence
+#print axioms Analysis.geomAlt_zero
+#print axioms Analysis.geomAlt_one
 -- v0.22.0 Track 1: the complex argument on the principal sector (Analysis/ComplexArg.lean).
 #print axioms Analysis.Carg_ofReal_pos
 -- v0.22.0 Track 1: the complex logarithm Clog on the principal sector (Analysis/ComplexLog.lean).
