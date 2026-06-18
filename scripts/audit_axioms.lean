@@ -853,6 +853,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.arctanCoeff_term_odd
 #print axioms Analysis.arctanCoeff_term_even
 #print axioms Analysis.peval_arctanCoeff_eq_arctanSum
+#print axioms Analysis.arctanSum_abs_le
 #print axioms Analysis.arctanCoeff_fabs_le_one
 #print axioms Analysis.gcornerB_den
 #print axioms Analysis.e_rec_alg2

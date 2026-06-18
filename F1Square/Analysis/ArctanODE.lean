@@ -864,6 +864,18 @@ theorem peval_arctanCoeff_eq_arctanSum (t : Q) (htd : 0 < t.den) (N : Nat) :
       (Qadd_congr (Qadd_congr ih (arctanCoeff_term_even t n)) ho) ?_
     exact Qadd_congr (Qadd_zero_right (arctanSum t n)) (Qeq_refl _)
 
+/-- **Absolute bound on the arctan partial sum**: `|arctanSum t N| ≤ geoSum ρ N` for `|t| ≤ ρ`
+    (per-term `arctanTerm_abs_le` + triangle). With `geoSum ρ N ≤ 1` (small `ρ`) this gives the
+    `|peval arctanCoeff t M| ≤ 1` hypothesis that `gen_per_m_bound` needs. -/
+theorem arctanSum_abs_le {t ρ : Q} (htd : 0 < t.den) (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den)
+    (htρ : Qle (Qabs t) ρ) : ∀ N, Qle (Qabs (arctanSum t N)) (geoSum ρ N)
+  | 0 => arctanTerm_abs_le htd hρ0 hρd htρ 0
+  | (N + 1) => by
+      show Qle (Qabs (add (arctanSum t N) (arctanTerm t (N + 1)))) (add (geoSum ρ N) (geoTerm ρ (N + 1)))
+      refine Qle_trans (add_den_pos (Qabs_den_pos (arctanSum_den_pos htd N))
+          (Qabs_den_pos (arctanTerm_den_pos htd (N + 1)))) (Qabs_add_le _ _) ?_
+      exact Qadd_le_add (arctanSum_abs_le htd hρ0 hρd htρ N) (arctanTerm_abs_le htd hρ0 hρd htρ (N + 1))
+
 /-- **Geometric domination of the arctan coefficients**: `|arctanCoeffₖ| ≤ 1` for every `k` (the
     coefficient is `(−1)^{k/2}/k` at odd `k`, else `0`). The convergence input for the composition
     value bridge: combined with `peval_mono` it bounds `peval (fabs arctanCoeff) ρ M` by a geometric
