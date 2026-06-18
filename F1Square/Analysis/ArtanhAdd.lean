@@ -1271,4 +1271,28 @@ theorem vval_argdiff2_cleared (pa qa pc qc pd qd : Int) :
     (pa * qc + pc * qa) * (qa * qd - pa * pd) - (pa * qd + pd * qa) * (qa * qc - pa * pc)
       = (pc * qd - pd * qc) * (qa * qa + pa * pa) := by ring_uor
 
+/-- The pure-`Int` denominator estimate behind the `vval` (arctan-map) Lipschitz constant `6`: if both
+    shifted denominators clear the half-bound `qa·qc ≤ 2·(qa·qc − pa·pc)` (which holds for `|a|,|c| ≤ ρ`,
+    `ρ² ≤ ½`, since the `arctan` map's denominator is `1 − ac`) and `2pc² ≤ qc²`, then
+    `(qc²+pc²)·qa·qb ≤ 6·D(a,c)·D(b,c)` with `D(x,y) = qx·qy − px·py`. The constant is `6` (not `4`)
+    because the `arctan` Lipschitz factor is `1+c²` and the denominator subtracts. Chain:
+    `(qa·qc)(qb·qc) ≤ (2D_ac)(2D_bc)`, and `2(qc²+pc²)·qa·qb ≤ 3·qc²·qa·qb`. -/
+theorem vval_lip1_den (qa pa qb pb qc pc : Int) (hqa : 0 < qa) (hqb : 0 < qb) (hqc : 0 < qc)
+    (hDac : qa * qc ≤ 2 * (qa * qc - pa * pc)) (hDbc : qb * qc ≤ 2 * (qb * qc - pb * pc))
+    (hpc : 2 * (pc * pc) ≤ qc * qc) :
+    (qc * qc + pc * pc) * (qa * qb) ≤ 6 * ((qa * qc - pa * pc) * (qb * qc - pb * pc)) := by
+  have hacp : 0 < qa * qc := Int.mul_pos hqa hqc
+  have hbcp : 0 < qb * qc := Int.mul_pos hqb hqc
+  have hqab : 0 ≤ qa * qb := Int.le_of_lt (Int.mul_pos hqa hqb)
+  have hprod : (qa * qc) * (qb * qc) ≤ (2 * (qa * qc - pa * pc)) * (2 * (qb * qc - pb * pc)) :=
+    Int.mul_le_mul hDac hDbc (Int.le_of_lt hbcp) (by omega)
+  have keyB : (qa * qc) * (qb * qc) = (qc * qc) * (qa * qb) := by ring_uor
+  have keyD : (2 * (qa * qc - pa * pc)) * (2 * (qb * qc - pb * pc))
+      = 4 * ((qa * qc - pa * pc) * (qb * qc - pb * pc)) := by ring_uor
+  -- 2·(qc²+pc²)·qa·qb ≤ 3·qc²·qa·qb  (slack (qc²−2pc²)·qa·qb ≥ 0)
+  have hslackC : 0 ≤ (qc * qc - 2 * (pc * pc)) * (qa * qb) := Int.mul_nonneg (by omega) hqab
+  have keyC : 3 * ((qc * qc) * (qa * qb)) - 2 * ((qc * qc + pc * pc) * (qa * qb))
+      = (qc * qc - 2 * (pc * pc)) * (qa * qb) := by ring_uor
+  omega
+
 end UOR.Bridge.F1Square.Analysis
