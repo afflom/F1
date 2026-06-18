@@ -250,4 +250,36 @@ theorem cosComp_deriv (k : Nat) :
   exact fmul_neg_left (fcomp sinCoeff arctanCoeff) geomAlt
     (fun i => fcomp_den_pos sinCoeff_den_pos arctanCoeff_den_pos i) geomAlt_den_pos k
 
+-- ===========================================================================
+-- Sparse-convolution evaluation: extracting fmul against the identity series
+-- (using the existing `Fsum_single` from ExpLog.lean).
+-- ===========================================================================
+
+/-- The **identity series** `X(t) = t`: coefficient `1` at degree `1`, else `0`. Multiplying by it
+    shifts a series up one degree: `(X·H)(k+1) = H(k)`. -/
+def Xident (k : Nat) : Q := if k = 1 then ⟨1, 1⟩ else ⟨0, 1⟩
+
+theorem Xident_den_pos (k : Nat) : 0 < (Xident k).den := by unfold Xident; split <;> exact Nat.one_pos
+
+/-- `(X·H)(0) ≈ 0`. -/
+theorem fmul_Xident_zero (H : Nat → Q) : Qeq (fmul Xident H 0) ⟨0, 1⟩ := by
+  show Qeq (mul (Xident 0) (H 0)) ⟨0, 1⟩
+  unfold Xident; rw [if_neg (by omega)]; simp only [Qeq, mul]; omega
+
+/-- **Shift law**: `(X·H)(k+1) ≈ H(k)` — multiplication by the identity series `X(t)=t`. Single nonzero
+    convolution term at `i = 1` (via `Fsum_single`). -/
+theorem fmul_Xident (H : Nat → Q) (hH : ∀ i, 0 < (H i).den) (k : Nat) :
+    Qeq (fmul Xident H (k + 1)) (H k) := by
+  show Qeq (Fsum (fun i => mul (Xident i) (H (k + 1 - i))) (k + 1)) (H k)
+  refine Qeq_trans (Qmul_den_pos (Xident_den_pos 1) (hH (k + 1 - 1)))
+    (Fsum_single (f := fun i => mul (Xident i) (H (k + 1 - i)))
+      (fun i => Qmul_den_pos (Xident_den_pos i) (hH _)) (j := 1) ?_ (k := k + 1) (by omega)) ?_
+  · intro i hi1
+    show Qeq (mul (Xident i) (H (k + 1 - i))) ⟨0, 1⟩
+    unfold Xident; rw [if_neg hi1]; simp only [Qeq, mul]; omega
+  · show Qeq (mul (Xident 1) (H (k + 1 - 1))) (H k)
+    rw [show k + 1 - 1 = k from by omega]
+    unfold Xident; rw [if_pos rfl]
+    simp only [Qeq, mul]; push_cast; ring_uor
+
 end UOR.Bridge.F1Square.Analysis
