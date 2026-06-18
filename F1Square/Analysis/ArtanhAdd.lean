@@ -232,4 +232,33 @@ theorem TwoArtanh_add_wval (a b : Q)
     (wval_den_pos a b had hbd) (wval_num_nonneg a b ha0 hb0) (wval_lt a b had ha0 halt hbd hb0 hblt)
     (wval_hg a b had ha0 halt hbd hb0 hblt)
 
+-- ===========================================================================
+-- The binary Lipschitz core for the REAL lift of the addition law.
+--
+-- Structural finding (this is why the real lift is materially harder than the unary doubling
+-- `Rartanh_double_real_via`): doubling `2·artanh t = artanh(2t/(1+t²))` lifts to real `t` through a
+-- SINGLE-variable polynomial composition (`dcomp_artSum` / `peval (fcomp acoef kdbl)`), composing
+-- the doubling polynomial `kdbl` with the artanh series. Binary addition has NO such single-variable
+-- composition, so its real lift needs a genuine two-variable continuity argument over a sign-robust
+-- binary map. The certified algebraic heart of that argument is the cleared difference numerator:
+-- varying ONE argument of `(s+t)/(1+st)` factors as `(Δ-cross)·(1 − other²)`, so each one-sided
+-- variation is Lipschitz with the `(1 − other²)` constant — the exact analog of `uval_diff_cleared`.
+-- ===========================================================================
+
+/-- **Binary cleared difference, first argument** (the Lipschitz numerator of `(·+c)/(1+·c)`):
+    `N(a,c)·D(b,c) − N(b,c)·D(a,c) = (pa·qb − pb·qa)·(qc² − pc²)`, where `N(x,y) = px·qy + py·qx` and
+    `D(x,y) = qx·qy + px·py` are the unreduced numerator/denominator of `(x+y)/(1+xy)`. The cross-term
+    `pa·qb − pb·qa` is the unreduced `a − b`; the factor `qc² − pc²` is the unreduced `1 − c²`. So the
+    one-sided variation is Lipschitz with constant `1 − c²` (`≤ 1`). Certified by `ring_uor`. -/
+theorem wval_argdiff1_cleared (pa qa pb qb pc qc : Int) :
+    (pa * qc + pc * qa) * (qb * qc + pb * pc) - (pb * qc + pc * qb) * (qa * qc + pa * pc)
+      = (pa * qb - pb * qa) * (qc * qc - pc * pc) := by ring_uor
+
+/-- **Binary cleared difference, second argument** (the symmetric companion of `wval_argdiff1_cleared`,
+    since `(s+t)/(1+st)` is symmetric): varying the second argument of `(a+·)/(1+a·)` factors as
+    `(pc·qd − pd·qc)·(qa² − pa²)` — the unreduced `(c − d)·(1 − a²)`. Certified by `ring_uor`. -/
+theorem wval_argdiff2_cleared (pa qa pc qc pd qd : Int) :
+    (pa * qc + pc * qa) * (qa * qd + pa * pd) - (pa * qd + pd * qa) * (qa * qc + pa * pc)
+      = (pc * qd - pd * qc) * (qa * qa - pa * pa) := by ring_uor
+
 end UOR.Bridge.F1Square.Analysis
