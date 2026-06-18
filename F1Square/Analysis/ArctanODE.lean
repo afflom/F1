@@ -282,4 +282,74 @@ theorem fmul_Xident (H : Nat → Q) (hH : ∀ i, 0 < (H i).den) (k : Nat) :
     unfold Xident; rw [if_pos rfl]
     simp only [Qeq, mul]; push_cast; ring_uor
 
+/-- The **`1 + t²` series**: coefficient `1` at degrees `0` and `2`, else `0`. -/
+def onePlusSq (k : Nat) : Q := if k = 0 then ⟨1, 1⟩ else if k = 2 then ⟨1, 1⟩ else ⟨0, 1⟩
+
+/-- The **`t²` series**: coefficient `1` at degree `2`, else `0`. -/
+def sq2 (k : Nat) : Q := if k = 2 then ⟨1, 1⟩ else ⟨0, 1⟩
+
+theorem onePlusSq_den_pos (k : Nat) : 0 < (onePlusSq k).den := by
+  unfold onePlusSq; split
+  · exact Nat.one_pos
+  · split <;> exact Nat.one_pos
+
+theorem sq2_den_pos (k : Nat) : 0 < (sq2 k).den := by unfold sq2; split <;> exact Nat.one_pos
+
+/-- Left unit for the formal Cauchy product: `fone · H ≈ H` (via `fmul_comm` + `fmul_one`). -/
+theorem fmul_fone_left (H : Nat → Q) (hH : ∀ i, 0 < (H i).den) (k : Nat) :
+    Qeq (fmul fone H k) (H k) :=
+  Qeq_trans (fmul_den_pos hH (fun i => fone_den_pos i) k)
+    (fmul_comm fone H (fun i => fone_den_pos i) hH k) (fmul_one H hH k)
+
+/-- **Shift-by-two law**: `(t²·H)(k+2) ≈ H(k)`. Single nonzero convolution term at `i = 2`. -/
+theorem fmul_sq2 (H : Nat → Q) (hH : ∀ i, 0 < (H i).den) (k : Nat) :
+    Qeq (fmul sq2 H (k + 2)) (H k) := by
+  show Qeq (Fsum (fun i => mul (sq2 i) (H (k + 2 - i))) (k + 2)) (H k)
+  refine Qeq_trans (Qmul_den_pos (sq2_den_pos 2) (hH (k + 2 - 2)))
+    (Fsum_single (f := fun i => mul (sq2 i) (H (k + 2 - i)))
+      (fun i => Qmul_den_pos (sq2_den_pos i) (hH _)) (j := 2) ?_ (k := k + 2) (by omega)) ?_
+  · intro i hi2
+    show Qeq (mul (sq2 i) (H (k + 2 - i))) ⟨0, 1⟩
+    unfold sq2; rw [if_neg hi2]; simp only [Qeq, mul]; omega
+  · show Qeq (mul (sq2 2) (H (k + 2 - 2))) (H k)
+    rw [show k + 2 - 2 = k from by omega]
+    unfold sq2; rw [if_pos rfl]; simp only [Qeq, mul]; push_cast; ring_uor
+
+/-- `onePlusSq ≈ fone + sq2` (pointwise) — the decomposition that splits its convolution. -/
+theorem onePlusSq_decomp (i : Nat) : Qeq (onePlusSq i) (add (fone i) (sq2 i)) := by
+  by_cases h0 : i = 0
+  · subst h0; unfold onePlusSq fone sq2; decide
+  · by_cases h2 : i = 2
+    · subst h2; unfold onePlusSq fone sq2; decide
+    · unfold onePlusSq fone sq2; simp only [if_neg h0, if_neg h2]; decide
+
+/-- **The `(1+t²)·H` annihilation form**: `((1+t²)·H)(k+2) ≈ H(k+2) + H(k)`. Two nonzero convolution
+    terms (`i = 0, 2`), extracted via the `fone + t²` decomposition. -/
+theorem fmul_onePlusSq (H : Nat → Q) (hH : ∀ i, 0 < (H i).den) (k : Nat) :
+    Qeq (fmul onePlusSq H (k + 2)) (add (H (k + 2)) (H k)) := by
+  refine Qeq_trans
+    (fmul_den_pos (fun i => add_den_pos (fone_den_pos i) (sq2_den_pos i)) hH (k + 2))
+    (fmul_congr_left (fun i => onePlusSq_decomp i) (k + 2)) ?_
+  refine Qeq_trans (add_den_pos (fmul_den_pos (fun i => fone_den_pos i) hH (k + 2))
+      (fmul_den_pos (fun i => sq2_den_pos i) hH (k + 2)))
+    (fmul_add_left (fun i => fone_den_pos i) (fun i => sq2_den_pos i) hH (k + 2)) ?_
+  exact Qadd_congr (fmul_fone_left H hH (k + 2)) (fmul_sq2 H hH k)
+
+/-- `((1+t²)·H)(0) ≈ H(0)`. -/
+theorem fmul_onePlusSq_zero (H : Nat → Q) :
+    Qeq (fmul onePlusSq H 0) (H 0) := by
+  show Qeq (mul (onePlusSq 0) (H 0)) (H 0)
+  unfold onePlusSq; rw [if_pos rfl]; simp only [Qeq, mul]; push_cast; ring_uor
+
+/-- `((1+t²)·H)(1) ≈ H(1)`. -/
+theorem fmul_onePlusSq_one (H : Nat → Q) (hH : ∀ i, 0 < (H i).den) :
+    Qeq (fmul onePlusSq H 1) (H 1) := by
+  show Qeq (add (mul (onePlusSq 0) (H 1)) (mul (onePlusSq 1) (H 0))) (H 1)
+  have h0 : Qeq (mul (onePlusSq 0) (H 1)) (H 1) := by
+    unfold onePlusSq; rw [if_pos rfl]; simp only [Qeq, mul]; push_cast; ring_uor
+  have h1 : Qeq (mul (onePlusSq 1) (H 0)) ⟨0, 1⟩ := by
+    unfold onePlusSq; rw [if_neg (by omega), if_neg (by omega)]; simp only [Qeq, mul]; omega
+  exact Qeq_trans (add_den_pos (hH 1) (by decide))
+    (Qadd_congr h0 h1) (Qadd_zero_right (H 1))
+
 end UOR.Bridge.F1Square.Analysis
