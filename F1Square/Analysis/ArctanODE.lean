@@ -429,6 +429,21 @@ theorem ode_unique (H : Nat → Q) (hH : ∀ i, 0 < (H i).den) (hH0 : Qeq (H 0) 
     | succ n ih => exact ⟨ih.2.1, ih.2.2, hrec n ih.2.1⟩
   intro k; exact (key k).1
 
+/-- Formal derivative of a pointwise difference: `(S − T)′ = S′ − T′`. -/
+theorem fderiv_sub (S T : Nat → Q) (k : Nat) :
+    Qeq (fderiv (fun j => Qsub (S j) (T j)) k) (Qsub (fderiv S k) (fderiv T k)) :=
+  Qmul_sub_distrib ⟨(k : Int) + 1, 1⟩ (S (k + 1)) (T (k + 1))
+
+/-- The identity series is its own antiderivative's derivative: `X′ = 1` (`fderiv Xident ≈ fone`). -/
+theorem Xident_fderiv (k : Nat) : Qeq (fderiv Xident k) (fone k) := by
+  by_cases h0 : k = 0
+  · subst h0
+    show Qeq (mul ⟨(0 : Int) + 1, 1⟩ (Xident 1)) (fone 0)
+    unfold Xident fone; rw [if_pos rfl, if_pos rfl]; decide
+  · show Qeq (mul ⟨(k : Int) + 1, 1⟩ (Xident (k + 1))) (fone k)
+    unfold Xident fone; rw [if_neg (by omega : ¬ k + 1 = 1), if_neg h0]
+    simp only [Qeq, mul]; push_cast; ring_uor
+
 /-- **`(1+t²)·A′ = 1`**: `fmul onePlusSq geomAlt ≈ fone` — the formal statement that `geomAlt` is the
     reciprocal `1/(1+t²)`. From `geomAlt_recurrence` (degree `≥ 2`) and the boundary values. -/
 theorem onePlusSq_geomAlt : ∀ k, Qeq (fmul onePlusSq geomAlt k) (fone k)
