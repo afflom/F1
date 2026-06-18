@@ -322,4 +322,88 @@ theorem wvalR_argdiff2 (a c d : Q)
   rw [hCd, hDd]
   exact wvalR_argdiff2_poly a.num (a.den : Int) c.num (c.den : Int) d.num (d.den : Int)
 
+/-- The pure-`Int` denominator estimate behind the Lipschitz constant `4`: if both shifted
+    denominators clear the half-bound `qa·qc ≤ 2·(qa·qc+pa·pc)` (which holds for `|a|,|c| ≤ ρ`,
+    `ρ² ≤ ½`), then `(qc²−pc²)·qa·qb ≤ 4·D(a,c)·D(b,c)`. The chain
+    `(qc²−pc²)qa·qb ≤ qc²·qa·qb = (qa·qc)(qb·qc) ≤ (2D_ac)(2D_bc) = 4 D_ac D_bc`. -/
+private theorem wval_lip1_den (qa pa qb pb qc pc : Int)
+    (hqa : 0 < qa) (hqb : 0 < qb) (hqc : 0 < qc)
+    (hDac : qa * qc ≤ 2 * (qa * qc + pa * pc))
+    (hDbc : qb * qc ≤ 2 * (qb * qc + pb * pc)) :
+    (qc * qc - pc * pc) * (qa * qb) ≤ 4 * ((qa * qc + pa * pc) * (qb * qc + pb * pc)) := by
+  have hacp : 0 < qa * qc := Int.mul_pos hqa hqc
+  have hbcp : 0 < qb * qc := Int.mul_pos hqb hqc
+  have hprod : (qa * qc) * (qb * qc)
+      ≤ (2 * (qa * qc + pa * pc)) * (2 * (qb * qc + pb * pc)) :=
+    Int.mul_le_mul hDac hDbc (Int.le_of_lt hbcp) (by omega)
+  have hpc2 : (0 : Int) ≤ pc * pc := by rw [← Int.natAbs_mul_self]; exact Int.ofNat_nonneg _
+  have hP : (0 : Int) ≤ (pc * pc) * (qa * qb) :=
+    Int.mul_nonneg hpc2 (Int.le_of_lt (Int.mul_pos hqa hqb))
+  have key1 : (qc * qc) * (qa * qb) - (qc * qc - pc * pc) * (qa * qb) = (pc * pc) * (qa * qb) := by
+    ring_uor
+  have key2 : (qc * qc) * (qa * qb) = (qa * qc) * (qb * qc) := by ring_uor
+  have key3 : (2 * (qa * qc + pa * pc)) * (2 * (qb * qc + pb * pc))
+      = 4 * ((qa * qc + pa * pc) * (qb * qc + pb * pc)) := by ring_uor
+  omega
+
+/-- **The denominator half-bound from the radius**: for `|a|, |c| ≤ ρ` with `ρ² ≤ ½`, the shifted
+    denominator `1 + ac` clears half: `qa·qc ≤ 2·(qa·qc + pa·pc)` (i.e. `2|pa·pc| ≤ qa·qc`). This is the
+    hypothesis `wval_lip1_den` needs, and the reason the binary lift requires the small-radius `ρ² ≤ ½`
+    that the unary doubling also used. -/
+theorem wval_halfbound (ρ a c : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num)
+    (had : 0 < a.den) (hcd : 0 < c.den)
+    (ha : Qle (Qabs a) ρ) (hc : Qle (Qabs c) ρ) (hρ2 : Qle (mul ρ ρ) ⟨1, 2⟩) :
+    (a.den : Int) * c.den ≤ 2 * ((a.den : Int) * c.den + a.num * c.num) := by
+  simp only [Qle, Qabs] at ha hc
+  simp only [Qle, mul] at hρ2
+  push_cast at hρ2
+  have hrd : (0 : Int) < ρ.den := by exact_mod_cast hρd
+  have hqa : (0 : Int) < a.den := by exact_mod_cast had
+  have hqc : (0 : Int) < c.den := by exact_mod_cast hcd
+  -- multiply the two abs bounds
+  have hpos1 : (0 : Int) ≤ (c.num.natAbs : Int) * ρ.den :=
+    Int.mul_nonneg (Int.ofNat_nonneg _) (Int.le_of_lt hrd)
+  have hpos2 : (0 : Int) ≤ ρ.num * a.den := Int.mul_nonneg hρ0 (Int.le_of_lt hqa)
+  have hprod : ((a.num.natAbs : Int) * ρ.den) * ((c.num.natAbs : Int) * ρ.den)
+      ≤ (ρ.num * a.den) * (ρ.num * c.den) := Int.mul_le_mul ha hc hpos1 hpos2
+  -- rearrange both sides (explicitly-typed ring_uor handles the cast atoms)
+  have eL : ((a.num.natAbs : Int) * ρ.den) * ((c.num.natAbs : Int) * ρ.den)
+      = ((a.num.natAbs : Int) * c.num.natAbs) * ((ρ.den : Int) * ρ.den) := by ring_uor
+  have eR : (ρ.num * a.den) * (ρ.num * c.den)
+      = (ρ.num * ρ.num) * ((a.den : Int) * c.den) := by ring_uor
+  rw [eL, eR] at hprod
+  -- |pa|·|pc| = |pa·pc| ; and 2ρ.num² ≤ ρ.den²
+  have hnatmul : ((a.num.natAbs : Int) * c.num.natAbs) = ((a.num * c.num).natAbs : Int) := by
+    rw [Int.natAbs_mul]; push_cast; ring_uor
+  rw [hnatmul] at hprod
+  -- 2·|pa·pc|·ρ.den² ≤ 2ρ.num²·(qa·qc) ≤ ρ.den²·(qa·qc)
+  have hrd2pos : (0 : Int) < (ρ.den : Int) * ρ.den := Int.mul_pos hrd hrd
+  have hqac : (0 : Int) ≤ (a.den : Int) * c.den := Int.le_of_lt (Int.mul_pos hqa hqc)
+  -- from hprod: |m|·ρ.den² ≤ ρ.num²·(qa qc); ×2 with hρ2 gives 2|m|·ρ.den² ≤ ρ.den²·(qa qc)
+  have hstep : (2 * ((a.num * c.num).natAbs : Int)) * ((ρ.den : Int) * ρ.den)
+      ≤ ((ρ.den : Int) * ρ.den) * ((a.den : Int) * c.den) := by
+    have h1 : 2 * (((a.num * c.num).natAbs : Int) * ((ρ.den : Int) * ρ.den))
+        ≤ 2 * ((ρ.num * ρ.num) * ((a.den : Int) * c.den)) := by omega
+    have h2 : 2 * ((ρ.num * ρ.num) * ((a.den : Int) * c.den))
+        ≤ ((ρ.den : Int) * ρ.den) * ((a.den : Int) * c.den) := by
+      have hmul := Int.mul_le_mul_of_nonneg_right (by omega : ρ.num * ρ.num * 2 ≤ 1 * ((ρ.den : Int) * ρ.den)) hqac
+      have e2 : (ρ.num * ρ.num * 2) * ((a.den : Int) * c.den)
+          = 2 * ((ρ.num * ρ.num) * ((a.den : Int) * c.den)) := by ring_uor
+      have e3 : (1 * ((ρ.den : Int) * ρ.den)) * ((a.den : Int) * c.den)
+          = ((ρ.den : Int) * ρ.den) * ((a.den : Int) * c.den) := by ring_uor
+      rw [e2, e3] at hmul; exact hmul
+    have e4 : (2 * ((a.num * c.num).natAbs : Int)) * ((ρ.den : Int) * ρ.den)
+        = 2 * (((a.num * c.num).natAbs : Int) * ((ρ.den : Int) * ρ.den)) := by ring_uor
+    rw [e4]; exact Int.le_trans h1 h2
+  -- cancel ρ.den²: 2|m| ≤ qa·qc
+  have hcancel : 2 * ((a.num * c.num).natAbs : Int) ≤ (a.den : Int) * c.den := by
+    have hcomm : ((ρ.den : Int) * ρ.den) * (2 * ((a.num * c.num).natAbs : Int))
+        ≤ ((ρ.den : Int) * ρ.den) * ((a.den : Int) * c.den) := by
+      have e5 : ((ρ.den : Int) * ρ.den) * (2 * ((a.num * c.num).natAbs : Int))
+          = (2 * ((a.num * c.num).natAbs : Int)) * ((ρ.den : Int) * ρ.den) := by ring_uor
+      rw [e5]; exact hstep
+    exact Int.le_of_mul_le_mul_left hcomm hrd2pos
+  -- conclude via omega (natAbs of the atom a.num*c.num)
+  omega
+
 end UOR.Bridge.F1Square.Analysis

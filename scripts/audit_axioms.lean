@@ -763,6 +763,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.wvalR_den_pos
 #print axioms Analysis.wvalR_argdiff1
 #print axioms Analysis.wvalR_argdiff2
+#print axioms Analysis.wval_halfbound
 -- v0.22.0 Track 1: the complex argument on the principal sector (Analysis/ComplexArg.lean).
 #print axioms Analysis.Carg_ofReal_pos
 -- v0.22.0 Track 1: the complex logarithm Clog on the principal sector (Analysis/ComplexLog.lean).
