@@ -406,4 +406,90 @@ theorem wval_halfbound (ρ a c : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num)
   -- conclude via omega (natAbs of the atom a.num*c.num)
   omega
 
+/-- **`|c| < 1` from the radius**: `pc² ≤ qc²` for `|c| ≤ ρ`, `ρ² ≤ ½` (so `ρ < 1`). -/
+theorem wval_csq_le (ρ c : Q) (hρd : 0 < ρ.den) (_hρ0 : 0 ≤ ρ.num) (hcd : 0 < c.den)
+    (hc : Qle (Qabs c) ρ) (hρ2 : Qle (mul ρ ρ) ⟨1, 2⟩) :
+    c.num * c.num ≤ (c.den : Int) * c.den := by
+  simp only [Qle, Qabs] at hc
+  simp only [Qle, mul] at hρ2
+  push_cast at hρ2
+  have hrd : (0 : Int) < ρ.den := by exact_mod_cast hρd
+  have hqc : (0 : Int) < c.den := by exact_mod_cast hcd
+  -- ρ < 1: ρ.num ≤ ρ.den (from 2ρ.num² ≤ ρ.den², ρ.num ≥ 0)
+  have hn2 : (0 : Int) ≤ ρ.num * ρ.num := by rw [← Int.natAbs_mul_self]; exact Int.ofNat_nonneg _
+  have hρlt1 : ρ.num ≤ (ρ.den : Int) := by
+    rcases Int.le_total ρ.num (ρ.den : Int) with h | h
+    · exact h
+    · exfalso
+      have hsq : (ρ.den : Int) * ρ.den ≤ ρ.num * ρ.num :=
+        Int.mul_le_mul h h (Int.le_of_lt hrd) (Int.le_trans (Int.le_of_lt hrd) h)
+      have hrd2 : (0 : Int) < (ρ.den : Int) * ρ.den := Int.mul_pos hrd hrd
+      omega
+  -- |c|·1 ≤ ρ.num·c.den ≤ c.den·c.den ... actually |pc|·ρ.den ≤ ρ.num·qc ≤ qc·qc gives |pc| ≤ qc
+  have habs : (c.num.natAbs : Int) * ρ.den ≤ ρ.num * c.den := hc
+  have hpcle : (c.num.natAbs : Int) ≤ (c.den : Int) := by
+    have h1 : (c.num.natAbs : Int) * ρ.den ≤ (c.den : Int) * ρ.den := by
+      have : ρ.num * c.den ≤ (c.den : Int) * ρ.den := by
+        have := Int.mul_le_mul_of_nonneg_right hρlt1 (Int.le_of_lt hqc)
+        have e : ρ.num * (c.den : Int) ≤ (c.den : Int) * ρ.den := by
+          have e2 : (ρ.den : Int) * c.den = (c.den : Int) * ρ.den := by ring_uor
+          rw [← e2]; exact Int.mul_le_mul_of_nonneg_right hρlt1 (Int.le_of_lt hqc)
+        exact e
+      exact Int.le_trans habs this
+    exact Int.le_of_mul_le_mul_right h1 hrd
+  -- pc² = |pc|² ≤ qc²
+  have hpc2 : c.num * c.num = (c.num.natAbs : Int) * c.num.natAbs := (Int.natAbs_mul_self' c.num).symm
+  rw [hpc2]
+  exact Int.mul_le_mul hpcle hpcle (Int.ofNat_nonneg _) (Int.le_of_lt hqc)
+
+/-- **Binary Lipschitz bound, first argument**: `|wvalR a c − wvalR b c| ≤ 4·|a − b|` for `|a|,|b|,|c| ≤ ρ`
+    with `ρ² ≤ ½` — the analog of `uval_lip` for the addition map. The cleared numerator
+    `(a−b)·(1−c²)` (`wvalR_argdiff1`) over the denominator estimate `wval_lip1_den` (using the radius
+    half-bound `wval_halfbound` and `|c| < 1` via `wval_csq_le`) yields the Lipschitz constant `4`. -/
+theorem wval_lip1 (ρ a b c : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num)
+    (had : 0 < a.den) (hbd : 0 < b.den) (hcd : 0 < c.den)
+    (ha : Qle (Qabs a) ρ) (hb : Qle (Qabs b) ρ) (hc : Qle (Qabs c) ρ)
+    (hρ2 : Qle (mul ρ ρ) ⟨1, 2⟩) :
+    Qle (Qabs (Qsub (wvalR a c) (wvalR b c))) (mul ⟨4, 1⟩ (Qabs (Qsub a b))) := by
+  have hqa : (0 : Int) < a.den := by exact_mod_cast had
+  have hqb : (0 : Int) < b.den := by exact_mod_cast hbd
+  have hqc : (0 : Int) < c.den := by exact_mod_cast hcd
+  have hHac := wval_halfbound ρ a c hρd hρ0 had hcd ha hc hρ2
+  have hHbc := wval_halfbound ρ b c hρd hρ0 hbd hcd hb hc hρ2
+  have hac : 0 < (a.den : Int) * c.den + a.num * c.num := by have := Int.mul_pos hqa hqc; omega
+  have hbc : 0 < (b.den : Int) * c.den + b.num * c.num := by have := Int.mul_pos hqb hqc; omega
+  have hND := wvalR_argdiff1 a b c hac hbc
+  have hcsq := wval_csq_le ρ c hρd hρ0 hcd hc hρ2
+  have hden := wval_lip1_den (a.den : Int) a.num (b.den : Int) b.num (c.den : Int) c.num
+    hqa hqb hqc hHac hHbc
+  have hqcpc : (0 : Int) ≤ (c.den : Int) * c.den - c.num * c.num := by omega
+  have hn : (0 : Int) ≤ ((Qsub a b).num.natAbs : Int) := Int.ofNat_nonneg _
+  -- |S.num| = |T.num|·(qc²−pc²)
+  have hSabs : ((Qsub (wvalR a c) (wvalR b c)).num.natAbs : Int)
+      = ((Qsub a b).num.natAbs : Int) * ((c.den : Int) * c.den - c.num * c.num) := by
+    rw [hND, Int.natAbs_mul]; push_cast; rw [Int.natAbs_of_nonneg hqcpc]
+  -- ↑S.den = D_ac·D_bc
+  have hSden : ((Qsub (wvalR a c) (wvalR b c)).den : Int)
+      = ((a.den : Int) * c.den + a.num * c.num) * ((b.den : Int) * c.den + b.num * c.num) := by
+    have e : (Qsub (wvalR a c) (wvalR b c)).den = (wvalR a c).den * (wvalR b c).den := rfl
+    rw [e, Int.natCast_mul, wvalR_den, wvalR_den,
+      Int.toNat_of_nonneg (Int.le_of_lt hac), Int.toNat_of_nonneg (Int.le_of_lt hbc)]
+  have hTd : (Qsub a b).den = a.den * b.den := rfl
+  simp only [Qle, Qabs, mul]
+  rw [hSabs, hSden, hTd]
+  push_cast
+  -- goal: ↑|T.num|·(qc²−pc²)·(↑a.den·↑b.den) ≤ 4·↑|T.num|·(D_ac·D_bc)
+  have key_le := Int.mul_le_mul_of_nonneg_left hden hn
+  have eL : ((Qsub a b).num.natAbs : Int) * ((c.den : Int) * c.den - c.num * c.num)
+        * (1 * ((a.den : Int) * b.den))
+      = ((Qsub a b).num.natAbs : Int)
+          * (((c.den : Int) * c.den - c.num * c.num) * ((a.den : Int) * b.den)) := by ring_uor
+  have eR : 4 * ((Qsub a b).num.natAbs : Int)
+        * (((a.den : Int) * c.den + a.num * c.num) * ((b.den : Int) * c.den + b.num * c.num))
+      = ((Qsub a b).num.natAbs : Int)
+          * (4 * (((a.den : Int) * c.den + a.num * c.num) * ((b.den : Int) * c.den + b.num * c.num))) := by
+    ring_uor
+  rw [eL, eR]
+  exact Int.mul_le_mul_of_nonneg_left hden hn
+
 end UOR.Bridge.F1Square.Analysis

@@ -126,9 +126,15 @@ audit-visible hypothesis, never an axiom).
     `ring_uor` identities, the analog of `uval_diff_cleared`. The sign-robust real-map basis `wvalR`
     (the *whole* `1+ab` numerator under `.toNat`, positive for `|a|,|b| < 1`, unlike `wval` which is
     `≥0`-only) is wired to those identities by `wvalR_argdiff1`/`_argdiff2`: the `Qsub` numerator of a
-    one-sided map difference equals `(Qsub a b).num·(qc²−pc²)` resp. `(Qsub c d).num·(qa²−pa²)`. (The
-    forthcoming `wval_lip` bound, `wvalReal` regularity, and the two-variable diagonal addition build on
-    these.)
+    one-sided map difference equals `(Qsub a b).num·(qc²−pc²)` resp. `(Qsub c d).num·(qa²−pa²)`.
+  - **The binary Lipschitz bound** `|wvalR a c − wvalR b c| ≤ 4·|a − b|` (`wval_lip1`), the analog of
+    `uval_lip` for the addition map. Its certified cores: `wval_lip1_den` (the constant-`4` denominator
+    estimate `(qc²−pc²)·qa·qb ≤ 4·D(a,c)·D(b,c)`, via `(qa·qc)(qb·qc) ≤ (2D_ac)(2D_bc)`), `wval_halfbound`
+    (the radius half-bound `qa·qc ≤ 2(qa·qc+pa·pc)` from `|a|,|c| ≤ ρ`, `ρ² ≤ ½` — the small-radius the
+    unary doubling also needed), and `wval_csq_le` (`|c| < 1`, i.e. `pc² ≤ qc²`, from the radius). The
+    wrapper composes `wvalR_argdiff1` (numerator `(a−b)(1−c²)`) over the denominator estimate via
+    `n·d ≤ n·e` (`n = |a−b|`-cross). (The `wvalReal` regularity and the two-variable diagonal addition
+    build on this.)
   RH-independent interface-shrinking toward discharging `bl`; the crux fields stay `none`.
 - **Track 1, brick 1 — arctan at a general REAL argument** (`Analysis/RArctan.lean`). The forced-first
   prerequisite of the `Γ(s/2) → ξ → Hadamard` stack that discharges the `bl` seam: complex `Clog` on
