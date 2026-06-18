@@ -170,4 +170,84 @@ theorem cos_fderiv (k : Nat) : Qeq (fderiv cosCoeff k) (neg (sinCoeff k)) := by
     exact cos_fct_poly (n : Int) ((qpow (⟨-1, 1⟩ : Q) n).num)
       ((qpow (⟨-1, 1⟩ : Q) n).den : Int) ((fct (2 * n + 1) : Nat) : Int)
 
+-- ===========================================================================
+-- Formal composition  sin∘arctan, cos∘arctan: the chain-rule ODE relations
+--   (sin∘arctan)′ = (cos∘arctan)·A′,   (cos∘arctan)′ = −(sin∘arctan)·A′.
+-- ===========================================================================
+
+/-- Negation distributes over the formal `add`: `(−A) + (−B) ≈ −(A + B)`. -/
+theorem Qadd_neg_distrib (A B : Q) : Qeq (add (neg A) (neg B)) (neg (add A B)) := by
+  simp only [Qeq, add, neg]; push_cast; ring_uor
+
+/-- A finite sum of negations is the negation of the sum: `Σ (−fᵢ) ≈ −(Σ fᵢ)`. -/
+theorem Fsum_neg (f : Nat → Q) (hf : ∀ i, 0 < (f i).den) (k : Nat) :
+    Qeq (Fsum (fun i => neg (f i)) k) (neg (Fsum f k)) := by
+  induction k with
+  | zero => exact Qeq_refl _
+  | succ n ih =>
+      show Qeq (add (Fsum (fun i => neg (f i)) n) (neg (f (n + 1)))) (neg (add (Fsum f n) (f (n + 1))))
+      exact Qeq_trans (add_den_pos (neg_den_pos (Fsum_den_pos hf n)) (neg_den_pos (hf (n + 1))))
+        (Qadd_congr ih (Qeq_refl _)) (Qadd_neg_distrib (Fsum f n) (f (n + 1)))
+
+/-- The formal composition is left-linear over negation: `(−a)∘b ≈ −(a∘b)`. Pull the sign through the
+    composition sum so the `cos` chain rule `(cos∘arctan)′ = −(sin∘arctan)·A′` lands in clean form. -/
+theorem fcomp_neg_left (a b : Nat → Q) (ha : ∀ i, 0 < (a i).den) (hb : ∀ i, 0 < (b i).den) (k : Nat) :
+    Qeq (fcomp (fun m => neg (a m)) b k) (neg (fcomp a b k)) := by
+  show Qeq (Fsum (fun m => mul (neg (a m)) (fpow b m k)) k) (neg (Fsum (fun m => mul (a m) (fpow b m k)) k))
+  refine Qeq_trans (Fsum_den_pos (fun m => neg_den_pos (Qmul_den_pos (ha m) (fpow_den_pos hb m k))) k)
+    (Fsum_congr (fun m => Qmul_neg_left (a m) (fpow b m k)) k)
+    (Fsum_neg (fun m => mul (a m) (fpow b m k)) (fun m => Qmul_den_pos (ha m) (fpow_den_pos hb m k)) k)
+
+/-- The formal Cauchy product is left-linear over negation: `(−a)·b ≈ −(a·b)`. -/
+theorem fmul_neg_left (a b : Nat → Q) (ha : ∀ i, 0 < (a i).den) (hb : ∀ i, 0 < (b i).den) (k : Nat) :
+    Qeq (fmul (fun i => neg (a i)) b k) (neg (fmul a b k)) := by
+  show Qeq (Fsum (fun i => mul (neg (a i)) (b (k - i))) k) (neg (Fsum (fun i => mul (a i) (b (k - i))) k))
+  refine Qeq_trans (Fsum_den_pos (fun i => neg_den_pos (Qmul_den_pos (ha i) (hb (k - i)))) k)
+    (Fsum_congr (fun i => Qmul_neg_left (a i) (b (k - i))) k)
+    (Fsum_neg (fun i => mul (a i) (b (k - i))) (fun i => Qmul_den_pos (ha i) (hb (k - i))) k)
+
+/-- `arctanCoeff 0 = 0` — the composition prerequisite `b(0) = 0` for `fcomp_chain`. -/
+theorem arctanCoeff_zero : Qeq (arctanCoeff 0) ⟨0, 1⟩ := by decide
+
+/-- **The `sin∘arctan` chain-rule ODE**: `(sin∘arctan)′ = (cos∘arctan)·A′`, with `A′ = geomAlt`.
+    `fcomp_chain` + `sin_fderiv` (sin′=cos, via `fcomp_congr_left`) + `arctan_fderiv` (A′=geomAlt). -/
+theorem sinComp_deriv (k : Nat) :
+    Qeq (fderiv (fcomp sinCoeff arctanCoeff) k) (fmul (fcomp cosCoeff arctanCoeff) geomAlt k) := by
+  refine Qeq_trans
+    (fmul_den_pos (fun i => fcomp_den_pos (fun j => fderiv_den_pos sinCoeff_den_pos j) arctanCoeff_den_pos i)
+      (fun i => fderiv_den_pos arctanCoeff_den_pos i) k)
+    (fcomp_chain sinCoeff arctanCoeff sinCoeff_den_pos arctanCoeff_den_pos arctanCoeff_zero k) ?_
+  refine Qeq_trans
+    (fmul_den_pos (fun i => fcomp_den_pos cosCoeff_den_pos arctanCoeff_den_pos i)
+      (fun i => fderiv_den_pos arctanCoeff_den_pos i) k)
+    (fmul_congr_left (fun i => fcomp_congr_left (b := arctanCoeff) sin_fderiv i) k)
+    (fmul_congr_right (fun i => arctan_fderiv i) k)
+
+/-- **The `cos∘arctan` chain-rule ODE**: `(cos∘arctan)′ = −(sin∘arctan)·A′`.
+    `fcomp_chain` + `cos_fderiv` (cos′=−sin) + `fcomp_neg_left` (pull the sign out) + `arctan_fderiv`. -/
+theorem cosComp_deriv (k : Nat) :
+    Qeq (fderiv (fcomp cosCoeff arctanCoeff) k) (neg (fmul (fcomp sinCoeff arctanCoeff) geomAlt k)) := by
+  refine Qeq_trans
+    (fmul_den_pos (fun i => fcomp_den_pos (fun j => fderiv_den_pos cosCoeff_den_pos j) arctanCoeff_den_pos i)
+      (fun i => fderiv_den_pos arctanCoeff_den_pos i) k)
+    (fcomp_chain cosCoeff arctanCoeff cosCoeff_den_pos arctanCoeff_den_pos arctanCoeff_zero k) ?_
+  -- fcomp (fderiv cosCoeff) arctanCoeff ≈ fcomp (neg sinCoeff) arctanCoeff ≈ neg (fcomp sinCoeff arctanCoeff)
+  have hcomp : ∀ i, Qeq (fcomp (fderiv cosCoeff) arctanCoeff i) (neg (fcomp sinCoeff arctanCoeff i)) := by
+    intro i
+    refine Qeq_trans
+      (fcomp_den_pos (fun j => neg_den_pos (sinCoeff_den_pos j)) arctanCoeff_den_pos i)
+      (fcomp_congr_left (b := arctanCoeff) (fun j => cos_fderiv j) i)
+      (fcomp_neg_left sinCoeff arctanCoeff sinCoeff_den_pos arctanCoeff_den_pos i)
+  refine Qeq_trans
+    (fmul_den_pos (fun i => neg_den_pos (fcomp_den_pos sinCoeff_den_pos arctanCoeff_den_pos i))
+      (fun i => fderiv_den_pos arctanCoeff_den_pos i) k)
+    (fmul_congr_left hcomp k) ?_
+  -- fmul (neg (fcomp sin arctan)) (fderiv arctan) ≈ neg (fmul (fcomp sin arctan) geomAlt)
+  refine Qeq_trans
+    (fmul_den_pos (fun i => neg_den_pos (fcomp_den_pos sinCoeff_den_pos arctanCoeff_den_pos i))
+      geomAlt_den_pos k)
+    (fmul_congr_right (fun i => arctan_fderiv i) k) ?_
+  exact fmul_neg_left (fcomp sinCoeff arctanCoeff) geomAlt
+    (fun i => fcomp_den_pos sinCoeff_den_pos arctanCoeff_den_pos i) geomAlt_den_pos k
+
 end UOR.Bridge.F1Square.Analysis

@@ -810,6 +810,13 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.cosCoeff_den_pos
 #print axioms Analysis.sin_fderiv
 #print axioms Analysis.cos_fderiv
+#print axioms Analysis.Qadd_neg_distrib
+#print axioms Analysis.Fsum_neg
+#print axioms Analysis.fmul_neg_left
+#print axioms Analysis.fcomp_neg_left
+#print axioms Analysis.arctanCoeff_zero
+#print axioms Analysis.sinComp_deriv
+#print axioms Analysis.cosComp_deriv
 -- v0.22.0 Track 1: the complex argument on the principal sector (Analysis/ComplexArg.lean).
 #print axioms Analysis.Carg_ofReal_pos
 -- v0.22.0 Track 1: the complex logarithm Clog on the principal sector (Analysis/ComplexLog.lean).
