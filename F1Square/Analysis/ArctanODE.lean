@@ -429,4 +429,18 @@ theorem ode_unique (H : Nat → Q) (hH : ∀ i, 0 < (H i).den) (hH0 : Qeq (H 0) 
     | succ n ih => exact ⟨ih.2.1, ih.2.2, hrec n ih.2.1⟩
   intro k; exact (key k).1
 
+/-- **`(1+t²)·A′ = 1`**: `fmul onePlusSq geomAlt ≈ fone` — the formal statement that `geomAlt` is the
+    reciprocal `1/(1+t²)`. From `geomAlt_recurrence` (degree `≥ 2`) and the boundary values. -/
+theorem onePlusSq_geomAlt : ∀ k, Qeq (fmul onePlusSq geomAlt k) (fone k)
+  | 0 => by
+      have h := fmul_onePlusSq_zero geomAlt
+      rw [geomAlt_zero] at h; exact h
+  | 1 => by
+      have h := fmul_onePlusSq_one geomAlt geomAlt_den_pos
+      rw [geomAlt_one] at h; exact h
+  | (m + 2) => by
+      have h := fmul_onePlusSq geomAlt geomAlt_den_pos m
+      exact Qeq_trans (add_den_pos (geomAlt_den_pos (m + 2)) (geomAlt_den_pos m)) h
+        (geomAlt_recurrence m)
+
 end UOR.Bridge.F1Square.Analysis
