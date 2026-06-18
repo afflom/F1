@@ -61,6 +61,16 @@ audit-visible hypothesis, never an axiom).
   BL interface is shrunk to its irreducible classical core (the explicit-formula zero-sum `bl` + its
   convergence `reg`); `bl_rh_implies_liNonneg_ofZeros` is the forward direction from that shrunk
   interface. No `sqrt`, choice-free.
+- **The per-zero Li contribution, linearized — the explicit-formula framework's algebraic core**
+  (`Analysis/LiLinearize.lean`). `cone_sub_npow_factor` — the geometric factorization
+  `1 − wⁿ = (1−w)·Σ_{k<n} wᵏ` for complex `w`, by induction; with `w = 1−1/ρ` (`liRatio`), `1−w = 1/ρ`,
+  so it exhibits the first moment `1/ρ` as an explicit factor of every per-zero Li contribution.
+  `witnessTerm_eq_linear` — the real part: the `RHWitness` per-zero term
+  `1 − Re(wⁿ) = Re((1−w)·Σ_{k<n} wᵏ)`. Summed over zeros this expresses `λₙ` through the power moments
+  `Σ_ρ ρ^{−k}`; that those moments equal the `−ζ′/ζ` Taylor data `ηⱼ` plus the archimedean place (the
+  explicit formula / Hadamard factorization) stays the classical interface. Also adds the small complex
+  commutative-ring lemmas the substrate had not yet needed (`cmul_czero`, `cadd_zero`, `cmul_cneg`, the
+  local congruences) — reusable for any future complex algebra. No zeros placed, no positivity asserted.
 - **The closed-disk witness hypothesis IS RH (set-level closure)** (`Analysis/Reflection.lean`,
   `Square/BLPipeline.lean`). `rh_witness_onLine` carried, in prose, that the half-plane (closed Cayley
   disk) witness does not secretly weaken RH; this upgrades it to a theorem. `double_inj` — doubling is
