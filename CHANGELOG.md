@@ -48,9 +48,22 @@ audit-visible hypothesis, never an axiom).
   `Clog(zw).im = Carg(zw) = Carg z + Carg w` (`Carg_add`). The general positive-real
   log-multiplicativity `log|zw|² = log|z|²+log|w|²` (via `cnormSq_mul` + `Rlog_mul` + integer-part
   telescoping) is the one explicit audit-visible hypothesis, isolated exactly as the program isolates
-  each heavy input — RH-*independent*, no smuggling. Discharging it (general `RlogPos_mul`, needing the
-  general `exp∘log` inverse or float decomposition) is the remaining substrate brick. Crux fields stay
-  `none`.
+  each heavy input — RH-*independent*, no smuggling. Crux fields stay `none`.
+- **Track 1 — ★ the `Clog_add` modulus seam discharged for bounded moduli** (`Analysis/RlogMulPos.lean`,
+  `Analysis/ClogAddBounded.lean`): the `hmod` hypothesis of `Clog_add` is now a **theorem**, not an
+  assumption, in the small-radius regime (squared moduli `1 ≤ |z|², |w|² ≤ B`). The substrate stack:
+  `reindex_Req` (a regular sequence reindexed past its tail presents the same real); `Rlog_congr`
+  (`Rlog` is a congruence in its argument at small radius, `tmap_lip` lifted through `Rartanh_congr`);
+  `RlogPos_unfold` (`RlogPos x k = Rlog (reindexed x) Mx` at the auto-derived radius, definitional);
+  the **`RlogPos → Rlog` bridge** `RlogPos_eq_Rlog` (auto-radius log = presented-radius `Rlog x B`,
+  routed through `Rartanh_radius_indep` `Mx→B` then `Rlog_congr` along `reindex_Req` — crucially only
+  `B` need be small, not the loose auto-radius); `RlogPos_mul` (`log(xy) = log x + log y` for positive
+  reals in `[1,B]`, bridging all three `RlogPos` calls into `Rlog_mul`); and `RlogPos_congr` (carrying
+  `RlogPos` across `≈`). Assembled in `RlogPos_cnormSq_mul` — exactly the `hmod` proposition,
+  `log|zw|² = log|z|²+log|w|²`, from elementary positivity/bound data via `cnormSq_mul`. The capstone
+  `Clog_add_bounded` then states `Clog(zw) = Clog z + Clog w` with **no** `RlogPos`-multiplicativity
+  hypothesis. The fully general modulus (relaxing the `ρ²≤1/2` continuity lemmas to `ρ<1`) remains the
+  open substrate frontier. Crux fields stay `none`.
 - **Track 1 — ★ value-level `sin(arctan t) = t·cos(arctan t)`** (`Analysis/ArctanODE.lean`,
   `Rsin_arctan_value_eq`): `Req (Rsin (Rarctan t₀)) (Rmul (ofQ t₀) (Rcos (Rarctan t₀)))` for
   `|t₀| ≤ ρ < 1/16`. This **completes the formal-PS → value (FTC) bridge** that lifts the formal

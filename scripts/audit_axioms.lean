@@ -2862,3 +2862,5 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.RlogPos_mul
 #print axioms Analysis.ge1_pos_witness
 #print axioms Analysis.RlogPos_congr
+#print axioms Analysis.RlogPos_cnormSq_mul
+#print axioms Analysis.Clog_add_bounded
