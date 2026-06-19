@@ -60,6 +60,75 @@ theorem RexpReal_inj_gen {X Y : Real} (h : Req (RexpReal X) (RexpReal Y)) : Req 
           (Req_trans (RexpReal_congr (Radd_neg Y)) RexpReal_zero)))
   exact Req_of_Rsub_zero_loc (RexpReal_eq_one_imp_zero hsub)
 
+set_option maxHeartbeats 1600000 in
+/-- **★ the exp∘log inverse at a rational base** `exp(log q) = q` for `q ≥ 1` (the constructive
+    `Rlog`). Instantiates the radius-general `Rexp_two_artanh_ofQ` at `τ = tmap q = (q−1)/(q+1)`,
+    `g = q`, `K = (q+1)/2`, `M' = q.num + q.den`; the closed forms (`tmap_nonneg_lt_one` + `hnum`/
+    `hdenI`/`hdenN`) discharge the parameter goals. Works at ANY rational `q ≥ 1` (no small-radius
+    bound) — the base case of the real exp∘log inverse. -/
+theorem Rexp_log_ratQ (q : Q) (hqd : 0 < q.den) (hqge : Qle (⟨1,1⟩:Q) q)
+    (hxpos : ∀ n, 0 < ((ofQ q hqd).seq n).num)
+    (hhi : ∀ n, Qle ((ofQ q hqd).seq n) q)
+    (hlo : ∀ n, Qle (⟨1,1⟩:Q) (mul ((ofQ q hqd).seq n) q)) :
+    Req (RexpReal (Rlog (ofQ q hqd) q hqd hqge hxpos hhi hlo)) (ofQ q hqd) := by
+  have hqn : 0 ≤ q.num := by have := hqge; simp only [Qle] at this; push_cast at this; omega
+  have hqn1 : (q.den:Int) ≤ q.num := by have := hqge; simp only [Qle] at this; push_cast at this; omega
+  have hd0 : (0:Int) < q.den := by exact_mod_cast hqd
+  obtain ⟨hτ0, hτlt0⟩ := tmap_nonneg_lt_one q hqd hqge
+  have hnum : (tmap q).num = (q.num - (q.den:Int)) * q.den := by
+    unfold tmap mul Qsub Qinv add neg; push_cast; ring_uor
+  have hdenN : (tmap q).den = q.den * (q.num + (q.den:Int)).toNat := by
+    unfold tmap mul Qsub Qinv add neg
+    show q.den * 1 * (q.num * 1 + 1 * (q.den:Int)).toNat = q.den * (q.num + (q.den:Int)).toNat
+    rw [show q.num * 1 + 1 * (q.den:Int) = q.num + (q.den:Int) by ring_uor, Nat.mul_one]
+  have hdenI : ((tmap q).den : Int) = (q.den:Int) * (q.num + q.den) := by
+    rw [hdenN]; push_cast [Int.toNat_of_nonneg (show (0:Int) ≤ q.num + q.den by omega)]; ring_uor
+  have hτd : 0 < (tmap q).den := by rw [hdenN]; exact Nat.mul_pos hqd (by omega)
+  have he2 : ((q.num.toNat + q.den : Nat):Int) = q.num + q.den := by
+    push_cast [Int.toNat_of_nonneg hqn]; ring_uor
+  have hρ0 : 0 ≤ (⟨q.num - (q.den:Int), q.num.toNat + q.den⟩ : Q).num := by show 0 ≤ q.num - (q.den:Int); omega
+  have hρd : 0 < (⟨q.num - (q.den:Int), q.num.toNat + q.den⟩ : Q).den := by show 0 < q.num.toNat + q.den; omega
+  have hρlt : (⟨q.num - (q.den:Int), q.num.toNat + q.den⟩ : Q).num.toNat < (⟨q.num - (q.den:Int), q.num.toNat + q.den⟩ : Q).den := by
+    show (q.num - (q.den:Int)).toNat < q.num.toNat + q.den
+    have h2 : ((q.num - (q.den:Int)).toNat : Int) = q.num - q.den := Int.toNat_of_nonneg (by omega)
+    have : ((q.num - (q.den:Int)).toNat : Int) < ((q.num.toNat + q.den : Nat):Int) := by rw [h2, he2]; omega
+    exact_mod_cast this
+  have htle : Qle (tmap q) (⟨q.num - (q.den:Int), q.num.toNat + q.den⟩ : Q) := by
+    apply Qeq_le
+    show (tmap q).num * ((q.num.toNat + q.den : Nat):Int) = (q.num - (q.den:Int)) * ((tmap q).den : Int)
+    rw [hnum, hdenI, he2]; ring_uor
+  have hb : Qle (Qabs (tmap q)) (⟨q.num - (q.den:Int), q.num.toNat + q.den⟩ : Q) :=
+    Qle_trans hτd (Qeq_le (Qabs_of_nonneg hτ0)) htle
+  have hbridge : Rlog (ofQ q hqd) q hqd hqge hxpos hhi hlo
+      = TwoArtanhConst (tmap q) (⟨q.num - (q.den:Int), q.num.toNat + q.den⟩ : Q) hτd hρ0 hρd hρlt hb := rfl
+  rw [hbridge]
+  refine Rexp_two_artanh_ofQ (tmap q) (⟨q.num - (q.den:Int), q.num.toNat + q.den⟩ : Q) q
+    (⟨q.num + (q.den:Int), 2 * q.den⟩ : Q) ((q.num + q.den).toNat)
+    ((expM_U ((q.num + q.den).toNat) (2 * (q.num + q.den).toNat)).num.toNat)
+    ((q.num + q.den).toNat * (q.num + q.den).toNat * (((expM_U ((q.num + q.den).toNat) (2 * (q.num + q.den).toNat)).num.toNat) + 2))
+    hτd hτ0 ?_ hτlt0 hρ0 hρd hρlt hb hqd ?_ (by show 0 < 2 * q.den; omega) ?_ ?_ rfl ?_ ?_
+  · show (tmap q).num * ((⟨1,1⟩:Q).den:Int) ≤ (⟨1,1⟩:Q).num * ((tmap q).den:Int)
+    rw [hnum, hdenI]
+    have hkey : (q.den:Int)*(q.num+q.den) - (q.num-q.den)*q.den = 2*(q.den*q.den) := by ring_uor
+    have hnn : (0:Int) ≤ 2*(q.den*q.den) := by have := Int.mul_pos hd0 hd0; omega
+    push_cast; omega
+  · show Qeq (mul q (Qsub ⟨1,1⟩ (tmap q))) (add ⟨1,1⟩ (tmap q))
+    simp only [Qeq, mul, Qsub, add, neg]; push_cast; rw [hnum, hdenI]; ring_uor
+  · show 0 ≤ (⟨q.num + (q.den:Int), 2 * q.den⟩:Q).num; show 0 ≤ q.num + (q.den:Int); omega
+  · apply Qeq_le
+    show Qeq (⟨1,1⟩:Q) (mul (⟨q.num + (q.den:Int), 2 * q.den⟩:Q) (Qsub ⟨1,1⟩ (tmap q)))
+    simp only [Qeq, mul, Qsub, add, neg]; push_cast; rw [hnum, hdenI]; ring_uor
+  · show Qle (mul (⟨q.num + (q.den:Int), 2 * q.den⟩:Q) ⟨2,1⟩) ⟨((q.num + q.den).toNat : Int), 1⟩
+    simp only [Qle, mul]
+    push_cast [Int.toNat_of_nonneg (show (0:Int) ≤ q.num + q.den by omega)]
+    simp only [Int.mul_one, Int.one_mul]
+    have hkey : (q.num+q.den) * (2 * (q.den:Int)) - (q.num+q.den) * 2 = (q.num+q.den)*(2*q.den - 2) := by ring_uor
+    have hnn : (0:Int) ≤ (q.num+q.den)*(2*q.den - 2) := Int.mul_nonneg (by omega) (by omega)
+    omega
+  · intro j
+    refine Qeq_le ?_
+    simp only [Qeq, add, mul]; rw [hdenN]; push_cast [Int.toNat_of_nonneg (show (0:Int) ≤ q.num + q.den by omega)]; ring_uor
+
 /-- **Right cancellation for `Rmul`**: if `a·c ≈ b·c` and `c` is apart from `0` (a positive lower
     bound at index `k`), then `a ≈ b`. Via `(a−b)·c ≈ a·c − b·c ≈ 0` and `Rmul_eq_zero_cancel`. -/
 theorem Rmul_right_cancel {a b c : Real} {k : Nat} (hk : Qlt (Qbound k) (c.seq k))
