@@ -16,6 +16,7 @@ import F1Square.Analysis.ArctanODE
 import F1Square.Analysis.RMulNF
 import F1Square.Analysis.ArtanhAdd
 import F1Square.Analysis.GammaTwoBracket
+import F1Square.Analysis.RealDiv
 
 namespace UOR.Bridge.F1Square.Analysis
 
@@ -257,5 +258,15 @@ theorem Rsin_sub_eq_zero {x y v : Real} (hx : Req (Rsin x) (Rmul v (Rcos x)))
   refine Req_trans (Rsub_congr (Rmul_assoc v (Rcos x) (Rcos y))
     (Rmul_left_comm_loc (Rcos x) v (Rcos y))) ?_
   exact Radd_neg (Rmul v (Rmul (Rcos x) (Rcos y)))
+
+/-- **Cancellation**: if `a·b = 0` and `b` is apart from `0` (positive lower bound `Qbound k < b.seq k`,
+    so `b` is invertible), then `a = 0`. Via `a = a·(b·b⁻¹) = (a·b)·b⁻¹ = 0·b⁻¹ = 0`. -/
+theorem Rmul_eq_zero_cancel {a b : Real} {k : Nat} (hk : Qlt (Qbound k) (b.seq k))
+    (h : Req (Rmul a b) zero) : Req a zero := by
+  refine Req_trans (Req_symm (Rmul_one a)) ?_
+  refine Req_trans (Rmul_congr (Req_refl a) (Req_symm (Rmul_Rinv_self hk))) ?_
+  refine Req_trans (Req_symm (Rmul_assoc a b (Rinv b k hk))) ?_
+  refine Req_trans (Rmul_congr h (Req_refl (Rinv b k hk))) ?_
+  exact Req_trans (Rmul_comm zero (Rinv b k hk)) (Rmul_zero (Rinv b k hk))
 
 end UOR.Bridge.F1Square.Analysis

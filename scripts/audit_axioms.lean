@@ -927,6 +927,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rsin_neg
 #print axioms Analysis.Rsin_sub
 #print axioms Analysis.Rsin_sub_eq_zero
+#print axioms Analysis.Rmul_eq_zero_cancel
 #print axioms Analysis.Qabs_sub_mul_right_eq
 #print axioms Analysis.Qabs_sub_mul_left_eq
 #print axioms Analysis.Qrecip_anti
