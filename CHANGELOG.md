@@ -32,9 +32,16 @@ audit-visible hypothesis, never an axiom).
   `vval` denominator is sign-robust (no `wvalR`-style split). Two legs through
   `W = arctanSum(vval(s_P,t_P),·)`: the argument-variation `arctanSum_vval_argdiff`
   (`≤ 12(|a−a'|+|b−b'|)`) and the combination `RarctanConst_add_vval_rho` (= `Rarctan_add_of_small`
-  read at the diagonal index). Remaining toward `Clog` additivity: package as `arg(zw) = arg z + arg w`
-  (`Carg`, the complex-division ratio identity `ratio(zw) ≈ vvalReal(ratio z, ratio w)`), then combine
-  with `Rlog_mul` (the modulus half). RH-*independent*; crux fields stay `none`.
+  read at the diagonal index). **Packaged as complex argument additivity** `arg(zw) = arg z + arg w`
+  (`Analysis/ComplexArgAdd.lean`, `Carg_add`): for `z, w` with `Re z, Re w, Re(zw)` apart from `0` and
+  the three ratios `Im/Re ≤ ρ < 1/16`, `Carg(zw) = Carg z + Carg w`. The bridge is the complex-division
+  **ratio identity** `Im(zw)/Re(zw) ≈ vvalReal(ratio z, ratio w)`, proved by cross-multiplication: the
+  `vvalReal` defining relation `vvalReal_rel_via` (`V·(1−st) ≈ s+t`, the rational `vval_rel` lifted to
+  the diagonal by regularity) feeds the real-algebra cross-identity `ratio_cross_via`
+  (`vvalReal(r_z,r_w)·Re(zw) = Im(zw)`), which together with `Rdiv_mul_cancel` and `Rmul_right_cancel`
+  gives the identity; then `RarctanR_congr` + `RarctanR_add_real_via` close it. **This completes the
+  imaginary (harder) half of `Clog` additivity.** Remaining: combine with `Rlog_mul` (the modulus half)
+  for the full `Clog(zw) = Clog z + Clog w`. RH-*independent*; crux fields stay `none`.
 - **Track 1 — ★ value-level `sin(arctan t) = t·cos(arctan t)`** (`Analysis/ArctanODE.lean`,
   `Rsin_arctan_value_eq`): `Req (Rsin (Rarctan t₀)) (Rmul (ofQ t₀) (Rcos (Rarctan t₀)))` for
   `|t₀| ≤ ρ < 1/16`. This **completes the formal-PS → value (FTC) bridge** that lifts the formal
