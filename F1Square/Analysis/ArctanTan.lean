@@ -14,6 +14,8 @@ fields stay `none`, RH open.
 -/
 import F1Square.Analysis.ArctanODE
 import F1Square.Analysis.RMulNF
+import F1Square.Analysis.ArtanhAdd
+import F1Square.Analysis.GammaTwoBracket
 
 namespace UOR.Bridge.F1Square.Analysis
 
@@ -129,5 +131,61 @@ theorem Rcos_add_of_tan {A B : Real} {a b : Q} (ha : 0 < a.den) (hb : 0 < b.den)
   refine Req_trans (Rsub_congr (Req_symm (Rone_mul_loc (Rmul (Rcos A) (Rcos B))))
     (Rmul_pair_regroup (ofQ a ha) (ofQ b hb) (Rcos A) (Rcos B))) ?_
   exact Req_symm (Rmul_sub_distrib_right one (Rmul (ofQ a ha) (ofQ b hb)) (Rmul (Rcos A) (Rcos B)))
+
+-- ===========================================================================
+-- arctan addition: A+B has tangent vval a b = (a+b)/(1−ab).
+-- ===========================================================================
+
+/-- The pure-`Int` core of the `vval` relation (dodges `ring_uor`'s `Nat.cast`-atom rejection). -/
+theorem vval_rel_poly (pa qa pb qb : Int) :
+    (pa * qb + pb * qa) * ((qa * qb - pa * pb) * (1 * (qa * qb)))
+      = (pa * qb + pb * qa) * (1 * (qa * qb) + -(pa * pb) * 1) * (qa * qb) := by
+  ring_uor
+
+/-- **`vval` defining relation**: `(a+b) = vval a b · (1 − a·b)` (division-free, given `1−ab > 0`).
+    The `tan`-addition identity in rational form: `vval = (a+b)/(1−ab)`. -/
+theorem vval_rel (a b : Q) (hpos : 0 < (a.den : Int) * b.den - a.num * b.num) :
+    Qeq (add a b) (mul (vval a b) (Qsub ⟨1, 1⟩ (mul a b))) := by
+  have hD : (((((a.den : Int) * b.den - a.num * b.num).toNat) : Nat) : Int)
+      = (a.den : Int) * b.den - a.num * b.num := Int.toNat_of_nonneg (Int.le_of_lt hpos)
+  simp only [Qeq, add, mul, Qsub, neg, vval]
+  push_cast [hD]
+  exact vval_rel_poly a.num (a.den : Int) b.num (b.den : Int)
+
+/-- **`a + b = vval a b · (1 − a·b)` at the real level** (via `ofQ` homomorphisms + `vval_rel`). The
+    coefficient identity behind `tan(A+B) = vval a b`. -/
+theorem vval_coeff_eq (a b : Q) (ha : 0 < a.den) (hb : 0 < b.den)
+    (hpos : 0 < (a.den : Int) * b.den - a.num * b.num) :
+    Req (Radd (ofQ a ha) (ofQ b hb))
+      (Rmul (ofQ (vval a b) (vval_den_pos a b hpos)) (Rsub one (Rmul (ofQ a ha) (ofQ b hb)))) := by
+  have hLHS : Req (Radd (ofQ a ha) (ofQ b hb))
+      (ofQ (mul (vval a b) (Qsub ⟨1, 1⟩ (mul a b)))
+        (Qmul_den_pos (vval_den_pos a b hpos) (Qsub_den_pos (by decide) (Qmul_den_pos ha hb)))) :=
+    Req_trans (Radd_ofQ_ofQ ha hb)
+      (ofQ_congr (add_den_pos ha hb) _ (vval_rel a b hpos))
+  have hRHS : Req (Rmul (ofQ (vval a b) (vval_den_pos a b hpos)) (Rsub one (Rmul (ofQ a ha) (ofQ b hb))))
+      (ofQ (mul (vval a b) (Qsub ⟨1, 1⟩ (mul a b)))
+        (Qmul_den_pos (vval_den_pos a b hpos) (Qsub_den_pos (by decide) (Qmul_den_pos ha hb)))) := by
+    refine Req_trans (Rmul_congr (Req_refl _)
+      (Req_trans (Rsub_congr (Req_refl one) (Rmul_ofQ_ofQ ha hb))
+        (Rsub_ofQ_ofQ (by decide) (Qmul_den_pos ha hb)))) ?_
+    exact Rmul_ofQ_ofQ (vval_den_pos a b hpos) (Qsub_den_pos (by decide) (Qmul_den_pos ha hb))
+  exact Req_trans hLHS (Req_symm hRHS)
+
+/-- **★ value-level tangent-addition**: if `sin A = a·cos A` and `sin B = b·cos B` (and `1−ab > 0`),
+    then `sin(A+B) = vval a b · cos(A+B)` — i.e. `A+B` is an angle whose tangent is `vval a b =
+    (a+b)/(1−ab)`, the SAME form as `sin(arctan v) = v·cos(arctan v)`. Combines `Rsin_add_of_tan`
+    (`sin(A+B)=(a+b)cosAcosB`), `Rcos_add_of_tan` (`cos(A+B)=(1−ab)cosAcosB`), and the `vval`
+    relation `(a+b)=vval·(1−ab)` (`vval_coeff_eq`). The value-level `tan(A+B) = (tan A+tan B)/(1−tan A
+    tan B)` — combined with tan-injectivity this yields `arctan a + arctan b = arctan(vval a b)`. -/
+theorem Rsin_cos_add_tan {A B : Real} {a b : Q} (ha : 0 < a.den) (hb : 0 < b.den)
+    (hpos : 0 < (a.den : Int) * b.den - a.num * b.num)
+    (hA : Req (Rsin A) (Rmul (ofQ a ha) (Rcos A))) (hB : Req (Rsin B) (Rmul (ofQ b hb) (Rcos B))) :
+    Req (Rsin (Radd A B)) (Rmul (ofQ (vval a b) (vval_den_pos a b hpos)) (Rcos (Radd A B))) := by
+  refine Req_trans (Rsin_add_of_tan ha hb hA hB) ?_
+  refine Req_trans (Rmul_congr (vval_coeff_eq a b ha hb hpos) (Req_refl _)) ?_
+  refine Req_trans (Rmul_assoc (ofQ (vval a b) (vval_den_pos a b hpos))
+    (Rsub one (Rmul (ofQ a ha) (ofQ b hb))) (Rmul (Rcos A) (Rcos B))) ?_
+  exact Rmul_congr (Req_refl _) (Req_symm (Rcos_add_of_tan ha hb hA hB))
 
 end UOR.Bridge.F1Square.Analysis

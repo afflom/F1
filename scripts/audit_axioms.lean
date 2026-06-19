@@ -913,6 +913,10 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rmul_pair_regroup
 #print axioms Analysis.Rsin_add_of_tan
 #print axioms Analysis.Rcos_add_of_tan
+#print axioms Analysis.vval_rel_poly
+#print axioms Analysis.vval_rel
+#print axioms Analysis.vval_coeff_eq
+#print axioms Analysis.Rsin_cos_add_tan
 #print axioms Analysis.Qabs_sub_mul_right_eq
 #print axioms Analysis.Qabs_sub_mul_left_eq
 #print axioms Analysis.Qrecip_anti
