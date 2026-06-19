@@ -1042,4 +1042,30 @@ theorem fpow_arctan_term_bound (ρ : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num
     (Qmul_congr (Qeq_refl _) (Qeq_trans (Qmul_den_pos (qpow_den_pos (by decide) k) (qpow_den_pos hρd k))
       (Qmul_congr (Qeq_symm (qpow_two_nat k)) (Qeq_refl _)) (Qeq_symm (qpow_mul ⟨2, 1⟩ ρ (by decide) hρd k)))))
 
+/-- **Cauchy gap for arctan powers**: `|peval(arctanᵐ,w,M′) − peval(arctanᵐ,w,M)| ≤ Σ_{M<k≤M′} 2ᵐ·(2ρ)ᵏ`
+    (`Fsum_abs_diff_le` + the per-term bound). Mirrors `peval_kdbl_pow_gap`. -/
+theorem peval_arctan_pow_gap (ρ w : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num) (hwd : 0 < w.den)
+    (hw : Qle (Qabs w) ρ) (m : Nat) {M M' : Nat} (hMM : M ≤ M') :
+    Qle (Qabs (Qsub (peval (fpow arctanCoeff m) w M') (peval (fpow arctanCoeff m) w M)))
+      (Qsub (Fsum (fun k => mul (⟨(2 : Int) ^ m, 1⟩ : Q) (qpow (mul ⟨2, 1⟩ ρ) k)) M')
+            (Fsum (fun k => mul (⟨(2 : Int) ^ m, 1⟩ : Q) (qpow (mul ⟨2, 1⟩ ρ) k)) M)) :=
+  Fsum_abs_diff_le
+    (fun k => Qmul_den_pos (fpow_den_pos (fun i => arctanCoeff_den_pos i) m k) (qpow_den_pos hwd k))
+    (fun k => Qmul_den_pos Nat.one_pos (qpow_den_pos (Qmul_den_pos (by decide) hρd) k))
+    (fun k => Qle_trans (Qmul_den_pos (Qabs_den_pos (fpow_den_pos (fun i => arctanCoeff_den_pos i) m k))
+        (Qabs_den_pos (qpow_den_pos hwd k)))
+      (Qeq_le (by rw [Qabs_mul]; exact Qeq_refl _ : Qeq (Qabs (mul (fpow arctanCoeff m k) (qpow w k)))
+        (mul (Qabs (fpow arctanCoeff m k)) (Qabs (qpow w k)))))
+      (Qle_trans (Qmul_den_pos (fpow_den_pos (fun i => fabs_den_pos (fun j => arctanCoeff_den_pos j) i) m k)
+          (qpow_den_pos hρd k))
+        (Qmul_le_mul (Qabs_den_pos (fpow_den_pos (fun i => arctanCoeff_den_pos i) m k))
+          (fpow_den_pos (fun i => fabs_den_pos (fun j => arctanCoeff_den_pos j) i) m k)
+          (Qabs_den_pos (qpow_den_pos hwd k))
+          (Qabs_num_nonneg _) (Qabs_num_nonneg _)
+          (fpow_abs_dom arctanCoeff (fun i => arctanCoeff_den_pos i) m k)
+          (Qle_trans (qpow_den_pos (Qabs_den_pos hwd) k) (Qeq_le (qpow_abs w k))
+            (qpow_base_mono (Qabs_den_pos hwd) hρd (Qabs_num_nonneg w) hw k)))
+        (fpow_arctan_term_bound ρ hρd hρ0 m k)))
+    hMM
+
 end UOR.Bridge.F1Square.Analysis
