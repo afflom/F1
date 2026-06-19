@@ -2857,3 +2857,6 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rexp_log_ratQ
 #print axioms Analysis.reindex_Req
 #print axioms Analysis.Rlog_congr
+#print axioms Analysis.RlogPos_unfold
+#print axioms Analysis.RlogPos_eq_Rlog
+#print axioms Analysis.RlogPos_mul
