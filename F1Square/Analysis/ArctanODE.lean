@@ -2022,6 +2022,30 @@ theorem altSum_argdiff_recip (t₀ ρ : Q) (htd : 0 < t₀.den) (hρ0 : 0 ≤ ρ
       (geoSum_diff_recip ρ hρ0 hρd hlt hρ2 hab hn))) ?_
   exact Qeq_le (by simp only [Qeq, mul]; push_cast; ring_uor)
 
+/-- **Common-factor product difference**: `|a·c − b·c| = |a−b|·|c|`. The `Rmul`-reconciliation
+    identity (factoring the shared `RsinAux` factor out of the outer/inner `X` gap). -/
+theorem Qabs_sub_mul_right_eq (a b c : Q) :
+    Qeq (Qabs (Qsub (mul a c) (mul b c))) (mul (Qabs (Qsub a b)) (Qabs c)) := by
+  have hf : Qeq (Qsub (mul a c) (mul b c)) (mul (Qsub a b) c) := by
+    simp only [Qeq, Qsub, mul, add, neg]; push_cast; ring_uor
+  rw [← Qabs_mul]; exact Qabs_Qeq hf
+
+/-- **`RaltReal_R` lower bound**: `m + 1 ≤ RaltReal_R x m` (the diagonal reindex dominates its index,
+    since `RaltReal_R x m = 2·xBound² + 4(m+1)·RaltReal_K x` and `RaltReal_K ≥ 1`). -/
+theorem RaltReal_R_ge (x : Real) (m : Nat) : m + 1 ≤ RaltReal_R x m := by
+  have hK1 : 1 ≤ RaltReal_K x := by unfold RaltReal_K; omega
+  have h4 : 4 * (m + 1) * 1 ≤ 4 * (m + 1) * RaltReal_K x := Nat.mul_le_mul (Nat.le_refl _) hK1
+  have hge : 4 * (m + 1) * RaltReal_K x ≤ RaltReal_R x m := by unfold RaltReal_R; omega
+  omega
+
+/-- **`Rartanh_R` lower bound**: `m + 1 ≤ Rartanh_R ρ m`. -/
+theorem Rartanh_R_ge (ρ : Q) (hρd : 0 < ρ.den) (m : Nat) : m + 1 ≤ Rartanh_R ρ m := by
+  unfold Rartanh_R
+  have hk : 1 ≤ ρ.den * ρ.den + 4 * ρ.den :=
+    Nat.le_trans (by omega : 1 ≤ 4 * ρ.den) (Nat.le_add_left _ _)
+  calc m + 1 = 1 * (m + 1) := by omega
+    _ ≤ (ρ.den * ρ.den + 4 * ρ.den) * (m + 1) := Nat.mul_le_mul_right _ hk
+
 /-- **Product-difference bound**: `|a·b − c·d| ≤ |a−c|·|b| + |c|·|b−d|` (via `a·b − c·d =
     (a−c)·b + c·(b−d)`). The product rule for the sin argument-Lipschitz (`sin = q·(sin/q)`). -/
 theorem Qabs_mul_sub_le {a b c d : Q} (ha : 0 < a.den) (hb : 0 < b.den) (hc : 0 < c.den)
