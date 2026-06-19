@@ -541,4 +541,166 @@ theorem Rarctan_add_of_small {a b ρ : Q} (hda : 0 < a.den) (hdb : 0 < b.den)
     (Rarctan_diff_seq_le hda hdb hρ0 hρd hlt htρa htρb hpos htρv hρ2 hlt16)
   exact Rarctan_add hda hdb hρ0 hρd hlt htρa htρb hpos htρv hlt16 h2ρ hhalf hρ4 hρ2 hρ8 hρ1 hk
 
+-- ===========================================================================
+-- Toward REAL-argument arctan addition (for `arg(zw) = arg z + arg w`).
+-- The argument-variation leg, mirror of `artSum_wval_argdiff` (with the `vval` map, constant 12).
+-- ===========================================================================
+
+/-- **arctanSum arg-variation (via `vval`)**: `|arctanSum(vval a b, M) − arctanSum(vval a' b', M)| ≤
+    12·(|a−a'| + |b−b'|)` for `|a|,|b|,|a'|,|b'| ≤ ρ` (`ρ² ≤ ½`) and `|vval ·| ≤ σ` (`σ² ≤ ½`). The
+    arctan analog of `artSum_wval_argdiff`: `arctanSum_Lip_le` + `geoEvenSum_le_two`, then the `vval`
+    map's two one-sided Lipschitz bounds (`vval_lip1`/`vval_lip2`, constant 6) through the mixed
+    midpoint `vval a' b`. The `vval` denominator is sign-robust, so no `wvalR`-style split is needed. -/
+theorem arctanSum_vval_argdiff (ρ σ a b a' b' : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num)
+    (hρ2 : Qle (mul ρ ρ) ⟨1, 2⟩) (hσ0 : 0 ≤ σ.num) (hσd : 0 < σ.den)
+    (hσ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul σ σ)))
+    (had : 0 < a.den) (hbd : 0 < b.den) (ha'd : 0 < a'.den) (hb'd : 0 < b'.den)
+    (ha : Qle (Qabs a) ρ) (hb : Qle (Qabs b) ρ) (ha' : Qle (Qabs a') ρ) (hb' : Qle (Qabs b') ρ)
+    (hwσ : Qle (Qabs (vval a b)) σ) (hw'σ : Qle (Qabs (vval a' b')) σ) (M : Nat) :
+    Qle (Qabs (Qsub (arctanSum (vval a b) M) (arctanSum (vval a' b') M)))
+        (mul ⟨12, 1⟩ (add (Qabs (Qsub a a')) (Qabs (Qsub b b')))) := by
+  have hwd : 0 < (vval a b).den := vval_den_pos a b (vval_inner_pos ρ a b hρd hρ0 had hbd ha hb hρ2)
+  have hw'd : 0 < (vval a' b').den :=
+    vval_den_pos a' b' (vval_inner_pos ρ a' b' hρd hρ0 ha'd hb'd ha' hb' hρ2)
+  have hw2d : 0 < (vval a' b).den :=
+    vval_den_pos a' b (vval_inner_pos ρ a' b hρd hρ0 ha'd hbd ha' hb hρ2)
+  refine Qle_trans (Qmul_den_pos (geoEvenSum_den_pos hσd M) (Qabs_den_pos (Qsub_den_pos hwd hw'd)))
+    (arctanSum_Lip_le hwd hw'd hσd hwσ hw'σ M) ?_
+  refine Qle_trans (Qmul_den_pos Nat.one_pos (Qabs_den_pos (Qsub_den_pos hwd hw'd)))
+    (Qmul_le_mul_right (Qabs_num_nonneg _) (geoEvenSum_le_two hσ0 hσd hσ2 M)) ?_
+  have hleg1 : Qle (Qabs (Qsub (vval a b) (vval a' b))) (mul ⟨6, 1⟩ (Qabs (Qsub a a'))) :=
+    vval_lip1 ρ a a' b hρd hρ0 had ha'd hbd ha ha' hb hρ2
+  have hleg2 : Qle (Qabs (Qsub (vval a' b) (vval a' b'))) (mul ⟨6, 1⟩ (Qabs (Qsub b b'))) :=
+    vval_lip2 ρ a' b b' hρd hρ0 ha'd hbd hb'd ha' hb hb' hρ2
+  refine Qle_trans (Qmul_den_pos Nat.one_pos (add_den_pos
+      (Qabs_den_pos (Qsub_den_pos hwd hw2d)) (Qabs_den_pos (Qsub_den_pos hw2d hw'd))))
+    (Qmul_le_mul_left (by decide) (Qabs_sub_triangle hwd hw2d hw'd)) ?_
+  refine Qle_trans (Qmul_den_pos Nat.one_pos (add_den_pos
+      (Qmul_den_pos Nat.one_pos (Qabs_den_pos (Qsub_den_pos had ha'd)))
+      (Qmul_den_pos Nat.one_pos (Qabs_den_pos (Qsub_den_pos hbd hb'd)))))
+    (Qmul_le_mul_left (by decide) (Qadd_le_add hleg1 hleg2)) ?_
+  apply Qeq_le
+  show Qeq (mul ⟨2, 1⟩ (add (mul ⟨6, 1⟩ (Qabs (Qsub a a'))) (mul ⟨6, 1⟩ (Qabs (Qsub b b')))))
+    (mul ⟨12, 1⟩ (add (Qabs (Qsub a a')) (Qabs (Qsub b b'))))
+  simp only [Qeq, mul, add]; push_cast; ring_uor
+
+/-- **The combination leg in `arctanSum` form** (the arctan analog of `RartanhConst_add_wval_rho`):
+    `|arctanSum a (Rartanh_R ρ (2n+1)) + arctanSum b (Rartanh_R ρ (2n+1)) − arctanSum (vval a b)
+    (Rartanh_R ρ n)| ≤ 2/(n+1)`. This is precisely `Rarctan_add_of_small` (the real arctan addition
+    law for the rationals `a, b`) read at diagonal index `n` — the `Req` unfolds to the `arctanSum`
+    forms by definitional reduction of `Radd`/`Rarctan`. Inherently relates the depth-`n` `vval` to the
+    depth-`(2n+1)` summands, so no polynomial bound is needed. -/
+theorem RarctanConst_add_vval_rho (a b ρ : Q) (hda : 0 < a.den) (hdb : 0 < b.den)
+    (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den) (hlt : ρ.num.toNat < ρ.den)
+    (htρa : Qle (Qabs a) ρ) (htρb : Qle (Qabs b) ρ)
+    (hpos : 0 < (a.den : Int) * b.den - a.num * b.num) (htρv : Qle (Qabs (vval a b)) ρ)
+    (hlt16 : (mul (⟨16, 1⟩ : Q) ρ).num.toNat < (mul (⟨16, 1⟩ : Q) ρ).den)
+    (h2ρ : 0 ≤ (Qsub (⟨1, 1⟩ : Q) (mul ⟨2, 1⟩ ρ)).num)
+    (hhalf : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ⟨2, 1⟩ ρ))) (hρ4 : Qle (mul ⟨4, 1⟩ ρ) ⟨1, 1⟩)
+    (hρ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ρ ρ))) (hρ8 : Qle (mul ⟨2, 1⟩ ρ) ⟨1, 1⟩)
+    (hρ1 : Qle ρ ⟨1, 1⟩) (n : Nat) :
+    Qle (Qabs (Qsub
+        (add (arctanSum a (Rartanh_R ρ (2 * n + 1))) (arctanSum b (Rartanh_R ρ (2 * n + 1))))
+        (arctanSum (vval a b) (Rartanh_R ρ n)))) (⟨2, n + 1⟩ : Q) :=
+  Rarctan_add_of_small hda hdb hρ0 hρd hlt htρa htρb hpos htρv hlt16 h2ρ hhalf hρ4 hρ2 hρ8 hρ1 n
+
+set_option maxHeartbeats 1200000 in
+/-- **★ the real-argument arctan ADDITION** `arctan s + arctan t = arctan((s+t)/(1−st))` for reals
+    `s, t` (the arctan analog of `Rartanh_add_real_via`). For `|s.seq m|, |t.seq m|,
+    |vval(s.seq m, t.seq m)| ≤ ρ` (the `ρ < 1/16` thicket) and abstract diagonals `X1 = RarctanR s`,
+    `X2 = RarctanR t`, `Y = RarctanR(vvalReal s t)` (via the seq equations), `X1 + X2 = Y`. Via
+    `Req_of_lin_bound` and a 2-way split through `W = arctanSum(vval(s_P,t_P), …)`: the combination leg
+    (`RarctanConst_add_vval_rho`, the exact rational addition relating depth-`n` to depth-`(2n+1)`) and
+    the argument-variation leg (`arctanSum_vval_argdiff` + `s.reg`/`t.reg`). Packages as
+    `arg(zw) = arg z + arg w`. -/
+theorem RarctanR_add_real_via (s t X1 X2 Y : Real) (ρ : Q) (R_Y : Nat → Nat)
+    (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den) (hlt : ρ.num.toNat < ρ.den)
+    (hlt16 : (mul (⟨16, 1⟩ : Q) ρ).num.toNat < (mul (⟨16, 1⟩ : Q) ρ).den)
+    (h2ρ : 0 ≤ (Qsub (⟨1, 1⟩ : Q) (mul ⟨2, 1⟩ ρ)).num)
+    (hhalf : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ⟨2, 1⟩ ρ))) (hρ4 : Qle (mul ⟨4, 1⟩ ρ) ⟨1, 1⟩)
+    (hρ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ρ ρ))) (hρ8 : Qle (mul ⟨2, 1⟩ ρ) ⟨1, 1⟩)
+    (hρ1 : Qle ρ ⟨1, 1⟩) (hRY : ∀ n, n ≤ R_Y n)
+    (hbs : ∀ m, Qle (Qabs (s.seq m)) ρ) (hbt : ∀ m, Qle (Qabs (t.seq m)) ρ)
+    (hbw : ∀ i, Qle (Qabs (vval (s.seq i) (t.seq i))) ρ)
+    (hX1seq : ∀ j, X1.seq j = arctanSum (s.seq (Rartanh_R ρ j)) (Rartanh_R ρ j))
+    (hX2seq : ∀ j, X2.seq j = arctanSum (t.seq (Rartanh_R ρ j)) (Rartanh_R ρ j))
+    (hYseq : ∀ n, Y.seq n = arctanSum (vval (s.seq (R_Y n)) (t.seq (R_Y n))) (Rartanh_R ρ n)) :
+    Req (Radd X1 X2) Y := by
+  have hsd : ∀ m, 0 < (s.seq m).den := fun m => s.den_pos m
+  have htd : ∀ m, 0 < (t.seq m).den := fun m => t.den_pos m
+  have hρhalf : Qle (mul ρ ρ) (⟨1, 2⟩ : Q) := by
+    have h := hρ2; simp only [Qle, Qsub, add, neg, mul] at h ⊢; push_cast at h ⊢; omega
+  have hRge : ∀ k, k ≤ Rartanh_R ρ k := by
+    intro k; unfold Rartanh_R
+    have hk : 1 ≤ ρ.den * ρ.den + 4 * ρ.den := Nat.le_trans (by omega) (Nat.le_add_left _ _)
+    calc k ≤ 1 * (k + 1) := by omega
+      _ ≤ (ρ.den * ρ.den + 4 * ρ.den) * (k + 1) := Nat.mul_le_mul_right _ hk
+  refine Req_of_lin_bound (C := 50) ?_
+  intro n
+  -- (Radd X1 X2).seq n = arctanSum(s_P,P) + arctanSum(t_P,P), P = Rartanh_R ρ (2n+1)
+  have hae : (Radd X1 X2).seq n
+      = add (arctanSum (s.seq (Rartanh_R ρ (2 * n + 1))) (Rartanh_R ρ (2 * n + 1)))
+          (arctanSum (t.seq (Rartanh_R ρ (2 * n + 1))) (Rartanh_R ρ (2 * n + 1))) := by
+    show add (X1.seq (2 * n + 1)) (X2.seq (2 * n + 1)) = _; rw [hX1seq, hX2seq]
+  rw [hae, hYseq n]
+  -- den-positivities
+  have hposP : 0 < (s.seq (Rartanh_R ρ (2 * n + 1))).den * (t.seq (Rartanh_R ρ (2 * n + 1))).den
+      - (s.seq (Rartanh_R ρ (2 * n + 1))).num * (t.seq (Rartanh_R ρ (2 * n + 1))).num :=
+    vval_inner_pos ρ _ _ hρd hρ0 (hsd _) (htd _) (hbs _) (hbt _) hρhalf
+  have hWd : 0 < (arctanSum (vval (s.seq (Rartanh_R ρ (2 * n + 1))) (t.seq (Rartanh_R ρ (2 * n + 1))))
+      (Rartanh_R ρ n)).den := arctanSum_den_pos (vval_den_pos _ _ hposP) _
+  have hYd : 0 < (arctanSum (vval (s.seq (R_Y n)) (t.seq (R_Y n))) (Rartanh_R ρ n)).den :=
+    arctanSum_den_pos (vval_den_pos _ _ (vval_inner_pos ρ _ _ hρd hρ0 (hsd _) (htd _)
+      (hbs _) (hbt _) hρhalf)) _
+  have hRd : 0 < (add (arctanSum (s.seq (Rartanh_R ρ (2 * n + 1))) (Rartanh_R ρ (2 * n + 1)))
+      (arctanSum (t.seq (Rartanh_R ρ (2 * n + 1))) (Rartanh_R ρ (2 * n + 1)))).den :=
+    add_den_pos (arctanSum_den_pos (hsd _) _) (arctanSum_den_pos (htd _) _)
+  -- leg A: combination (the rational addition law at the diagonal rationals)
+  have hlegA : Qle (Qabs (Qsub
+        (add (arctanSum (s.seq (Rartanh_R ρ (2 * n + 1))) (Rartanh_R ρ (2 * n + 1)))
+          (arctanSum (t.seq (Rartanh_R ρ (2 * n + 1))) (Rartanh_R ρ (2 * n + 1))))
+        (arctanSum (vval (s.seq (Rartanh_R ρ (2 * n + 1))) (t.seq (Rartanh_R ρ (2 * n + 1))))
+          (Rartanh_R ρ n)))) (⟨2, n + 1⟩ : Q) :=
+    RarctanConst_add_vval_rho _ _ ρ (hsd _) (htd _) hρ0 hρd hlt (hbs _) (hbt _) hposP (hbw _)
+      hlt16 h2ρ hhalf hρ4 hρ2 hρ8 hρ1 n
+  -- leg B: argument variation
+  have hQbP : Qle (Qbound (Rartanh_R ρ (2 * n + 1))) (Qbound n) := by
+    show (1 : Int) * ((n + 1 : Nat) : Int) ≤ 1 * ((Rartanh_R ρ (2 * n + 1) + 1 : Nat) : Int)
+    have := hRge (2 * n + 1); rw [Int.one_mul, Int.one_mul]
+    exact_mod_cast (show n + 1 ≤ Rartanh_R ρ (2 * n + 1) + 1 by omega)
+  have hQbM : Qle (Qbound (R_Y n)) (Qbound n) := by
+    show (1 : Int) * ((n + 1 : Nat) : Int) ≤ 1 * ((R_Y n + 1 : Nat) : Int)
+    have := hRY n; rw [Int.one_mul, Int.one_mul]
+    exact_mod_cast (show n + 1 ≤ R_Y n + 1 by omega)
+  have hvar := arctanSum_vval_argdiff ρ ρ (s.seq (Rartanh_R ρ (2 * n + 1)))
+    (t.seq (Rartanh_R ρ (2 * n + 1))) (s.seq (R_Y n)) (t.seq (R_Y n))
+    hρd hρ0 hρhalf hρ0 hρd hρ2 (hsd _) (htd _) (hsd _) (htd _)
+    (hbs _) (hbt _) (hbs _) (hbt _) (hbw _) (hbw _) (Rartanh_R ρ n)
+  have hlegB : Qle (Qabs (Qsub
+        (arctanSum (vval (s.seq (Rartanh_R ρ (2 * n + 1))) (t.seq (Rartanh_R ρ (2 * n + 1))))
+          (Rartanh_R ρ n))
+        (arctanSum (vval (s.seq (R_Y n)) (t.seq (R_Y n))) (Rartanh_R ρ n)))) (⟨48, n + 1⟩ : Q) := by
+    refine Qle_trans (Qmul_den_pos Nat.one_pos (add_den_pos
+        (Qabs_den_pos (Qsub_den_pos (hsd _) (hsd _))) (Qabs_den_pos (Qsub_den_pos (htd _) (htd _)))))
+      hvar ?_
+    refine Qle_trans (Qmul_den_pos Nat.one_pos (add_den_pos
+        (add_den_pos (Qbound_den_pos _) (Qbound_den_pos _))
+        (add_den_pos (Qbound_den_pos _) (Qbound_den_pos _))))
+      (Qmul_le_mul_left (by decide) (Qadd_le_add (s.reg _ _) (t.reg _ _))) ?_
+    refine Qle_trans (Qmul_den_pos Nat.one_pos (add_den_pos
+        (add_den_pos (Qbound_den_pos n) (Qbound_den_pos n))
+        (add_den_pos (Qbound_den_pos n) (Qbound_den_pos n))))
+      (Qmul_le_mul_left (by decide)
+        (Qadd_le_add (Qadd_le_add hQbP hQbM) (Qadd_le_add hQbP hQbM))) ?_
+    apply Qeq_le
+    show Qeq (mul ⟨12, 1⟩ (add (add (Qbound n) (Qbound n)) (add (Qbound n) (Qbound n))))
+      (⟨48, n + 1⟩ : Q)
+    simp only [Qeq, mul, add, Qbound]; push_cast; ring_uor
+  -- triangle through W and combine
+  refine Qle_trans (add_den_pos (Qabs_den_pos (Qsub_den_pos hRd hWd))
+      (Qabs_den_pos (Qsub_den_pos hWd hYd)))
+    (Qabs_sub_triangle hRd hWd hYd) ?_
+  refine Qle_trans (add_den_pos (Nat.succ_pos n) (Nat.succ_pos n)) (Qadd_le_add hlegA hlegB) ?_
+  apply Qeq_le; exact Qadd_same_den_loc 2 48 (n + 1)
+
 end UOR.Bridge.F1Square.Analysis
