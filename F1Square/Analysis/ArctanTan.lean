@@ -475,4 +475,70 @@ theorem Rarctan_seq_abs_le (t : Q) (htd : 0 < t.den) {ρ : Q} (hρ0 : 0 ≤ ρ.n
   Qle_trans (geoSum_den_pos hρd _) (arctanSum_abs_le htd hρ0 hρd htρ (Rartanh_R ρ n))
     (geoSum_le_two hρ0 hρd hρ2 _)
 
+/-- **`2ρ ≤ 1/3`** from `16ρ < 1` (`hlt16`): each angle's budget so three of them sum below `1`. -/
+theorem Qmul_two_le_third {ρ : Q} (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den)
+    (hlt16 : (mul (⟨16, 1⟩ : Q) ρ).num.toNat < (mul (⟨16, 1⟩ : Q) ρ).den) :
+    Qle (mul (⟨2, 1⟩ : Q) ρ) (⟨1, 3⟩ : Q) := by
+  have hnn : (0 : Int) ≤ 16 * ρ.num := Int.mul_nonneg (by decide) hρ0
+  have h16 : 16 * ρ.num < (ρ.den : Int) := by
+    have h : (16 * ρ.num).toNat < 1 * ρ.den := hlt16
+    omega
+  show (2 * ρ.num) * ((3 : Nat) : Int) ≤ (1 : Int) * ((1 * ρ.den : Nat) : Int)
+  push_cast; omega
+
+/-- **The arctan angle-difference is `≤ 1` everywhere**: each of `arctan a`, `arctan b`,
+    `arctan(vval a b)` is `≤ 2ρ` (`Rarctan_seq_abs_le`), so the `Radd`/`Rsub`-reindexed difference is
+    `≤ 6ρ ≤ 1` (`Qmul_six_le_one`). Discharges the `Pos_RsinAux_of_small` hypothesis. -/
+theorem Rarctan_diff_seq_le {a b ρ : Q} (hda : 0 < a.den) (hdb : 0 < b.den)
+    (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den) (hlt : ρ.num.toNat < ρ.den)
+    (htρa : Qle (Qabs a) ρ) (htρb : Qle (Qabs b) ρ)
+    (hpos : 0 < (a.den : Int) * b.den - a.num * b.num) (htρv : Qle (Qabs (vval a b)) ρ)
+    (hρ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ρ ρ)))
+    (hlt16 : (mul (⟨16, 1⟩ : Q) ρ).num.toNat < (mul (⟨16, 1⟩ : Q) ρ).den) (n : Nat) :
+    Qle (Qabs ((Rsub
+        (Radd (Rarctan a hda hρ0 hρd hlt htρa) (Rarctan b hdb hρ0 hρd hlt htρb))
+        (Rarctan (vval a b) (vval_den_pos a b hpos) hρ0 hρd hlt htρv)).seq n)) (⟨1, 1⟩ : Q) := by
+  have hA := Rarctan_seq_abs_le a hda hρ0 hρd hlt htρa hρ2 (2 * (2 * n + 1) + 1)
+  have hB := Rarctan_seq_abs_le b hdb hρ0 hρd hlt htρb hρ2 (2 * (2 * n + 1) + 1)
+  have hC := Rarctan_seq_abs_le (vval a b) (vval_den_pos a b hpos) hρ0 hρd hlt htρv hρ2 (2 * n + 1)
+  have dA : 0 < ((Rarctan a hda hρ0 hρd hlt htρa).seq (2 * (2 * n + 1) + 1)).den :=
+    (Rarctan a hda hρ0 hρd hlt htρa).den_pos _
+  have dB : 0 < ((Rarctan b hdb hρ0 hρd hlt htρb).seq (2 * (2 * n + 1) + 1)).den :=
+    (Rarctan b hdb hρ0 hρd hlt htρb).den_pos _
+  have dC : 0 < ((Rarctan (vval a b) (vval_den_pos a b hpos) hρ0 hρd hlt htρv).seq (2 * n + 1)).den :=
+    (Rarctan (vval a b) (vval_den_pos a b hpos) hρ0 hρd hlt htρv).den_pos _
+  have hCneg : Qle (Qabs (neg ((Rarctan (vval a b) (vval_den_pos a b hpos) hρ0 hρd hlt htρv).seq
+        (2 * n + 1)))) (⟨1, 3⟩ : Q) := by
+    rw [Qabs_neg]; exact Qle_trans (Qmul_den_pos (by decide) hρd) hC (Qmul_two_le_third hρ0 hρd hlt16)
+  have hAt := Qle_trans (Qmul_den_pos (by decide) hρd) hA (Qmul_two_le_third hρ0 hρd hlt16)
+  have hBt := Qle_trans (Qmul_den_pos (by decide) hρd) hB (Qmul_two_le_third hρ0 hρd hlt16)
+  -- |add (add SA SB) (neg SC)| ≤ (|SA|+|SB|)+|SC| ≤ (1/3+1/3)+1/3 = 1
+  refine Qle_trans (add_den_pos (Qabs_den_pos (add_den_pos dA dB)) (Qabs_den_pos (neg_den_pos dC)))
+    (Qabs_add_le _ _) ?_
+  refine Qle_trans (add_den_pos (add_den_pos (Qabs_den_pos dA) (Qabs_den_pos dB))
+      (Qabs_den_pos (neg_den_pos dC)))
+    (Qadd_le_add (Qabs_add_le _ _) (Qle_refl _)) ?_
+  exact Qle_trans (add_den_pos (add_den_pos (by decide) (by decide)) (by decide))
+    (Qadd_le_add (Qadd_le_add hAt hBt) hCneg) (Qeq_le (by decide))
+
+/-- **★ the arctan addition law, apartness discharged** `arctan a + arctan b = arctan((a+b)/(1−ab))`:
+    the `RsinAux` apartness `Rarctan_add` needs is now automatic — the angle difference is `≤ 1`
+    everywhere (`Rarctan_diff_seq_le`), so `Pos_RsinAux_of_small` supplies the witness. Holds for any
+    `|a|, |b|, |vval a b| ≤ ρ` with the shared `ρ < 1/16` thicket and `1 − ab > 0`. The complete
+    imaginary half of `Clog` additivity. -/
+theorem Rarctan_add_of_small {a b ρ : Q} (hda : 0 < a.den) (hdb : 0 < b.den)
+    (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den) (hlt : ρ.num.toNat < ρ.den)
+    (htρa : Qle (Qabs a) ρ) (htρb : Qle (Qabs b) ρ)
+    (hpos : 0 < (a.den : Int) * b.den - a.num * b.num) (htρv : Qle (Qabs (vval a b)) ρ)
+    (hlt16 : (mul (⟨16, 1⟩ : Q) ρ).num.toNat < (mul (⟨16, 1⟩ : Q) ρ).den)
+    (h2ρ : 0 ≤ (Qsub (⟨1, 1⟩ : Q) (mul ⟨2, 1⟩ ρ)).num)
+    (hhalf : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ⟨2, 1⟩ ρ))) (hρ4 : Qle (mul ⟨4, 1⟩ ρ) ⟨1, 1⟩)
+    (hρ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ρ ρ))) (hρ8 : Qle (mul ⟨2, 1⟩ ρ) ⟨1, 1⟩)
+    (hρ1 : Qle ρ ⟨1, 1⟩) :
+    Req (Radd (Rarctan a hda hρ0 hρd hlt htρa) (Rarctan b hdb hρ0 hρd hlt htρb))
+        (Rarctan (vval a b) (vval_den_pos a b hpos) hρ0 hρd hlt htρv) := by
+  obtain ⟨k, hk⟩ := Pos_RsinAux_of_small
+    (Rarctan_diff_seq_le hda hdb hρ0 hρd hlt htρa htρb hpos htρv hρ2 hlt16)
+  exact Rarctan_add hda hdb hρ0 hρd hlt htρa htρb hpos htρv hlt16 h2ρ hhalf hρ4 hρ2 hρ8 hρ1 hk
+
 end UOR.Bridge.F1Square.Analysis
