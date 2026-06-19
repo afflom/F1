@@ -188,4 +188,55 @@ theorem Rsin_cos_add_tan {A B : Real} {a b : Q} (ha : 0 < a.den) (hb : 0 < b.den
     (Rsub one (Rmul (ofQ a ha) (ofQ b hb))) (Rmul (Rcos A) (Rcos B))) ?_
   exact Rmul_congr (Req_refl _) (Req_symm (Rcos_add_of_tan ha hb hA hB))
 
+-- ===========================================================================
+-- Parity: cos is even, sin is odd (toward tan-injectivity → arctan addition).
+-- ===========================================================================
+
+/-- The alternating term is even in its base: `altTerm (−q) off n = altTerm q off n` (depends on `q²`
+    only, and `(−q)² = q²`). -/
+theorem altTerm_base_neg (q : Q) (off n : Nat) : Qeq (altTerm (neg q) off n) (altTerm q off n) := by
+  unfold altTerm
+  refine Qmul_congr (qpow_Qeq ?_ n) (Qeq_refl _)
+  show Qeq (neg (mul (neg q) (neg q))) (neg (mul q q))
+  simp only [Qeq, neg, mul]; push_cast; ring_uor
+
+/-- The alternating sum is even in its base: `altSum (−q) off N = altSum q off N`. -/
+theorem altSum_base_neg (q : Q) (off : Nat) : ∀ N, Qeq (altSum (neg q) off N) (altSum q off N)
+  | 0 => altTerm_base_neg q off 0
+  | (N + 1) => Qadd_congr (altSum_base_neg q off N) (altTerm_base_neg q off (N + 1))
+
+/-- `xBound (−x) = xBound x` (negation preserves `|num|` and `den` of the 0-th approximant). -/
+theorem xBound_neg (x : Real) : xBound (Rneg x) = xBound x := by
+  unfold xBound
+  show (neg (x.seq 0)).num.natAbs + 2 * (neg (x.seq 0)).den = (x.seq 0).num.natAbs + 2 * (x.seq 0).den
+  simp only [neg, Int.natAbs_neg]
+
+/-- `RaltReal_K (−x) = RaltReal_K x` (depends only on `xBound`). -/
+theorem RaltReal_K_neg (x : Real) : RaltReal_K (Rneg x) = RaltReal_K x := by
+  unfold RaltReal_K; rw [xBound_neg]
+
+/-- `RaltReal_R (−x) j = RaltReal_R x j` (the diagonal reindex depends only on `xBound`). -/
+theorem RaltReal_R_neg (x : Real) (j : Nat) : RaltReal_R (Rneg x) j = RaltReal_R x j := by
+  unfold RaltReal_R; rw [xBound_neg, RaltReal_K_neg]
+
+/-- **`cos` is even**: `cos(−x) = cos x` (`altSum_base_neg` + the reindex parity `RaltReal_R_neg`). -/
+theorem Rcos_neg (x : Real) : Req (Rcos (Rneg x)) (Rcos x) := by
+  refine Req_of_seq_Qeq (fun j => ?_)
+  show Qeq (altSum (neg (x.seq (RaltReal_R (Rneg x) j))) 0 (RaltReal_R (Rneg x) j))
+    (altSum (x.seq (RaltReal_R x j)) 0 (RaltReal_R x j))
+  rw [RaltReal_R_neg]
+  exact altSum_base_neg (x.seq (RaltReal_R x j)) 0 (RaltReal_R x j)
+
+/-- `RsinAux(−x) = RsinAux x` (the `sin/x` series is even). -/
+theorem RsinAux_neg (x : Real) : Req (RsinAux (Rneg x)) (RsinAux x) := by
+  refine Req_of_seq_Qeq (fun j => ?_)
+  show Qeq (altSum (neg (x.seq (RaltReal_R (Rneg x) j))) 1 (RaltReal_R (Rneg x) j))
+    (altSum (x.seq (RaltReal_R x j)) 1 (RaltReal_R x j))
+  rw [RaltReal_R_neg]
+  exact altSum_base_neg (x.seq (RaltReal_R x j)) 1 (RaltReal_R x j)
+
+/-- **`sin` is odd**: `sin(−x) = −sin x` (`sin = x·RsinAux`, `RsinAux` even, `Rmul_neg_left`). -/
+theorem Rsin_neg (x : Real) : Req (Rsin (Rneg x)) (Rneg (Rsin x)) :=
+  Req_trans (Rmul_congr (Req_refl (Rneg x)) (RsinAux_neg x)) (Rmul_neg_left x (RsinAux x))
+
 end UOR.Bridge.F1Square.Analysis

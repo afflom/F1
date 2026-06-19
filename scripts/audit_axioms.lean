@@ -917,6 +917,14 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.vval_rel
 #print axioms Analysis.vval_coeff_eq
 #print axioms Analysis.Rsin_cos_add_tan
+#print axioms Analysis.altTerm_base_neg
+#print axioms Analysis.altSum_base_neg
+#print axioms Analysis.xBound_neg
+#print axioms Analysis.RaltReal_K_neg
+#print axioms Analysis.RaltReal_R_neg
+#print axioms Analysis.Rcos_neg
+#print axioms Analysis.RsinAux_neg
+#print axioms Analysis.Rsin_neg
 #print axioms Analysis.Qabs_sub_mul_right_eq
 #print axioms Analysis.Qabs_sub_mul_left_eq
 #print axioms Analysis.Qrecip_anti
