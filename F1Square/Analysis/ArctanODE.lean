@@ -1105,4 +1105,79 @@ theorem peval_arctan_pow_cauchy (ρ w : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.
   exact Qmul_le_mul_left (by show (0 : Int) ≤ (2 : Int) ^ m; exact_mod_cast Nat.zero_le (2 ^ m))
     (gPow_gap_le (mul ⟨2, 1⟩ ρ) hr0 hrd hMM)
 
+/-- `|arctanCoeff_i·wⁱ| ≤ 1·ρⁱ` for `|w| ≤ ρ` (cleaner than kdbl's `2·ρⁱ`). -/
+theorem Qabs_arctan_C_le (ρ w : Q) (hρd : 0 < ρ.den) (hwd : 0 < w.den) (hw : Qle (Qabs w) ρ) (i : Nat) :
+    Qle (Qabs (mul (arctanCoeff i) (qpow w i))) (mul ⟨1, 1⟩ (qpow ρ i)) :=
+  Qle_trans (Qmul_den_pos (Qabs_den_pos (arctanCoeff_den_pos i)) (Qabs_den_pos (qpow_den_pos hwd i)))
+    (Qeq_le (by rw [Qabs_mul]; exact Qeq_refl _ :
+      Qeq (Qabs (mul (arctanCoeff i) (qpow w i))) (mul (Qabs (arctanCoeff i)) (Qabs (qpow w i)))))
+    (Qmul_le_mul (Qabs_den_pos (arctanCoeff_den_pos i)) (by decide) (Qabs_den_pos (qpow_den_pos hwd i))
+      (Qabs_num_nonneg _) (Qabs_num_nonneg _) (arctanCoeff_fabs_le_one i)
+      (Qle_trans (qpow_den_pos (Qabs_den_pos hwd) i) (Qeq_le (qpow_abs w i))
+        (qpow_base_mono (Qabs_den_pos hwd) hρd (Qabs_num_nonneg w) hw i)))
+
+/-- The `i`-th inner gap of the arctan `peval_fpow_succ` corner factors as `(arctanCoeff_i·wⁱ)·(pₘ gap)`. -/
+theorem corner_inner_eq_arctan (w : Q) (hwd : 0 < w.den) (m M i : Nat) :
+    Qeq (Qsub (Fsum (fun j => mul (mul (arctanCoeff i) (qpow w i)) (mul (fpow arctanCoeff m j) (qpow w j))) M)
+              (Fsum (fun j => mul (mul (arctanCoeff i) (qpow w i)) (mul (fpow arctanCoeff m j) (qpow w j))) (M - i)))
+      (mul (mul (arctanCoeff i) (qpow w i))
+        (Qsub (peval (fpow arctanCoeff m) w M) (peval (fpow arctanCoeff m) w (M - i)))) := by
+  have hC : 0 < (mul (arctanCoeff i) (qpow w i)).den := Qmul_den_pos (arctanCoeff_den_pos i) (qpow_den_pos hwd i)
+  have hterm : ∀ N, Qeq (Fsum (fun j => mul (mul (arctanCoeff i) (qpow w i))
+        (mul (fpow arctanCoeff m j) (qpow w j))) N)
+      (mul (mul (arctanCoeff i) (qpow w i)) (peval (fpow arctanCoeff m) w N)) :=
+    fun N => Fsum_mul_left hC
+      (fun j => Qmul_den_pos (fpow_den_pos (fun l => arctanCoeff_den_pos l) m j) (qpow_den_pos hwd j)) N
+  exact Qeq_trans (Qsub_den_pos
+      (Qmul_den_pos hC (peval_den_pos (fpow_den_pos (fun l => arctanCoeff_den_pos l) m) hwd M))
+      (Qmul_den_pos hC (peval_den_pos (fpow_den_pos (fun l => arctanCoeff_den_pos l) m) hwd (M - i))))
+    (Qsub_congr (hterm M) (hterm (M - i)))
+    (Qeq_symm (Qmul_sub_left_loc (mul (arctanCoeff i) (qpow w i))
+      (peval (fpow arctanCoeff m) w M) (peval (fpow arctanCoeff m) w (M - i))))
+
+/-- **Per-corner-term bound**: `|corner_iⁱ|·(1−2ρ) ≤ 2ᵐ·(2ρ)^{M+1}`. Mirrors `corner_term_le`. -/
+theorem corner_term_le_arctan (ρ w : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num) (hwd : 0 < w.den)
+    (hw : Qle (Qabs w) ρ) (h2ρ : 0 ≤ (Qsub (⟨1, 1⟩ : Q) (mul ⟨2, 1⟩ ρ)).num) (m M i : Nat) (hiM : i ≤ M) :
+    Qle (mul (Qabs (Qsub
+          (Fsum (fun j => mul (mul (arctanCoeff i) (qpow w i)) (mul (fpow arctanCoeff m j) (qpow w j))) M)
+          (Fsum (fun j => mul (mul (arctanCoeff i) (qpow w i)) (mul (fpow arctanCoeff m j) (qpow w j))) (M - i))))
+          (Qsub ⟨1, 1⟩ (mul ⟨2, 1⟩ ρ)))
+      (mul (⟨(2 : Int) ^ m, 1⟩ : Q) (qpow (mul ⟨2, 1⟩ ρ) (M + 1))) := by
+  have hpd : ∀ N, 0 < (peval (fpow arctanCoeff m) w N).den :=
+    fun N => peval_den_pos (fpow_den_pos (fun l => arctanCoeff_den_pos l) m) hwd N
+  have hC : 0 < (mul (arctanCoeff i) (qpow w i)).den := Qmul_den_pos (arctanCoeff_den_pos i) (qpow_den_pos hwd i)
+  have hgap : 0 < (Qsub (peval (fpow arctanCoeff m) w M) (peval (fpow arctanCoeff m) w (M - i))).den :=
+    Qsub_den_pos (hpd M) (hpd (M - i))
+  have h2d : 0 < (mul (⟨2, 1⟩ : Q) ρ).den := Qmul_den_pos (by decide) hρd
+  have hwd1 : 0 < (Qsub (⟨1, 1⟩ : Q) (mul ⟨2, 1⟩ ρ)).den := Qsub_den_pos Nat.one_pos h2d
+  have h2n : (0 : Int) ≤ (2 : Int) ^ m := by exact_mod_cast Nat.zero_le (2 ^ m)
+  have hRHSn : 0 ≤ (mul (⟨(2 : Int) ^ m, 1⟩ : Q) (qpow (mul ⟨2, 1⟩ ρ) (M - i + 1))).num :=
+    Qmul_num_nonneg h2n (qpow_nonneg (Qmul_num_nonneg (by decide) hρ0) _)
+  have heq : Qeq (Qabs (Qsub
+        (Fsum (fun j => mul (mul (arctanCoeff i) (qpow w i)) (mul (fpow arctanCoeff m j) (qpow w j))) M)
+        (Fsum (fun j => mul (mul (arctanCoeff i) (qpow w i)) (mul (fpow arctanCoeff m j) (qpow w j))) (M - i))))
+      (mul (Qabs (mul (arctanCoeff i) (qpow w i)))
+        (Qabs (Qsub (peval (fpow arctanCoeff m) w M) (peval (fpow arctanCoeff m) w (M - i))))) :=
+    Qeq_trans (Qabs_den_pos (Qmul_den_pos hC hgap)) (Qabs_Qeq (corner_inner_eq_arctan w hwd m M i))
+      (by rw [Qabs_mul]; exact Qeq_refl _)
+  refine Qle_trans (Qmul_den_pos (Qmul_den_pos (Qabs_den_pos hC) (Qabs_den_pos hgap)) hwd1)
+    (Qeq_le (Qmul_congr heq (Qeq_refl _))) ?_
+  refine Qle_trans (Qmul_den_pos (Qabs_den_pos hC) (Qmul_den_pos (Qabs_den_pos hgap) hwd1))
+    (Qeq_le (Qmul_assoc (Qabs (mul (arctanCoeff i) (qpow w i)))
+      (Qabs (Qsub (peval (fpow arctanCoeff m) w M) (peval (fpow arctanCoeff m) w (M - i))))
+      (Qsub ⟨1, 1⟩ (mul ⟨2, 1⟩ ρ)))) ?_
+  refine Qle_trans (Qmul_den_pos (Qabs_den_pos hC) (Qmul_den_pos Nat.one_pos (qpow_den_pos h2d _)))
+    (Qmul_le_mul_left (Qabs_num_nonneg _)
+      (peval_arctan_pow_cauchy ρ w hρd hρ0 hwd hw h2ρ m (M := M - i) (M' := M) (by omega))) ?_
+  refine Qle_trans (Qmul_den_pos (Qmul_den_pos (by decide) (qpow_den_pos hρd i))
+      (Qmul_den_pos Nat.one_pos (qpow_den_pos h2d _)))
+    (Qmul_le_mul_right hRHSn (Qabs_arctan_C_le ρ w hρd hwd hw i)) ?_
+  refine Qle_trans (Qmul_den_pos (Qmul_den_pos (by decide) Nat.one_pos)
+      (Qmul_den_pos (qpow_den_pos hρd i) (qpow_den_pos h2d _)))
+    (Qeq_le (mul_rearrange ⟨1, 1⟩ (qpow ρ i) ⟨(2 : Int) ^ m, 1⟩ (qpow (mul ⟨2, 1⟩ ρ) (M - i + 1)))) ?_
+  refine Qle_trans (Qmul_den_pos Nat.one_pos (Qmul_den_pos (qpow_den_pos hρd i) (qpow_den_pos h2d _)))
+    (Qeq_le (Qmul_congr (by simp [Qeq, mul] :
+      Qeq (mul (⟨1, 1⟩ : Q) ⟨(2 : Int) ^ m, 1⟩) ⟨(2 : Int) ^ m, 1⟩) (Qeq_refl _))) ?_
+  exact Qmul_le_mul_left h2n (qpow_conv_le ρ hρd hρ0 i M hiM)
+
 end UOR.Bridge.F1Square.Analysis
