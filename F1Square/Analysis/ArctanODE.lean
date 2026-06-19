@@ -1451,4 +1451,118 @@ theorem DN_cos_closed (t ρ : Q) (M : Nat) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.
   exact Qeq_le (Fsum_const_eq (mul (⟨(2 : Int) ^ (M + 1) - 1, 1⟩ : Q)
     (mul (⟨(M : Int) + 1, 1⟩ : Q) (qpow (mul ⟨2, 1⟩ ρ) (M + 1)))) hCB M)
 
+-- ===========================================================================
+-- Decay arithmetic: bound the closed DN right-hand side by ρ.den/(n+1).
+-- ===========================================================================
+
+/-- `a·(b·(a·p)) ≈ ((a·a)·b)·p` (pulls the two `a` factors and `b` to the front). -/
+theorem Qrearr_AABP (a b p : Q) :
+    Qeq (mul a (mul b (mul a p))) (mul (mul (mul a a) b) p) := by
+  simp only [Qeq, mul]; push_cast; ring_uor
+
+set_option maxHeartbeats 1000000 in
+/-- **Decay arithmetic**: the closed `DN_*_closed` right-hand side
+    `(M+1)·(2^{M+1}−1)·(M+1)·(2ρ)^{M+1}` is `≤ ρ.den/(n+1)` whenever `n+1 ≤ M`, `4ρ ≤ 1`, and
+    `16ρ < 1`. The `(M+1)²` polynomial absorbs into the geometric base only at `ρ < 1/16` (via
+    `sq_le_four_pow`: `(M+1)² ≤ 4^M`), matching the doubling radius; the `2^{M+1}` collapses the
+    `(2ρ)` base to `(4ρ)`, the surplus `4^M` collapses `(4ρ)` to `(16ρ)`, and `qpow_le_recip` turns
+    `(16ρ)^M` into the `C/(n+1)` form `Req_of_lin_bound` consumes. -/
+theorem DN_arctan_decay (ρ : Q) (M n : Nat) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num)
+    (hρ4 : Qle (mul ⟨4, 1⟩ ρ) ⟨1, 1⟩)
+    (hlt : (mul ⟨16, 1⟩ ρ).num.toNat < (mul ⟨16, 1⟩ ρ).den) (hMn : n + 1 ≤ M) :
+    Qle (mul (⟨(M : Int) + 1, 1⟩ : Q) (mul (⟨(2 : Int) ^ (M + 1) - 1, 1⟩ : Q)
+        (mul (⟨(M : Int) + 1, 1⟩ : Q) (qpow (mul ⟨2, 1⟩ ρ) (M + 1)))))
+      (⟨(ρ.den : Int), n + 1⟩ : Q) := by
+  -- denominator positivity for the pieces
+  have hρ2d : 0 < (mul (⟨2, 1⟩ : Q) ρ).den := Qmul_den_pos (by decide) hρd
+  have hρ4d : 0 < (mul (⟨4, 1⟩ : Q) ρ).den := Qmul_den_pos (by decide) hρd
+  have hρ16d : 0 < (mul (⟨16, 1⟩ : Q) ρ).den := Qmul_den_pos (by decide) hρd
+  have hPd : 0 < (qpow (mul (⟨2, 1⟩ : Q) ρ) (M + 1)).den := qpow_den_pos hρ2d (M + 1)
+  have hPnn : 0 ≤ (qpow (mul (⟨2, 1⟩ : Q) ρ) (M + 1)).num :=
+    qpow_nonneg (Qmul_num_nonneg (by decide) hρ0) (M + 1)
+  have hAnn : 0 ≤ (⟨(M : Int) + 1, 1⟩ : Q).num := by show (0 : Int) ≤ (M : Int) + 1; omega
+  have hXnn : 0 ≤ (mul (⟨(M : Int) + 1, 1⟩ : Q) (qpow (mul ⟨2, 1⟩ ρ) (M + 1))).num :=
+    Qmul_num_nonneg hAnn hPnn
+  have hB2nn : 0 ≤ (⟨(2 : Int) ^ (M + 1), 1⟩ : Q).num := by
+    show (0 : Int) ≤ (2 : Int) ^ (M + 1)
+    have hh : (0 : Int) ≤ (((2 : Nat) ^ (M + 1) : Nat) : Int) := Int.ofNat_nonneg _
+    push_cast at hh; exact hh
+  have hR16nn : 0 ≤ (qpow (mul (⟨16, 1⟩ : Q) ρ) M).num :=
+    qpow_nonneg (Qmul_num_nonneg (by decide) hρ0) M
+  have h16nn : 0 ≤ (mul (⟨16, 1⟩ : Q) ρ).num := Qmul_num_nonneg (by decide) hρ0
+  -- (2^{M+1}-1) ≤ 2^{M+1}
+  have hB1le2 : Qle (⟨(2 : Int) ^ (M + 1) - 1, 1⟩ : Q) (⟨(2 : Int) ^ (M + 1), 1⟩ : Q) := by
+    simp only [Qle]; push_cast; omega
+  -- (M+1)² ≤ 4^M
+  have hI : ((M : Int) + 1) * ((M : Int) + 1) ≤ (4 : Int) ^ M := by
+    have hnat := sq_le_four_pow M
+    have hh : (((M + 1) * (M + 1) : Nat) : Int) ≤ (((4 : Nat) ^ M : Nat) : Int) := by
+      exact_mod_cast hnat
+    push_cast at hh; exact hh
+  have hAAle : Qle (mul (⟨(M : Int) + 1, 1⟩ : Q) (⟨(M : Int) + 1, 1⟩ : Q)) (⟨(4 : Int) ^ M, 1⟩ : Q) := by
+    show ((M : Int) + 1) * ((M : Int) + 1) * ((1 : Nat) : Int)
+      ≤ (4 : Int) ^ M * (((1 : Nat) * (1 : Nat) : Nat) : Int)
+    calc ((M : Int) + 1) * ((M : Int) + 1) * ((1 : Nat) : Int)
+        = ((M : Int) + 1) * ((M : Int) + 1) := by push_cast; ring_uor
+      _ ≤ (4 : Int) ^ M := hI
+      _ = (4 : Int) ^ M * (((1 : Nat) * (1 : Nat) : Nat) : Int) := by push_cast; ring_uor
+  -- geometric core: 2^{M+1}·(2ρ)^{M+1} = (4ρ)^{M+1}
+  have h4eq : Qeq (mul (mul (⟨2, 1⟩ : Q) ρ) ⟨2, 1⟩) (mul ⟨4, 1⟩ ρ) := by
+    simp only [Qeq, mul]; push_cast; ring_uor
+  have hcore : Qeq (mul (⟨(2 : Int) ^ (M + 1), 1⟩ : Q) (qpow (mul ⟨2, 1⟩ ρ) (M + 1)))
+      (qpow (mul ⟨4, 1⟩ ρ) (M + 1)) := by
+    refine Qeq_trans (Qmul_den_pos hPd Nat.one_pos)
+      (mul_comm (⟨(2 : Int) ^ (M + 1), 1⟩ : Q) (qpow (mul ⟨2, 1⟩ ρ) (M + 1))) ?_
+    refine Qeq_trans (qpow_den_pos (Qmul_den_pos hρ2d Nat.one_pos) (M + 1))
+      (qpow_const_combine 2 (mul ⟨2, 1⟩ ρ) hρ2d (M + 1)) ?_
+    exact qpow_Qeq_loc h4eq (M + 1)
+  -- (4ρ)^{M+1} = (4ρ)^M·(4ρ)
+  have hq1one : Qeq (qpow (mul (⟨4, 1⟩ : Q) ρ) 1) (mul ⟨4, 1⟩ ρ) := by
+    show Qeq (mul (mul ⟨4, 1⟩ ρ) ⟨1, 1⟩) (mul ⟨4, 1⟩ ρ)
+    exact mul_one (mul ⟨4, 1⟩ ρ)
+  have hsplit : Qeq (qpow (mul (⟨4, 1⟩ : Q) ρ) (M + 1))
+      (mul (qpow (mul ⟨4, 1⟩ ρ) M) (mul ⟨4, 1⟩ ρ)) :=
+    Qeq_trans (Qmul_den_pos (qpow_den_pos hρ4d M) (qpow_den_pos hρ4d 1))
+      (qpow_add (mul ⟨4, 1⟩ ρ) hρ4d M 1) (Qmul_congr (Qeq_refl _) hq1one)
+  -- 4^M·(4ρ)^M = (16ρ)^M
+  have h16eq : Qeq (mul (mul (⟨4, 1⟩ : Q) ρ) ⟨4, 1⟩) (mul ⟨16, 1⟩ ρ) := by
+    simp only [Qeq, mul]; push_cast; ring_uor
+  have hAcombine : Qeq (mul (⟨(4 : Int) ^ M, 1⟩ : Q) (qpow (mul ⟨4, 1⟩ ρ) M))
+      (qpow (mul ⟨16, 1⟩ ρ) M) := by
+    refine Qeq_trans (Qmul_den_pos (qpow_den_pos hρ4d M) Nat.one_pos)
+      (mul_comm (⟨(4 : Int) ^ M, 1⟩ : Q) (qpow (mul ⟨4, 1⟩ ρ) M)) ?_
+    refine Qeq_trans (qpow_den_pos (Qmul_den_pos hρ4d Nat.one_pos) M)
+      (qpow_const_combine 4 (mul ⟨4, 1⟩ ρ) hρ4d M) ?_
+    exact qpow_Qeq_loc h16eq M
+  -- assemble the full geometric equality
+  have hgeom : Qeq (mul (⟨(4 : Int) ^ M, 1⟩ : Q)
+        (mul (⟨(2 : Int) ^ (M + 1), 1⟩ : Q) (qpow (mul ⟨2, 1⟩ ρ) (M + 1))))
+      (mul (qpow (mul ⟨16, 1⟩ ρ) M) (mul ⟨4, 1⟩ ρ)) := by
+    refine Qeq_trans (Qmul_den_pos Nat.one_pos (qpow_den_pos hρ4d (M + 1)))
+      (Qmul_congr (Qeq_refl _) hcore) ?_
+    refine Qeq_trans (Qmul_den_pos Nat.one_pos (Qmul_den_pos (qpow_den_pos hρ4d M) hρ4d))
+      (Qmul_congr (Qeq_refl _) hsplit) ?_
+    refine Qeq_trans (Qmul_den_pos (Qmul_den_pos Nat.one_pos (qpow_den_pos hρ4d M)) hρ4d)
+      (Qeq_symm (Qmul_assoc (⟨(4 : Int) ^ M, 1⟩ : Q) (qpow (mul ⟨4, 1⟩ ρ) M) (mul ⟨4, 1⟩ ρ))) ?_
+    exact Qmul_congr hAcombine (Qeq_refl _)
+  -- final reciprocal conversion
+  have hfin : Qeq (⟨((mul (⟨16, 1⟩ : Q) ρ).den : Int), n + 1⟩ : Q) (⟨(ρ.den : Int), n + 1⟩ : Q) := by
+    simp only [Qeq, mul]; push_cast; ring_uor
+  -- chain everything
+  refine Qle_trans (Qmul_den_pos Nat.one_pos (Qmul_den_pos Nat.one_pos (Qmul_den_pos Nat.one_pos hPd)))
+    (Qmul_le_mul_left hAnn (Qmul_le_mul_right hXnn hB1le2)) ?_
+  refine Qle_trans (Qmul_den_pos (Qmul_den_pos (Qmul_den_pos Nat.one_pos Nat.one_pos) Nat.one_pos) hPd)
+    (Qeq_le (Qrearr_AABP (⟨(M : Int) + 1, 1⟩ : Q) (⟨(2 : Int) ^ (M + 1), 1⟩ : Q)
+      (qpow (mul ⟨2, 1⟩ ρ) (M + 1)))) ?_
+  refine Qle_trans (Qmul_den_pos (Qmul_den_pos Nat.one_pos Nat.one_pos) hPd)
+    (Qmul_le_mul_right hPnn (Qmul_le_mul_right hB2nn hAAle)) ?_
+  refine Qle_trans (Qmul_den_pos Nat.one_pos (Qmul_den_pos Nat.one_pos hPd))
+    (Qeq_le (Qmul_assoc (⟨(4 : Int) ^ M, 1⟩ : Q) (⟨(2 : Int) ^ (M + 1), 1⟩ : Q)
+      (qpow (mul ⟨2, 1⟩ ρ) (M + 1)))) ?_
+  refine Qle_trans (Qmul_den_pos (qpow_den_pos hρ16d M) hρ4d) (Qeq_le hgeom) ?_
+  refine Qle_trans (Qmul_den_pos (qpow_den_pos hρ16d M) Nat.one_pos)
+    (Qmul_le_mul_left hR16nn hρ4) ?_
+  refine Qle_trans (qpow_den_pos hρ16d M) (Qeq_le (mul_one (qpow (mul ⟨16, 1⟩ ρ) M))) ?_
+  exact Qle_trans (Nat.succ_pos n) (qpow_le_recip h16nn hρ16d hlt hMn) (Qeq_le hfin)
+
 end UOR.Bridge.F1Square.Analysis
