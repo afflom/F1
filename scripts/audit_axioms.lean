@@ -879,6 +879,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.DN_cos_closed
 #print axioms Analysis.Qrearr_AABP
 #print axioms Analysis.DN_arctan_decay
+#print axioms Analysis.DN_sin_recip
+#print axioms Analysis.DN_cos_recip
 #print axioms Analysis.sinCoeff_abs_le_one
 #print axioms Analysis.cosCoeff_abs_le_one
 #print axioms Analysis.arctanSum_abs_le

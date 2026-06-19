@@ -1565,4 +1565,66 @@ theorem DN_arctan_decay (ρ : Q) (M n : Nat) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ �
   refine Qle_trans (qpow_den_pos hρ16d M) (Qeq_le (mul_one (qpow (mul ⟨16, 1⟩ ρ) M))) ?_
   exact Qle_trans (Nat.succ_pos n) (qpow_le_recip h16nn hρ16d hlt hMn) (Qeq_le hfin)
 
+set_option maxHeartbeats 1000000 in
+/-- **sin composition gap, reciprocal form**: `|sin∘arctan eval − sin(arctan eval)| ≤ 2·ρ.den/(n+1)`
+    for `n+1 ≤ M`, `ρ ≤ 1/4` (so `1−2ρ ≥ 1/2`) and `16ρ < 1`. Combines `DN_sin_closed`
+    (`|D|·(1−2ρ) ≤ closed`) via `mul_div2` with `DN_arctan_decay` (`closed ≤ ρ.den/(n+1)`). This is
+    the per-index input `Req_of_lin_bound` consumes for the sin side of `tan(arctan t) = t`. -/
+theorem DN_sin_recip (t ρ : Q) (M n : Nat) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num) (htd : 0 < t.den)
+    (hw : Qle (Qabs t) ρ) (h2ρ : 0 ≤ (Qsub (⟨1, 1⟩ : Q) (mul ⟨2, 1⟩ ρ)).num)
+    (hhalf : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ⟨2, 1⟩ ρ)))
+    (hρ4 : Qle (mul ⟨4, 1⟩ ρ) ⟨1, 1⟩)
+    (hlt : (mul ⟨16, 1⟩ ρ).num.toNat < (mul ⟨16, 1⟩ ρ).den) (hMn : n + 1 ≤ M)
+    (hq1 : Qle (Qabs (peval arctanCoeff t M)) ⟨1, 1⟩) :
+    Qle (Qabs (Qsub (peval (fcomp sinCoeff arctanCoeff) t M)
+            (peval sinCoeff (peval arctanCoeff t M) M)))
+      (⟨2 * (ρ.den : Int), n + 1⟩ : Q) := by
+  have hFd : 0 < (Qsub (⟨1, 1⟩ : Q) (mul ⟨2, 1⟩ ρ)).den :=
+    Qsub_den_pos Nat.one_pos (Qmul_den_pos (by decide) hρd)
+  have hBd : 0 < (mul (⟨(M : Int) + 1, 1⟩ : Q) (mul (⟨(2 : Int) ^ (M + 1) - 1, 1⟩ : Q)
+      (mul (⟨(M : Int) + 1, 1⟩ : Q) (qpow (mul ⟨2, 1⟩ ρ) (M + 1))))).den :=
+    Qmul_den_pos Nat.one_pos (Qmul_den_pos Nat.one_pos
+      (Qmul_den_pos Nat.one_pos (qpow_den_pos (Qmul_den_pos (by decide) hρd) (M + 1))))
+  have had : 0 < (Qabs (Qsub (peval (fcomp sinCoeff arctanCoeff) t M)
+      (peval sinCoeff (peval arctanCoeff t M) M))).den :=
+    Qabs_den_pos (Qsub_den_pos
+      (peval_den_pos (fun k => fcomp_den_pos sinCoeff_den_pos arctanCoeff_den_pos k) htd M)
+      (peval_den_pos sinCoeff_den_pos (peval_den_pos arctanCoeff_den_pos htd M) M))
+  have hstep := mul_div2 (Qabs_num_nonneg _) had hFd hBd hhalf
+    (DN_sin_closed t ρ M hρd hρ0 htd hw h2ρ hq1)
+  refine Qle_trans (Qmul_den_pos (by decide) hBd) hstep ?_
+  refine Qle_trans (Qmul_den_pos (by decide) (Nat.succ_pos n))
+    (Qmul_le_mul_left (by decide) (DN_arctan_decay ρ M n hρd hρ0 hρ4 hlt hMn)) ?_
+  exact Qeq_le (by simp only [Qeq, mul]; push_cast; ring_uor)
+
+set_option maxHeartbeats 1000000 in
+/-- **cos composition gap, reciprocal form**: `|cos∘arctan eval − cos(arctan eval)| ≤ 2·ρ.den/(n+1)`.
+    The cos analogue of `DN_sin_recip` (via `DN_cos_closed` + `DN_arctan_decay`). -/
+theorem DN_cos_recip (t ρ : Q) (M n : Nat) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num) (htd : 0 < t.den)
+    (hw : Qle (Qabs t) ρ) (h2ρ : 0 ≤ (Qsub (⟨1, 1⟩ : Q) (mul ⟨2, 1⟩ ρ)).num)
+    (hhalf : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ⟨2, 1⟩ ρ)))
+    (hρ4 : Qle (mul ⟨4, 1⟩ ρ) ⟨1, 1⟩)
+    (hlt : (mul ⟨16, 1⟩ ρ).num.toNat < (mul ⟨16, 1⟩ ρ).den) (hMn : n + 1 ≤ M)
+    (hq1 : Qle (Qabs (peval arctanCoeff t M)) ⟨1, 1⟩) :
+    Qle (Qabs (Qsub (peval (fcomp cosCoeff arctanCoeff) t M)
+            (peval cosCoeff (peval arctanCoeff t M) M)))
+      (⟨2 * (ρ.den : Int), n + 1⟩ : Q) := by
+  have hFd : 0 < (Qsub (⟨1, 1⟩ : Q) (mul ⟨2, 1⟩ ρ)).den :=
+    Qsub_den_pos Nat.one_pos (Qmul_den_pos (by decide) hρd)
+  have hBd : 0 < (mul (⟨(M : Int) + 1, 1⟩ : Q) (mul (⟨(2 : Int) ^ (M + 1) - 1, 1⟩ : Q)
+      (mul (⟨(M : Int) + 1, 1⟩ : Q) (qpow (mul ⟨2, 1⟩ ρ) (M + 1))))).den :=
+    Qmul_den_pos Nat.one_pos (Qmul_den_pos Nat.one_pos
+      (Qmul_den_pos Nat.one_pos (qpow_den_pos (Qmul_den_pos (by decide) hρd) (M + 1))))
+  have had : 0 < (Qabs (Qsub (peval (fcomp cosCoeff arctanCoeff) t M)
+      (peval cosCoeff (peval arctanCoeff t M) M))).den :=
+    Qabs_den_pos (Qsub_den_pos
+      (peval_den_pos (fun k => fcomp_den_pos cosCoeff_den_pos arctanCoeff_den_pos k) htd M)
+      (peval_den_pos cosCoeff_den_pos (peval_den_pos arctanCoeff_den_pos htd M) M))
+  have hstep := mul_div2 (Qabs_num_nonneg _) had hFd hBd hhalf
+    (DN_cos_closed t ρ M hρd hρ0 htd hw h2ρ hq1)
+  refine Qle_trans (Qmul_den_pos (by decide) hBd) hstep ?_
+  refine Qle_trans (Qmul_den_pos (by decide) (Nat.succ_pos n))
+    (Qmul_le_mul_left (by decide) (DN_arctan_decay ρ M n hρd hρ0 hρ4 hlt hMn)) ?_
+  exact Qeq_le (by simp only [Qeq, mul]; push_cast; ring_uor)
+
 end UOR.Bridge.F1Square.Analysis
