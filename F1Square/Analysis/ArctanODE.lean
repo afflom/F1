@@ -1712,4 +1712,34 @@ theorem RsinAux_seq_eq_peval (X : Real) (j : Nat) :
   rw [RsinAux_seq_eq_altSum]
   exact Qeq_symm (peval_sinCoeff_eq (X.seq (RaltReal_R X j)) (X.den_pos _) (RaltReal_R X j))
 
+-- ===========================================================================
+-- cos argument-Lipschitz at fixed depth (reduces the cos argument-gap to |q−q'|).
+-- ===========================================================================
+
+/-- `0 ≤ (LipS M N).num` (the Lipschitz constant is a sum of non-negative `Pbound/fct` terms). -/
+theorem LipS_num_nonneg (M : Nat) : ∀ N, 0 ≤ (LipS M N).num
+  | 0 => Int.ofNat_nonneg _
+  | (n + 1) => Qadd_num_nonneg_loc (LipS_num_nonneg M n) (Int.ofNat_nonneg _)
+
+set_option maxHeartbeats 1000000 in
+/-- **cos argument-Lipschitz**: `|peval cos q (2N) − peval cos q' (2N)| ≤ LipS(M²,N)·2M·|q−q'|`
+    for `|q|,|q'| ≤ M`. Rewrites both truncations to `altSum` (`peval_cosCoeff_eq_altSum`), applies the
+    alternating-series Lipschitz bound (`altSum_Lip_le`), and reduces the `−q²` base-gap to `|q−q'|`
+    (`qsq_diff_le`). Absorbs the inner-depth mismatch of the nested-diagonal bridge: replacing the
+    cos argument by a nearby value costs only `|q−q'|` (times a bounded constant). -/
+theorem peval_cosCoeff_Lip (q q' : Q) (M N : Nat) (hqd : 0 < q.den) (hq'd : 0 < q'.den)
+    (hq : Qle (Qabs q) ⟨(M : Int), 1⟩) (hq' : Qle (Qabs q') ⟨(M : Int), 1⟩) :
+    Qle (Qabs (Qsub (peval cosCoeff q (2 * N)) (peval cosCoeff q' (2 * N))))
+      (mul (LipS (M * M) N) (mul (⟨(2 * M : Nat), 1⟩ : Q) (Qabs (Qsub q q')))) := by
+  have hcongr : Qeq (Qabs (Qsub (peval cosCoeff q (2 * N)) (peval cosCoeff q' (2 * N))))
+      (Qabs (Qsub (altSum q 0 N) (altSum q' 0 N))) :=
+    Qabs_Qeq (Qsub_congr (peval_cosCoeff_eq_altSum q hqd N) (peval_cosCoeff_eq_altSum q' hq'd N))
+  refine Qle_congr_left
+    (Qabs_den_pos (Qsub_den_pos (altSum_den_pos hqd 0 N) (altSum_den_pos hq'd 0 N)))
+    (Qeq_symm hcongr) ?_
+  refine Qle_trans (Qmul_den_pos (LipS_den_pos (M * M) N)
+      (Qabs_den_pos (Qsub_den_pos (Nat.mul_pos hqd hqd) (Nat.mul_pos hq'd hq'd))))
+    (altSum_Lip_le hqd hq'd hq hq' 0 N) ?_
+  exact Qmul_le_mul_left (LipS_num_nonneg (M * M) N) (qsq_diff_le hqd hq'd hq hq')
+
 end UOR.Bridge.F1Square.Analysis
