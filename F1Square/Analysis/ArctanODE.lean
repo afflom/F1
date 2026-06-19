@@ -1817,4 +1817,33 @@ theorem peval_cosCoeff_arctan_argdiff (t ρ : Q) (htd : 0 < t.den) (hρ0 : 0 ≤
   exact Qmul_le_mul_left (LipS_num_nonneg 1 D)
     (Qmul_le_mul_left (by decide) (arctanSum_abs_diff_le htd hρ0 hρd htρ hab))
 
+set_option maxHeartbeats 1000000 in
+/-- **cos arctan-depth gap, reciprocal form**: `|peval cos (arctanSum t b)(2D) − peval cos
+    (arctanSum t a)(2D)| ≤ U·4·ρ.den/(n+1)` (`U = (expM_U 1 2).num.toNat`) for `a ≤ b`, `n+1 ≤ 2a+3`.
+    Bounds the varying `LipS(1,D)` by the uniform constant `U` (`LipS_le_U` + `Qle_toNat`) and the
+    `geoSum` gap by the reciprocal (`geoSum_diff_recip`). The cos inner-depth mismatch fully in the
+    `C/(n+1)` form `Req_of_lin_bound` consumes — constant independent of the (growing) depth `D`. -/
+theorem peval_cosCoeff_arctan_argdiff_recip (t ρ : Q) (htd : 0 < t.den) (hρ0 : 0 ≤ ρ.num)
+    (hρd : 0 < ρ.den) (htρ : Qle (Qabs t) ρ) (hlt : ρ.num.toNat < ρ.den)
+    (hρ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ρ ρ))) (hρ8 : Qle (mul ⟨2, 1⟩ ρ) ⟨1, 1⟩)
+    {a b n : Nat} (hab : a ≤ b) (hn : n + 1 ≤ 2 * a + 3) (D : Nat) :
+    Qle (Qabs (Qsub (peval cosCoeff (arctanSum t b) (2 * D)) (peval cosCoeff (arctanSum t a) (2 * D))))
+      (⟨((expM_U 1 2).num.toNat : Int) * (4 * (ρ.den : Int)), n + 1⟩ : Q) := by
+  have hgapnn : 0 ≤ (mul (⟨2, 1⟩ : Q) (Qsub (geoSum ρ b) (geoSum ρ a))).num :=
+    Qmul_num_nonneg (by decide) (Qsub_num_nonneg (geoSum_mono ρ hρ0 hρd hab))
+  have hUnn : 0 ≤ (⟨((expM_U 1 2).num.toNat : Int), 1⟩ : Q).num := Int.ofNat_nonneg _
+  have hLipU : Qle (LipS 1 D) (⟨((expM_U 1 2).num.toNat : Int), 1⟩ : Q) :=
+    Qle_trans (expM_U_den_pos 1 2) (LipS_le_U 1 D)
+      (Qle_toNat (expM_U_num_nonneg 1 2) (expM_U_den_pos 1 2))
+  refine Qle_trans (Qmul_den_pos (LipS_den_pos 1 D) (Qmul_den_pos (by decide)
+      (Qsub_den_pos (geoSum_den_pos hρd b) (geoSum_den_pos hρd a))))
+    (peval_cosCoeff_arctan_argdiff t ρ htd hρ0 hρd htρ hρ2 hρ8 hab D) ?_
+  refine Qle_trans (Qmul_den_pos Nat.one_pos (Qmul_den_pos (by decide)
+      (Qsub_den_pos (geoSum_den_pos hρd b) (geoSum_den_pos hρd a))))
+    (Qmul_le_mul_right hgapnn hLipU) ?_
+  refine Qle_trans (Qmul_den_pos Nat.one_pos (Qmul_den_pos (by decide) (Nat.succ_pos n)))
+    (Qmul_le_mul_left hUnn (Qmul_le_mul_left (by decide)
+      (geoSum_diff_recip ρ hρ0 hρd hlt hρ2 hab hn))) ?_
+  exact Qeq_le (by simp only [Qeq, mul]; push_cast; ring_uor)
+
 end UOR.Bridge.F1Square.Analysis
