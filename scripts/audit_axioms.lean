@@ -906,6 +906,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rsin_arctan_nested
 #print axioms Analysis.Rsin_arctan_value_eq
 #print axioms Analysis.Rcos_arctan_sq
+#print axioms Analysis.Rcos_arctan_inv
+#print axioms Analysis.Rtan_arctan_eq
 #print axioms Analysis.Qabs_sub_mul_right_eq
 #print axioms Analysis.Qabs_sub_mul_left_eq
 #print axioms Analysis.Qrecip_anti
