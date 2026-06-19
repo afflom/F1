@@ -1724,6 +1724,21 @@ theorem peval_arctanCoeff_even (t : Q) (htd : 0 < t.den) (E : Nat) :
     (Qadd_congr (peval_arctanCoeff_eq_arctanSum t htd E) (arctanCoeff_term_even t E)) ?_
   exact Qadd_zero_right (arctanSum t E)
 
+/-- **arctan partial sum is bounded by 1**: `|arctanSum t N| ≤ 1` for `|t| ≤ ρ`, `1/2 ≤ 1−ρ²`,
+    `2ρ ≤ 1`. (`arctanSum_abs_le` ≤ `geoSum ρ N` ≤ `2ρ` ≤ `1`, mirroring `peval_kdbl_abs_le_one`.)
+    Supplies the `M = 1` argument bound for `peval_cosCoeff_Lip` in the nested-diagonal bridge. -/
+theorem arctanSum_abs_le_one {t ρ : Q} (htd : 0 < t.den) (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den)
+    (htρ : Qle (Qabs t) ρ) (hρ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ρ ρ)))
+    (hρ8 : Qle (mul ⟨2, 1⟩ ρ) ⟨1, 1⟩) (N : Nat) : Qle (Qabs (arctanSum t N)) ⟨1, 1⟩ := by
+  have hg : Qle (geoSum ρ N) (mul ⟨2, 1⟩ (qpow ρ 1)) :=
+    mul_div2 (geoSum_num_nonneg hρ0 N) (geoSum_den_pos hρd N)
+      (Qsub_den_pos Nat.one_pos (Qmul_den_pos hρd hρd)) (qpow_den_pos hρd 1) hρ2
+      (geoSum_tel_le ρ hρd hρ0 N)
+  refine Qle_trans (geoSum_den_pos hρd N) (arctanSum_abs_le htd hρ0 hρd htρ N) ?_
+  refine Qle_trans (Qmul_den_pos (by decide) (qpow_den_pos hρd 1)) hg ?_
+  refine Qle_trans (Qmul_den_pos (by decide) hρd)
+    (Qeq_le (Qmul_congr (Qeq_refl _) (mul_one ρ))) hρ8
+
 -- ===========================================================================
 -- cos argument-Lipschitz at fixed depth (reduces the cos argument-gap to |q−q'|).
 -- ===========================================================================
@@ -1753,5 +1768,25 @@ theorem peval_cosCoeff_Lip (q q' : Q) (M N : Nat) (hqd : 0 < q.den) (hq'd : 0 < 
       (Qabs_den_pos (Qsub_den_pos (Nat.mul_pos hqd hqd) (Nat.mul_pos hq'd hq'd))))
     (altSum_Lip_le hqd hq'd hq hq' 0 N) ?_
   exact Qmul_le_mul_left (LipS_num_nonneg (M * M) N) (qsq_diff_le hqd hq'd hq hq')
+
+set_option maxHeartbeats 1000000 in
+/-- **cos at two arctan depths**: `|peval cos (arctanSum t b)(2D) − peval cos (arctanSum t a)(2D)|
+    ≤ LipS(1,D)·2·(geoSum ρ b − geoSum ρ a)` for `a ≤ b`. Combines `peval_cosCoeff_Lip` (cos
+    argument-Lipschitz, both arctan partial sums `≤ 1` via `arctanSum_abs_le_one`) with the arctan
+    truncation gap (`arctanSum_abs_diff_le`). The arctan inner-depth mismatch of the nested-diagonal
+    bridge, bounded by the geometric arctan tail (times the uniformly-bounded `LipS` constant). -/
+theorem peval_cosCoeff_arctan_argdiff (t ρ : Q) (htd : 0 < t.den) (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den)
+    (htρ : Qle (Qabs t) ρ) (hρ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ρ ρ)))
+    (hρ8 : Qle (mul ⟨2, 1⟩ ρ) ⟨1, 1⟩) {a b : Nat} (hab : a ≤ b) (D : Nat) :
+    Qle (Qabs (Qsub (peval cosCoeff (arctanSum t b) (2 * D)) (peval cosCoeff (arctanSum t a) (2 * D))))
+      (mul (LipS 1 D) (mul ⟨2, 1⟩ (Qsub (geoSum ρ b) (geoSum ρ a)))) := by
+  have hb1 := arctanSum_abs_le_one htd hρ0 hρd htρ hρ2 hρ8 b
+  have ha1 := arctanSum_abs_le_one htd hρ0 hρd htρ hρ2 hρ8 a
+  refine Qle_trans (Qmul_den_pos (LipS_den_pos 1 D) (Qmul_den_pos (by decide)
+      (Qabs_den_pos (Qsub_den_pos (arctanSum_den_pos htd b) (arctanSum_den_pos htd a)))))
+    (peval_cosCoeff_Lip (arctanSum t b) (arctanSum t a) 1 D (arctanSum_den_pos htd b)
+      (arctanSum_den_pos htd a) hb1 ha1) ?_
+  exact Qmul_le_mul_left (LipS_num_nonneg 1 D)
+    (Qmul_le_mul_left (by decide) (arctanSum_abs_diff_le htd hρ0 hρd htρ hab))
 
 end UOR.Bridge.F1Square.Analysis
