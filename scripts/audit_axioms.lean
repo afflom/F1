@@ -890,6 +890,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.arctanSum_abs_le_one
 #print axioms Analysis.LipS_num_nonneg
 #print axioms Analysis.peval_cosCoeff_Lip
+#print axioms Analysis.geoSum_mono
+#print axioms Analysis.geoSum_diff_recip
 #print axioms Analysis.peval_cosCoeff_arctan_argdiff
 #print axioms Analysis.sinCoeff_abs_le_one
 #print axioms Analysis.cosCoeff_abs_le_one

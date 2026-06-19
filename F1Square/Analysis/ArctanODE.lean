@@ -1769,6 +1769,34 @@ theorem peval_cosCoeff_Lip (q q' : Q) (M N : Nat) (hqd : 0 < q.den) (hq'd : 0 < 
     (altSum_Lip_le hqd hq'd hq hq' 0 N) ?_
   exact Qmul_le_mul_left (LipS_num_nonneg (M * M) N) (qsq_diff_le hqd hq'd hq hq')
 
+/-- `geoSum` is monotone in the truncation length (`a ≤ b ⟹ geoSum ρ a ≤ geoSum ρ b`), since each
+    added `geoTerm = ρ^{2k+1} ≥ 0`. -/
+theorem geoSum_mono (ρ : Q) (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den) {a b : Nat} (hab : a ≤ b) :
+    Qle (geoSum ρ a) (geoSum ρ b) := by
+  induction hab with
+  | refl => exact Qle_refl _
+  | @step k _ ih =>
+      refine Qle_trans (geoSum_den_pos hρd k) ih ?_
+      show Qle (geoSum ρ k) (add (geoSum ρ k) (geoTerm ρ (k + 1)))
+      exact Qle_self_add (qpow_nonneg hρ0 _)
+
+/-- **Geometric arctan-tail decay**: `geoSum ρ b − geoSum ρ a ≤ 2·ρ.den/(n+1)` for `a ≤ b`,
+    `n+1 ≤ 2a+3`, `ρ < 1`, `ρ² ≤ 1/2`. Strips the `(1−ρ²)` from `geo_diff_bound` (via `mul_div2`) and
+    converts the `ρ^{2a+3}` geometric tail to the `C/(n+1)` form (`qpow_le_recip`). The cos-argument-gap
+    analogue of `DN_arctan_decay` — the inner-depth tail in reciprocal form. -/
+theorem geoSum_diff_recip (ρ : Q) (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den) (hlt : ρ.num.toNat < ρ.den)
+    (hρ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ρ ρ))) {a b n : Nat} (hab : a ≤ b) (hn : n + 1 ≤ 2 * a + 3) :
+    Qle (Qsub (geoSum ρ b) (geoSum ρ a)) (⟨2 * (ρ.den : Int), n + 1⟩ : Q) := by
+  have hstep : Qle (Qsub (geoSum ρ b) (geoSum ρ a)) (mul ⟨2, 1⟩ (qpow ρ (2 * a + 3))) :=
+    mul_div2 (Qsub_num_nonneg (geoSum_mono ρ hρ0 hρd hab))
+      (Qsub_den_pos (geoSum_den_pos hρd b) (geoSum_den_pos hρd a))
+      (Qsub_den_pos Nat.one_pos (Qmul_den_pos hρd hρd)) (qpow_den_pos hρd _) hρ2
+      (geo_diff_bound hρ0 hρd hab)
+  refine Qle_trans (Qmul_den_pos (by decide) (qpow_den_pos hρd _)) hstep ?_
+  refine Qle_trans (Qmul_den_pos (by decide) (Nat.succ_pos n))
+    (Qmul_le_mul_left (by decide) (qpow_le_recip hρ0 hρd hlt hn)) ?_
+  exact Qeq_le (by simp only [Qeq, mul]; push_cast; ring_uor)
+
 set_option maxHeartbeats 1000000 in
 /-- **cos at two arctan depths**: `|peval cos (arctanSum t b)(2D) − peval cos (arctanSum t a)(2D)|
     ≤ LipS(1,D)·2·(geoSum ρ b − geoSum ρ a)` for `a ≤ b`. Combines `peval_cosCoeff_Lip` (cos
