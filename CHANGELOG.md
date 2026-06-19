@@ -26,10 +26,15 @@ audit-visible hypothesis, never an axiom).
   the angle-difference magnitude bound `Rarctan_diff_seq_le` (each angle `≤ 2ρ` via `Rarctan_seq_abs_le`
   + `geoSum_le_two`, so the `Radd`/`Rsub`-reindexed difference is `≤ 6ρ ≤ 1` via `Qmul_two_le_third`
   from `16ρ < 1`). `Rarctan_add_of_small` then makes the apartness automatic — the law holds for any
-  `|a|, |b|, |(a+b)/(1−ab)| ≤ ρ` with the shared `ρ < 1/16` thicket and `1 − ab > 0`. Remaining toward
-  `Clog` additivity: lift to real arguments (`RarctanR`) by continuity and package as
-  `arg(zw) = arg z + arg w` (`Carg`), then combine with `Rlog_mul` (the modulus half). RH-*independent*;
-  crux fields stay `none`.
+  `|a|, |b|, |(a+b)/(1−ab)| ≤ ρ` with the shared `ρ < 1/16` thicket and `1 − ab > 0`. **Lifted to real
+  arguments** (`RarctanR_add_real_via`): `arctan s + arctan t = arctan((s+t)/(1−st))` for reals `s, t`
+  with `Y = RarctanR(vvalReal s t)` — the arctan analog of `Rartanh_add_real_via`, cleaner since the
+  `vval` denominator is sign-robust (no `wvalR`-style split). Two legs through
+  `W = arctanSum(vval(s_P,t_P),·)`: the argument-variation `arctanSum_vval_argdiff`
+  (`≤ 12(|a−a'|+|b−b'|)`) and the combination `RarctanConst_add_vval_rho` (= `Rarctan_add_of_small`
+  read at the diagonal index). Remaining toward `Clog` additivity: package as `arg(zw) = arg z + arg w`
+  (`Carg`, the complex-division ratio identity `ratio(zw) ≈ vvalReal(ratio z, ratio w)`), then combine
+  with `Rlog_mul` (the modulus half). RH-*independent*; crux fields stay `none`.
 - **Track 1 — ★ value-level `sin(arctan t) = t·cos(arctan t)`** (`Analysis/ArctanODE.lean`,
   `Rsin_arctan_value_eq`): `Req (Rsin (Rarctan t₀)) (Rmul (ofQ t₀) (Rcos (Rarctan t₀)))` for
   `|t₀| ≤ ρ < 1/16`. This **completes the formal-PS → value (FTC) bridge** that lifts the formal
