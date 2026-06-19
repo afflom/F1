@@ -289,4 +289,26 @@ theorem Rtan_inj {x y v : Real} {k : Nat}
     (hx : Req (Rsin x) (Rmul v (Rcos x))) (hy : Req (Rsin y) (Rmul v (Rcos y))) : Req x y :=
   Req_of_Rsub_zero_loc (Rmul_eq_zero_cancel hk (Rsin_sub_eq_zero hx hy))
 
+-- ===========================================================================
+-- Tangent-addition capstone: A+B = C from the tangent VALUES.
+-- The arctan analog of `Req_add_of_exp_values` (the exp-injectivity core of the modulus half).
+-- ===========================================================================
+
+/-- **★ addition from tangent-values** (the tan-injectivity core of the imaginary/`arg` half): if
+    `A` has tangent `a`, `B` has tangent `b` (i.e. `sin A = a·cos A`, `sin B = b·cos B`), `1−ab > 0`,
+    and the angle `(A+B)−C` is small enough that `RsinAux((A+B)−C)` is apart from `0`, then `A+B = C`
+    whenever `C` has tangent `vval a b = (a+b)/(1−ab)`. Combines the value-level tangent-addition
+    `Rsin_cos_add_tan` (`A+B` has tangent `vval a b`) with tangent-injectivity `Rtan_inj` (`A+B` and
+    `C` share that tangent ⟹ equal). The exact arctan analog of `Req_add_of_exp_values`: the algebraic
+    law is clean and the sole analytic input (here the `RsinAux` apartness, there the exp-values) is an
+    explicit, audit-visible hypothesis. This is what packages `arctan a + arctan b = arctan(vval a b)`,
+    hence `arg(zw) = arg z + arg w`. -/
+theorem Req_add_of_tan_values {A B C : Real} {a b : Q} {k : Nat} (ha : 0 < a.den) (hb : 0 < b.den)
+    (hpos : 0 < (a.den : Int) * b.den - a.num * b.num)
+    (hk : Qlt (Qbound k) ((RsinAux (Rsub (Radd A B) C)).seq k))
+    (hA : Req (Rsin A) (Rmul (ofQ a ha) (Rcos A))) (hB : Req (Rsin B) (Rmul (ofQ b hb) (Rcos B)))
+    (hC : Req (Rsin C) (Rmul (ofQ (vval a b) (vval_den_pos a b hpos)) (Rcos C))) :
+    Req (Radd A B) C :=
+  Rtan_inj hk (Rsin_cos_add_tan ha hb hpos hA hB) hC
+
 end UOR.Bridge.F1Square.Analysis
