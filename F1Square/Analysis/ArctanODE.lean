@@ -1712,6 +1712,18 @@ theorem RsinAux_seq_eq_peval (X : Real) (j : Nat) :
   rw [RsinAux_seq_eq_altSum]
   exact Qeq_symm (peval_sinCoeff_eq (X.seq (RaltReal_R X j)) (X.den_pos _) (RaltReal_R X j))
 
+/-- **arctan at even depth**: `peval arctanCoeff t (2E+2) = arctanSum t E` — the cos truncation depth
+    `2D` from `Rcos` is even, but the top (even-degree) arctan term vanishes, so the arctan argument at
+    that depth is still the `E`-term partial sum (`peval_arctanCoeff_eq_arctanSum` + the vanishing even
+    term). Matches the `Rcos` outer depth to the arctan reindex for the nested-diagonal bridge. -/
+theorem peval_arctanCoeff_even (t : Q) (htd : 0 < t.den) (E : Nat) :
+    Qeq (peval arctanCoeff t (2 * E + 2)) (arctanSum t E) := by
+  show Qeq (add (peval arctanCoeff t (2 * E + 1)) (mul (arctanCoeff (2 * E + 2)) (qpow t (2 * E + 2))))
+    (arctanSum t E)
+  refine Qeq_trans (add_den_pos (arctanSum_den_pos htd E) Nat.one_pos)
+    (Qadd_congr (peval_arctanCoeff_eq_arctanSum t htd E) (arctanCoeff_term_even t E)) ?_
+  exact Qadd_zero_right (arctanSum t E)
+
 -- ===========================================================================
 -- cos argument-Lipschitz at fixed depth (reduces the cos argument-gap to |q−q'|).
 -- ===========================================================================
