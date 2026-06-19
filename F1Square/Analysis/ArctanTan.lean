@@ -311,4 +311,98 @@ theorem Req_add_of_tan_values {A B C : Real} {a b : Q} {k : Nat} (ha : 0 < a.den
     Req (Radd A B) C :=
   Rtan_inj hk (Rsin_cos_add_tan ha hb hpos hA hB) hC
 
+-- ===========================================================================
+-- Discharging the `RsinAux` apartness witness for small arguments.
+-- `sin(w)/w ≈ 1 − w²/6 + …` is `≥ 1/2` for `|w| ≤ 1`, so `RsinAux w` is apart from `0`.
+-- ===========================================================================
+
+/-- **`−|x| ≤ x`** from `|x| ≤ c`: the lower one-sided bound of a `Qabs` estimate. -/
+theorem Qneg_le_of_Qabs_le {x c : Q} (hxd : 0 < x.den) (h : Qle (Qabs x) c) : Qle (neg c) x := by
+  have h1 : Qle (neg x) (Qabs x) := by
+    have h0 := Qle_self_Qabs (neg x); rwa [Qabs_neg] at h0
+  have h2 : Qle (neg x) c := Qle_trans (Qabs_den_pos hxd) h1 h
+  have heq : Qeq (neg (neg x)) x := by simp only [Qeq, neg]; push_cast; ring_uor
+  exact Qle_congr_right (b := neg (neg x)) hxd heq (Qneg_le_neg h2)
+
+/-- **`sin(w)/w ≥ 5/6` to second order**: for `|q| ≤ 1` the explicit degree-2 partial sum
+    `altSum q 1 2 = 1 − q²/6 + q⁴/120` is `≥ 5/6` (the `−q²/6` term loses at most `1/6`, the `q⁴/120`
+    term is `≥ 0`). -/
+theorem altSum_sin_two_ge {q : Q} (hqd : 0 < q.den) (hq1 : Qle (Qabs q) (⟨1, 1⟩ : Q)) :
+    Qle (⟨5, 6⟩ : Q) (altSum q 1 2) := by
+  have habs : Qle (Qabs (neg (mul q q))) (⟨1, 1⟩ : Q) :=
+    Qle_congr_right (by decide) (by decide) (qsq_abs_le (M := 1) hqd hq1)
+  have hsqd : 0 < (neg (mul q q)).den := Nat.mul_pos hqd hqd
+  -- t0 = 1
+  have h0 : Qle (⟨1, 1⟩ : Q) (altTerm q 1 0) := by
+    have he : Qeq (⟨1, 1⟩ : Q) (altTerm q 1 0) := by
+      show Qeq (⟨1, 1⟩ : Q) (mul (⟨1, 1⟩ : Q) ⟨1, fct (2 * 0 + 1)⟩)
+      decide
+    exact Qeq_le he
+  -- t1 ≥ −1/6
+  have ht1eq : Qeq (altTerm q 1 1) (mul (neg (mul q q)) (⟨1, 6⟩ : Q)) := by
+    show Qeq (mul (qpow (neg (mul q q)) 1) ⟨1, fct (2 * 1 + 1)⟩) (mul (neg (mul q q)) (⟨1, 6⟩ : Q))
+    rw [show fct (2 * 1 + 1) = 6 from rfl]
+    simp only [qpow, Qeq, mul, neg]; push_cast; ring_uor
+  have hmul1 : Qle (mul (neg (⟨1, 1⟩ : Q)) (⟨1, 6⟩ : Q)) (mul (neg (mul q q)) (⟨1, 6⟩ : Q)) :=
+    Qmul_le_mul_right (by decide) (Qneg_le_of_Qabs_le hsqd habs)
+  have h1 : Qle (neg (⟨1, 6⟩ : Q)) (altTerm q 1 1) :=
+    Qle_congr_left (by decide) (by decide)
+      (Qle_congr_right (Qmul_den_pos hsqd (by decide)) (Qeq_symm ht1eq) hmul1)
+  -- t2 ≥ 0
+  have h2 : Qle (⟨0, 1⟩ : Q) (altTerm q 1 2) := by
+    have hsbase : (0 : Int) ≤ q.num * q.num := by
+      rcases Int.le_total 0 q.num with h | h
+      · exact Int.mul_nonneg h h
+      · have hpp : (0 : Int) ≤ (-q.num) * (-q.num) := Int.mul_nonneg (by omega) (by omega)
+        have he : (-q.num) * (-q.num) = q.num * q.num := by ring_uor
+        omega
+    have hsq : (0 : Int) ≤ (q.num * q.num) * (q.num * q.num) := Int.mul_nonneg hsbase hsbase
+    have hN : (altTerm q 1 2).num = (q.num * q.num) * (q.num * q.num) := by
+      show (mul (qpow (neg (mul q q)) 2) ⟨1, fct (2 * 2 + 1)⟩).num = (q.num * q.num) * (q.num * q.num)
+      simp only [qpow, mul, neg]; ring_uor
+    unfold Qle
+    rw [hN]
+    show (0 : Int) * ((altTerm q 1 2).den : Int) ≤ (q.num * q.num) * (q.num * q.num) * (1 : Int)
+    omega
+  -- combine: 1 + (−1/6) + 0 = 5/6
+  have hsum := Qadd_le_add (Qadd_le_add h0 h1) h2
+  exact Qle_congr_left (by decide) (by decide) hsum
+
+/-- **The `sin/x` diagonal partial sum exceeds `1/3`** for `|q| ≤ 1` and depth `R ≥ 2`: its value is
+    `≥ 1/2` — the degree-2 head is `≥ 5/6` (`altSum_sin_two_ge`) and the tail past it is `≤ 2/6`
+    (`altSum_trunc_bound`). -/
+theorem altSum_sin_diag_gt {q : Q} (hqd : 0 < q.den) (hq1 : Qle (Qabs q) (⟨1, 1⟩ : Q))
+    {R : Nat} (hR2 : 2 ≤ R) : Qlt (⟨1, 3⟩ : Q) (altSum q 1 R) := by
+  have hlow2 : Qle (⟨5, 6⟩ : Q) (altSum q 1 2) := altSum_sin_two_ge hqd hq1
+  -- tail past index 2: |altSum q 1 R − altSum q 1 2| ≤ 2/6
+  have htr : Qle (Qabs (Qsub (altSum q 1 R) (altSum q 1 2))) (⟨2, 6⟩ : Q) :=
+    Qle_congr_right (by decide) (by decide)
+      (altSum_trunc_bound (M := 1) hqd hq1 1 (by decide) hR2)
+  have hub : Qle (altSum q 1 2) (add (altSum q 1 R) (⟨2, 6⟩ : Q)) :=
+    Qle_add_of_Qabs_sub (altSum_den_pos hqd 1 2) (altSum_den_pos hqd 1 R) (by decide)
+      (by rw [Qabs_Qsub_comm]; exact htr)
+  -- so 5/6 ≤ altSum q 1 R + 2/6, hence altSum q 1 R ≥ 1/2
+  have hchain : Qle (⟨5, 6⟩ : Q) (add (altSum q 1 R) (⟨2, 6⟩ : Q)) :=
+    Qle_trans (altSum_den_pos hqd 1 2) hlow2 hub
+  have hcancel : Qle (⟨1, 2⟩ : Q) (altSum q 1 R) := by
+    have hstep := Qadd_le_add hchain (Qle_refl (neg (⟨2, 6⟩ : Q)))
+    refine Qle_congr_left (by decide) (by decide)
+      (Qle_congr_right (add_den_pos (add_den_pos (altSum_den_pos hqd 1 R) (by decide)) (by decide))
+        ?_ hstep)
+    simp only [Qeq, add, neg]; push_cast; ring_uor
+  -- 1/3 < altSum q 1 R from 1/2 ≤ altSum q 1 R
+  have hDi : (1 : Int) ≤ ((altSum q 1 R).den : Int) := by
+    have := altSum_den_pos hqd 1 R; exact_mod_cast this
+  simp only [Qlt, Qle] at hcancel ⊢
+  push_cast at hcancel ⊢
+  omega
+
+/-- **★ `RsinAux w` is apart from `0` for `|w| ≤ 1`**: the `sin(w)/w` diagonal exceeds `1/3` at index
+    `2` (`altSum_sin_diag_gt`, since the reindex depth `RaltReal_R w 2 ≥ 2`). This discharges the
+    apartness witness `Rtan_inj` / `Req_add_of_tan_values` need, so the arctan-addition law applies
+    whenever the angle difference is small. -/
+theorem Pos_RsinAux_of_small {w : Real} (hw : ∀ n, Qle (Qabs (w.seq n)) (⟨1, 1⟩ : Q)) :
+    Pos (RsinAux w) :=
+  ⟨2, altSum_sin_diag_gt (w.den_pos _) (hw _) (Nat.le_trans (by decide) (RaltReal_R_ge w 2))⟩
+
 end UOR.Bridge.F1Square.Analysis

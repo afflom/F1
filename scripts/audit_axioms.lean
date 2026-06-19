@@ -931,6 +931,10 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Req_of_Rsub_zero_loc
 #print axioms Analysis.Rtan_inj
 #print axioms Analysis.Req_add_of_tan_values
+#print axioms Analysis.Qneg_le_of_Qabs_le
+#print axioms Analysis.altSum_sin_two_ge
+#print axioms Analysis.altSum_sin_diag_gt
+#print axioms Analysis.Pos_RsinAux_of_small
 #print axioms Analysis.Qabs_sub_mul_right_eq
 #print axioms Analysis.Qabs_sub_mul_left_eq
 #print axioms Analysis.Qrecip_anti
