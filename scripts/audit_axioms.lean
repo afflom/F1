@@ -2852,3 +2852,5 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.ratio_cross_via
 #print axioms Analysis.Carg_add
 #print axioms Analysis.Clog_add
+#print axioms Analysis.RexpReal_eq_one_imp_zero
+#print axioms Analysis.RexpReal_inj_gen

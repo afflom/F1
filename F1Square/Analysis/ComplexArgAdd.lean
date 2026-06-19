@@ -19,6 +19,47 @@ import F1Square.Analysis.ComplexLog
 
 namespace UOR.Bridge.F1Square.Analysis
 
+/-- **`exp w ≈ 1 ⟹ w ≈ 0`** — the kernel of general `exp`-injectivity (no non-negativity needed).
+    `exp` is strictly monotone, so `exp w = exp 0 = 1` forces `w = 0`. Both order directions come from
+    `RexpReal_reflects_le` with the non-negative argument fixed at `0`: `w ≤ 0` directly, and `0 ≤ w`
+    from `exp(−w) ≈ 1` (since `exp(−w)·exp w = exp 0 = 1`). -/
+theorem RexpReal_eq_one_imp_zero {w : Real} (h : Req (RexpReal w) one) : Req w zero := by
+  have hle : Rle w zero :=
+    RexpReal_reflects_le Rnonneg_zero (Rle_of_Req (Req_trans h (Req_symm RexpReal_zero)))
+  have hnegexp : Req (RexpReal (Rneg w)) one := by
+    have hprod : Req (RexpReal (Radd (Rneg w) w)) (Rmul (RexpReal (Rneg w)) (RexpReal w)) :=
+      RexpReal_add (Rneg w) w
+    have haddz : Req (Radd (Rneg w) w) zero := Req_trans (Radd_comm (Rneg w) w) (Radd_neg w)
+    have h1 : Req (Rmul (RexpReal (Rneg w)) (RexpReal w)) one :=
+      Req_trans (Req_symm hprod) (Req_trans (RexpReal_congr haddz) RexpReal_zero)
+    exact Req_trans (Req_symm (Rmul_one (RexpReal (Rneg w))))
+      (Req_trans (Rmul_congr (Req_refl _) (Req_symm h)) h1)
+  have hlen : Rle (Rneg w) zero :=
+    RexpReal_reflects_le Rnonneg_zero (Rle_of_Req (Req_trans hnegexp (Req_symm RexpReal_zero)))
+  have hle0 : Rle zero w := by
+    intro n
+    have hh := hlen n
+    show Qle (zero.seq n) (add (w.seq n) ⟨2, n + 1⟩)
+    have e1 : (Rneg w).seq n = neg (w.seq n) := rfl
+    rw [e1] at hh
+    simp only [Qle, neg, add, zero_seq] at hh ⊢
+    push_cast at hh ⊢
+    simp only [Int.one_mul, Int.mul_one, Int.zero_mul, Int.neg_mul] at hh ⊢
+    omega
+  exact Rle_antisymm hle hle0
+
+/-- **`exp` is injective** (general — no non-negativity): `exp X ≈ exp Y ⟹ X ≈ Y`. Via
+    `exp(X−Y) = exp X·exp(−Y) ≈ exp Y·exp(−Y) = exp(Y−Y) = exp 0 = 1` (`RexpReal_add` both ways, no
+    cancellation/positivity), then `RexpReal_eq_one_imp_zero`. Removes the `Rnonneg` restriction of
+    `RexpReal_inj`. -/
+theorem RexpReal_inj_gen {X Y : Real} (h : Req (RexpReal X) (RexpReal Y)) : Req X Y := by
+  have hsub : Req (RexpReal (Rsub X Y)) one :=
+    Req_trans (RexpReal_add X (Rneg Y))
+      (Req_trans (Rmul_congr h (Req_refl _))
+        (Req_trans (Req_symm (RexpReal_add Y (Rneg Y)))
+          (Req_trans (RexpReal_congr (Radd_neg Y)) RexpReal_zero)))
+  exact Req_of_Rsub_zero_loc (RexpReal_eq_one_imp_zero hsub)
+
 /-- **Right cancellation for `Rmul`**: if `a·c ≈ b·c` and `c` is apart from `0` (a positive lower
     bound at index `k`), then `a ≈ b`. Via `(a−b)·c ≈ a·c − b·c ≈ 0` and `Rmul_eq_zero_cancel`. -/
 theorem Rmul_right_cancel {a b c : Real} {k : Nat} (hk : Qlt (Qbound k) (c.seq k))
