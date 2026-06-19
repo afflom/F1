@@ -2161,4 +2161,96 @@ theorem sin_nested_general (t₀ ρ : Q) (htd : 0 < t₀.den) (hρ0 : 0 ≤ ρ.n
   exact Qeq_le (Qadd_same_den_loc (((expM_U 1 2).num.toNat : Int) * (6 * (ρ.den : Int)))
     (2 * (ρ.den : Int)) (n + 1))
 
+set_option maxHeartbeats 2400000 in
+/-- **sin nested-diagonal bound (real arctan, abstract `X`)**: for a real `X` whose diagonal is the
+    arctan partial sum (`hXseq`), `|(Rsin X).seq n − peval(sin∘arctan) t₀ (2D+1)| ≤ C/(n+1)` where
+    `D = RaltReal_R X (Ridx X (RsinAux X) n)`. Triangle through `mul (X.seq D)((RsinAux X).seq R)`
+    (`R = Ridx X (RsinAux X) n`): the **Rmul reconciliation** — `Rsin X = Rmul X (RsinAux X)` evaluates
+    `X` at the outer reindex `R` but `RsinAux` internally at the deeper `D`, and the gap is
+    `|X.seq R − X.seq D|·|RsinAux| ≤ 2U/(n+1)` (`X` regularity, `Qabs_sub_mul_right_eq`) — plus the
+    composition core (`sin_nested_general`, after `RsinAux_seq_eq_peval` identifies the value-sin). -/
+theorem Rsin_arctan_nested (t₀ ρ : Q) (X : Real) (htd : 0 < t₀.den) (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den)
+    (hlt16 : (mul ⟨16, 1⟩ ρ).num.toNat < (mul ⟨16, 1⟩ ρ).den) (htρ : Qle (Qabs t₀) ρ)
+    (h2ρ : 0 ≤ (Qsub (⟨1, 1⟩ : Q) (mul ⟨2, 1⟩ ρ)).num)
+    (hhalf : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ⟨2, 1⟩ ρ))) (hρ4 : Qle (mul ⟨4, 1⟩ ρ) ⟨1, 1⟩)
+    (hρ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ρ ρ))) (hρ8 : Qle (mul ⟨2, 1⟩ ρ) ⟨1, 1⟩)
+    (hlt : ρ.num.toNat < ρ.den) (hXseq : ∀ m, X.seq m = arctanSum t₀ (Rartanh_R ρ m)) (n : Nat) :
+    Qle (Qabs (Qsub ((Rsin X).seq n)
+        (peval (fcomp sinCoeff arctanCoeff) t₀ (2 * RaltReal_R X (Ridx X (RsinAux X) n) + 1))))
+      (⟨((expM_U 1 2).num.toNat : Int) * 2
+        + (((expM_U 1 2).num.toNat : Int) * (6 * (ρ.den : Int)) + 2 * (ρ.den : Int)), n + 1⟩ : Q) := by
+  have hRn : n ≤ Ridx X (RsinAux X) n := Ridx_ge X (RsinAux X) n
+  have hDRge : Ridx X (RsinAux X) n + 1 ≤ RaltReal_R X (Ridx X (RsinAux X) n) :=
+    RaltReal_R_ge X (Ridx X (RsinAux X) n)
+  have hDRn : n ≤ RaltReal_R X (Ridx X (RsinAux X) n) := by omega
+  -- |RsinAux.seq R| ≤ U
+  have hRA : (RsinAux X).seq (Ridx X (RsinAux X) n)
+      = altSum (arctanSum t₀ (Rartanh_R ρ (RaltReal_R X (Ridx X (RsinAux X) n)))) 1
+          (RaltReal_R X (Ridx X (RsinAux X) n)) := by
+    rw [RsinAux_seq_eq_altSum, hXseq]
+  have hRsinAuxU : Qle (Qabs ((RsinAux X).seq (Ridx X (RsinAux X) n)))
+      (⟨((expM_U 1 2).num.toNat : Int), 1⟩ : Q) := by
+    rw [hRA]
+    exact altSum_arctan_abs_le_U htd hρ0 hρd htρ hρ2 hρ8
+      (Rartanh_R ρ (RaltReal_R X (Ridx X (RsinAux X) n))) (RaltReal_R X (Ridx X (RsinAux X) n))
+  -- |X.seq R − X.seq D| ≤ ⟨2,n+1⟩  (X regularity)
+  have hXreg2 : Qle (Qabs (Qsub (X.seq (Ridx X (RsinAux X) n))
+        (X.seq (RaltReal_R X (Ridx X (RsinAux X) n))))) (⟨2, n + 1⟩ : Q) := by
+    refine Qle_trans (add_den_pos (Qbound_den_pos _) (Qbound_den_pos _))
+      (X.reg (Ridx X (RsinAux X) n) (RaltReal_R X (Ridx X (RsinAux X) n))) ?_
+    have hb1 : Qle (Qbound (Ridx X (RsinAux X) n)) (Qbound n) := by
+      show (1 : Int) * ((n + 1 : Nat) : Int) ≤ 1 * ((Ridx X (RsinAux X) n + 1 : Nat) : Int)
+      rw [Int.one_mul, Int.one_mul]; exact_mod_cast (Nat.succ_le_succ hRn)
+    have hb2 : Qle (Qbound (RaltReal_R X (Ridx X (RsinAux X) n))) (Qbound n) := by
+      show (1 : Int) * ((n + 1 : Nat) : Int)
+        ≤ 1 * ((RaltReal_R X (Ridx X (RsinAux X) n) + 1 : Nat) : Int)
+      rw [Int.one_mul, Int.one_mul]; exact_mod_cast (Nat.succ_le_succ hDRn)
+    refine Qle_trans (add_den_pos (Qbound_den_pos n) (Qbound_den_pos n)) (Qadd_le_add hb1 hb2) ?_
+    apply Qeq_le; simp only [Qeq, add, Qbound]; push_cast; ring_uor
+  -- reconciliation leg
+  have hrec : Qle (Qabs (Qsub
+        (mul (X.seq (Ridx X (RsinAux X) n)) ((RsinAux X).seq (Ridx X (RsinAux X) n)))
+        (mul (X.seq (RaltReal_R X (Ridx X (RsinAux X) n)))
+          ((RsinAux X).seq (Ridx X (RsinAux X) n)))))
+      (⟨((expM_U 1 2).num.toNat : Int) * 2, n + 1⟩ : Q) := by
+    refine Qle_congr_left (Qmul_den_pos
+        (Qabs_den_pos (Qsub_den_pos (X.den_pos _) (X.den_pos _)))
+        (Qabs_den_pos ((RsinAux X).den_pos _)))
+      (Qeq_symm (Qabs_sub_mul_right_eq (X.seq (Ridx X (RsinAux X) n))
+        (X.seq (RaltReal_R X (Ridx X (RsinAux X) n)))
+        ((RsinAux X).seq (Ridx X (RsinAux X) n)))) ?_
+    refine Qle_trans (Qmul_den_pos (Nat.succ_pos n) Nat.one_pos)
+      (Qmul_le_mul (Qabs_den_pos (Qsub_den_pos (X.den_pos _) (X.den_pos _))) (Nat.succ_pos n)
+        (Qabs_den_pos ((RsinAux X).den_pos _)) (Qabs_num_nonneg _) (Qabs_num_nonneg _)
+        hXreg2 hRsinAuxU) ?_
+    apply Qeq_le; simp only [Qeq, mul]; push_cast; ring_uor
+  -- composition leg
+  have hsinLeg : Qle (Qabs (Qsub
+        (mul (X.seq (RaltReal_R X (Ridx X (RsinAux X) n)))
+          ((RsinAux X).seq (Ridx X (RsinAux X) n)))
+        (peval (fcomp sinCoeff arctanCoeff) t₀ (2 * RaltReal_R X (Ridx X (RsinAux X) n) + 1))))
+      (⟨((expM_U 1 2).num.toNat : Int) * (6 * (ρ.den : Int)) + 2 * (ρ.den : Int), n + 1⟩ : Q) := by
+    refine Qle_congr_left (Qabs_den_pos (Qsub_den_pos
+        (peval_den_pos sinCoeff_den_pos (X.den_pos _) _)
+        (peval_den_pos (fun k => fcomp_den_pos sinCoeff_den_pos arctanCoeff_den_pos k) htd _)))
+      (Qabs_Qeq (Qsub_congr (Qeq_symm (RsinAux_seq_eq_peval X (Ridx X (RsinAux X) n)))
+        (Qeq_refl _))) ?_
+    rw [hXseq (RaltReal_R X (Ridx X (RsinAux X) n))]
+    exact sin_nested_general t₀ ρ htd hρ0 hρd hlt16 htρ h2ρ hhalf hρ4 hρ2 hρ8 hlt
+      (RaltReal_R X (Ridx X (RsinAux X) n)) (Rartanh_R ρ (RaltReal_R X (Ridx X (RsinAux X) n))) n
+      (by have := Rartanh_R_ge ρ hρd (RaltReal_R X (Ridx X (RsinAux X) n)); omega) (by omega) (by omega)
+  -- triangle through the midpoint mul (X.seq D)(RsinAux.seq R)
+  refine Qle_trans (add_den_pos
+      (Qabs_den_pos (Qsub_den_pos (Qmul_den_pos (X.den_pos _) ((RsinAux X).den_pos _))
+        (Qmul_den_pos (X.den_pos _) ((RsinAux X).den_pos _))))
+      (Qabs_den_pos (Qsub_den_pos (Qmul_den_pos (X.den_pos _) ((RsinAux X).den_pos _))
+        (peval_den_pos (fun k => fcomp_den_pos sinCoeff_den_pos arctanCoeff_den_pos k) htd _))))
+    (Qabs_sub_triangle (b := mul (X.seq (RaltReal_R X (Ridx X (RsinAux X) n)))
+        ((RsinAux X).seq (Ridx X (RsinAux X) n)))
+      (Qmul_den_pos (X.den_pos _) ((RsinAux X).den_pos _))
+      (Qmul_den_pos (X.den_pos _) ((RsinAux X).den_pos _))
+      (peval_den_pos (fun k => fcomp_den_pos sinCoeff_den_pos arctanCoeff_den_pos k) htd _)) ?_
+  refine Qle_trans (add_den_pos (Nat.succ_pos n) (Nat.succ_pos n)) (Qadd_le_add hrec hsinLeg) ?_
+  apply Qeq_le; simp only [Qeq, add]; push_cast; ring_uor
+
 end UOR.Bridge.F1Square.Analysis

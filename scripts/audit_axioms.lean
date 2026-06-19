@@ -903,6 +903,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Qabs_mul_sub_le
 #print axioms Analysis.peval_sinCoeff_arctan_argdiff_recip
 #print axioms Analysis.sin_nested_general
+#print axioms Analysis.Rsin_arctan_nested
 #print axioms Analysis.Qabs_sub_mul_right_eq
 #print axioms Analysis.RaltReal_R_ge
 #print axioms Analysis.Rartanh_R_ge
