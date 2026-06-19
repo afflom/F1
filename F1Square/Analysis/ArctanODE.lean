@@ -1852,4 +1852,56 @@ theorem peval_cosCoeff_arctan_argdiff_recip (t ρ : Q) (htd : 0 < t.den) (hρ0 :
       (geoSum_diff_recip ρ hρ0 hρd hlt hρ2 hab hn))) ?_
   exact Qeq_le (by simp only [Qeq, mul]; push_cast; ring_uor)
 
+set_option maxHeartbeats 1600000 in
+/-- **cos nested-diagonal bound (general depth)**: at depth `2(E+1)`, the cos series evaluated at the
+    arctan partial sum `arctanSum t₀ b` (`E ≤ b`) is within `(U·4·ρ.den + 2·ρ.den)/(n+1)` of the
+    composed series `cos∘arctan` evaluated at `t₀`. Triangle through `peval cos (peval arctan t₀ M) M`:
+    the arctan inner-depth gap (`peval_cosCoeff_arctan_argdiff_recip`, after matching the even depth
+    `2(E+1)` to `arctanSum t₀ E` via `peval_arctanCoeff_even`/`peval_arg_congr`) plus the
+    composition gap (`DN_cos_recip`). The analytic core of the cos side of `tan(arctan t)=t`. -/
+theorem cos_nested_general (t₀ ρ : Q) (htd : 0 < t₀.den) (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den)
+    (hlt16 : (mul ⟨16, 1⟩ ρ).num.toNat < (mul ⟨16, 1⟩ ρ).den) (htρ : Qle (Qabs t₀) ρ)
+    (h2ρ : 0 ≤ (Qsub (⟨1, 1⟩ : Q) (mul ⟨2, 1⟩ ρ)).num)
+    (hhalf : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ⟨2, 1⟩ ρ))) (hρ4 : Qle (mul ⟨4, 1⟩ ρ) ⟨1, 1⟩)
+    (hρ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ρ ρ))) (hρ8 : Qle (mul ⟨2, 1⟩ ρ) ⟨1, 1⟩)
+    (hlt : ρ.num.toNat < ρ.den) (E b n : Nat) (hbE : E ≤ b) (hnb : n + 1 ≤ 2 * E + 3)
+    (hnD : n + 1 ≤ 2 * (E + 1)) :
+    Qle (Qabs (Qsub (peval cosCoeff (arctanSum t₀ b) (2 * (E + 1)))
+        (peval (fcomp cosCoeff arctanCoeff) t₀ (2 * (E + 1)))))
+      (⟨((expM_U 1 2).num.toNat : Int) * (4 * (ρ.den : Int)) + 2 * (ρ.den : Int), n + 1⟩ : Q) := by
+  -- arctan argument at the even depth is bounded by 1
+  have hq1 : Qle (Qabs (peval arctanCoeff t₀ (2 * (E + 1)))) ⟨1, 1⟩ :=
+    Qle_congr_left (Qabs_den_pos (arctanSum_den_pos htd E))
+      (Qabs_Qeq (Qeq_symm (peval_arctanCoeff_even t₀ htd E)))
+      (arctanSum_abs_le_one htd hρ0 hρd htρ hρ2 hρ8 E)
+  -- denominators of the three triangle points
+  have hAd : 0 < (peval cosCoeff (arctanSum t₀ b) (2 * (E + 1))).den :=
+    peval_den_pos cosCoeff_den_pos (arctanSum_den_pos htd b) (2 * (E + 1))
+  have hMd : 0 < (peval cosCoeff (peval arctanCoeff t₀ (2 * (E + 1))) (2 * (E + 1))).den :=
+    peval_den_pos cosCoeff_den_pos (peval_den_pos arctanCoeff_den_pos htd (2 * (E + 1))) (2 * (E + 1))
+  have hCd : 0 < (peval (fcomp cosCoeff arctanCoeff) t₀ (2 * (E + 1))).den :=
+    peval_den_pos (fun k => fcomp_den_pos cosCoeff_den_pos arctanCoeff_den_pos k) htd (2 * (E + 1))
+  -- leg I: arg gap (midpoint argument rewritten to arctanSum t₀ E)
+  have harg : Qeq (peval cosCoeff (peval arctanCoeff t₀ (2 * (E + 1))) (2 * (E + 1)))
+      (peval cosCoeff (arctanSum t₀ E) (2 * (E + 1))) :=
+    peval_arg_congr cosCoeff (peval_arctanCoeff_even t₀ htd E) (2 * (E + 1))
+  have hI : Qle (Qabs (Qsub (peval cosCoeff (arctanSum t₀ b) (2 * (E + 1)))
+        (peval cosCoeff (peval arctanCoeff t₀ (2 * (E + 1))) (2 * (E + 1)))))
+      (⟨((expM_U 1 2).num.toNat : Int) * (4 * (ρ.den : Int)), n + 1⟩ : Q) :=
+    Qle_congr_left (Qabs_den_pos (Qsub_den_pos hAd
+        (peval_den_pos cosCoeff_den_pos (arctanSum_den_pos htd E) (2 * (E + 1)))))
+      (Qabs_Qeq (Qsub_congr (Qeq_refl _) (Qeq_symm harg)))
+      (peval_cosCoeff_arctan_argdiff_recip t₀ ρ htd hρ0 hρd htρ hlt hρ2 hρ8 hbE hnb (E + 1))
+  -- leg II: composition gap (DN_cos_recip)
+  have hII : Qle (Qabs (Qsub (peval cosCoeff (peval arctanCoeff t₀ (2 * (E + 1))) (2 * (E + 1)))
+        (peval (fcomp cosCoeff arctanCoeff) t₀ (2 * (E + 1))))) (⟨2 * (ρ.den : Int), n + 1⟩ : Q) := by
+    rw [Qabs_Qsub_comm]
+    exact DN_cos_recip t₀ ρ (2 * (E + 1)) n hρd hρ0 htd htρ h2ρ hhalf hρ4 hlt16 hnD hq1
+  -- combine via the triangle
+  refine Qle_trans (add_den_pos (Qabs_den_pos (Qsub_den_pos hAd hMd))
+      (Qabs_den_pos (Qsub_den_pos hMd hCd))) (Qabs_sub_triangle hAd hMd hCd) ?_
+  refine Qle_trans (add_den_pos (Nat.succ_pos n) (Nat.succ_pos n)) (Qadd_le_add hI hII) ?_
+  exact Qeq_le (Qadd_same_den_loc (((expM_U 1 2).num.toNat : Int) * (4 * (ρ.den : Int)))
+    (2 * (ρ.den : Int)) (n + 1))
+
 end UOR.Bridge.F1Square.Analysis
