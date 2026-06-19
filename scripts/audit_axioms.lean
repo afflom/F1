@@ -2847,3 +2847,5 @@ open UOR.Bridge.F1Square
 #print axioms Square.atlas_complete
 #print axioms Analysis.Rmul_right_cancel
 #print axioms Analysis.Rdiv_mul_cancel
+#print axioms Analysis.vvalrel_alg
+#print axioms Analysis.vvalReal_rel_via
