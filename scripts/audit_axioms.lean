@@ -936,6 +936,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.altSum_sin_diag_gt
 #print axioms Analysis.Pos_RsinAux_of_small
 #print axioms Analysis.Rarctan_add
+#print axioms Analysis.geoSum_le_two
+#print axioms Analysis.Rarctan_seq_abs_le
 #print axioms Analysis.Qabs_sub_mul_right_eq
 #print axioms Analysis.Qabs_sub_mul_left_eq
 #print axioms Analysis.Qrecip_anti

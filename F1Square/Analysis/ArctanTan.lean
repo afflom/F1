@@ -438,4 +438,41 @@ theorem Rarctan_add {a b ρ : Q} {k : Nat}
     (Rsin_arctan_value_eq (vval a b) ρ (vval_den_pos a b hpos) hρ0 hρd hlt htρv hlt16 h2ρ hhalf
       hρ4 hρ2 hρ8 hρ1)
 
+-- ===========================================================================
+-- Magnitude bound on the arctan diagonal — to discharge the apartness automatically.
+-- `|arctan t| ≤ 2ρ`: the geometric series Σρ^{2i+1} = ρ/(1−ρ²) ≤ 2ρ when ρ² ≤ 1/2.
+-- ===========================================================================
+
+/-- **`geoSum ρ N ≤ 2ρ`** when `1 − ρ² ≥ 1/2` (i.e. `ρ² ≤ 1/2`): `geoSum ρ N · (1−ρ²) ≤ ρ`
+    (`geoSum_tel_le`), and `ρ ≤ 2ρ·(1−ρ²)` since `2(1−ρ²) ≥ 1`. -/
+theorem geoSum_le_two {ρ : Q} (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den)
+    (hρ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ρ ρ))) (N : Nat) :
+    Qle (geoSum ρ N) (mul (⟨2, 1⟩ : Q) ρ) := by
+  have hWd : 0 < (Qsub (⟨1, 1⟩ : Q) (mul ρ ρ)).den := Qsub_den_pos Nat.one_pos (Nat.mul_pos hρd hρd)
+  have hWn : 0 < (Qsub (⟨1, 1⟩ : Q) (mul ρ ρ)).num := by
+    have h : (1 : Int) * ((Qsub (⟨1, 1⟩ : Q) (mul ρ ρ)).den : Int)
+        ≤ (Qsub (⟨1, 1⟩ : Q) (mul ρ ρ)).num * 2 := hρ2
+    have hd : (1 : Int) ≤ ((Qsub (⟨1, 1⟩ : Q) (mul ρ ρ)).den : Int) := by exact_mod_cast hWd
+    omega
+  have key : Qle (qpow ρ 1) (mul (mul (⟨2, 1⟩ : Q) ρ) (Qsub ⟨1, 1⟩ (mul ρ ρ))) := by
+    have h12W : Qle (⟨1, 1⟩ : Q) (mul (⟨2, 1⟩ : Q) (Qsub ⟨1, 1⟩ (mul ρ ρ))) :=
+      Qle_congr_left (by decide) (by decide) (Qmul_le_mul_left (by decide) hρ2)
+    have hstep : Qle (mul ρ (⟨1, 1⟩ : Q)) (mul ρ (mul (⟨2, 1⟩ : Q) (Qsub ⟨1, 1⟩ (mul ρ ρ)))) :=
+      Qmul_le_mul_left hρ0 h12W
+    refine Qle_congr_right (Qmul_den_pos hρd (Qmul_den_pos (by decide) hWd)) ?_ hstep
+    simp only [Qeq, mul]; push_cast; ring_uor
+  apply Qmul_le_cancel_right hWn hWd
+  exact Qle_trans (qpow_den_pos hρd 1) (geoSum_tel_le ρ hρd hρ0 N) key
+
+/-- **`|arctan t| ≤ 2ρ` at the diagonal** (`|t| ≤ ρ`, `ρ² ≤ 1/2`): every approximant of the
+    real-valued `Rarctan t` is bounded by `2ρ` (`arctanSum_abs_le` then `geoSum_le_two`). The uniform
+    angle bound that, summed over the three angles of the addition law, keeps the difference `≤ 1` and
+    so discharges the `RsinAux` apartness. -/
+theorem Rarctan_seq_abs_le (t : Q) (htd : 0 < t.den) {ρ : Q} (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den)
+    (hlt : ρ.num.toNat < ρ.den) (htρ : Qle (Qabs t) ρ)
+    (hρ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ρ ρ))) (n : Nat) :
+    Qle (Qabs ((Rarctan t htd hρ0 hρd hlt htρ).seq n)) (mul (⟨2, 1⟩ : Q) ρ) :=
+  Qle_trans (geoSum_den_pos hρd _) (arctanSum_abs_le htd hρ0 hρd htρ (Rartanh_R ρ n))
+    (geoSum_le_two hρ0 hρd hρ2 _)
+
 end UOR.Bridge.F1Square.Analysis
