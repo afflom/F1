@@ -2037,4 +2037,57 @@ theorem Qabs_mul_sub_le {a b c d : Q} (ha : 0 < a.den) (hb : 0 < b.den) (hc : 0 
   rw [Qabs_mul, Qabs_mul]
   exact Qle_refl _
 
+set_option maxHeartbeats 1600000 in
+/-- **sin arctan-depth gap, reciprocal form**: `|peval sin (arctanSum t₀ b)(2N+1) − peval sin
+    (arctanSum t₀ a)(2N+1)| ≤ U·6·ρ.den/(n+1)` for `a ≤ b`, `n+1 ≤ 2a+3`. Via `peval sin q = q·altSum
+    (q,1,N)` (`peval_sinCoeff_eq`) and the product rule (`Qabs_mul_sub_le`): the `q`-gap term
+    (`arctanSum_abs_diff_le`, `|altSum| ≤ U`) plus the `altSum`-gap term (`altSum_argdiff_recip`,
+    `|q'| ≤ 1`). The sin analogue of `peval_cosCoeff_arctan_argdiff_recip` (one extra term from the
+    `q` factor). -/
+theorem peval_sinCoeff_arctan_argdiff_recip (t₀ ρ : Q) (htd : 0 < t₀.den) (hρ0 : 0 ≤ ρ.num)
+    (hρd : 0 < ρ.den) (htρ : Qle (Qabs t₀) ρ) (hlt : ρ.num.toNat < ρ.den)
+    (hρ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ρ ρ))) (hρ8 : Qle (mul ⟨2, 1⟩ ρ) ⟨1, 1⟩)
+    {a b n : Nat} (hab : a ≤ b) (hn : n + 1 ≤ 2 * a + 3) (N : Nat) :
+    Qle (Qabs (Qsub (peval sinCoeff (arctanSum t₀ b) (2 * N + 1))
+        (peval sinCoeff (arctanSum t₀ a) (2 * N + 1))))
+      (⟨((expM_U 1 2).num.toNat : Int) * (6 * (ρ.den : Int)), n + 1⟩ : Q) := by
+  have hqd := arctanSum_den_pos htd b
+  have hq'd := arctanSum_den_pos htd a
+  have hAd := altSum_den_pos hqd 1 N
+  have hA'd := altSum_den_pos hq'd 1 N
+  have hUnn : 0 ≤ (⟨((expM_U 1 2).num.toNat : Int), 1⟩ : Q).num := Int.ofNat_nonneg _
+  have hpe : Qeq (Qsub (peval sinCoeff (arctanSum t₀ b) (2 * N + 1))
+        (peval sinCoeff (arctanSum t₀ a) (2 * N + 1)))
+      (Qsub (mul (arctanSum t₀ b) (altSum (arctanSum t₀ b) 1 N))
+        (mul (arctanSum t₀ a) (altSum (arctanSum t₀ a) 1 N))) :=
+    Qsub_congr (peval_sinCoeff_eq (arctanSum t₀ b) hqd N) (peval_sinCoeff_eq (arctanSum t₀ a) hq'd N)
+  have hT1 : Qle (mul (Qabs (Qsub (arctanSum t₀ b) (arctanSum t₀ a)))
+        (Qabs (altSum (arctanSum t₀ b) 1 N)))
+      (⟨((expM_U 1 2).num.toNat : Int) * (2 * (ρ.den : Int)), n + 1⟩ : Q) := by
+    refine Qle_trans (Qmul_den_pos (Qsub_den_pos (geoSum_den_pos hρd b) (geoSum_den_pos hρd a))
+        Nat.one_pos)
+      (Qmul_le_mul (Qabs_den_pos (Qsub_den_pos hqd hq'd))
+        (Qsub_den_pos (geoSum_den_pos hρd b) (geoSum_den_pos hρd a)) (Qabs_den_pos hAd)
+        (Qabs_num_nonneg _) (Qabs_num_nonneg _) (arctanSum_abs_diff_le htd hρ0 hρd htρ hab)
+        (altSum_arctan_abs_le_U htd hρ0 hρd htρ hρ2 hρ8 b N)) ?_
+    refine Qle_trans (Qmul_den_pos (Nat.succ_pos n) Nat.one_pos)
+      (Qmul_le_mul_right hUnn (geoSum_diff_recip ρ hρ0 hρd hlt hρ2 hab hn)) ?_
+    apply Qeq_le; simp only [Qeq, mul]; push_cast; ring_uor
+  have hT2 : Qle (mul (Qabs (arctanSum t₀ a))
+        (Qabs (Qsub (altSum (arctanSum t₀ b) 1 N) (altSum (arctanSum t₀ a) 1 N))))
+      (⟨((expM_U 1 2).num.toNat : Int) * (4 * (ρ.den : Int)), n + 1⟩ : Q) := by
+    refine Qle_trans (Qmul_den_pos Nat.one_pos (Nat.succ_pos n))
+      (Qmul_le_mul (Qabs_den_pos hq'd) Nat.one_pos (Qabs_den_pos (Qsub_den_pos hAd hA'd))
+        (Qabs_num_nonneg _) (Qabs_num_nonneg _) (arctanSum_abs_le_one htd hρ0 hρd htρ hρ2 hρ8 a)
+        (altSum_argdiff_recip t₀ ρ htd hρ0 hρd htρ hlt hρ2 hρ8 1 hab hn N)) ?_
+    apply Qeq_le; simp only [Qeq, mul]; push_cast; ring_uor
+  refine Qle_congr_left (Qabs_den_pos (Qsub_den_pos (Qmul_den_pos hqd hAd) (Qmul_den_pos hq'd hA'd)))
+    (Qabs_Qeq (Qeq_symm hpe)) ?_
+  refine Qle_trans (add_den_pos
+      (Qmul_den_pos (Qabs_den_pos (Qsub_den_pos hqd hq'd)) (Qabs_den_pos hAd))
+      (Qmul_den_pos (Qabs_den_pos hq'd) (Qabs_den_pos (Qsub_den_pos hAd hA'd))))
+    (Qabs_mul_sub_le hqd hAd hq'd hA'd) ?_
+  refine Qle_trans (add_den_pos (Nat.succ_pos n) (Nat.succ_pos n)) (Qadd_le_add hT1 hT2) ?_
+  apply Qeq_le; simp only [Qeq, add]; push_cast; ring_uor
+
 end UOR.Bridge.F1Square.Analysis
