@@ -1981,4 +1981,60 @@ theorem altSum_arctan_abs_le_U {t₀ ρ : Q} (htd : 0 < t₀.den) (hρ0 : 0 ≤ 
   exact Qle_trans (expM_U_den_pos 1 2) (expSumM_le_U 1 N)
     (Qle_toNat (expM_U_num_nonneg 1 2) (expM_U_den_pos 1 2))
 
+set_option maxHeartbeats 1200000 in
+/-- **altSum arctan-depth gap, reciprocal form (any `off`)**: `|altSum (arctanSum t₀ b) off N −
+    altSum (arctanSum t₀ a) off N| ≤ U·4·ρ.den/(n+1)` (`U = (expM_U 1 2).num.toNat`) for `a ≤ b`,
+    `n+1 ≤ 2a+3`. The alternating-series argument-Lipschitz (`altSum_Lip_le` + `qsq_diff_le`) over the
+    arctan tail (`arctanSum_abs_diff_le`), with `LipS` bounded uniformly (`LipS_le_U`) and the `geoSum`
+    gap in reciprocal form (`geoSum_diff_recip`). Serves both the cos (`off=0`) and sin/x (`off=1`)
+    inner-depth reconciliations. -/
+theorem altSum_argdiff_recip (t₀ ρ : Q) (htd : 0 < t₀.den) (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den)
+    (htρ : Qle (Qabs t₀) ρ) (hlt : ρ.num.toNat < ρ.den)
+    (hρ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ρ ρ))) (hρ8 : Qle (mul ⟨2, 1⟩ ρ) ⟨1, 1⟩)
+    (off : Nat) {a b n : Nat} (hab : a ≤ b) (hn : n + 1 ≤ 2 * a + 3) (N : Nat) :
+    Qle (Qabs (Qsub (altSum (arctanSum t₀ b) off N) (altSum (arctanSum t₀ a) off N)))
+      (⟨((expM_U 1 2).num.toNat : Int) * (4 * (ρ.den : Int)), n + 1⟩ : Q) := by
+  have hb1 := arctanSum_abs_le_one htd hρ0 hρd htρ hρ2 hρ8 b
+  have ha1 := arctanSum_abs_le_one htd hρ0 hρd htρ hρ2 hρ8 a
+  have hUnn : 0 ≤ (⟨((expM_U 1 2).num.toNat : Int), 1⟩ : Q).num := Int.ofNat_nonneg _
+  have hLipU : Qle (LipS 1 N) (⟨((expM_U 1 2).num.toNat : Int), 1⟩ : Q) :=
+    Qle_trans (expM_U_den_pos 1 2) (LipS_le_U 1 N)
+      (Qle_toNat (expM_U_num_nonneg 1 2) (expM_U_den_pos 1 2))
+  have hgapnn : 0 ≤ (mul (⟨(2 * 1 : Nat), 1⟩ : Q) (Qsub (geoSum ρ b) (geoSum ρ a))).num :=
+    Qmul_num_nonneg (by decide) (Qsub_num_nonneg (geoSum_mono ρ hρ0 hρd hab))
+  refine Qle_trans (Qmul_den_pos (LipS_den_pos 1 N) (Qabs_den_pos (Qsub_den_pos
+      (Nat.mul_pos (arctanSum_den_pos htd b) (arctanSum_den_pos htd b))
+      (Nat.mul_pos (arctanSum_den_pos htd a) (arctanSum_den_pos htd a)))))
+    (altSum_Lip_le (arctanSum_den_pos htd b) (arctanSum_den_pos htd a) hb1 ha1 off N) ?_
+  refine Qle_trans (Qmul_den_pos (LipS_den_pos 1 N) (Qmul_den_pos (by decide)
+      (Qabs_den_pos (Qsub_den_pos (arctanSum_den_pos htd b) (arctanSum_den_pos htd a)))))
+    (Qmul_le_mul_left (LipS_num_nonneg 1 N)
+      (qsq_diff_le (arctanSum_den_pos htd b) (arctanSum_den_pos htd a) hb1 ha1)) ?_
+  refine Qle_trans (Qmul_den_pos (LipS_den_pos 1 N) (Qmul_den_pos (by decide)
+      (Qsub_den_pos (geoSum_den_pos hρd b) (geoSum_den_pos hρd a))))
+    (Qmul_le_mul_left (LipS_num_nonneg 1 N)
+      (Qmul_le_mul_left (by decide) (arctanSum_abs_diff_le htd hρ0 hρd htρ hab))) ?_
+  refine Qle_trans (Qmul_den_pos Nat.one_pos (Qmul_den_pos (by decide)
+      (Qsub_den_pos (geoSum_den_pos hρd b) (geoSum_den_pos hρd a))))
+    (Qmul_le_mul_right hgapnn hLipU) ?_
+  refine Qle_trans (Qmul_den_pos Nat.one_pos (Qmul_den_pos (by decide) (Nat.succ_pos n)))
+    (Qmul_le_mul_left hUnn (Qmul_le_mul_left (by decide)
+      (geoSum_diff_recip ρ hρ0 hρd hlt hρ2 hab hn))) ?_
+  exact Qeq_le (by simp only [Qeq, mul]; push_cast; ring_uor)
+
+/-- **Product-difference bound**: `|a·b − c·d| ≤ |a−c|·|b| + |c|·|b−d|` (via `a·b − c·d =
+    (a−c)·b + c·(b−d)`). The product rule for the sin argument-Lipschitz (`sin = q·(sin/q)`). -/
+theorem Qabs_mul_sub_le {a b c d : Q} (ha : 0 < a.den) (hb : 0 < b.den) (hc : 0 < c.den)
+    (hd : 0 < d.den) :
+    Qle (Qabs (Qsub (mul a b) (mul c d)))
+      (add (mul (Qabs (Qsub a c)) (Qabs b)) (mul (Qabs c) (Qabs (Qsub b d)))) := by
+  have heq : Qeq (Qsub (mul a b) (mul c d)) (add (mul (Qsub a c) b) (mul c (Qsub b d))) := by
+    simp only [Qeq, Qsub, mul, add, neg]; push_cast; ring_uor
+  refine Qle_congr_left (Qabs_den_pos (add_den_pos (Qmul_den_pos (Qsub_den_pos ha hc) hb)
+      (Qmul_den_pos hc (Qsub_den_pos hb hd)))) (Qabs_Qeq (Qeq_symm heq)) ?_
+  refine Qle_trans (add_den_pos (Qabs_den_pos (Qmul_den_pos (Qsub_den_pos ha hc) hb))
+      (Qabs_den_pos (Qmul_den_pos hc (Qsub_den_pos hb hd)))) (Qabs_add_le _ _) ?_
+  rw [Qabs_mul, Qabs_mul]
+  exact Qle_refl _
+
 end UOR.Bridge.F1Square.Analysis
