@@ -897,6 +897,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.peval_cosCoeff_arctan_argdiff_recip
 #print axioms Analysis.cos_nested_general
 #print axioms Analysis.Rcos_arctan_nested
+#print axioms Analysis.altSum_abs_le
+#print axioms Analysis.altSum_arctan_abs_le_U
 #print axioms Analysis.sinCoeff_abs_le_one
 #print axioms Analysis.cosCoeff_abs_le_one
 #print axioms Analysis.arctanSum_abs_le

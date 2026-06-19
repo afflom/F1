@@ -1951,4 +1951,34 @@ theorem Rcos_arctan_nested (t₀ ρ : Q) (htd : 0 < t₀.den) (hρ0 : 0 ≤ ρ.n
   exact cos_nested_general t₀ ρ htd hρ0 hρd hlt16 htρ h2ρ hhalf hρ4 hρ2 hρ8 hlt
     E (Rartanh_R ρ (E + 1)) j hbE (by omega) (by omega)
 
+-- ===========================================================================
+-- Sin side: |altSum| bound, sin argument-Lipschitz, nested evaluation.
+-- ===========================================================================
+
+/-- **Alternating sum absolute bound**: `|altSum q off N| ≤ expSumM (M²) N` for `|q| ≤ M` (termwise
+    `altTerm_abs_le`, summed). For `M = 1` this is `≤ expM_U 1 2` (a uniform constant) — the bound on
+    the sin/x partial sum needed for the sin argument-Lipschitz product rule. -/
+theorem altSum_abs_le {q : Q} {M : Nat} (hqd : 0 < q.den) (hq : Qle (Qabs q) ⟨(M : Int), 1⟩)
+    (off : Nat) : ∀ N, Qle (Qabs (altSum q off N)) (expSumM (M * M) N)
+  | 0 => altTerm_abs_le hqd hq off 0
+  | (N + 1) => by
+      show Qle (Qabs (add (altSum q off N) (altTerm q off (N + 1))))
+        (add (expSumM (M * M) N) ⟨(npow (M * M) (N + 1) : Int), fct (N + 1)⟩)
+      refine Qle_trans (add_den_pos (Qabs_den_pos (altSum_den_pos hqd off N))
+          (Qabs_den_pos (altTerm_den_pos hqd off (N + 1)))) (Qabs_add_le _ _) ?_
+      exact Qadd_le_add (altSum_abs_le hqd hq off N) (altTerm_abs_le hqd hq off (N + 1))
+
+/-- **arctan partial sum is `sin/x`-summable at `M = 1`**: `|altSum (arctanSum t₀ N') 1 N| ≤ U`
+    (`U = (expM_U 1 2).num.toNat`) for `|t₀| ≤ ρ`, `2ρ ≤ 1`, `ρ² ≤ 1/2`. The uniform bound on the
+    sin-aux partial sum evaluated at an arctan partial sum. -/
+theorem altSum_arctan_abs_le_U {t₀ ρ : Q} (htd : 0 < t₀.den) (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den)
+    (htρ : Qle (Qabs t₀) ρ) (hρ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ρ ρ)))
+    (hρ8 : Qle (mul ⟨2, 1⟩ ρ) ⟨1, 1⟩) (N' N : Nat) :
+    Qle (Qabs (altSum (arctanSum t₀ N') 1 N)) (⟨((expM_U 1 2).num.toNat : Int), 1⟩ : Q) := by
+  refine Qle_trans (expSumM_den_pos (1 * 1) N)
+    (altSum_abs_le (M := 1) (arctanSum_den_pos htd N')
+      (arctanSum_abs_le_one htd hρ0 hρd htρ hρ2 hρ8 N') 1 N) ?_
+  exact Qle_trans (expM_U_den_pos 1 2) (expSumM_le_U 1 N)
+    (Qle_toNat (expM_U_num_nonneg 1 2) (expM_U_den_pos 1 2))
+
 end UOR.Bridge.F1Square.Analysis
