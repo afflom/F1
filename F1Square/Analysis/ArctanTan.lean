@@ -269,4 +269,24 @@ theorem Rmul_eq_zero_cancel {a b : Real} {k : Nat} (hk : Qlt (Qbound k) (b.seq k
   refine Req_trans (Rmul_congr h (Req_refl (Rinv b k hk))) ?_
   exact Req_trans (Rmul_comm zero (Rinv b k hk)) (Rmul_zero (Rinv b k hk))
 
+/-- `x − y = 0 ⟹ x = y` (local copy). -/
+theorem Req_of_Rsub_zero_loc {a b : Real} (h : Req (Rsub a b) zero) : Req a b := by
+  have h1 : Req a (Radd (Rsub a b) b) := by
+    show Req a (Radd (Radd a (Rneg b)) b)
+    refine Req_trans (Req_symm (Radd_zero a)) ?_
+    have hz : Req zero (Radd (Rneg b) b) :=
+      Req_symm (Req_trans (Radd_comm (Rneg b) b) (Radd_neg b))
+    exact Req_trans (Radd_congr (Req_refl a) hz) (Req_symm (Radd_assoc a (Rneg b) b))
+  exact Req_trans h1 (Req_trans (Radd_congr h (Req_refl b)) (Req_trans (Radd_comm zero b) (Radd_zero b)))
+
+/-- **★ tangent-injectivity**: if `sin x = v·cos x`, `sin y = v·cos y` (same tangent `v`), and the
+    angle difference `x−y` has `RsinAux(x−y)` apart from `0` (i.e. `x−y` is small enough that the
+    `sin/x` factor is positive — `Qbound k < RsinAux(x−y).seq k`), then `x = y`. Via
+    `Rsin_sub_eq_zero` (`sin(x−y)=0`) + `Rmul_eq_zero_cancel` (`sin(x−y) = (x−y)·RsinAux(x−y)`, so
+    `x−y = 0`). The key step for `arctan a + arctan b = arctan(vval a b)`. -/
+theorem Rtan_inj {x y v : Real} {k : Nat}
+    (hk : Qlt (Qbound k) ((RsinAux (Rsub x y)).seq k))
+    (hx : Req (Rsin x) (Rmul v (Rcos x))) (hy : Req (Rsin y) (Rmul v (Rcos y))) : Req x y :=
+  Req_of_Rsub_zero_loc (Rmul_eq_zero_cancel hk (Rsin_sub_eq_zero hx hy))
+
 end UOR.Bridge.F1Square.Analysis
