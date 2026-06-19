@@ -228,4 +228,29 @@ theorem RlogPos_mul (x y : Real) (kx : Nat) (hx : Qlt (Qbound kx) (x.seq kx))
     hB2d hB2ge hxypos hxyhi hxylo hρ2 hρσ hσhalf
   exact Req_trans bxy (Req_trans (Req_symm hmul) (Radd_congr (Req_symm bx) (Req_symm by')))
 
+/-- A value `≥ 1` at index 1 furnishes a `RlogPos` positivity witness there (`Qbound 1 = 1/2 < 1`). -/
+theorem ge1_pos_witness (x : Real) (h1 : Qle (⟨1, 1⟩ : Q) (x.seq 1)) :
+    Qlt (Qbound 1) (x.seq 1) := by
+  have hd := x.den_pos 1
+  simp only [Qlt, Qbound]; simp only [Qle] at h1; push_cast at h1 ⊢; omega
+
+set_option maxHeartbeats 1600000 in
+/-- **`RlogPos` congruence in its argument** (bounded modulus): `x ≈ y` both in `[1,B]` at small
+    radius ⟹ `RlogPos x ≈ RlogPos y`. Both bridged to the presented-radius `Rlog ·B` and joined by
+    `Rlog_congr`. -/
+theorem RlogPos_congr (x y : Real) (kx : Nat) (hx : Qlt (Qbound kx) (x.seq kx))
+    (ky : Nat) (hy : Qlt (Qbound ky) (y.seq ky))
+    (B : Q) (hBd : 0 < B.den) (hBge : Qle (⟨1, 1⟩ : Q) B)
+    (hxposB : ∀ n, 0 < (x.seq n).num) (hxhiB : ∀ n, Qle (x.seq n) B)
+    (hxloB : ∀ n, Qle (⟨1, 1⟩ : Q) (mul (x.seq n) B))
+    (hyposB : ∀ n, 0 < (y.seq n).num) (hyhiB : ∀ n, Qle (y.seq n) B)
+    (hyloB : ∀ n, Qle (⟨1, 1⟩ : Q) (mul (y.seq n) B))
+    (hρB2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ⟨B.num - (B.den : Int), B.num.toNat + B.den⟩
+              ⟨B.num - (B.den : Int), B.num.toNat + B.den⟩)))
+    (heq : Req x y) :
+    Req (RlogPos x kx hx) (RlogPos y ky hy) :=
+  Req_trans (RlogPos_eq_Rlog x kx hx B hBd hBge hxposB hxhiB hxloB hρB2)
+    (Req_trans (Rlog_congr x y B hBd hBge hxposB hxhiB hxloB hyposB hyhiB hyloB hρB2 heq)
+      (Req_symm (RlogPos_eq_Rlog y ky hy B hBd hBge hyposB hyhiB hyloB hρB2)))
+
 end UOR.Bridge.F1Square.Analysis
