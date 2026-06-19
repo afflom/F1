@@ -1223,4 +1223,23 @@ theorem corner_sum_bound_arctan (ρ w : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.
     (Qeq_le (Fsum_mul_const_right hwd1 ha M)) ?_
   exact Fsum_le_Fsum_le (fun j _ => corner_bound_arctan ρ w hρd hρ0 hwd hw h2ρ j M)
 
+/-- **Closed corner-sum bound**: `(Σ_{j≤M}|gcornerB arctanCoeff w j M|)·(1−2ρ) ≤
+    (2^{M+1}−1)·(M+1)·(2ρ)^{M+1}`. Collapse the `j`-sum (`Qmul_swap_outer` + `Fsum_mul_const_right`
+    + `pow2_sum`). -/
+theorem corner_sum_closed_arctan (ρ w : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num) (hwd : 0 < w.den)
+    (hw : Qle (Qabs w) ρ) (h2ρ : 0 ≤ (Qsub (⟨1, 1⟩ : Q) (mul ⟨2, 1⟩ ρ)).num) (M : Nat) :
+    Qle (mul (Fsum (fun j => Qabs (gcornerB arctanCoeff w j M)) M) (Qsub ⟨1, 1⟩ (mul ⟨2, 1⟩ ρ)))
+      (mul (⟨(2 : Int) ^ (M + 1) - 1, 1⟩ : Q)
+        (mul (⟨(M : Int) + 1, 1⟩ : Q) (qpow (mul ⟨2, 1⟩ ρ) (M + 1)))) := by
+  have hQ : 0 < (qpow (mul ⟨2, 1⟩ ρ) (M + 1)).den := qpow_den_pos (Qmul_den_pos (by decide) hρd) (M + 1)
+  have hC : 0 < (mul (⟨(M : Int) + 1, 1⟩ : Q) (qpow (mul ⟨2, 1⟩ ρ) (M + 1))).den := Qmul_den_pos Nat.one_pos hQ
+  refine Qle_trans (Fsum_den_pos (fun j => Qmul_den_pos Nat.one_pos (Qmul_den_pos Nat.one_pos hQ)) M)
+    (corner_sum_bound_arctan ρ w hρd hρ0 hwd hw h2ρ M) ?_
+  refine Qle_trans (Fsum_den_pos (fun j => Qmul_den_pos Nat.one_pos hC) M)
+    (Qeq_le (Fsum_congr (fun j => Qmul_swap_outer (⟨(M : Int) + 1, 1⟩ : Q) (⟨(2 : Int) ^ j, 1⟩ : Q)
+      (qpow (mul ⟨2, 1⟩ ρ) (M + 1))) M)) ?_
+  exact Qeq_le (Qeq_trans (Qmul_den_pos (Fsum_den_pos (fun _ => Nat.one_pos) M) hC)
+    (Qeq_symm (Fsum_mul_const_right (a := fun j => (⟨(2 : Int) ^ j, 1⟩ : Q)) hC (fun _ => Nat.one_pos) M))
+    (Qmul_congr (pow2_sum M) (Qeq_refl _)))
+
 end UOR.Bridge.F1Square.Analysis
