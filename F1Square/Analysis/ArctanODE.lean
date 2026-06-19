@@ -2090,4 +2090,51 @@ theorem peval_sinCoeff_arctan_argdiff_recip (t₀ ρ : Q) (htd : 0 < t₀.den) (
   refine Qle_trans (add_den_pos (Nat.succ_pos n) (Nat.succ_pos n)) (Qadd_le_add hT1 hT2) ?_
   apply Qeq_le; simp only [Qeq, add]; push_cast; ring_uor
 
+set_option maxHeartbeats 1600000 in
+/-- **sin nested-diagonal bound (general depth)**: at odd depth `2D+1`, the sin series evaluated at the
+    arctan partial sum `arctanSum t₀ b` (`D ≤ b`) is within `(U·6ρ.den + 2ρ.den)/(n+1)` of the composed
+    series `sin∘arctan` at `t₀`. Triangle through `peval sin (peval arctan t₀ M) M`: the arctan
+    inner-depth gap (`peval_sinCoeff_arctan_argdiff_recip`, with the odd depth `2D+1` matching
+    `arctanSum t₀ D` directly via `peval_arctanCoeff_eq_arctanSum` — no even-parity step) plus the
+    composition gap (`DN_sin_recip`). The analytic core of the sin side of `tan(arctan t)=t`. -/
+theorem sin_nested_general (t₀ ρ : Q) (htd : 0 < t₀.den) (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den)
+    (hlt16 : (mul ⟨16, 1⟩ ρ).num.toNat < (mul ⟨16, 1⟩ ρ).den) (htρ : Qle (Qabs t₀) ρ)
+    (h2ρ : 0 ≤ (Qsub (⟨1, 1⟩ : Q) (mul ⟨2, 1⟩ ρ)).num)
+    (hhalf : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ⟨2, 1⟩ ρ))) (hρ4 : Qle (mul ⟨4, 1⟩ ρ) ⟨1, 1⟩)
+    (hρ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ρ ρ))) (hρ8 : Qle (mul ⟨2, 1⟩ ρ) ⟨1, 1⟩)
+    (hlt : ρ.num.toNat < ρ.den) (D b n : Nat) (hbD : D ≤ b) (hnb : n + 1 ≤ 2 * D + 3)
+    (hnD : n + 1 ≤ 2 * D + 1) :
+    Qle (Qabs (Qsub (peval sinCoeff (arctanSum t₀ b) (2 * D + 1))
+        (peval (fcomp sinCoeff arctanCoeff) t₀ (2 * D + 1))))
+      (⟨((expM_U 1 2).num.toNat : Int) * (6 * (ρ.den : Int)) + 2 * (ρ.den : Int), n + 1⟩ : Q) := by
+  have hq1 : Qle (Qabs (peval arctanCoeff t₀ (2 * D + 1))) ⟨1, 1⟩ :=
+    Qle_congr_left (Qabs_den_pos (arctanSum_den_pos htd D))
+      (Qabs_Qeq (Qeq_symm (peval_arctanCoeff_eq_arctanSum t₀ htd D)))
+      (arctanSum_abs_le_one htd hρ0 hρd htρ hρ2 hρ8 D)
+  have hAd : 0 < (peval sinCoeff (arctanSum t₀ b) (2 * D + 1)).den :=
+    peval_den_pos sinCoeff_den_pos (arctanSum_den_pos htd b) (2 * D + 1)
+  have hMd : 0 < (peval sinCoeff (peval arctanCoeff t₀ (2 * D + 1)) (2 * D + 1)).den :=
+    peval_den_pos sinCoeff_den_pos (peval_den_pos arctanCoeff_den_pos htd (2 * D + 1)) (2 * D + 1)
+  have hCd : 0 < (peval (fcomp sinCoeff arctanCoeff) t₀ (2 * D + 1)).den :=
+    peval_den_pos (fun k => fcomp_den_pos sinCoeff_den_pos arctanCoeff_den_pos k) htd (2 * D + 1)
+  have harg : Qeq (peval sinCoeff (peval arctanCoeff t₀ (2 * D + 1)) (2 * D + 1))
+      (peval sinCoeff (arctanSum t₀ D) (2 * D + 1)) :=
+    peval_arg_congr sinCoeff (peval_arctanCoeff_eq_arctanSum t₀ htd D) (2 * D + 1)
+  have hI : Qle (Qabs (Qsub (peval sinCoeff (arctanSum t₀ b) (2 * D + 1))
+        (peval sinCoeff (peval arctanCoeff t₀ (2 * D + 1)) (2 * D + 1))))
+      (⟨((expM_U 1 2).num.toNat : Int) * (6 * (ρ.den : Int)), n + 1⟩ : Q) :=
+    Qle_congr_left (Qabs_den_pos (Qsub_den_pos hAd
+        (peval_den_pos sinCoeff_den_pos (arctanSum_den_pos htd D) (2 * D + 1))))
+      (Qabs_Qeq (Qsub_congr (Qeq_refl _) (Qeq_symm harg)))
+      (peval_sinCoeff_arctan_argdiff_recip t₀ ρ htd hρ0 hρd htρ hlt hρ2 hρ8 hbD hnb D)
+  have hII : Qle (Qabs (Qsub (peval sinCoeff (peval arctanCoeff t₀ (2 * D + 1)) (2 * D + 1))
+        (peval (fcomp sinCoeff arctanCoeff) t₀ (2 * D + 1)))) (⟨2 * (ρ.den : Int), n + 1⟩ : Q) := by
+    rw [Qabs_Qsub_comm]
+    exact DN_sin_recip t₀ ρ (2 * D + 1) n hρd hρ0 htd htρ h2ρ hhalf hρ4 hlt16 hnD hq1
+  refine Qle_trans (add_den_pos (Qabs_den_pos (Qsub_den_pos hAd hMd))
+      (Qabs_den_pos (Qsub_den_pos hMd hCd))) (Qabs_sub_triangle hAd hMd hCd) ?_
+  refine Qle_trans (add_den_pos (Nat.succ_pos n) (Nat.succ_pos n)) (Qadd_le_add hI hII) ?_
+  exact Qeq_le (Qadd_same_den_loc (((expM_U 1 2).num.toNat : Int) * (6 * (ρ.den : Int)))
+    (2 * (ρ.den : Int)) (n + 1))
+
 end UOR.Bridge.F1Square.Analysis
