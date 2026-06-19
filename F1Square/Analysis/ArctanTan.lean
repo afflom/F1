@@ -239,4 +239,23 @@ theorem RsinAux_neg (x : Real) : Req (RsinAux (Rneg x)) (RsinAux x) := by
 theorem Rsin_neg (x : Real) : Req (Rsin (Rneg x)) (Rneg (Rsin x)) :=
   Req_trans (Rmul_congr (Req_refl (Rneg x)) (RsinAux_neg x)) (Rmul_neg_left x (RsinAux x))
 
+/-- **sin subtraction formula**: `sin(x−y) = sin x·cos y − cos x·sin y` (`Rsin_add` + parity). -/
+theorem Rsin_sub (x y : Real) :
+    Req (Rsin (Rsub x y)) (Rsub (Rmul (Rsin x) (Rcos y)) (Rmul (Rcos x) (Rsin y))) := by
+  refine Req_trans (Rsin_add x (Rneg y)) ?_
+  refine Req_trans (Radd_congr (Rmul_congr (Req_refl _) (Rsin_neg y))
+    (Rmul_congr (Req_refl _) (Rcos_neg y))) ?_
+  refine Req_trans (Radd_congr (Rmul_neg_right (Rcos x) (Rsin y)) (Req_refl _)) ?_
+  exact Radd_comm (Rneg (Rmul (Rcos x) (Rsin y))) (Rmul (Rsin x) (Rcos y))
+
+/-- **Shared-tangent ⟹ `sin(x−y) = 0`**: if `sin x = v·cos x` and `sin y = v·cos y` (same `v`), then
+    `sin(x−y) = v·cosx·cosy − v·cosx·cosy = 0`. (`Rsin_sub` + substitution + `Radd_neg`.) -/
+theorem Rsin_sub_eq_zero {x y v : Real} (hx : Req (Rsin x) (Rmul v (Rcos x)))
+    (hy : Req (Rsin y) (Rmul v (Rcos y))) : Req (Rsin (Rsub x y)) zero := by
+  refine Req_trans (Rsin_sub x y) ?_
+  refine Req_trans (Rsub_congr (Rmul_congr hx (Req_refl _)) (Rmul_congr (Req_refl _) hy)) ?_
+  refine Req_trans (Rsub_congr (Rmul_assoc v (Rcos x) (Rcos y))
+    (Rmul_left_comm_loc (Rcos x) v (Rcos y))) ?_
+  exact Radd_neg (Rmul v (Rmul (Rcos x) (Rcos y)))
+
 end UOR.Bridge.F1Square.Analysis
