@@ -16,6 +16,20 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **Track 1 — ★ the arctan addition law** `arctan a + arctan b = arctan((a+b)/(1−ab))`
+  (`Analysis/ArctanTan.lean`, `Rarctan_add` / `Rarctan_add_of_small`): the imaginary half of `Clog`
+  additivity, built on the value-level `tan` substrate below. The chain: the abstract
+  tangent-addition capstone `Req_add_of_tan_values` (the arctan analog of `Req_add_of_exp_values` —
+  `A+B=C` from the tangent *values* via `Rsin_cos_add_tan` + tangent-injectivity `Rtan_inj`); the
+  `RsinAux` apartness `Pos_RsinAux_of_small` (`sin w/w ≥ 1/2` for `|w| ≤ 1`, since the degree-2 head
+  `1−w²/6+w⁴/120 ≥ 5/6` by `altSum_sin_two_ge` and the tail is `≤ 2/6` by `altSum_trunc_bound`); and
+  the angle-difference magnitude bound `Rarctan_diff_seq_le` (each angle `≤ 2ρ` via `Rarctan_seq_abs_le`
+  + `geoSum_le_two`, so the `Radd`/`Rsub`-reindexed difference is `≤ 6ρ ≤ 1` via `Qmul_two_le_third`
+  from `16ρ < 1`). `Rarctan_add_of_small` then makes the apartness automatic — the law holds for any
+  `|a|, |b|, |(a+b)/(1−ab)| ≤ ρ` with the shared `ρ < 1/16` thicket and `1 − ab > 0`. Remaining toward
+  `Clog` additivity: lift to real arguments (`RarctanR`) by continuity and package as
+  `arg(zw) = arg z + arg w` (`Carg`), then combine with `Rlog_mul` (the modulus half). RH-*independent*;
+  crux fields stay `none`.
 - **Track 1 — ★ value-level `sin(arctan t) = t·cos(arctan t)`** (`Analysis/ArctanODE.lean`,
   `Rsin_arctan_value_eq`): `Req (Rsin (Rarctan t₀)) (Rmul (ofQ t₀) (Rcos (Rarctan t₀)))` for
   `|t₀| ≤ ρ < 1/16`. This **completes the formal-PS → value (FTC) bridge** that lifts the formal
