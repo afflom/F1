@@ -1683,4 +1683,33 @@ theorem peval_sin_arctan_shift (t : Q) (htd : 0 < t.den) (m : Nat) :
     (peval_fmul_Xident_shift (fcomp cosCoeff arctanCoeff)
       (fun i => fcomp_den_pos cosCoeff_den_pos arctanCoeff_den_pos i) t htd m)
 
+-- ===========================================================================
+-- Diagonal ↔ peval identification: connect Rcos/Rsin(X) diagonals to the
+-- peval cosCoeff/sinCoeff forms (entry point for the nested-diagonal bridge).
+-- ===========================================================================
+
+/-- **Rcos diagonal as a peval**: `(Rcos X).seq j = peval cosCoeff (X.seq D) (2D)` with
+    `D = RaltReal_R X j` — the alternating cos partial sum at the diagonal depth is exactly the
+    `cosCoeff` truncation (`peval_cosCoeff_eq_altSum`). The identification feeding the
+    nested-diagonal reconciliation of `tan(arctan t) = t`. -/
+theorem Rcos_seq_eq_peval (X : Real) (j : Nat) :
+    Qeq ((Rcos X).seq j)
+      (peval cosCoeff (X.seq (RaltReal_R X j)) (2 * RaltReal_R X j)) :=
+  Qeq_symm (peval_cosCoeff_eq_altSum (X.seq (RaltReal_R X j)) (X.den_pos _) (RaltReal_R X j))
+
+/-- **RsinAux diagonal as an altSum** (definitional): `(RsinAux X).seq j = altSum (X.seq D) 1 D`,
+    the `sin/x` series at the diagonal depth `D = RaltReal_R X j`. -/
+theorem RsinAux_seq_eq_altSum (X : Real) (j : Nat) :
+    (RsinAux X).seq j = altSum (X.seq (RaltReal_R X j)) 1 (RaltReal_R X j) := rfl
+
+/-- **Genuine sin value as a peval**: `X.seq D · (RsinAux X).seq j = peval sinCoeff (X.seq D) (2D+1)`
+    (`D = RaltReal_R X j`). Since `Rsin X = X · RsinAux X`, the value-level `sin` at the diagonal depth
+    is the `sinCoeff` truncation (`peval_sinCoeff_eq`: `peval sin q (2N+1) = q·altSum(q,1,N)`). The
+    identification feeding the sin side of `tan(arctan t) = t`. -/
+theorem RsinAux_seq_eq_peval (X : Real) (j : Nat) :
+    Qeq (mul (X.seq (RaltReal_R X j)) ((RsinAux X).seq j))
+      (peval sinCoeff (X.seq (RaltReal_R X j)) (2 * RaltReal_R X j + 1)) := by
+  rw [RsinAux_seq_eq_altSum]
+  exact Qeq_symm (peval_sinCoeff_eq (X.seq (RaltReal_R X j)) (X.den_pos _) (RaltReal_R X j))
+
 end UOR.Bridge.F1Square.Analysis
