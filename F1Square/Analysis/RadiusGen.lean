@@ -532,4 +532,45 @@ theorem wval_lip2_gen (ρ a c d : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num)
   rw [wvalR_comm a c, wvalR_comm a d]
   exact wval_lip1_gen ρ c d a hρd hρ0 hcd hdd had hc hd ha hρlt
 
+set_option maxHeartbeats 1200000 in
+/-- **General-radius `artSum` arg-variation via `wvalR`**: `|artSum(wvalR a b) M − artSum(wvalR a' b') M|
+    ≤ Kσ·ρ.den²·(|a−a'| + |b−b'|)` for args `≤ ρ < 1` and `wvalR`s `≤ σ < 1` (`Kσ` the σ even-sum
+    bound). General analog of `artSum_wval_argdiff` (constant `Kσ·ρ.den²` replaces `8`). -/
+theorem artSum_wval_argdiff_gen (ρ σ a b a' b' : Q) (Kσ : Nat) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num)
+    (hρlt : ρ.num.toNat < ρ.den) (hσ0 : 0 ≤ σ.num) (hσd : 0 < σ.den)
+    (hKσF : Qle (⟨1, 1⟩ : Q) (mul (⟨(Kσ : Int), 1⟩ : Q) (Qsub ⟨1, 1⟩ (mul σ σ))))
+    (had : 0 < a.den) (hbd : 0 < b.den) (ha'd : 0 < a'.den) (hb'd : 0 < b'.den)
+    (ha : Qle (Qabs a) ρ) (hb : Qle (Qabs b) ρ) (ha' : Qle (Qabs a') ρ) (hb' : Qle (Qabs b') ρ)
+    (hwσ : Qle (Qabs (wvalR a b)) σ) (hw'σ : Qle (Qabs (wvalR a' b')) σ) (M : Nat) :
+    Qle (Qabs (Qsub (artSum (wvalR a b) M) (artSum (wvalR a' b') M)))
+        (mul (⟨(Kσ : Int) * ((ρ.den : Int) * ρ.den), 1⟩ : Q) (add (Qabs (Qsub a a')) (Qabs (Qsub b b')))) := by
+  have hwd : 0 < (wvalR a b).den := wvalR_den_pos a b (wval_inner_pos_gen ρ a b hρd hρ0 had hbd ha hb hρlt)
+  have hw'd : 0 < (wvalR a' b').den :=
+    wvalR_den_pos a' b' (wval_inner_pos_gen ρ a' b' hρd hρ0 ha'd hb'd ha' hb' hρlt)
+  have hw2d : 0 < (wvalR a' b).den :=
+    wvalR_den_pos a' b (wval_inner_pos_gen ρ a' b hρd hρ0 ha'd hbd ha' hb hρlt)
+  refine Qle_trans (Qmul_den_pos (geoEvenSum_den_pos hσd M) (Qabs_den_pos (Qsub_den_pos hwd hw'd)))
+    (artSum_Lip_le hwd hw'd hσd hwσ hw'σ M) ?_
+  refine Qle_trans (Qmul_den_pos Nat.one_pos (Qabs_den_pos (Qsub_den_pos hwd hw'd)))
+    (Qmul_le_mul_right (Qabs_num_nonneg _)
+      (geoEvenSum_le_gen hσ0 hσd Nat.one_pos (Int.ofNat_nonneg Kσ) hKσF M)) ?_
+  have hleg1 : Qle (Qabs (Qsub (wvalR a b) (wvalR a' b)))
+      (mul (⟨(ρ.den : Int) * ρ.den, 1⟩ : Q) (Qabs (Qsub a a'))) :=
+    wval_lip1_gen ρ a a' b hρd hρ0 had ha'd hbd ha ha' hb hρlt
+  have hleg2 : Qle (Qabs (Qsub (wvalR a' b) (wvalR a' b')))
+      (mul (⟨(ρ.den : Int) * ρ.den, 1⟩ : Q) (Qabs (Qsub b b'))) :=
+    wval_lip2_gen ρ a' b b' hρd hρ0 ha'd hbd hb'd ha' hb hb' hρlt
+  refine Qle_trans (Qmul_den_pos Nat.one_pos (add_den_pos
+      (Qabs_den_pos (Qsub_den_pos hwd hw2d)) (Qabs_den_pos (Qsub_den_pos hw2d hw'd))))
+    (Qmul_le_mul_left (Int.ofNat_nonneg Kσ) (Qabs_sub_triangle hwd hw2d hw'd)) ?_
+  refine Qle_trans (Qmul_den_pos Nat.one_pos (add_den_pos
+      (Qmul_den_pos Nat.one_pos (Qabs_den_pos (Qsub_den_pos had ha'd)))
+      (Qmul_den_pos Nat.one_pos (Qabs_den_pos (Qsub_den_pos hbd hb'd)))))
+    (Qmul_le_mul_left (Int.ofNat_nonneg Kσ) (Qadd_le_add hleg1 hleg2)) ?_
+  apply Qeq_le
+  show Qeq (mul (⟨(Kσ : Int), 1⟩ : Q) (add (mul (⟨(ρ.den : Int) * ρ.den, 1⟩ : Q) (Qabs (Qsub a a')))
+      (mul (⟨(ρ.den : Int) * ρ.den, 1⟩ : Q) (Qabs (Qsub b b')))))
+    (mul (⟨(Kσ : Int) * ((ρ.den : Int) * ρ.den), 1⟩ : Q) (add (Qabs (Qsub a a')) (Qabs (Qsub b b'))))
+  simp only [Qeq, mul, add]; push_cast; ring_uor
+
 end UOR.Bridge.F1Square.Analysis
