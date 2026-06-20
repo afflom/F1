@@ -92,6 +92,11 @@ audit-visible hypothesis, never an axiom).
   the interface clean. This is the constructive **assembly** of ξ from the item-1 / Track-1 pieces; the
   analytic *properties* (functional equation, order-1 bound, Hadamard) of items 3–5 are separate and
   not asserted. Axiom-clean.
+- **Track 1 — `Rlim` congruence infrastructure** (`Analysis/RlimProps.lean`): `Rlim_congr` (pointwise
+  `≈` regular sequences have `≈` diagonal limits — from `Req` at index `4n+3`, since `2/(4n+4) ≤
+  2/(n+1)`) and `Rlim_neg` (`lim(−X) ≈ −lim X`, seq-equal hence definitional). The limit-level
+  congruences any property/convergence argument over `Rlim`-built objects needs — e.g. the complex
+  digamma's symmetries and the eventual `CSpougeGamma → Γ` convergence. Axiom-clean.
 - **Track 1 — left-sector argument additivity** `CargLeft(zw) = CargLeft z + Carg w`
   (`Analysis/ComplexArgLeftAdd.lean`): left-half-plane `z` (`Re z < 0`) times principal `w`, the
   product again left. Reflects the principal `Carg_add` through the `+π` shift via `−(zw) = (−z)·w`
