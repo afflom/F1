@@ -45,4 +45,56 @@ theorem zeta2_lower : Rle (ofQ (⟨163, 100⟩ : Q) (by decide)) (zeta 2 (by dec
   Rle_trans (Rle_ofQ_ofQ (by decide) (zetaSum_den_pos 2 70) zetaSum_two_70_ge)
     (zeta_ge_partial 2 (by decide) 70)
 
+/-- **`ζ(s) ≤ zetaU s N = S(N) + 1/(N+1)`** — the value is dominated by the decreasing upper sequence
+    `U` (`zetaU_le`), the rigorous tail-overestimate `Σ_{k>N+1} 1/kˢ ≤ 1/(N+1)` made an explicit
+    rational upper bound. The mirror of `zeta_ge_partial` (the upper bracket). -/
+theorem zeta_le_partial (s : Nat) (hs : 2 ≤ s) (N : Nat) :
+    Rle (zeta s hs) (ofQ (zetaU s N) (zetaU_den_pos s N)) := by
+  intro n
+  show Qle (zetaSum s n) (add (zetaU s N) ⟨2, n + 1⟩)
+  rcases Nat.le_total n N with hnN | hNn
+  · -- n ≤ N: S(n) ≤ S(N) ≤ S(N)+1/(N+1) = U(N) ≤ + 2/(n+1)
+    have h1 : Qle (zetaSum s n) (zetaU s N) :=
+      Qle_trans (zetaSum_den_pos s N) (zetaSum_le s hnN)
+        (Qle_self_add (show (0 : Int) ≤ 1 by decide))
+    exact Qle_trans (zetaU_den_pos s N) h1 (Qle_self_add (show (0 : Int) ≤ 2 by decide))
+  · -- n ≥ N: S(n) ≤ S(N)+1/(N+1) = U(N) (zetadiff_bound) ≤ + 2/(n+1)
+    have h1 : Qle (zetaSum s n) (zetaU s N) :=
+      Qle_add_of_Qsub_le (zetaSum_den_pos s n) (zetaSum_den_pos s N) (Nat.succ_pos N)
+        (zetadiff_bound s hs hNn)
+    exact Qle_trans (zetaU_den_pos s N) h1 (Qle_self_add (show (0 : Int) ≤ 2 by decide))
+
+set_option maxHeartbeats 4000000 in
+set_option maxRecDepth 8192 in
+/-- `zetaU 2 70 = Σ_{k=1}^{71} 1/k² + 1/71 ≤ 1645/1000` (one rational `decide`; `≈ 1.6450`). -/
+theorem zetaU_two_70_le : Qle (zetaU 2 70) (⟨1646, 1000⟩ : Q) := by decide
+
+/-- **`ζ(2) ≤ 1.646`** — the upper bracket for the Basel constant (true value `≈ 1.64493`), via the
+    decreasing upper sequence `zetaU` at `N = 70`. With `zeta2_lower` this two-sided-brackets `ζ(2)`. -/
+theorem zeta2_upper : Rle (zeta 2 (by decide)) (ofQ (⟨1646, 1000⟩ : Q) (by decide)) :=
+  Rle_trans (zeta_le_partial 2 (by decide) 70)
+    (Rle_ofQ_ofQ (zetaU_den_pos 2 70) (by decide) zetaU_two_70_le)
+
+set_option maxHeartbeats 4000000 in
+set_option maxRecDepth 8192 in
+/-- `Σ_{k=1}^{71} 1/k³ ≥ 1201/1000` (`≈ 1.20206`; one rational `decide`). -/
+theorem zetaSum_three_70_ge : Qle (⟨1201, 1000⟩ : Q) (zetaSum 3 70) := by decide
+
+/-- **`ζ(3) ≥ 1.201`** — the lower bracket for Apéry's constant (true value `≈ 1.2020569`). -/
+theorem zeta3_lower : Rle (ofQ (⟨1201, 1000⟩ : Q) (by decide)) (zeta 3 (by decide)) :=
+  Rle_trans (Rle_ofQ_ofQ (by decide) (zetaSum_den_pos 3 70) zetaSum_three_70_ge)
+    (zeta_ge_partial 3 (by decide) 70)
+
+set_option maxHeartbeats 4000000 in
+set_option maxRecDepth 8192 in
+/-- `zetaU 3 70 = Σ_{k=1}^{71} 1/k³ + 1/71 ≤ 1217/1000` (one rational `decide`; `≈ 1.2161`). -/
+theorem zetaU_three_70_le : Qle (zetaU 3 70) (⟨1217, 1000⟩ : Q) := by decide
+
+/-- **`ζ(3) ≤ 1.217`** — the upper bracket for Apéry's constant, via the decreasing upper sequence
+    `zetaU` at `N = 70`. With `zeta3_lower` this two-sided-brackets `ζ(3) ∈ [1.201, 1.217]` — the
+    `two-sided ζ(3)` named missing for the `Pos Rlambda3` (`λ₃`) certificate. -/
+theorem zeta3_upper : Rle (zeta 3 (by decide)) (ofQ (⟨1217, 1000⟩ : Q) (by decide)) :=
+  Rle_trans (zeta_le_partial 3 (by decide) 70)
+    (Rle_ofQ_ofQ (zetaU_den_pos 3 70) (by decide) zetaU_three_70_le)
+
 end UOR.Bridge.F1Square.Analysis

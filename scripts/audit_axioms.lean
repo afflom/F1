@@ -1957,6 +1957,13 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.zeta_ge_partial
 #print axioms Analysis.zetaSum_two_70_ge
 #print axioms Analysis.zeta2_lower
+#print axioms Analysis.zeta_le_partial
+#print axioms Analysis.zetaU_two_70_le
+#print axioms Analysis.zeta2_upper
+#print axioms Analysis.zetaSum_three_70_ge
+#print axioms Analysis.zeta3_lower
+#print axioms Analysis.zetaU_three_70_le
+#print axioms Analysis.zeta3_upper
 
 -- GammaUpper (the γ ≤ 0.66 upper bracket, companion to Rgamma_h_lower; v0.16.0, for Pos λ₂).
 #print axioms Analysis.Qabs_upper

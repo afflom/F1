@@ -16,6 +16,15 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **Crux frontier (`n = 3`) — ζ(2)/ζ(3) brackets toward `Pos Rlambda3`** (`Analysis/ZetaTwo.lean`):
+  the named-missing `ζ(2)` upper bound and two-sided `ζ(3)` for the `λ₃` positivity certificate. The
+  reusable `zeta_le_partial` (`ζ(s) ≤ S(N) + 1/(N+1)`, the mirror of `zeta_ge_partial`, via the
+  decreasing upper sequence `zetaU` and the rigorous tail-overestimate `Σ_{k>N+1} 1/kˢ ≤ 1/(N+1)`)
+  gives `ζ(2) ≤ 1.646` (`zeta2_upper`; with `zeta2_lower ≥ 1.63` brackets the Basel constant) and
+  `ζ(3) ∈ [1.201, 1.217]` (`zeta3_lower`/`zeta3_upper`, two-sided Apéry). These discharge two of the
+  constant-precision inputs the `n = 3` coupling coefficient `Pos Rlambda3` needs (the dominant
+  remaining gap is the tight two-sided `γ₁`). Axiom-clean.
+
 - **Track 1 (item 1 — the Γ place on the strip) — the complex digamma term**
   (`Analysis/ComplexDigamma.lean`, increment 1): the archimedean `Γ′/Γ` series
   `ψ(s) = −γ + Σ_{n≥0} [1/(n+1) − 1/(s+n)]` lifted to complex `s` with `Re s ≥ c > 0` (the strip) —
