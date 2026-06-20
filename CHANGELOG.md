@@ -16,10 +16,12 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
-- **Track 1 — the lower-sector argument** `CargLower` (`Analysis/ComplexArgLower.lean`): for
-  `Im z < 0`, `arg(z) = −arg(z̄)` (`CargLower z = −CargUpper(Cconj z)`, `z̄` upper). Genuine tangent
-  `tan(CargLower z) = Im z/Re z` (`CargLower_tan`, from `CargUpper_tan` of `z̄` + sin-oddness /
-  cos-evenness). Completes the argument below the real axis (ξ's zeros are conjugate pairs).
+- **Track 1 — the lower-sector argument + its additivity** `CargLower` (`Analysis/ComplexArgLower.lean`):
+  for `Im z < 0`, `arg(z) = −arg(z̄)` (`CargLower z = −CargUpper(Cconj z)`, `z̄` upper). Genuine
+  tangent `tan(CargLower z) = Im z/Re z` (`CargLower_tan`, from `CargUpper_tan` of `z̄` + sin-oddness /
+  cos-evenness), and additivity `CargLower(zw) = Carg z + CargLower w` (`CargLower_add`) — the
+  conjugate reflection of `CargUpper_add` through `Cconj_Cmul` (`z̄w̄ = (zw)‾`) and `CargUpper_congr`.
+  Completes the argument across all four wedges near the axes (ξ's zeros are conjugate pairs).
   Axiom-clean (`{propext, Quot.sound}`).
 - **Track 1 — ★★ cross-sector complex-logarithm additivity** `Clog(zw) = Clog z + Clog w` past
   `|arg| < π/4` (`Analysis/ComplexLogUpperAdd.lean`, `ClogUpper_add`): `ClogUpper(zw) = Clog z +
