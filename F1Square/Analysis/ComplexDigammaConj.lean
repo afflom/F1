@@ -28,6 +28,30 @@ theorem Cexp_conj (z : Complex) : Ceq (Cexp (Cconj z)) (Cconj (Cexp z)) :=
   ⟨Rmul_congr (Req_refl _) (Rcos_neg z.im),
    Req_trans (Rmul_congr (Req_refl _) (Rsin_neg z.im)) (Rmul_neg_right (RexpReal z.re) (Rsin z.im))⟩
 
+/-- **`|z̄|² = |z|²`** generically (the modulus-squared is conjugation-invariant; `Im` enters only as
+    `(±Im z)²`). -/
+theorem CnormSq_conj (z : Complex) : Req (CnormSq (Cconj z)) (CnormSq z) := by
+  show Req (Radd (Rmul z.re z.re) (Rmul (Rneg z.im) (Rneg z.im)))
+    (Radd (Rmul z.re z.re) (Rmul z.im z.im))
+  refine Radd_congr (Req_refl _) ?_
+  exact Req_trans (Rmul_neg_left z.im (Rneg z.im))
+    (Req_trans (Rneg_congr (Rmul_neg_right z.im z.im)) (Rneg_neg (Rmul z.im z.im)))
+
+/-- **`Cinv` commutes with conjugation** `1/z̄ = conj(1/z)`. From `1/z = z̄/|z|²`: the real part
+    `Re z/|z̄|² ≈ Re z/|z|²` (`Rinv_congr` on `|z̄|² ≈ |z|²`) and the imaginary part flips
+    (`(−Im z)/|z̄|² ≈ −(Im z/|z|²)`). Reusable for the conjugation of any `Cinv`-built object (the
+    ζ-strip denominator `etaDenomInv`, the Spouge bracket `1/(s+k)`). -/
+theorem Cinv_conj (z : Complex) (k : Nat) (hk : Qlt (Qbound k) ((CnormSq z).seq k))
+    (k' : Nat) (hk' : Qlt (Qbound k') ((CnormSq (Cconj z)).seq k')) :
+    Ceq (Cinv (Cconj z) k' hk') (Cconj (Cinv z k hk)) := by
+  refine ⟨?_, ?_⟩
+  · show Req (Rmul z.re (Rinv (CnormSq (Cconj z)) k' hk')) (Rmul z.re (Rinv (CnormSq z) k hk))
+    exact Rmul_congr (Req_refl _) (Rinv_congr hk' hk (CnormSq_conj z))
+  · show Req (Rneg (Rmul (Rneg z.im) (Rinv (CnormSq (Cconj z)) k' hk')))
+      (Rneg (Rneg (Rmul z.im (Rinv (CnormSq z) k hk))))
+    refine Rneg_congr (Req_trans (Rmul_neg_left z.im (Rinv (CnormSq (Cconj z)) k' hk')) ?_)
+    exact Rneg_congr (Rmul_congr (Req_refl _) (Rinv_congr hk' hk (CnormSq_conj z)))
+
 /-- **`genSum` respects pointwise `≈`** (termwise congruence of the finite partial sum). -/
 theorem genSum_congr (T T' : Nat → Real) (h : ∀ n, Req (T n) (T' n)) :
     ∀ N, Req (genSum T N) (genSum T' N)

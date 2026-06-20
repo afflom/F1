@@ -518,6 +518,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.CDigamma_im_conj
 #print axioms Analysis.CDigamma_conj
 #print axioms Analysis.Cexp_conj
+#print axioms Analysis.CnormSq_conj
+#print axioms Analysis.Cinv_conj
 #print axioms Analysis.CpiPow_conj
 #print axioms Analysis.CxiPoly_conj
 #print axioms Analysis.Cxi_conj
