@@ -3030,3 +3030,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.hSeq1_ge_gBound1lo
 #print axioms Analysis.gamma1_lo_decide
 #print axioms Analysis.Rgamma1_ge_neg0762
+#print axioms Analysis.zetaSum2_perstep_ge
+#print axioms Analysis.zetaSum2_tail_ge
+#print axioms Analysis.zeta2_ge_partial_tail
+#print axioms Analysis.zetaSum_two_70_tail_ge
+#print axioms Analysis.zeta2_lower_tight
