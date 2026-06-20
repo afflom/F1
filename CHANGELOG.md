@@ -16,6 +16,13 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **Track 1 — the general complex power** `z^w = exp(w·log z)` (`Analysis/ComplexPowGen.lean`,
+  `Cpow`), the bridge from item 0's complex logarithm to item 1's complex Γ. Where `ncpow` gives only
+  `n^s` for a *natural* base `n ≥ 2` (the ζ Dirichlet terms), `Cpow` raises a *complex* base on the
+  principal sector — needed for Spouge's `(z+a)^{z+1/2}` in `Γ(s/2)` and `π^{−s/2}` in `ξ`. Defined as
+  `Cexp(w·Clog z)`; the exponent law `z^{w₁+w₂} = z^{w₁}·z^{w₂}` (`Cpow_add_exp`) is immediate from
+  `Cexp_add` + distributivity (the base law `(zz')^w = z^w·z'^w` follows from the `Clog` additivity of
+  item 0). Axiom-clean (`{propext, Quot.sound}`).
 - **Track 1 — the lower-sector argument + its additivity** `CargLower` (`Analysis/ComplexArgLower.lean`):
   for `Im z < 0`, `arg(z) = −arg(z̄)` (`CargLower z = −CargUpper(Cconj z)`, `z̄` upper). Genuine
   tangent `tan(CargLower z) = Im z/Re z` (`CargLower_tan`, from `CargUpper_tan` of `z̄` + sin-oddness /
