@@ -16,6 +16,13 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **Track 1 — the complex logarithm past `|arg| < π/4`** (`Analysis/ComplexLogUpper.lean`,
+  `ClogUpper`): `ClogUpper z = ½·log|z|² + i·(π/2 − arctan(Re/Im))` on the upper sector (`Im z > 0`,
+  `|Re/Im| ≤ ρ < 1`, i.e. `|arg| ∈ (π/4, π/2]`) — the extension of the principal `Clog` past its
+  `|arg| < π/4` domain. Real part = the same genuine modulus log `½·log|z|²`; imaginary part = the
+  genuine second-sector argument `CargUpper` (`CargUpper_tan`). Anchored by `Im (ClogUpper i) = π/2`
+  (`ClogUpper_I_im`, i.e. `log i = i·π/2`). Axiom-clean (`{propext, Quot.sound}`). (Cross-sector
+  additivity — the full-plane atan2 — is the following brick.)
 - **Track 1 — ★ the upper-half argument is genuine** `tan(CargUpper z) = Im z/Re z`
   (`Analysis/ComplexArgUpper.lean`, `CargUpper_tan`): `sin(CargUpper z) = (Im/Re)·cos(CargUpper z)`
   for `Im z > 0`, `Re z` apart from `0`, `|Re/Im| ≤ ρ < 1/16` (the steep wedge off the imaginary
