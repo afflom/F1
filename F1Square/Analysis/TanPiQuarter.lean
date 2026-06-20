@@ -249,6 +249,19 @@ theorem Rsin_cos_pi_half_sub_tan (A : Real) {s t : Q} (hsd : 0 < s.den) (htd : 0
   refine Req_trans (Req_symm (Rmul_assoc (ofQ t htd) (ofQ s hsd) (Rcos A))) ?_
   exact Req_trans (Rmul_congr hone (Req_refl (Rcos A))) (Rone_mul_loc (Rcos A))
 
+/-- **★ complementary tangent, REAL tangents**: if `A` has tangent `s` (`sin A = s·cos A`, `s` a real)
+    and `t·s = 1` (real reciprocal), then `π/2 − A` has tangent `t`. The real-tangent analogue of
+    `Rsin_cos_pi_half_sub_tan`, for use with the real-argument value identity `RarctanR_value_eq`
+    (where the tangent is a genuine real ratio `Re/Im`). Same proof: complementary formulas + `t·s = 1`. -/
+theorem Rsin_cos_pi_half_sub_tan_real (A s t : Real)
+    (hval : Req (Rsin A) (Rmul s (Rcos A))) (hts : Req (Rmul t s) one) :
+    Req (Rsin (Rsub Rpi_half A)) (Rmul t (Rcos (Rsub Rpi_half A))) := by
+  refine Req_trans (Rsin_pi_half_sub A) (Req_symm ?_)
+  refine Req_trans (Rmul_congr (Req_refl t) (Rcos_pi_half_sub A)) ?_
+  refine Req_trans (Rmul_congr (Req_refl t) hval) ?_
+  refine Req_trans (Req_symm (Rmul_assoc t s (Rcos A))) ?_
+  exact Req_trans (Rmul_congr hts (Req_refl (Rcos A))) (Rone_mul_loc (Rcos A))
+
 /-- **The complementary tangent-carrying angle**: from `x` (tangent `s`), `π/2 − x.angle` carries the
     reciprocal tangent `t = 1/s` (`Rsin_cos_pi_half_sub_tan`). This makes the reciprocal reduction
     `arctan t = π/2 − arctan(1/t)` a first-class operation: a small-argument leaf (tangent `s = 1/t`,

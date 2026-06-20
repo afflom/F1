@@ -16,6 +16,15 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **Track 1 — ★ the upper-half argument is genuine** `tan(CargUpper z) = Im z/Re z`
+  (`Analysis/ComplexArgUpper.lean`, `CargUpper_tan`): `sin(CargUpper z) = (Im/Re)·cos(CargUpper z)`
+  for `Im z > 0`, `Re z` apart from `0`, `|Re/Im| ≤ ρ < 1/16` (the steep wedge off the imaginary
+  axis). Confirms the second-sector argument `CargUpper z = π/2 − arctan(Re/Im)` is the genuine
+  argument (not just a definition): the reciprocal reduction gives `tan(π/2 − arctan(Re/Im)) =
+  1/(Re/Im) = Im/Re`. Built from the real-argument value identity `RarctanR_value_eq`
+  (`tan(arctan(Re/Im)) = Re/Im`), the real complementary tangent `Rsin_cos_pi_half_sub_tan_real`, and
+  the reciprocal `(Im/Re)·(Re/Im) = 1` (`Rmul_Rinv_self`). The second-sector analogue of the
+  principal-sector `tan(Carg z) = Im/Re`. Axiom-clean (`{propext, Quot.sound}`).
 - **Track 1 — ★★ the real-argument value identity** `sin(arctan t) = t·cos(arctan t)` for a REAL
   argument `t` (`Analysis/RArctanValue.lean`, `RarctanR_value_eq`) — the keystone lifting the
   rational `Rsin_arctan_value_eq` (fixed `t₀`, the heart of `tan(arctan t₀)=t₀`) to a real ratio, as
