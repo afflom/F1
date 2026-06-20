@@ -16,6 +16,13 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **Track 1 — left-sector argument additivity** `CargLeft(zw) = CargLeft z + Carg w`
+  (`Analysis/ComplexArgLeftAdd.lean`): left-half-plane `z` (`Re z < 0`) times principal `w`, the
+  product again left. Reflects the principal `Carg_add` through the `+π` shift via `−(zw) = (−z)·w`
+  (`Cneg_Cmul_left`): both `−z` and `w` are right half-plane, so `arg(−(zw)) = arg(−z) + arg w` and
+  the `+π` regroups to `(arg(−z) + π) + arg w = CargLeft z + Carg w`. With this, the cross-sector
+  additivity `arg(zw) = arg z + arg w` is now proved in all four sectors (principal, upper, lower,
+  left) — argument additivity over the whole punctured plane. Axiom-clean.
 - **Track 1 — the left-half-plane argument (full-plane atan2)** `CargLeft` (`Analysis/ComplexArgLeft.lean`)
   with the `π` values (`Analysis/TanPiQuarter.lean`): `cos π = −1`, `sin π = 0` (`Rcos_pi`/`Rsin_pi`,
   double-angle on `π/2 = Rpi_half`), the π-shift formulas `sin(x+π) = −sin x`, `cos(x+π) = −cos x`
