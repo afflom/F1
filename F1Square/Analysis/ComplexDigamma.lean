@@ -225,4 +225,83 @@ theorem CdigammaTerm_factored (s : Complex) {c : Q} (hcn : 0 < c.num) (hcd : 0 <
   refine Ceq_trans hid ?_
   exact cdig_Cmul_congr (CdigammaArg_sub_succ_eq s n) (Ceq_refl _)
 
+-- ===========================================================================
+-- Per-term bounds. The factored form `Cterm = (s−1)·P` with `P = F·(1/(s+n))`, `F = 1/(n+1)`,
+-- reduces the bound to bounding `P`'s components. The key inverse comparison is `σ_n·(1/N) ≤ 1/σ_n`
+-- (from `σ_n² ≤ N = |s+n|²`), giving `P.re = F·σ_n·(1/N) ≤ F·(1/n) = 1/((n+1)n)` and similarly
+-- `|P.im| = F·|t|·(1/N) ≤ |t|/((n+1)n)` — the `O(1/n²)` decay made rational.
+-- ===========================================================================
+
+/-- **`x·(1/N) ≤ 1/x`** when `0 < x`, `0 < N`, and `x² ≤ N` — the inverse comparison behind the
+    per-term bounds (`σ_n/|s+n|² ≤ 1/σ_n`). No cancellation: from `x² ≤ N`, `x ≈ (1/x)·x² ≤ (1/x)·N`,
+    then multiplying by `1/N ≥ 0` gives `x·(1/N) ≤ ((1/x)·N)·(1/N) ≈ 1/x`. -/
+private theorem Rmul_Rinv_le_Rinv_of_sq_le {x N : Real} {kx : Nat} (hkx : Qlt (Qbound kx) (x.seq kx))
+    {kN : Nat} (hkN : Qlt (Qbound kN) (N.seq kN)) (hsq : Rle (Rmul x x) N) :
+    Rle (Rmul x (Rinv N kN hkN)) (Rinv x kx hkx) := by
+  have hRxnn : Rnonneg (Rinv x kx hkx) := Rnonneg_Rinv x kx hkx
+  have hRNnn : Rnonneg (Rinv N kN hkN) := Rnonneg_Rinv N kN hkN
+  -- (1/x)·(x·x) ≈ x
+  have h3 : Req (Rmul (Rinv x kx hkx) (Rmul x x)) x :=
+    Req_trans (Req_symm (Rmul_assoc (Rinv x kx hkx) x x))
+      (Req_trans (Rmul_congr (Req_trans (Rmul_comm (Rinv x kx hkx) x) (Rmul_Rinv_self hkx))
+          (Req_refl x))
+        (Req_trans (Rmul_comm one x) (Rmul_one x)))
+  -- x ≤ (1/x)·N
+  have hx_le : Rle x (Rmul (Rinv x kx hkx) N) :=
+    Rle_trans (Rle_of_Req (Req_symm h3)) (Rmul_le_Rmul_left hRxnn hsq)
+  -- x·(1/N) ≤ ((1/x)·N)·(1/N) ≈ 1/x
+  have h5 : Req (Rmul (Rmul (Rinv x kx hkx) N) (Rinv N kN hkN)) (Rinv x kx hkx) :=
+    Req_trans (Rmul_assoc (Rinv x kx hkx) N (Rinv N kN hkN))
+      (Req_trans (Rmul_congr (Req_refl _) (Rmul_Rinv_self hkN)) (Rmul_one _))
+  exact Rle_trans (Rmul_le_Rmul_right hRNnn hx_le) (Rle_of_Req h5)
+
+/-- `Re P_n ≈ (1/(n+1))·(σ_n·(1/N))` (the `0·(Im (1/(s+n)))` cross-term vanishes). Here
+    `σ_n = Re s + n`, `N = |s+n|²`. -/
+theorem CdigammaPfac_re_eq (s : Complex) {c : Q} (hcn : 0 < c.num) (hcd : 0 < c.den)
+    (hcs : Rle (ofQ c hcd) s.re) (n : Nat) :
+    Req (CdigammaPfac s hcn hcd hcs n).re
+      (Rmul (ofQ ⟨1, n + 1⟩ (Nat.succ_pos n))
+        (Rmul (Radd s.re (RofNat n))
+          (Rinv (CnormSq (CdigammaArg s n)) (CdigK c) (CdigammaArg_witness hcn hcd hcs n)))) := by
+  have hz : Req (Rmul zero (Rneg (Rmul s.im
+      (Rinv (CnormSq (CdigammaArg s n)) (CdigK c) (CdigammaArg_witness hcn hcd hcs n))))) zero :=
+    Req_trans (Rmul_comm zero _) (Rmul_zero _)
+  exact Req_trans (Rsub_congr (Req_refl _) hz) (Rsub_zero _)
+
+/-- **`Re P_n` two-sided** (`n ≥ 1`): `0 ≤ Re P_n ≤ 1/((n+1)n)`. Upper bound:
+    `Re P_n ≈ F·(σ_n·(1/N)) ≤ F·(1/σ_n) ≤ F·(1/n) = 1/((n+1)n)`, via `Rmul_Rinv_le_Rinv_of_sq_le`
+    (`σ_n² ≤ N`) and the real-line `digamma_Rinv_le` (`1/σ_n ≤ 1/n`). -/
+theorem CdigammaPfac_re_bound (s : Complex) {c : Q} (hcn : 0 < c.num) (hcd : 0 < c.den)
+    (hcs : Rle (ofQ c hcd) s.re) {n : Nat} (hn : 1 ≤ n) :
+    Rnonneg (CdigammaPfac s hcn hcd hcs n).re
+    ∧ Rle (CdigammaPfac s hcn hcd hcs n).re (ofQ ⟨1, (n + 1) * n⟩ (digamma_succ_mul_pos hn)) := by
+  have heq := CdigammaPfac_re_eq s hcn hcd hcs n
+  have hFnn : Rnonneg (ofQ (⟨1, n + 1⟩ : Q) (Nat.succ_pos n)) :=
+    Rnonneg_ofQ (Nat.succ_pos n) (show (0 : Int) ≤ 1 by decide)
+  have hσnn : Rnonneg (Radd s.re (RofNat n)) :=
+    Rnonneg_of_ofQ_le hcn hcd (ofQ_le_digammaArg hcd hcs n)
+  have hRinvNnn : Rnonneg (Rinv (CnormSq (CdigammaArg s n)) (CdigK c)
+      (CdigammaArg_witness hcn hcd hcs n)) := Rnonneg_Rinv _ _ _
+  -- σ_n² ≤ N = σ_n² + (Im s)²
+  have hsq : Rle (Rmul (Radd s.re (RofNat n)) (Radd s.re (RofNat n))) (CnormSq (CdigammaArg s n)) :=
+    Rle_self_Radd_right (Rnonneg_Rmul_self s.im)
+  -- σ_n·(1/N) ≤ 1/σ_n
+  have hstep1 : Rle (Rmul (Radd s.re (RofNat n)) (Rinv (CnormSq (CdigammaArg s n)) (CdigK c)
+        (CdigammaArg_witness hcn hcd hcs n)))
+      (Rinv (Radd s.re (RofNat n)) (digammaArgK c) (digammaArg_witness hcn hcd hcs n)) :=
+    Rmul_Rinv_le_Rinv_of_sq_le (digammaArg_witness hcn hcd hcs n)
+      (CdigammaArg_witness hcn hcd hcs n) hsq
+  -- 1/σ_n ≤ 1/n
+  have hstep2 : Rle (Rinv (Radd s.re (RofNat n)) (digammaArgK c) (digammaArg_witness hcn hcd hcs n))
+      (ofQ (⟨1, n⟩ : Q) (show 0 < n by omega)) := digamma_Rinv_le s.re hcn hcd hcs hn
+  refine ⟨?_, ?_⟩
+  · exact Rnonneg_congr (Req_symm heq) (Rnonneg_Rmul hFnn (Rnonneg_Rmul hσnn hRinvNnn))
+  · -- F·(σ_n·(1/N)) ≤ F·(1/n) ≈ 1/((n+1)n)
+    refine Rle_trans (Rle_of_Req heq) ?_
+    refine Rle_trans (Rmul_le_Rmul_left hFnn (Rle_trans hstep1 hstep2)) ?_
+    refine Rle_of_Req (Req_trans (Rmul_ofQ_ofQ (Nat.succ_pos n) (show 0 < n by omega)) ?_)
+    exact ofQ_congr (Qmul_den_pos (Nat.succ_pos n) (show 0 < n by omega)) (digamma_succ_mul_pos hn)
+      (by show Qeq (mul (⟨1, n + 1⟩ : Q) (⟨1, n⟩ : Q)) (⟨1, (n + 1) * n⟩ : Q)
+          simp only [Qeq, mul]; push_cast; ring_uor)
+
 end UOR.Bridge.F1Square.Analysis
