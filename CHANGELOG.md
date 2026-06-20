@@ -62,8 +62,23 @@ audit-visible hypothesis, never an axiom).
   `RlogPos` across `≈`). Assembled in `RlogPos_cnormSq_mul` — exactly the `hmod` proposition,
   `log|zw|² = log|z|²+log|w|²`, from elementary positivity/bound data via `cnormSq_mul`. The capstone
   `Clog_add_bounded` then states `Clog(zw) = Clog z + Clog w` with **no** `RlogPos`-multiplicativity
-  hypothesis. The fully general modulus (relaxing the `ρ²≤1/2` continuity lemmas to `ρ<1`) remains the
-  open substrate frontier. Crux fields stay `none`.
+  hypothesis. Crux fields stay `none`.
+- **Track 1 — ★★ symmetric-band `Clog` additivity (signed-τ)** (`Analysis/RlogMulSigned.lean`):
+  `Clog_add_signed` extends the modulus-seam discharge from `[1,B]` to the **symmetric band**
+  `[1/B, B]` — squared moduli on *either* side of 1 (the realistic Hadamard regime, where the
+  `artanh` argument `tmap(x.seq)` turns negative). The signed substrate, built bottom-up via the
+  **oddness route** that sidesteps re-deriving the `t≥0` corner bounds: `exp(2·artanh τ)=(1+τ)/(1−τ)`
+  for `τ<0` follows from the nonneg case by `artanh(−σ)=−artanh σ` (`Rartanh_neg`) + exp-of-negation
+  (`Rexp_TwoArtanh_of_neg`), unified sign-agnostically (`Rexp_TwoArtanh_signed_rho`). Then the signed
+  addition law `TwoArtanh_add_wvalR_rho` (three signed exp-identities through `Req_add_of_exp_values_gen`
+  + the signed multiplicativity `wvalR_hg`), its `×2`-strip `RartanhConst_add_wvalR_rho`, the signed
+  real lift `Rartanh_add_real_via_signed` (the arg-variation/`wvalR` den-positivity legs were already
+  sign-agnostic), the signed real log-multiplicativity `Rlog_mul_signed` (`tmap_abs_lt_one` two-sided
+  + `wvalR_tmap_seq_bound_signed`), `RlogPos_mul_signed`, and the assembly
+  `RlogPos_cnormSq_mul_signed`/`Clog_add_signed` (witness from a lower bound, `pos_witness_of_mulM_ge`,
+  since the squared-modulus product may dip below 1). The fully general positive-real modulus
+  (relaxing the `ρ²≤1/2` continuity lemmas to `ρ<1` for large moduli) remains the open substrate
+  frontier. Crux fields stay `none`.
 - **Track 1 — ★ value-level `sin(arctan t) = t·cos(arctan t)`** (`Analysis/ArctanODE.lean`,
   `Rsin_arctan_value_eq`): `Req (Rsin (Rarctan t₀)) (Rmul (ofQ t₀) (Rcos (Rarctan t₀)))` for
   `|t₀| ≤ ρ < 1/16`. This **completes the formal-PS → value (FTC) bridge** that lifts the formal
