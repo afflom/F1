@@ -592,4 +592,37 @@ theorem Rlog_mul_signed (x y : Real) (B : Q) (hBd : 0 < B.den) (hBge : Qle (⟨1
   exact Req_trans
     (Radd_congr (Rmul_congr (Req_refl _) hradx) (Rmul_congr (Req_refl _) hrady)) hvia
 
+set_option maxHeartbeats 1600000 in
+/-- **★ `RlogPos` multiplicativity, signed** (symmetric band): `log(xy) = log x + log y` for positive
+    reals `x, y` presented in `[1/B, B]` — the signed analog of `RlogPos_mul`, bridging each `RlogPos`
+    to its presented-radius `Rlog` (`RlogPos_eq_Rlog`, already sign-agnostic) and combining via the
+    signed `Rlog_mul_signed`. Drops the `≥1` hypotheses. -/
+theorem RlogPos_mul_signed (x y : Real) (kx : Nat) (hx : Qlt (Qbound kx) (x.seq kx))
+    (ky : Nat) (hy : Qlt (Qbound ky) (y.seq ky))
+    (kxy : Nat) (hxy : Qlt (Qbound kxy) ((Rmul x y).seq kxy))
+    (B : Q) (hBd : 0 < B.den) (hBge : Qle (⟨1, 1⟩ : Q) B)
+    (hxposB : ∀ n, 0 < (x.seq n).num) (hxhiB : ∀ n, Qle (x.seq n) B)
+    (hxloB : ∀ n, Qle (⟨1, 1⟩ : Q) (mul (x.seq n) B))
+    (hyposB : ∀ n, 0 < (y.seq n).num) (hyhiB : ∀ n, Qle (y.seq n) B)
+    (hyloB : ∀ n, Qle (⟨1, 1⟩ : Q) (mul (y.seq n) B))
+    (hB2d : 0 < (mul B B).den) (hB2ge : Qle (⟨1, 1⟩ : Q) (mul B B))
+    (hxypos : ∀ n, 0 < ((Rmul x y).seq n).num) (hxyhi : ∀ n, Qle ((Rmul x y).seq n) (mul B B))
+    (hxylo : ∀ n, Qle (⟨1, 1⟩ : Q) (mul ((Rmul x y).seq n) (mul B B)))
+    (hρ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ⟨B.num - (B.den : Int), B.num.toNat + B.den⟩
+              ⟨B.num - (B.den : Int), B.num.toNat + B.den⟩)))
+    (hρσ : Qle (⟨B.num - (B.den : Int), B.num.toNat + B.den⟩ : Q)
+              (⟨(mul B B).num - ((mul B B).den : Int), (mul B B).num.toNat + (mul B B).den⟩ : Q))
+    (hσhalf : Qle (mul ⟨(mul B B).num - ((mul B B).den : Int), (mul B B).num.toNat + (mul B B).den⟩
+              ⟨(mul B B).num - ((mul B B).den : Int), (mul B B).num.toNat + (mul B B).den⟩) ⟨1, 2⟩)
+    (hσ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ⟨(mul B B).num - ((mul B B).den : Int),
+              (mul B B).num.toNat + (mul B B).den⟩ ⟨(mul B B).num - ((mul B B).den : Int),
+              (mul B B).num.toNat + (mul B B).den⟩))) :
+    Req (RlogPos (Rmul x y) kxy hxy) (Radd (RlogPos x kx hx) (RlogPos y ky hy)) := by
+  have bx := RlogPos_eq_Rlog x kx hx B hBd hBge hxposB hxhiB hxloB hρ2
+  have by' := RlogPos_eq_Rlog y ky hy B hBd hBge hyposB hyhiB hyloB hρ2
+  have bxy := RlogPos_eq_Rlog (Rmul x y) kxy hxy (mul B B) hB2d hB2ge hxypos hxyhi hxylo hσ2
+  have hmul := Rlog_mul_signed x y B hBd hBge hxposB hxhiB hxloB hyposB hyhiB hyloB
+    hB2d hB2ge hxypos hxyhi hxylo hρ2 hρσ hσhalf
+  exact Req_trans bxy (Req_trans (Req_symm hmul) (Radd_congr (Req_symm bx) (Req_symm by')))
+
 end UOR.Bridge.F1Square.Analysis
