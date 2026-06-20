@@ -167,6 +167,7 @@ import F1Square.Analysis.RMulNF
 import F1Square.Analysis.LiGrowth
 import F1Square.Analysis.ClogAddBounded
 import F1Square.Analysis.RlogMulSigned
+import F1Square.Analysis.RadiusGen
 import F1Square.Analysis.RHWitness
 import F1Square.Analysis.CayleyMap
 import F1Square.Analysis.LiLinearize
