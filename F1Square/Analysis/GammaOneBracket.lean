@@ -296,4 +296,99 @@ theorem Rgamma1_ge_hSeq1 {N : Nat} (hN : 1 ≤ N) (hN256 : N ≤ 256) :
     htend) ?_
   exact Rle_of_Req (Req_trans (Radd_comm zero _) (Radd_zero _))
 
+-- ===========================================================================
+-- (A4) **THE BRACKET: `γ₁ ≥ −0.0754`** — the new tight lower bound. `γ₁ ≥ hSeq1(200) − 1/400`, with
+-- `hSeq1(200)` bounded below by the single rational `gBound1lo 4 10⁸ 200` (the lower `lnSum` bound minus
+-- the upper `½log²` and `½log/(N+1)` bounds), then the residual `1/400` and one `decide`.
+-- ===========================================================================
+
+/-- `lnSumLo T D k` is a rational *lower* bound for `lnSum k = Σ_{i=1}^k (log i)/i`, at fixed
+    denominator `D` (each new term `(log(k+1))/(k+1) ≥ logLowBound k · 1/(k+1)`, round down). -/
+def lnSumLo (T D : Nat) : Nat → Q
+  | 0 => ⟨0, D⟩
+  | (k + 1) => qRoundDown (add (lnSumLo T D k) (mul (logLowBound T D k) ⟨1, k + 1⟩)) D
+
+theorem lnSumLo_den_pos (T D : Nat) (hD : 0 < D) : ∀ N, 0 < (lnSumLo T D N).den
+  | 0 => hD
+  | (_ + 1) => hD
+
+/-- **`ofQ(lnSumLo T D k) ≤ lnSum k`** — the partial-sum `Σ (log i)/i` bounded BELOW term-by-term via
+    `logN_ge_logLowBound` (depth `T ≤ 21`), accumulated at fixed denominator `D` (round down). -/
+theorem lnSum_ge_lnSumLo (T D : Nat) (hD : 0 < D) (hT : T ≤ 21) :
+    ∀ k, Rle (ofQ (lnSumLo T D k) (lnSumLo_den_pos T D hD k)) (lnSum k) := by
+  intro k
+  induction k with
+  | zero =>
+    have h0 : Req (ofQ (lnSumLo T D 0) (lnSumLo_den_pos T D hD 0)) zero :=
+      Req_of_seq_Qeq (fun n => by show Qeq (⟨0, D⟩ : Q) ⟨0, 1⟩; simp only [Qeq]; push_cast; ring_uor)
+    exact Rle_of_Req h0
+  | succ k ih =>
+    have hLLd := logLowBound_den_pos T D hD k
+    have hmuld : 0 < (mul (logLowBound T D k) (⟨1, k + 1⟩ : Q)).den :=
+      Qmul_den_pos hLLd (Nat.succ_pos k)
+    have hadd := add_den_pos (lnSumLo_den_pos T D hD k) hmuld
+    have hov : Rle (ofQ (mul (logLowBound T D k) ⟨1, k + 1⟩) hmuld) (lnOver (k + 1) (Nat.succ_pos k)) := by
+      refine Rle_trans (Rle_of_Req (Req_symm (Rmul_ofQ_ofQ hLLd (Nat.succ_pos k)))) ?_
+      exact Rmul_le_Rmul_right (Rnonneg_ofQ (Nat.succ_pos k) (by show (0 : Int) ≤ 1; decide))
+        (logN_ge_logLowBound T D hD hT k)
+    refine Rle_trans (Rle_ofQ_ofQ (lnSumLo_den_pos T D hD (k + 1)) hadd
+      (qRoundDown_le (add (lnSumLo T D k) (mul (logLowBound T D k) ⟨1, k + 1⟩)) hadd D)) ?_
+    refine Rle_trans (Rle_of_Req (Radd_ofQ_ofQ (lnSumLo_den_pos T D hD k) hmuld)) ?_
+    exact Radd_le_add ih hov
+
+/-- The **rational lower bound on `hSeq1 N`** (depth `T`, denominator `D`): the lower `lnSum` bound
+    minus the upper `½log²` and `½log/(N+1)` bounds. -/
+def gBound1lo (T D N : Nat) : Q :=
+  Qsub (Qsub (lnSumLo T D (N + 1)) (mul (⟨1, 2⟩ : Q) (mul (logBound T D N) (logBound T D N))))
+    (mul (⟨1, 2⟩ : Q) (mul (logBound T D N) (⟨1, N + 1⟩ : Q)))
+
+theorem gBound1lo_den_pos (T D N : Nat) (hD : 0 < D) : 0 < (gBound1lo T D N).den :=
+  Qsub_den_pos (Qsub_den_pos (lnSumLo_den_pos T D hD (N + 1))
+      (Qmul_den_pos (by decide) (Qmul_den_pos (logBound_den_pos T D hD N) (logBound_den_pos T D hD N))))
+    (Qmul_den_pos (by decide) (Qmul_den_pos (logBound_den_pos T D hD N) (Nat.succ_pos N)))
+
+/-- **`ofQ(gBound1lo T D N) ≤ hSeq1 N`** (`T ≤ 21`) — `hSeq1 N = lnSum(N+1) − ½log²(N+1) − ½log(N+1)/(N+1)`
+    bounded below by the lower `lnSum` bound minus the upper `½log²`/`½log/(N+1)` bounds, all at `D`. -/
+theorem hSeq1_ge_gBound1lo (T D N : Nat) (hD : 0 < D) (hT : T ≤ 21) :
+    Rle (ofQ (gBound1lo T D N) (gBound1lo_den_pos T D N hD)) (hSeq1 N) := by
+  have LBd := logBound_den_pos T D hD N
+  have hlogsq : Rle (Rhalf (Rmul (logN (N + 1) (Nat.succ_pos N)) (logN (N + 1) (Nat.succ_pos N))))
+      (ofQ (mul (⟨1, 2⟩ : Q) (mul (logBound T D N) (logBound T D N)))
+        (Qmul_den_pos (by decide) (Qmul_den_pos LBd LBd))) :=
+    Rle_trans (Rhalf_le_Rhalf (logNsq_le T D N hD))
+      (Rle_of_Req (Req_trans (Rhalf_congr (Rmul_ofQ_ofQ LBd LBd))
+        (Rhalf_ofQ _ (Qmul_den_pos LBd LBd))))
+  have hlnover : Rle (Rhalf (lnOver (N + 1) (Nat.succ_pos N)))
+      (ofQ (mul (⟨1, 2⟩ : Q) (mul (logBound T D N) (⟨1, N + 1⟩ : Q)))
+        (Qmul_den_pos (by decide) (Qmul_den_pos LBd (Nat.succ_pos N)))) := by
+    refine Rle_trans (Rhalf_le_Rhalf ?_) (Rle_of_Req (Rhalf_ofQ _ (Qmul_den_pos LBd (Nat.succ_pos N))))
+    refine Rle_trans (Rmul_le_Rmul_right (Rnonneg_ofQ (Nat.succ_pos N) (by show (0 : Int) ≤ 1; decide))
+      (logN_le_logBound T D hD N)) ?_
+    exact Rle_of_Req (Rmul_ofQ_ofQ LBd (Nat.succ_pos N))
+  have hsum := lnSum_ge_lnSumLo T D hD hT (N + 1)
+  exact Rle_trans (Rle_of_Req (Req_symm (Req_of_seq_Qeq (fun n => Qeq_refl _))))
+    (Rsub_le_sub (Rsub_le_sub hsum hlogsq) hlnover)
+
+set_option maxRecDepth 40000 in
+/-- The numeric heart: `−762/10000 ≤ gBound1lo 4 10⁶ 200 − 1/400` — one big-integer kernel `decide`
+    (no `native_decide`).  (≈ `−0.07613`, vs the true `γ₁ ≈ −0.07282`; denominator `D = 10⁶` to match
+    the `Rgamma1_le_neg055` upper-bound setup, keeping the downstream defeq shallow.) -/
+theorem gamma1_lo_decide :
+    Qle (⟨-762, 10000⟩ : Q) (add (gBound1lo 4 1000000 200) (neg (⟨1, 2 * 200⟩ : Q))) := by decide
+
+/-- **`γ₁ ≥ −0.0762`** (`= −762/10000`) — the certified TIGHT lower bracket on the first Stieltjes
+    constant (true `≈ −0.07282`), via the Euler–Maclaurin accelerated sequence. `γ₁ ≥ hSeq1(200) − 1/400`
+    (`Rgamma1_ge_hSeq1`), `hSeq1(200) ≥ ofQ(gBound1lo 4 10⁶ 200)` (`hSeq1_ge_gBound1lo`), and
+    `gBound1lo 4 10⁶ 200 − 1/400 ≥ −762/10000` (`gamma1_lo_decide`). With `Rgamma1_le_neg055`
+    (`γ₁ ≤ −0.055`) this brackets `γ₁` two-sided — the dominant `Pos Rlambda3` (`λ₃`) input. -/
+theorem Rgamma1_ge_neg0762 : Rle (ofQ (⟨-762, 10000⟩ : Q) (by decide)) Rgamma1 := by
+  refine Rle_trans ?_ (Rgamma1_ge_hSeq1 (show 1 ≤ 200 by decide) (show 200 ≤ 256 by decide))
+  refine Rle_trans ?_ (Rsub_le_sub (hSeq1_ge_gBound1lo 4 1000000 200 (by decide) (by decide))
+    (Rle_of_Req (Req_refl _)))
+  have hgbd : 0 < (gBound1lo 4 1000000 200).den := gBound1lo_den_pos 4 1000000 200 (by decide)
+  have h400 : 0 < (⟨1, 2 * 200⟩ : Q).den := Nat.mul_pos (by decide) (by decide)
+  have h400n : 0 < (neg (⟨1, 2 * 200⟩ : Q)).den := h400
+  refine Rle_trans ?_ (Rle_of_Req (Req_symm (Rsub_ofQ_ofQ hgbd h400)))
+  exact Rle_ofQ_ofQ (by decide) (add_den_pos hgbd h400n) gamma1_lo_decide
+
 end UOR.Bridge.F1Square.Analysis

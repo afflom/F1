@@ -3024,3 +3024,9 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.hSeq1_lower_const
 #print axioms Analysis.hSeq1_le_gSeq
 #print axioms Analysis.Rgamma1_ge_hSeq1
+#print axioms Analysis.lnSumLo_den_pos
+#print axioms Analysis.lnSum_ge_lnSumLo
+#print axioms Analysis.gBound1lo_den_pos
+#print axioms Analysis.hSeq1_ge_gBound1lo
+#print axioms Analysis.gamma1_lo_decide
+#print axioms Analysis.Rgamma1_ge_neg0762
