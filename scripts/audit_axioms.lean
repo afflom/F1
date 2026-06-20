@@ -3008,3 +3008,13 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.ClogUpper_re
 #print axioms Analysis.ClogUpper_im
 #print axioms Analysis.ClogUpper_I_im
+#print axioms Analysis.addsub_linear_b
+#print axioms Analysis.sq_diff_identity_b
+#print axioms Analysis.add_sub_add_cancel_left
+#print axioms Analysis.hSeq1_step_eq
+#print axioms Analysis.step_regroup
+#print axioms Analysis.WStep_ge_negDsq_gen
+#print axioms Analysis.two_delta_le
+#print axioms Analysis.WStep_ge_negDsq
+#print axioms Analysis.WStep_ge
+#print axioms Analysis.sStep1_ge
