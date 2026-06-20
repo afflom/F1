@@ -16,6 +16,17 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **Track 1 — ★★ cross-sector argument additivity** `arg(zw) = arg z + arg w` across the
+  principal/upper boundary (`Analysis/ComplexArgUpperAdd.lean`, `CargUpper_add`):
+  `CargUpper(zw) = Carg z + CargUpper w` for principal `z` (`Re z > 0`) × upper `w` (`Im w > 0`),
+  product upper, all ratios `< 1/16`. The clean reduction via the coordinate swap `swapC z =
+  ⟨Im z, Re z⟩`: `CargUpper z = π/2 − Carg(swapC z)` and the exact identity `swapC(zw) = swapC w · z̄`
+  (`swapC_Cmul_Cconj`, componentwise), so `CargUpper(zw) = π/2 − Carg(swapC w · z̄) =
+  π/2 − Carg(swapC w) − Carg(z̄) = CargUpper w + Carg z` — reusing the principal `Carg_add` and the
+  conjugate symmetry `Carg_conj`. Reusable congruence gaps filled: `Rdiv_congr` (division respects
+  `≈`, via denominator cancellation `Rdiv_mul_cancel`/`Rmul_right_cancel` — no `Rinv`-congruence
+  needed) and `Carg_congr` (the argument respects `≈`). Axiom-clean (`{propext, Quot.sound}`). The
+  argument is now additive across `|arg| < π/4`, not only within it.
 - **Track 1 — ★ argument conjugate symmetry** `arg(z̄) = −arg z` (`Analysis/ComplexArgUpper.lean`,
   `Carg_conj`): `Carg(Cconj z) = −Carg z`. Since `Cconj z = ⟨Re z, −Im z⟩` has ratio `−(Im z/Re z)` and
   `arctan` is odd (`RarctanR_neg`, via `RarctanR_congr` on the ratio `Rmul_neg_left`). A building block
