@@ -96,7 +96,10 @@ audit-visible hypothesis, never an axiom).
   `≈` regular sequences have `≈` diagonal limits — from `Req` at index `4n+3`, since `2/(4n+4) ≤
   2/(n+1)`) and `Rlim_neg` (`lim(−X) ≈ −lim X`, seq-equal hence definitional). The limit-level
   congruences any property/convergence argument over `Rlim`-built objects needs — e.g. the complex
-  digamma's symmetries and the eventual `CSpougeGamma → Γ` convergence. Axiom-clean.
+  digamma's symmetries and the eventual `CSpougeGamma → Γ` convergence. Axiom-clean. Also
+  `Rinv_congr` (`1/x ≈ 1/y` from `x ≈ y`, across different positivity witnesses — via the cancellation
+  `1/x ≈ (1/x)(y/y) ≈ (1/x)(x/y) ≈ 1/y`, no witness-dependent reindexing), filling a previously-missing
+  reciprocal congruence.
 - **Track 1 — left-sector argument additivity** `CargLeft(zw) = CargLeft z + Carg w`
   (`Analysis/ComplexArgLeftAdd.lean`): left-half-plane `z` (`Re z < 0`) times principal `w`, the
   product again left. Reflects the principal `Carg_add` through the `+π` shift via `−(zw) = (−z)·w`

@@ -13,8 +13,27 @@ Pure Lean 4 core, no Mathlib, no `sorry`/`native_decide`, choice-free; audited b
 `scripts/honesty_audit.sh`.
 -/
 import F1Square.Analysis.Complete
+import F1Square.Analysis.RealDiv
 
 namespace UOR.Bridge.F1Square.Analysis
+
+/-- **`Rinv` respects `≈`** (even across different positivity witnesses): `x ≈ y ⟹ 1/x ≈ 1/y`. No
+    witness-dependent reindexing is needed — the cancellation `1/x ≈ (1/x)·(y·(1/y)) ≈ (1/x)·(x·(1/y))
+    ≈ ((1/x)·x)·(1/y) ≈ 1·(1/y) ≈ 1/y` routes through `Rmul_Rinv_self` on both sides. -/
+theorem Rinv_congr {x y : Real} {kx ky : Nat} (hkx : Qlt (Qbound kx) (x.seq kx))
+    (hky : Qlt (Qbound ky) (y.seq ky)) (h : Req x y) :
+    Req (Rinv x kx hkx) (Rinv y ky hky) := by
+  have h1 : Req (Rinv x kx hkx) (Rmul (Rinv x kx hkx) (Rmul y (Rinv y ky hky))) :=
+    Req_trans (Req_symm (Rmul_one (Rinv x kx hkx)))
+      (Rmul_congr (Req_refl _) (Req_symm (Rmul_Rinv_self hky)))
+  have h2 : Req (Rmul (Rinv x kx hkx) (Rmul y (Rinv y ky hky)))
+      (Rmul (Rinv x kx hkx) (Rmul x (Rinv y ky hky))) :=
+    Rmul_congr (Req_refl _) (Rmul_congr (Req_symm h) (Req_refl _))
+  have h3 : Req (Rmul (Rinv x kx hkx) (Rmul x (Rinv y ky hky))) (Rinv y ky hky) :=
+    Req_trans (Req_symm (Rmul_assoc _ _ _))
+      (Req_trans (Rmul_congr (Req_trans (Rmul_comm _ _) (Rmul_Rinv_self hkx)) (Req_refl _))
+        (Req_trans (Rmul_comm one _) (Rmul_one _)))
+  exact Req_trans h1 (Req_trans h2 h3)
 
 /-- **`Rlim` respects pointwise `≈`**: if `X j ≈ Y j` for every `j`, then `lim X ≈ lim Y`. At index `n`
     both limits read their diagonal entry at `4n+3`; the hypothesis at `(4n+3, 4n+3)` bounds the gap by
