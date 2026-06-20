@@ -56,8 +56,15 @@ audit-visible hypothesis, never an axiom).
     `ψ(s) = −γ + Σ_{n≥0}[1/(n+1) − 1/(s+n)]`** as `⟨Rlim Re-sums, Rlim Im-sums⟩` (the `Ceta`/`Czeta`
     componentwise-limit pattern), with `−γ` on the real part. This is **item 1's barrier-free
     archimedean piece complete**: the real-line `Digamma` lifted to complex `s` on the strip, built
-    from `Cinv` alone. (Spouge `Γ(s/2)` itself remains gated on the `1/16` value-identity radius for
-    `Cpow` on diagonal arguments — the recorded open frontier.)
+    from `Cinv` alone.
+  - **Increment 4 — the complex Spouge bracket** `c₀ + Σ_{k=1}^N cₖ/(s+k)` (`CspougeBracket`), the
+    `Cinv`-sum core of the complex Spouge `Γ` on the strip. Mirrors the real `spougeBracketAux` with
+    `Rinv → Cinv` and the real coefficients scaled in via `ofReal`, reusing the `CdigammaArg`
+    reciprocal-witness machinery — barrier-free (no `Cpow`/`Clog`). Non-vacuity `cspougeBracketWitness`
+    at `s=1, a=4, N=2`. Note: the complex `Cpow`/`Clog` *definition* needs only the argument ratio
+    `< 1` (not the `1/16` value identity, which is only for additivity *properties*), so the base power
+    `(s+a)^{s+½}` and the full `Γ` assembly are buildable barrier-free by choosing the Spouge shift `a`
+    large enough to keep the base's argument small — the remaining item-1 pieces.
 - **Track 1 — left-sector argument additivity** `CargLeft(zw) = CargLeft z + Carg w`
   (`Analysis/ComplexArgLeftAdd.lean`): left-half-plane `z` (`Re z < 0`) times principal `w`, the
   product again left. Reflects the principal `Carg_add` through the `+π` shift via `−(zw) = (−z)·w`

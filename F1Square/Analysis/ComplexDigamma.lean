@@ -730,4 +730,45 @@ noncomputable def cDigammaWitness : Complex := by
     (Rle_of_Req hnz0)
     (Rle_of_Req (Req_symm hz0))
 
+-- ===========================================================================
+-- The complex Spouge Γ bracket `c₀ + Σ_{k=1}^N cₖ/(s+k)` — the `Cinv`-sum core of the complex Γ on
+-- the strip (item 1). Barrier-free (no `Cpow`/`Clog`), mirroring the real `spougeBracketAux` with
+-- `Rinv → Cinv` and the real coefficients `cₖ` scaled in via `ofReal`. Reuses the `CdigammaArg`
+-- reciprocal-witness machinery for `1/(s+k)`.
+-- ===========================================================================
+
+/-- **The complex Spouge bracket (downward recursion)** `c₀ + Σ_{k=1}^{m} cₖ/(s+k)`, accumulated over
+    `k = m, …, 1`. Complex analogue of `spougeBracketAux`: `Rinv (digammaArg z k) → Cinv (CdigammaArg s
+    k)`, the real `cₖ = spougeCoeff a hadp k` scaled in via `ofReal`. `c₀ = √(2π)` (real, `ofReal`). -/
+def CspougeBracketAux (s : Complex) {c : Q} (hcn : 0 < c.num) (hcd : 0 < c.den)
+    (hcs : Rle (ofQ c hcd) s.re) (a : Q) (hadp : 0 < a.den) :
+    (m : Nat) → (ha : ∀ (k : Nat), 1 ≤ k → k ≤ m → Qlt (⟨1, 1⟩ : Q) (Qsub a ⟨(k : Int), 1⟩)) → Complex
+  | 0, _ => ofReal spougeSqrt2pi
+  | (k + 1), ha =>
+      Cadd (CspougeBracketAux s hcn hcd hcs a hadp k
+              (fun j hj1 hjk => ha j hj1 (Nat.le_succ_of_le hjk)))
+        (Cmul (ofReal (spougeCoeff a hadp (k + 1) (ha (k + 1) (Nat.le_add_left 1 k) (Nat.le_refl _))))
+          (Cinv (CdigammaArg s (k + 1)) (CdigK c) (CdigammaArg_witness hcn hcd hcs (k + 1))))
+
+/-- **The complex Spouge bracket** `c₀ + Σ_{k=1}^{N} cₖ/(s+k)` (complex `s`, `Re s ≥ c > 0`), a genuine
+    constructive complex number built from `Cinv` only — no `Cpow`/`Clog`, hence no `1/16` barrier. The
+    `Cinv`-sum factor of the complex Spouge `Γ`; the base power `(s+a)^{s+½}` (via `Cpow`) and the
+    assembly `Γ(s) = (s+a)^{s+½}·e^{−(s+a)}·bracket` are the remaining item-1 pieces. -/
+def CspougeBracket (s : Complex) {c : Q} (hcn : 0 < c.num) (hcd : 0 < c.den)
+    (hcs : Rle (ofQ c hcd) s.re) (a : Q) (hadp : 0 < a.den) (N : Nat)
+    (ha : ∀ (k : Nat), 1 ≤ k → k ≤ N → Qlt (⟨1, 1⟩ : Q) (Qsub a ⟨(k : Int), 1⟩)) : Complex :=
+  CspougeBracketAux s hcn hcd hcs a hadp N ha
+
+/-- **The complex Spouge bracket is non-vacuous** (instantiation at `s = 1`, `c = 1`, `a = 4`, `N = 2`),
+    mirroring `spougeGammaWitness`: `a − k > 1` for `k = 1, 2`. -/
+noncomputable def cspougeBracketWitness : Complex :=
+  CspougeBracket Cone (c := ⟨1, 1⟩) (by decide) (by decide)
+    (Rle_of_Req (Req_of_seq_Qeq (fun _ => Qeq_refl _)))
+    (a := ⟨4, 1⟩) (by decide) 2
+    (fun k hk1 hk2 => by
+      have hk : k = 1 ∨ k = 2 := by omega
+      show Qlt (⟨1, 1⟩ : Q) (Qsub (⟨4, 1⟩ : Q) (⟨(k : Int), 1⟩ : Q))
+      rcases hk with h | h <;> subst h <;>
+        (show Qlt (⟨1, 1⟩ : Q) (Qsub (⟨4, 1⟩ : Q) (⟨_, 1⟩ : Q)); simp only [Qlt, Qsub, add, neg]; decide))
+
 end UOR.Bridge.F1Square.Analysis
