@@ -16,6 +16,12 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **Track 1 — ★★ cross-sector complex-logarithm additivity** `Clog(zw) = Clog z + Clog w` past
+  `|arg| < π/4` (`Analysis/ComplexLogUpperAdd.lean`, `ClogUpper_add`): `ClogUpper(zw) = Clog z +
+  ClogUpper w` for principal `z` × upper `w` (product upper). Real half from the modulus hypothesis
+  `hmod` + `Rmul_distrib` (as in `Clog_add`); imaginary half the *fully discharged* cross-sector
+  argument additivity `CargUpper_add`. The complex logarithm is now additive across the
+  principal/upper boundary — the second-sector capstone of substrate item 0. Axiom-clean.
 - **Track 1 — ★★ cross-sector argument additivity** `arg(zw) = arg z + arg w` across the
   principal/upper boundary (`Analysis/ComplexArgUpperAdd.lean`, `CargUpper_add`):
   `CargUpper(zw) = Carg z + CargUpper w` for principal `z` (`Re z > 0`) × upper `w` (`Im w > 0`),
