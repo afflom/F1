@@ -170,6 +170,7 @@ import F1Square.Analysis.RlogMulSigned
 import F1Square.Analysis.RadiusGen
 import F1Square.Analysis.TanPiQuarter
 import F1Square.Analysis.ComplexArgUpper
+import F1Square.Analysis.RArctanValue
 import F1Square.Analysis.RHWitness
 import F1Square.Analysis.CayleyMap
 import F1Square.Analysis.LiLinearize

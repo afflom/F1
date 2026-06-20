@@ -16,6 +16,22 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **Track 1 — ★★ the real-argument value identity** `sin(arctan t) = t·cos(arctan t)` for a REAL
+  argument `t` (`Analysis/RArctanValue.lean`, `RarctanR_value_eq`) — the keystone lifting the
+  rational `Rsin_arctan_value_eq` (fixed `t₀`, the heart of `tan(arctan t₀)=t₀`) to a real ratio, as
+  `Carg z = arctan(Im z/Re z)` and its reciprocal extension require. The lift is NOT naive
+  approximation (which blows up the Lipschitz constant via the approximants' denominators): it clones
+  the nested-diagonal bridge directly for `RarctanR t`, sampling the argument at one deep index
+  `q = t.seq(Rartanh_R ρ D)` per diagonal step, where the `t₀`-parametric composition lemmas
+  (`cos_nested_general`/`sin_nested_general`, `|t₀| ≤ ρ`) apply — so all bounds stay `ρ.den`-based.
+  `Rcos_RarctanR_nested` / `Rsin_RarctanR_nested` are the cos/sin real-argument nested bounds (the
+  `Rmul` reconciliation is `X`-regularity, argument-agnostic). The capstone triangle:
+  `sin(arctan t).seq n →[Rsin nested] peval(sin∘arctan) q (2D+1) →[degree shift, exact]
+  q·peval(cos∘arctan) q (2D) →[Rcos nested] q·(Rcos(arctan t)).seq R →[reg] t·cos`, the new leg over
+  the rational case being the factor reconciliation `q ↦ t` (sin-shift factor `q` vs `Rmul` factor
+  `t`), discharged by `t`-regularity and the `|Rcos| ≤ expM_U 1 2` bound (`altSum_abs_le_U`). The
+  sqrt-free real-argument `tan∘arctan = id` — the substrate of the reciprocal `Carg`/`Clog` lift.
+  Axiom-clean (`{propext, Quot.sound}`).
 - **Track 1 — ★ the reciprocal/complementary tangent** `tan(π/2 − A) = 1/tan A`
   (`Analysis/TanPiQuarter.lean`, `Rsin_cos_pi_half_sub_tan` + `TanReal.compl`) — the value-level
   engine of the reciprocal reduction `arctan t = π/2 − arctan(1/t)`, which is how the argument axis
