@@ -77,6 +77,45 @@ theorem Rexp_TwoArtanh_of_neg (τ ρ gσ gτ : Q) (hτd : 0 < τ.den)
     Rmul_right_cancel hk (Req_trans hprodσ (Req_symm hprodgτ))
   exact Req_trans (RexpReal_congr htac) hcancel
 
+/-- Pure-`Int` multiplicativity identity behind the signed `hg`: `(1+c)/(1−c) = (1+a)/(1−a)·(1+b)/(1−b)`
+    cleared, where `c = wvalR a b` has `(num,den) = (pa qb+pb qa, qa qb+pa pb)`. -/
+private theorem wvalR_hg_poly (pa qa pb qb : Int) :
+    ((qa * qb + pa * pb) + (pa * qb + pb * qa)) * ((qa - pa) * (qb - pb))
+      = ((qa + pa) * (qb + pb)) * ((qa - pa) * (qb - pb)) := by ring_uor
+
+/-- **Signed `hg` multiplicativity** for the normalized `(den+num)/(den−num)` exp-values: with
+    `c = wvalR a b`, `gC = gA·gB`. The signed analog of `wval_hg`, using the `(·.den−·.num).toNat`
+    (Int-toNat) dens that match `Rexp_TwoArtanh_signed_rho`'s output. Requires `|a|, |b| < 1`
+    (`a.num < a.den`, `−a.den < a.num`, etc.) and `1 + ab > 0`. -/
+theorem wvalR_hg (a b : Q) (haL : a.num < (a.den : Int)) (hbL : b.num < (b.den : Int))
+    (hab : 0 < (a.den : Int) * b.den + a.num * b.num) :
+    Qeq (⟨((wvalR a b).den : Int) + (wvalR a b).num,
+          (((wvalR a b).den : Int) - (wvalR a b).num).toNat⟩ : Q)
+        (mul (⟨(a.den : Int) + a.num, ((a.den : Int) - a.num).toNat⟩ : Q)
+             (⟨(b.den : Int) + b.num, ((b.den : Int) - b.num).toNat⟩ : Q)) := by
+  have hWden : ((wvalR a b).den : Int) = (a.den : Int) * b.den + a.num * b.num := by
+    rw [wvalR_den]; exact Int.toNat_of_nonneg (Int.le_of_lt hab)
+  have hgA : (((a.den : Int) - a.num).toNat : Int) = (a.den : Int) - a.num :=
+    Int.toNat_of_nonneg (by omega)
+  have hgB : (((b.den : Int) - b.num).toNat : Int) = (b.den : Int) - b.num :=
+    Int.toNat_of_nonneg (by omega)
+  have hCnn : 0 ≤ ((wvalR a b).den : Int) - (wvalR a b).num := by
+    rw [hWden, wvalR_num]
+    have hfac : (a.den : Int) * b.den + a.num * b.num - (a.num * (b.den : Int) + b.num * (a.den : Int))
+        = ((a.den : Int) - a.num) * ((b.den : Int) - b.num) := by
+      generalize (a.den : Int) = qa; generalize (b.den : Int) = qb; ring_uor
+    rw [hfac]; exact Int.mul_nonneg (by omega) (by omega)
+  have hgC : ((((wvalR a b).den : Int) - (wvalR a b).num).toNat : Int)
+      = (a.den : Int) * b.den + a.num * b.num - (a.num * (b.den : Int) + b.num * (a.den : Int)) := by
+    rw [Int.toNat_of_nonneg hCnn, hWden, wvalR_num]
+  simp only [Qeq, mul]
+  rw [hgC]
+  push_cast [hgA, hgB, hWden, wvalR_num]
+  generalize (a.den : Int) = qa; generalize (b.den : Int) = qb
+  generalize a.num = pa; generalize b.num = pb
+  rw [show qa * qb + pa * pb + (pa * qb + pb * qa) = (qa + pa) * (qb + pb) from by ring_uor,
+    show qa * qb + pa * pb - (pa * qb + pb * qa) = (qa - pa) * (qb - pb) from by ring_uor]
+
 /-- **Additivity from exp-values, no sign restriction** (the `RexpReal_inj_gen` core): if `exp A = gA`,
     `exp B = gB`, `exp C = gC` with `gC = gA·gB`, then `C = A + B` — for **any** reals `A, B, C`
     (dropping the `≥ 0` hypotheses of `Req_add_of_exp_values`, via the general injectivity
