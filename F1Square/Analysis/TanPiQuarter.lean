@@ -174,4 +174,79 @@ theorem Rsin_pi_half : Req (Rsin Rpi_half) one := by
   exact Req_trans hadd (Req_trans hdist
     (Req_trans (Radd_congr (Req_refl (Rmul (Rcos Spi4.angle) (Rcos Spi4.angle))) hcs) hpyth))
 
+-- ===========================================================================
+-- Complementary-angle formulas: sin(π/2 − x) = cos x, cos(π/2 − x) = sin x.
+-- The bridge from the π/2 values to the reciprocal reduction arctan t = π/2 − arctan(1/t).
+-- ===========================================================================
+
+/-- **cos subtraction formula**: `cos(x − y) = cos x·cos y + sin x·sin y` (`Rcos_add` + parity). -/
+theorem Rcos_sub (x y : Real) :
+    Req (Rcos (Rsub x y)) (Radd (Rmul (Rcos x) (Rcos y)) (Rmul (Rsin x) (Rsin y))) := by
+  refine Req_trans (Rcos_add x (Rneg y)) ?_
+  refine Req_trans (Rsub_congr (Rmul_congr (Req_refl (Rcos x)) (Rcos_neg y))
+    (Rmul_congr (Req_refl (Rsin x)) (Rsin_neg y))) ?_
+  refine Req_trans (Rsub_congr (Req_refl (Rmul (Rcos x) (Rcos y)))
+    (Rmul_neg_right (Rsin x) (Rsin y))) ?_
+  exact Radd_congr (Req_refl (Rmul (Rcos x) (Rcos y))) (Rneg_neg (Rmul (Rsin x) (Rsin y)))
+
+/-- **`sin(π/2 − x) = cos x`**: `sin(π/2)·cos x − cos(π/2)·sin x = 1·cos x − 0·sin x = cos x`. -/
+theorem Rsin_pi_half_sub (x : Real) : Req (Rsin (Rsub Rpi_half x)) (Rcos x) := by
+  refine Req_trans (Rsin_sub Rpi_half x) ?_
+  refine Req_trans (Rsub_congr (Rmul_congr Rsin_pi_half (Req_refl (Rcos x)))
+    (Rmul_congr Rcos_pi_half (Req_refl (Rsin x)))) ?_
+  refine Req_trans (Rsub_congr (Rone_mul_loc (Rcos x)) (Rzero_mul (Rsin x))) ?_
+  exact Rsub_zero (Rcos x)
+
+/-- **`cos(π/2 − x) = sin x`**: `cos(π/2)·cos x + sin(π/2)·sin x = 0·cos x + 1·sin x = sin x`. -/
+theorem Rcos_pi_half_sub (x : Real) : Req (Rcos (Rsub Rpi_half x)) (Rsin x) := by
+  refine Req_trans (Rcos_sub Rpi_half x) ?_
+  refine Req_trans (Radd_congr (Rmul_congr Rcos_pi_half (Req_refl (Rcos x)))
+    (Rmul_congr Rsin_pi_half (Req_refl (Rsin x)))) ?_
+  refine Req_trans (Radd_congr (Rzero_mul (Rcos x)) (Rone_mul_loc (Rsin x))) ?_
+  exact Req_trans (Radd_comm zero (Rsin x)) (Radd_zero (Rsin x))
+
+-- ===========================================================================
+-- The reciprocal/complementary tangent: if A has tangent s, then π/2 − A has tangent 1/s.
+-- This is the value-level engine of arctan t = π/2 − arctan(1/t) for large |t|.
+-- ===========================================================================
+
+/-- **★ complementary tangent**: if `A` has tangent `s` (`sin A = s·cos A`) and `t·s = 1`, then the
+    complementary angle `π/2 − A` has tangent `t`: `sin(π/2 − A) = t·cos(π/2 − A)`. Via the
+    complementary formulas (`sin(π/2−A) = cos A`, `cos(π/2−A) = sin A`) and `sin A = s·cos A`:
+    `t·cos(π/2−A) = t·sin A = t·s·cos A = cos A = sin(π/2−A)`. This is the value-level form of the
+    reciprocal reduction `arctan t = π/2 − arctan(1/t)` — it lets the small-argument value identity
+    (`|s| < 1/16`) supply the tangent of a LARGE argument `t = 1/s` through the complementary angle. -/
+theorem Rsin_cos_pi_half_sub_tan (A : Real) {s t : Q} (hsd : 0 < s.den) (htd : 0 < t.den)
+    (hval : Req (Rsin A) (Rmul (ofQ s hsd) (Rcos A))) (hts : Qeq (mul t s) (⟨1, 1⟩ : Q)) :
+    Req (Rsin (Rsub Rpi_half A)) (Rmul (ofQ t htd) (Rcos (Rsub Rpi_half A))) := by
+  have hone : Req (Rmul (ofQ t htd) (ofQ s hsd)) one :=
+    Req_trans (Rmul_ofQ_ofQ htd hsd)
+      (ofQ_congr (Qmul_den_pos htd hsd) (by decide : 0 < (⟨1, 1⟩ : Q).den) hts)
+  refine Req_trans (Rsin_pi_half_sub A) (Req_symm ?_)
+  -- t·cos(π/2−A) = t·sin A = t·(s·cos A) = (t·s)·cos A = 1·cos A = cos A
+  refine Req_trans (Rmul_congr (Req_refl (ofQ t htd)) (Rcos_pi_half_sub A)) ?_
+  refine Req_trans (Rmul_congr (Req_refl (ofQ t htd)) hval) ?_
+  refine Req_trans (Req_symm (Rmul_assoc (ofQ t htd) (ofQ s hsd) (Rcos A))) ?_
+  exact Req_trans (Rmul_congr hone (Req_refl (Rcos A))) (Rone_mul_loc (Rcos A))
+
+/-- **The complementary tangent-carrying angle**: from `x` (tangent `s`), `π/2 − x.angle` carries the
+    reciprocal tangent `t = 1/s` (`Rsin_cos_pi_half_sub_tan`). This makes the reciprocal reduction
+    `arctan t = π/2 − arctan(1/t)` a first-class operation: a small-argument leaf (tangent `s = 1/t`,
+    `|s| < 1/16`) yields a LARGE-tangent angle, and the result composes with `.add`/`.step` like any
+    other `TanReal`. So tangents beyond the value-identity radius are now constructible. -/
+def TanReal.compl (x : TanReal) (t : Q) (htd : 0 < t.den) (hts : Qeq (mul t x.tan) (⟨1, 1⟩ : Q)) :
+    TanReal :=
+  { angle := Rsub Rpi_half x.angle
+    tan := t
+    htd := htd
+    hrel := Rsin_cos_pi_half_sub_tan x.angle x.htd htd x.hrel hts }
+
+/-- **A concrete reciprocal reduction**: the large angle `π/2 − arctan(1/18)` carries tangent `18`
+    (`tan(π/2 − arctan(1/18)) = 18`) — a tangent far outside the value-identity radius `1/16`, reached
+    through the complementary angle. The witness that `TanReal.compl` delivers genuine large tangents. -/
+theorem tan_pi_half_sub_arctan_eighteen :
+    Req (Rsin (Rsub Rpi_half L18.angle))
+      (Rmul (ofQ (⟨18, 1⟩ : Q) (by decide)) (Rcos (Rsub Rpi_half L18.angle))) :=
+  (L18.compl (⟨18, 1⟩ : Q) (by decide) (by decide)).hrel
+
 end UOR.Bridge.F1Square.Analysis

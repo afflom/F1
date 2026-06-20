@@ -16,6 +16,17 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **Track 1 — ★ the reciprocal/complementary tangent** `tan(π/2 − A) = 1/tan A`
+  (`Analysis/TanPiQuarter.lean`, `Rsin_cos_pi_half_sub_tan` + `TanReal.compl`) — the value-level
+  engine of the reciprocal reduction `arctan t = π/2 − arctan(1/t)`, which is how the argument axis
+  reaches `|arg| ≥ π/4`. From the complementary formulas `sin(π/2 − x) = cos x`, `cos(π/2 − x) = sin x`
+  (`Rsin_pi_half_sub` / `Rcos_pi_half_sub`, themselves from `Rsin_sub` / the new `Rcos_sub` and the
+  `π/2` values) and `sin A = s·cos A`: if `A` has tangent `s` and `t·s = 1`, then `π/2 − A` has
+  tangent `t` (`t·cos(π/2−A) = t·sin A = t·s·cos A = cos A = sin(π/2−A)`). `TanReal.compl` packages
+  this as a bundle operation, so a small-argument leaf (`|s| < 1/16`) yields a LARGE-tangent angle
+  that still composes with `.add`/`.step` — tangents beyond the value-identity radius are now
+  constructible (`tan_pi_half_sub_arctan_eighteen`: `tan(π/2 − arctan(1/18)) = 18`). Axiom-clean
+  (`{propext, Quot.sound}`). (The full-plane `Carg` atan2 with quadrant `±π` shifts is the next brick.)
 - **Track 1 — ★ `tan(π/4) = 1` and the `π/2` values `cos(π/2) = 0`, `sin(π/2) = 1`**
   (`Analysis/TanPiQuarter.lean`, `sin_eq_cos_pi4` / `Rcos_pi_half` / `Rsin_pi_half`) — the anchors of
   the **full-range complex argument** (`Carg`/`Clog` past the principal sector `|arg| < π/4`, via the
