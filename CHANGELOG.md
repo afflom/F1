@@ -82,6 +82,16 @@ audit-visible hypothesis, never an axiom).
     `b ≥ 0`, so it is valid throughout the strip — the prerequisite for assembling
     `ξ(s) = ½ s(s−1) π^{−s/2} Γ(s/2) ζ(s)` (item 2; the other factors `π^{−s/2}` via `Cpow` over the
     real `Rpi` base, and `ζ` via `CzetaStrip`, are in hand).
+- **Track 1 (item 2 — the completed ξ, assembled)** (`Analysis/ComplexXi.lean`). The conductor factor
+  `π^{−s/2} = exp((−s/2)·log π)` (`CpiPow`) built from the *real* `log π = Rlog_pi` (`Pi.lean`) embedded
+  as `⟨log π, 0⟩` — sidestepping the complex `Clog`/`Carg`/`cnormSq` of `π` entirely (no `1/16` barrier,
+  and no infeasible `Rpi²` `whnf`; `Rlog_pi` stays an opaque atom). The polynomial prefactor `½·s·(s−1)`
+  (`CxiPoly`, entire, taming `ζ`'s pole at `s=1`), and the **product assembly**
+  `Cxi s gammaHalf zeta = ½s(s−1)·π^{−s/2}·Γ(s/2)·ζ(s)` (`Cxi`), with the heavy-data factors `Γ(s/2)`
+  (via `CSpougeGammaW` at `s/2`) and `ζ(s)` (via `CzetaStrip`) passed as already-built values to keep
+  the interface clean. This is the constructive **assembly** of ξ from the item-1 / Track-1 pieces; the
+  analytic *properties* (functional equation, order-1 bound, Hadamard) of items 3–5 are separate and
+  not asserted. Axiom-clean.
 - **Track 1 — left-sector argument additivity** `CargLeft(zw) = CargLeft z + Carg w`
   (`Analysis/ComplexArgLeftAdd.lean`): left-half-plane `z` (`Re z < 0`) times principal `w`, the
   product again left. Reflects the principal `Carg_add` through the `+π` shift via `−(zw) = (−z)·w`
