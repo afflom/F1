@@ -3044,3 +3044,6 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.gcf_le
 #print axioms Analysis.gcfDen_pos
 #print axioms Analysis.dPlusQ_one_le
+#print axioms Analysis.Qle_sub_swap
+#print axioms Analysis.cLowQ_one_tail_lower
+#print axioms Analysis.cApprox_tail_lower

@@ -140,4 +140,32 @@ theorem dPlusQ_one_le (m : Nat) :
     Qle (dPlusQ 1 (m + 1)) (⟨2 * m + 3, 2 * (m + 1) * (m + 2)⟩ : Q) :=
   Qle_congr_left (gcfDen_pos m) (Qeq_symm (dPlusQ_one_eq m)) (gcf_le m)
 
+/-- **`d ≤ a − b ⟹ b ≤ a − d`** (both `⟺ b + d ≤ a`). -/
+theorem Qle_sub_swap {a b d : Q} (h : Qle d (Qsub a b)) : Qle b (Qsub a d) := by
+  simp only [Qle, Qsub, add, neg] at h ⊢
+  push_cast at h ⊢
+  have key :
+      (a.num * (d.den : Int) + -d.num * (a.den : Int)) * (b.den : Int)
+        - b.num * ((a.den : Int) * (d.den : Int))
+      = (a.num * (b.den : Int) + -b.num * (a.den : Int)) * (d.den : Int)
+        - d.num * ((a.den : Int) * (b.den : Int)) := by ring_uor
+  omega
+
+/-- **`1/(2(m+1)(m+2)) ≤ cLowQ 1 m`** — the per-term tail lower bound (from `dPlusQ_one_le`). -/
+theorem cLowQ_one_tail_lower (m : Nat) :
+    Qle (⟨1, 2 * (m + 1) * (m + 2)⟩ : Q) (cLowQ 1 m) := by
+  have hQeqR : Qeq (⟨2 * m + 3, 2 * (m + 1) * (m + 2)⟩ : Q)
+      (Qsub (⟨1, m + 1⟩ : Q) (⟨1, 2 * (m + 1) * (m + 2)⟩ : Q)) := by
+    simp only [Qeq, Qsub, add, neg]; push_cast; ring_uor
+  have h : Qle (dPlusQ 1 (m + 1)) (Qsub (⟨1, m + 1⟩ : Q) (⟨1, 2 * (m + 1) * (m + 2)⟩ : Q)) :=
+    Qle_congr_right (Nat.mul_pos (Nat.mul_pos (by decide) (Nat.succ_pos m)) (Nat.succ_pos (m + 1)))
+      hQeqR (dPlusQ_one_le m)
+  exact Qle_sub_swap h
+
+/-- **`1/(2(m+1)(m+2)) ≤ cApprox m T'`** for every depth `T'` — the uniform tail lower bound
+    (`cLowQ_one_tail_lower` + `cApprox_ge_cLowQ`). -/
+theorem cApprox_tail_lower (m T' : Nat) :
+    Qle (⟨1, 2 * (m + 1) * (m + 2)⟩ : Q) (cApprox m T') :=
+  Qle_trans (cLowQ_den_pos 1 m) (cLowQ_one_tail_lower m) (cApprox_ge_cLowQ 1 m T')
+
 end UOR.Bridge.F1Square.Analysis
