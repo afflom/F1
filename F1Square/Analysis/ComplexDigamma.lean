@@ -304,4 +304,113 @@ theorem CdigammaPfac_re_bound (s : Complex) {c : Q} (hcn : 0 < c.num) (hcd : 0 <
       (by show Qeq (mul (⟨1, n + 1⟩ : Q) (⟨1, n⟩ : Q)) (⟨1, (n + 1) * n⟩ : Q)
           simp only [Qeq, mul]; push_cast; ring_uor)
 
+/-- **`|s+n|² ≥ n`** (`n ≥ 1`): `N = σ_n² + t² ≥ σ_n² ≥ n` (since `σ_n ≥ n ≥ 1` gives `σ_n² ≥ σ_n·1 ≥
+    n`). The rational floor behind `1/N ≤ 1/n`. -/
+theorem CnormSq_CdigammaArg_ge (s : Complex) {c : Q} (hcn : 0 < c.num) (hcd : 0 < c.den)
+    (hcs : Rle (ofQ c hcd) s.re) {n : Nat} (hn : 1 ≤ n) :
+    Rle (ofQ (⟨(n : Int), 1⟩ : Q) Nat.one_pos) (CnormSq (CdigammaArg s n)) := by
+  have hsre : Rnonneg s.re := Rnonneg_of_ofQ_le hcn hcd hcs
+  -- n ≤ σ_n
+  have hσn_ge_n : Rle (RofNat n) (Radd s.re (RofNat n)) :=
+    Rle_trans (Rle_self_Radd_right hsre) (Rle_of_Req (Radd_comm (RofNat n) s.re))
+  -- 1 ≤ σ_n  (from 1 ≤ n ≤ σ_n)
+  have h1_le_σn : Rle (ofQ (⟨1, 1⟩ : Q) Nat.one_pos) (Radd s.re (RofNat n)) :=
+    Rle_trans (Rle_ofQ_ofQ Nat.one_pos Nat.one_pos
+      (show Qle (⟨1, 1⟩ : Q) (⟨(n : Int), 1⟩ : Q) by simp only [Qle]; push_cast; omega)) hσn_ge_n
+  -- σ_n² ≥ σ_n·1 ≥ n·1 = n
+  have ha : Rle (Rmul (RofNat n) (Radd s.re (RofNat n)))
+      (Rmul (Radd s.re (RofNat n)) (Radd s.re (RofNat n))) :=
+    Rmul_le_Rmul_right (Rnonneg_of_ofQ_le hcn hcd (ofQ_le_digammaArg hcd hcs n)) hσn_ge_n
+  have hb : Rle (Rmul (RofNat n) (ofQ (⟨1, 1⟩ : Q) Nat.one_pos))
+      (Rmul (RofNat n) (Radd s.re (RofNat n))) :=
+    Rmul_le_Rmul_left (Rnonneg_RofNat n) h1_le_σn
+  have hnle : Rle (ofQ (⟨(n : Int), 1⟩ : Q) Nat.one_pos)
+      (Rmul (Radd s.re (RofNat n)) (Radd s.re (RofNat n))) := by
+    refine Rle_trans (Rle_of_Req ?_) (Rle_trans hb ha)
+    -- n ≈ n·1
+    exact Req_trans (Req_symm (Rmul_one (RofNat n)))
+      (Rmul_congr (Req_refl _) (Req_of_seq_Qeq (fun _ => Qeq_refl _)))
+  exact Rle_trans hnle (Rle_self_Radd_right (Rnonneg_Rmul_self s.im))
+
+/-- `Im P_n ≈ (1/(n+1))·((−Im s)·(1/N))` (the `0·(Re (1/(s+n)))` cross-term vanishes; the inner
+    `−(Im s·(1/N))` is rewritten as `(−Im s)·(1/N)`). -/
+theorem CdigammaPfac_im_eq (s : Complex) {c : Q} (hcn : 0 < c.num) (hcd : 0 < c.den)
+    (hcs : Rle (ofQ c hcd) s.re) (n : Nat) :
+    Req (CdigammaPfac s hcn hcd hcs n).im
+      (Rmul (ofQ ⟨1, n + 1⟩ (Nat.succ_pos n))
+        (Rmul (Rneg s.im)
+          (Rinv (CnormSq (CdigammaArg s n)) (CdigK c) (CdigammaArg_witness hcn hcd hcs n)))) := by
+  have hz : Req (Rmul zero (Rmul (Radd s.re (RofNat n))
+      (Rinv (CnormSq (CdigammaArg s n)) (CdigK c) (CdigammaArg_witness hcn hcd hcs n)))) zero :=
+    Req_trans (Rmul_comm zero _) (Rmul_zero _)
+  refine Req_trans (Radd_congr (Req_refl _) hz) (Req_trans (Radd_zero _) ?_)
+  -- F·(−(Im s·(1/N))) ≈ F·((−Im s)·(1/N))
+  exact Rmul_congr (Req_refl _) (Req_symm (Rmul_neg_left s.im
+    (Rinv (CnormSq (CdigammaArg s n)) (CdigK c) (CdigammaArg_witness hcn hcd hcs n))))
+
+set_option maxHeartbeats 800000 in
+/-- **Abstract two-sided product bound**: `F ≥ 0`, `|u| ≤ A`, `|I| ≤ D` (`I` two-sided about 0) ⟹
+    `|F·(u·I)| ≤ F·(A·D)`. Stated on opaque reals so the heavy `Rinv (CnormSq …)` term is substituted
+    only at the application site (keeping `whnf` cheap). -/
+private theorem cdig_Rmul_two_sided_prod {F A D u I : Real} (hF : Rnonneg F)
+    (hulo : Rle (Rneg A) u) (huhi : Rle u A) (hIlo : Rle (Rneg D) I) (hIhi : Rle I D) :
+    Rle (Rneg (Rmul F (Rmul A D))) (Rmul F (Rmul u I))
+    ∧ Rle (Rmul F (Rmul u I)) (Rmul F (Rmul A D)) := by
+  refine ⟨?_, Rmul_le_Rmul_left hF (Rmul_le_mul_of_abs hulo huhi hIlo hIhi)⟩
+  refine Rle_trans (Rle_of_Req (Req_symm (Rmul_neg_right F (Rmul A D)))) ?_
+  exact Rmul_le_Rmul_left hF (Rneg_mul_le_of_abs hulo huhi hIlo hIhi)
+
+set_option maxHeartbeats 1200000 in
+/-- **`Im P_n` two-sided** (`n ≥ 1`, `|Im s| ≤ B`): `−B/((n+1)n) ≤ Im P_n ≤ B/((n+1)n)`. From
+    `Im P_n ≈ F·((−Im s)·(1/N))` with `−B ≤ −Im s ≤ B` and `0 ≤ 1/N ≤ 1/n` (`CnormSq_CdigammaArg_ge`),
+    via the abstract `cdig_Rmul_two_sided_prod`. -/
+theorem CdigammaPfac_im_bound (s : Complex) {c : Q} (hcn : 0 < c.num) (hcd : 0 < c.den)
+    (hcs : Rle (ofQ c hcd) s.re) {B : Q} (hBd : 0 < B.den)
+    (hBlo : Rle (Rneg (ofQ B hBd)) s.im) (hBhi : Rle s.im (ofQ B hBd)) {n : Nat} (hn : 1 ≤ n) :
+    Rle (Rneg (ofQ (mul B (⟨1, (n + 1) * n⟩ : Q)) (Qmul_den_pos hBd (digamma_succ_mul_pos hn))))
+        (CdigammaPfac s hcn hcd hcs n).im
+    ∧ Rle (CdigammaPfac s hcn hcd hcs n).im
+        (ofQ (mul B (⟨1, (n + 1) * n⟩ : Q)) (Qmul_den_pos hBd (digamma_succ_mul_pos hn))) := by
+  have heq := CdigammaPfac_im_eq s hcn hcd hcs n
+  have hFnn : Rnonneg (ofQ (⟨1, n + 1⟩ : Q) (Nat.succ_pos n)) :=
+    Rnonneg_ofQ (Nat.succ_pos n) (show (0 : Int) ≤ 1 by decide)
+  have hRinvNnn : Rnonneg (Rinv (CnormSq (CdigammaArg s n)) (CdigK c)
+      (CdigammaArg_witness hcn hcd hcs n)) := Rnonneg_Rinv _ _ _
+  -- two-sided on u = −Im s
+  have hulo : Rle (Rneg (ofQ B hBd)) (Rneg s.im) := Rle_Rneg hBhi
+  have huhi : Rle (Rneg s.im) (ofQ B hBd) :=
+    Rle_trans (Rle_Rneg hBlo) (Rle_of_Req (Rneg_neg (ofQ B hBd)))
+  -- 0 ≤ 1/N ≤ 1/n
+  have hqn : 0 < (⟨(n : Int), 1⟩ : Q).num := by show (0 : Int) < (n : Int); exact_mod_cast hn
+  have hRhi : Rle (Rinv (CnormSq (CdigammaArg s n)) (CdigK c) (CdigammaArg_witness hcn hcd hcs n))
+      (ofQ (⟨1, n⟩ : Q) (show 0 < n by omega)) := by
+    refine Rle_trans (Rinv_le_ofQ_Qinv (CdigammaArg_witness hcn hcd hcs n) hqn Nat.one_pos
+      (CnormSq_CdigammaArg_ge s hcn hcd hcs hn)) ?_
+    exact Rle_of_Req (ofQ_congr (Qinv_den_pos hqn) (show 0 < n by omega)
+      (by show Qeq (Qinv (⟨(n : Int), 1⟩ : Q)) (⟨1, n⟩ : Q); simp only [Qinv, Qeq]; push_cast; omega))
+  have hRlo : Rle (Rneg (ofQ (⟨1, n⟩ : Q) (show 0 < n by omega)))
+      (Rinv (CnormSq (CdigammaArg s n)) (CdigK c) (CdigammaArg_witness hcn hcd hcs n)) := by
+    have h0 : Rle zero (ofQ (⟨1, n⟩ : Q) (show 0 < n by omega)) :=
+      Rle_zero_of_Rnonneg (Rnonneg_ofQ (show 0 < n by omega) (show (0 : Int) ≤ 1 by decide))
+    refine Rle_trans ?_ (Rle_zero_of_Rnonneg hRinvNnn)
+    refine Rle_trans (Rle_Rneg h0) (Rle_of_Req ?_)
+    exact Req_of_seq_Qeq (fun _ => by simp only [Rneg, zero, ofQ, Qeq, neg]; decide)
+  -- the rational product bound E = B/((n+1)n)
+  have hEeq : Req (Rmul (ofQ (⟨1, n + 1⟩ : Q) (Nat.succ_pos n))
+        (Rmul (ofQ B hBd) (ofQ (⟨1, n⟩ : Q) (show 0 < n by omega))))
+      (ofQ (mul B (⟨1, (n + 1) * n⟩ : Q)) (Qmul_den_pos hBd (digamma_succ_mul_pos hn))) := by
+    refine Req_trans (Rmul_congr (Req_refl _) (Rmul_ofQ_ofQ hBd (show 0 < n by omega))) ?_
+    refine Req_trans (Rmul_ofQ_ofQ (Nat.succ_pos n)
+      (Qmul_den_pos hBd (show 0 < n by omega))) ?_
+    exact ofQ_congr (Qmul_den_pos (Nat.succ_pos n) (Qmul_den_pos hBd (show 0 < n by omega)))
+      (Qmul_den_pos hBd (digamma_succ_mul_pos hn))
+      (by show Qeq (mul (⟨1, n + 1⟩ : Q) (mul B (⟨1, n⟩ : Q))) (mul B (⟨1, (n + 1) * n⟩ : Q))
+          simp only [Qeq, mul]; push_cast; ring_uor)
+  have key := cdig_Rmul_two_sided_prod hFnn hulo huhi hRlo hRhi
+  refine ⟨?_, ?_⟩
+  · -- lower: −E ≈ −(F·(B·1/n)) ≤ F·((−Im s)·(1/N)) ≈ Im P_n
+    refine Rle_trans (Rle_of_Req (Req_symm (Rneg_congr hEeq))) (Rle_trans key.1 (Rle_of_Req (Req_symm heq)))
+  · -- upper: Im P_n ≈ F·((−Im s)·(1/N)) ≤ F·(B·1/n) ≈ E
+    exact Rle_trans (Rle_of_Req heq) (Rle_trans key.2 (Rle_of_Req hEeq))
+
 end UOR.Bridge.F1Square.Analysis

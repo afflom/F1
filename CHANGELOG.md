@@ -35,6 +35,12 @@ audit-visible hypothesis, never an axiom).
     (`Cmul_natSucc_inv`), then `(s+n)−(n+1) ≈ s−1` (`CdigammaArg_sub_succ_eq`). This factorization
     exposes the `O(1/n²)` decay (the `1/(n+1)` and `1/(s+n)` summands each only `O(1/n)`), the
     prerequisite for the per-term bounds.
+  - **Increment 2b/2c — the per-term component bounds** `|Re P_n| ≤ 1/((n+1)n)` and
+    `|Im P_n| ≤ B/((n+1)n)` (`|Im s| ≤ B`), via the inverse-comparison helper `x·(1/N) ≤ 1/x` when
+    `x² ≤ N` (no cancellation), the modulus-squared floors `|s+n|² ≥ σ_n²` and `|s+n|² ≥ n`
+    (`CnormSq_CdigammaArg_ge`), and the real-line `digamma_Rinv_le`. `Re P_n = F·(σ_n/N) ≤ F·(1/n)`
+    and `Im P_n = F·((−Im s)/N)` bounded two-sidedly via an abstract product lemma. This is the
+    `O(1/n²)` decay made rational — the input the generic `RReg_of_real_bound` engine needs.
 - **Track 1 — left-sector argument additivity** `CargLeft(zw) = CargLeft z + Carg w`
   (`Analysis/ComplexArgLeftAdd.lean`): left-half-plane `z` (`Re z < 0`) times principal `w`, the
   product again left. Reflects the principal `Carg_add` through the `+π` shift via `−(zw) = (−z)·w`
