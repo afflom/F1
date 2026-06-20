@@ -670,4 +670,65 @@ theorem Rartanh_add_real_via_gen (s t X1 X2 Y : Real) (σ : Q) (Kσ : Nat) (R_Y 
     (⟨((2 + 4 * Kσ * (σ.den * σ.den) : Nat) : Int), n + 1⟩ : Q)
   simp only [Qeq, add]; push_cast; ring_uor
 
+/-- **The real binary addition map at general radius** `wvalReal_gen s t ρ = (s+t)/(1+s·t)`, for reals
+    `s, t` with `|s|,|t| ≤ ρ < 1` (no `ρ²≤1/2`). The reindex `2·ρ.den²·(n+1)` absorbs the
+    general-radius Lipschitz constant `ρ.den²` (vs `wvalReal`'s `8n+7` absorbing `4`). -/
+def wvalReal_gen (s t : Real) (ρ : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num)
+    (hρlt : ρ.num.toNat < ρ.den)
+    (hbs : ∀ n, Qle (Qabs (s.seq n)) ρ) (hbt : ∀ n, Qle (Qabs (t.seq n)) ρ) : Real where
+  seq := fun n => wvalR (s.seq (2 * ρ.den * ρ.den * (n + 1))) (t.seq (2 * ρ.den * ρ.den * (n + 1)))
+  den_pos := fun n => wvalR_den_pos _ _
+    (wval_inner_pos_gen ρ _ _ hρd hρ0 (s.den_pos _) (t.den_pos _) (hbs _) (hbt _) hρlt)
+  reg := by
+    intro m n
+    have hDsv : ∀ k, 0 < (wvalR (s.seq k) (t.seq k)).den := fun k => wvalR_den_pos _ _
+      (wval_inner_pos_gen ρ _ _ hρd hρ0 (s.den_pos _) (t.den_pos _) (hbs k) (hbt k) hρlt)
+    have hDmid : 0 < (wvalR (s.seq (2 * ρ.den * ρ.den * (n + 1))) (t.seq (2 * ρ.den * ρ.den * (m + 1)))).den :=
+      wvalR_den_pos _ _ (wval_inner_pos_gen ρ _ _ hρd hρ0 (s.den_pos _) (t.den_pos _) (hbs _) (hbt _) hρlt)
+    show Qle (Qabs (Qsub (wvalR (s.seq (2 * ρ.den * ρ.den * (m + 1))) (t.seq (2 * ρ.den * ρ.den * (m + 1))))
+        (wvalR (s.seq (2 * ρ.den * ρ.den * (n + 1))) (t.seq (2 * ρ.den * ρ.den * (n + 1))))))
+      (add (Qbound m) (Qbound n))
+    have hT1 : Qle (Qabs (Qsub (wvalR (s.seq (2 * ρ.den * ρ.den * (m + 1))) (t.seq (2 * ρ.den * ρ.den * (m + 1))))
+          (wvalR (s.seq (2 * ρ.den * ρ.den * (n + 1))) (t.seq (2 * ρ.den * ρ.den * (m + 1))))))
+        (mul (⟨(ρ.den : Int) * ρ.den, 1⟩ : Q)
+          (add (Qbound (2 * ρ.den * ρ.den * (m + 1))) (Qbound (2 * ρ.den * ρ.den * (n + 1))))) :=
+      Qle_trans (Qmul_den_pos Nat.one_pos (Qabs_den_pos (Qsub_den_pos (s.den_pos _) (s.den_pos _))))
+        (wval_lip1_gen ρ (s.seq (2 * ρ.den * ρ.den * (m + 1))) (s.seq (2 * ρ.den * ρ.den * (n + 1)))
+          (t.seq (2 * ρ.den * ρ.den * (m + 1))) hρd hρ0 (s.den_pos _) (s.den_pos _) (t.den_pos _)
+          (hbs _) (hbs _) (hbt _) hρlt)
+        (Qmul_le_mul_left (Int.mul_nonneg (Int.ofNat_nonneg _) (Int.ofNat_nonneg _))
+          (s.reg (2 * ρ.den * ρ.den * (m + 1)) (2 * ρ.den * ρ.den * (n + 1))))
+    have hT2 : Qle (Qabs (Qsub (wvalR (s.seq (2 * ρ.den * ρ.den * (n + 1))) (t.seq (2 * ρ.den * ρ.den * (m + 1))))
+          (wvalR (s.seq (2 * ρ.den * ρ.den * (n + 1))) (t.seq (2 * ρ.den * ρ.den * (n + 1))))))
+        (mul (⟨(ρ.den : Int) * ρ.den, 1⟩ : Q)
+          (add (Qbound (2 * ρ.den * ρ.den * (m + 1))) (Qbound (2 * ρ.den * ρ.den * (n + 1))))) :=
+      Qle_trans (Qmul_den_pos Nat.one_pos (Qabs_den_pos (Qsub_den_pos (t.den_pos _) (t.den_pos _))))
+        (wval_lip2_gen ρ (s.seq (2 * ρ.den * ρ.den * (n + 1))) (t.seq (2 * ρ.den * ρ.den * (m + 1)))
+          (t.seq (2 * ρ.den * ρ.den * (n + 1))) hρd hρ0 (s.den_pos _) (t.den_pos _) (t.den_pos _)
+          (hbs _) (hbt _) (hbt _) hρlt)
+        (Qmul_le_mul_left (Int.mul_nonneg (Int.ofNat_nonneg _) (Int.ofNat_nonneg _))
+          (t.reg (2 * ρ.den * ρ.den * (m + 1)) (2 * ρ.den * ρ.den * (n + 1))))
+    refine Qle_trans (add_den_pos (Qabs_den_pos (Qsub_den_pos (hDsv _) hDmid))
+        (Qabs_den_pos (Qsub_den_pos hDmid (hDsv _))))
+      (Qabs_sub_triangle (hDsv _) hDmid (hDsv _)) ?_
+    refine Qle_trans (add_den_pos
+        (Qmul_den_pos Nat.one_pos (add_den_pos (Qbound_den_pos _) (Qbound_den_pos _)))
+        (Qmul_den_pos Nat.one_pos (add_den_pos (Qbound_den_pos _) (Qbound_den_pos _))))
+      (Qadd_le_add hT1 hT2) ?_
+    -- 2·ρ.den²·(Qbound(gm)+Qbound(gn)) ≤ Qbound m + Qbound n, exact per-leg
+    have hleg : ∀ k, Qle (mul (⟨2 * (ρ.den : Int) * ρ.den, 1⟩ : Q)
+        (Qbound (2 * ρ.den * ρ.den * (k + 1)))) (Qbound k) := by
+      intro k
+      simp only [Qle, mul, Qbound]; push_cast; simp only [Int.mul_one, Int.one_mul]; omega
+    refine Qle_trans (add_den_pos (Qmul_den_pos Nat.one_pos (Qbound_den_pos _))
+        (Qmul_den_pos Nat.one_pos (Qbound_den_pos _)))
+      (Qeq_le ?_) (Qadd_le_add (hleg m) (hleg n))
+    show Qeq (add (mul (⟨(ρ.den : Int) * ρ.den, 1⟩ : Q)
+          (add (Qbound (2 * ρ.den * ρ.den * (m + 1))) (Qbound (2 * ρ.den * ρ.den * (n + 1)))))
+        (mul (⟨(ρ.den : Int) * ρ.den, 1⟩ : Q)
+          (add (Qbound (2 * ρ.den * ρ.den * (m + 1))) (Qbound (2 * ρ.den * ρ.den * (n + 1))))))
+      (add (mul (⟨2 * (ρ.den : Int) * ρ.den, 1⟩ : Q) (Qbound (2 * ρ.den * ρ.den * (m + 1))))
+        (mul (⟨2 * (ρ.den : Int) * ρ.den, 1⟩ : Q) (Qbound (2 * ρ.den * ρ.den * (n + 1)))))
+    simp only [Qeq, mul, add, Qbound]; push_cast; ring_uor
+
 end UOR.Bridge.F1Square.Analysis
