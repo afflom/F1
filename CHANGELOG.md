@@ -16,6 +16,13 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **Crux frontier (`n = 3`) — tighter γ₁ upper `≤ −0.055`** (`Analysis/GammaOne.lean`, `Rgamma1_le_neg055`):
+  the dominant `−6γ₁` contribution to the `Pos Rlambda3` (`λ₃`) certificate, tightened from `−0.0445`
+  (`Rgamma1_le_neg445`, artanh depth `T = 2`) to `−0.055` at depth `T = 4` (`gBound200_T4_le_neg055`,
+  a kernel `decide`). Diagnosis recorded: the residual gap to the true `γ₁ ≈ −0.0728` is the `gSeq`
+  Euler–Maclaurin overshoot `+(ln N)/(2N)` (a *convergence* limit, not bound depth — raising `T`
+  further plateaus), whose removal is the remaining `GammaTwoBracket`-scale acceleration (the single
+  hardest `λ₃` brick).
 - **Crux frontier (`n = 3`) — ζ(2)/ζ(3) brackets toward `Pos Rlambda3`** (`Analysis/ZetaTwo.lean`):
   the named-missing `ζ(2)` upper bound and two-sided `ζ(3)` for the `λ₃` positivity certificate. The
   reusable `zeta_le_partial` (`ζ(s) ≤ S(N) + 1/(N+1)`, the mirror of `zeta_ge_partial`, via the

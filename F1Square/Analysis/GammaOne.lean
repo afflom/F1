@@ -1242,4 +1242,26 @@ theorem Rgamma1_le_neg445 : Rle Rgamma1 (ofQ (⟨-445, 10000⟩ : Q) (by decide)
   refine Rle_trans (Rle_of_Req (Radd_ofQ_ofQ hgbd h200)) ?_
   exact Rle_ofQ_ofQ (add_den_pos hgbd h200) (by decide) gBound200_le_neg
 
+set_option maxRecDepth 40000 in
+/-- The tighter numeric heart at artanh depth `T = 4`: `gBound 4 10⁶ 200 + 1/400 ≤ −55/1000`
+    (kernel `decide`). The deeper per-term log bounds (`T = 4` vs `T = 2`) shrink the `gBound`
+    over-estimate, pushing the bracket from `−0.0445` to `−0.055`. -/
+theorem gBound200_T4_le_neg055 :
+    Qle (add (gBound 4 1000000 200) (⟨1, 2 * 200⟩ : Q)) (⟨-55, 1000⟩ : Q) := by decide
+
+/-- **`γ₁ ≤ −0.055`** — a tighter upper bracket on the first Stieltjes constant (true `≈ −0.0728`),
+    via artanh depth `T = 4` (vs `Rgamma1_le_neg445`'s `T = 2`). Same chain
+    (`Rgamma1_le_gSeq` → `gSeq_le_gBound` → numeric), tightening the dominant `−6γ₁` contribution to the
+    `Pos Rlambda3` (`λ₃`) certificate. The residual gap to the true value is the `gSeq` Euler–Maclaurin
+    overshoot `+(ln N)/(2N)` (the convergence, not the bound depth — raising `T` further plateaus),
+    whose removal is the remaining `GammaTwoBracket`-scale acceleration. -/
+theorem Rgamma1_le_neg055 : Rle Rgamma1 (ofQ (⟨-55, 1000⟩ : Q) (by decide)) := by
+  refine Rle_trans (Rgamma1_le_gSeq (show 1 ≤ 200 by decide) (show 200 ≤ 256 by decide)) ?_
+  refine Rle_trans (Radd_le_add (gSeq_le_gBound 4 1000000 200 (by decide) (by decide))
+    (Rle_refl _)) ?_
+  have hgbd : 0 < (gBound 4 1000000 200).den := gBound_den_pos 4 1000000 200 (by decide)
+  have h200 : 0 < (⟨1, 2 * 200⟩ : Q).den := Nat.mul_pos (by decide) (by decide)
+  refine Rle_trans (Rle_of_Req (Radd_ofQ_ofQ hgbd h200)) ?_
+  exact Rle_ofQ_ofQ (add_den_pos hgbd h200) (by decide) gBound200_T4_le_neg055
+
 end UOR.Bridge.F1Square.Analysis

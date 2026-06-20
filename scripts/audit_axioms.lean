@@ -1899,6 +1899,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.gSeq_le_gBound
 #print axioms Analysis.gBound200_le_neg
 #print axioms Analysis.Rgamma1_le_neg445
+#print axioms Analysis.gBound200_T4_le_neg055
+#print axioms Analysis.Rgamma1_le_neg055
 #print axioms Analysis.deltaLog_upper
 #print axioms Analysis.expDelta_eq
 #print axioms Analysis.expRecip_le
