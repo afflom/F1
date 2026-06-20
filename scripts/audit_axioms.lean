@@ -2868,3 +2868,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.RartanhConst_neg
 #print axioms Analysis.TwoArtanhConst_neg
 #print axioms Analysis.Rexp_TwoArtanh_of_neg
+#print axioms Analysis.Rexp_TwoArtanh_signed_rho
