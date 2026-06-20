@@ -76,9 +76,22 @@ audit-visible hypothesis, never an axiom).
   sign-agnostic), the signed real log-multiplicativity `Rlog_mul_signed` (`tmap_abs_lt_one` two-sided
   + `wvalR_tmap_seq_bound_signed`), `RlogPos_mul_signed`, and the assembly
   `RlogPos_cnormSq_mul_signed`/`Clog_add_signed` (witness from a lower bound, `pos_witness_of_mulM_ge`,
-  since the squared-modulus product may dip below 1). The fully general positive-real modulus
-  (relaxing the `ρ²≤1/2` continuity lemmas to `ρ<1` for large moduli) remains the open substrate
-  frontier. Crux fields stay `none`.
+  since the squared-modulus product may dip below 1). Crux fields stay `none`.
+- **Track 1 — ★★★ general-modulus complex `Clog` additivity (`ρ<1` relaxation)** (`Analysis/RadiusGen.lean`):
+  `Clog_add_gen` removes the small-radius cap entirely — `Clog(zw) = Clog z + Clog w` with the modulus
+  seam `hmod` discharged for squared moduli in `[1/B, B]` at **any** `B ≥ 1`. The load-bearing
+  finding: `ρ²≤1/2` was never needed for convergence, only for the clean constant `2`; the artanh
+  reindex `(ρ.den²+4ρ.den)(n+1)` already absorbs the general even-sum bound `Σρ^{2k} ≤ 1/(1−ρ²) ~
+  ρ.den/2`, with the **canonical `K = ρ.den`** valid for every `ρ<1`. The full `_gen` stack (~20
+  lemmas): `geoEvenSum_le_gen` → `Rartanh_congr_gen`/`artSum_depth_recip_gen`/`Rartanh_radius_indep_gen`
+  (continuity) → `Rlog_congr_gen`/`RlogPos_eq_Rlog_gen`/`RlogPos_congr_gen` (bridge) →
+  `wval_halfbound_gen` (denominator factor `ρ.den` vs `2`)/`wval_lip1_gen`/`wval_lip2_gen`
+  (Lipschitz constant `ρ.den²` vs `4`)/`wval_inner_pos_gen` → `artSum_wval_argdiff_gen`
+  (constant `Kσ·ρ.den²`) → `Rartanh_add_real_via_gen` (the real artanh addition diagonal; combination
+  leg already radius-agnostic) → `wvalReal_gen`/`tmul_wvalReal_via_gen` (reindex `2ρ.den²(n+1)`
+  absorbing the larger constant) → `Rlog_mul_via_gen` → `Rlog_mul_gen` → `RlogPos_mul_gen` →
+  `RlogPos_cnormSq_mul_gen` → `Clog_add_gen`. Substrate item 0's modulus seam is now closed at full
+  generality. Crux fields stay `none`.
 - **Track 1 — ★ value-level `sin(arctan t) = t·cos(arctan t)`** (`Analysis/ArctanODE.lean`,
   `Rsin_arctan_value_eq`): `Req (Rsin (Rarctan t₀)) (Rmul (ofQ t₀) (Rcos (Rarctan t₀)))` for
   `|t₀| ≤ ρ < 1/16`. This **completes the formal-PS → value (FTC) bridge** that lifts the formal
