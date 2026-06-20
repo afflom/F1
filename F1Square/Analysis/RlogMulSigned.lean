@@ -77,6 +77,23 @@ theorem Rexp_TwoArtanh_of_neg (τ ρ gσ gτ : Q) (hτd : 0 < τ.den)
     Rmul_right_cancel hk (Req_trans hprodσ (Req_symm hprodgτ))
   exact Req_trans (RexpReal_congr htac) hcancel
 
+/-- **Additivity from exp-values, no sign restriction** (the `RexpReal_inj_gen` core): if `exp A = gA`,
+    `exp B = gB`, `exp C = gC` with `gC = gA·gB`, then `C = A + B` — for **any** reals `A, B, C`
+    (dropping the `≥ 0` hypotheses of `Req_add_of_exp_values`, via the general injectivity
+    `RexpReal_inj_gen`). The engine for the *signed* artanh addition law. -/
+theorem Req_add_of_exp_values_gen {A B C : Real} {gA gB gC : Q}
+    (hgAd : 0 < gA.den) (hgBd : 0 < gB.den) (hgCd : 0 < gC.den)
+    (hA : Req (RexpReal A) (ofQ gA hgAd)) (hB : Req (RexpReal B) (ofQ gB hgBd))
+    (hC : Req (RexpReal C) (ofQ gC hgCd)) (hg : Qeq gC (mul gA gB)) :
+    Req C (Radd A B) := by
+  apply RexpReal_inj_gen
+  have hmul : Req (RexpReal (Radd A B)) (ofQ gC hgCd) :=
+    Req_trans (RexpReal_add A B)
+      (Req_trans (Rmul_congr hA hB)
+        (Req_trans (Rmul_ofQ_ofQ hgAd hgBd)
+          (ofQ_congr (Qmul_den_pos hgAd hgBd) hgCd (Qeq_symm hg))))
+  exact Req_trans hC (Req_symm hmul)
+
 set_option maxHeartbeats 800000 in
 /-- **★ sign-agnostic exp/artanh identity** `exp(2·artanh τ) = (1+τ)/(1−τ)` for **any** rational `τ`
     with `|τ| < 1` (`τ.num.toNat < τ.den` and `(−τ).num.toNat < τ.den`), at any radius `ρ ≥ |τ|`.
