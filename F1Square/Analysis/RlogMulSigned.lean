@@ -270,4 +270,99 @@ theorem RartanhConst_add_wvalR_rho (a b σ : Q)
   exact Req_trans (Req_symm (two_half_cancel_s _))
     (Req_trans (Rmul_congr (Req_refl (ofQ (⟨1, 2⟩ : Q) (by decide))) hmul2) (two_half_cancel_s _))
 
+set_option maxHeartbeats 1600000 in
+/-- **★ signed real artanh addition diagonal** `artanh s + artanh t = artanh(wvalReal s t)` for **signed**
+    real `s, t` (`|s.seq m|, |t.seq m| < 1` both ways). The signed analog of `Rartanh_add_real_via`:
+    identical diagonal assembly (arg-variation leg `artSum_wval_argdiff` and the den-positivity
+    `wval_inner_pos` are already sign-agnostic over `wvalR`), with the combination leg now the signed
+    `RartanhConst_add_wvalR_rho`. Drops the `≥0` hypotheses `hs0`/`ht0`, adds the `−num`-side bounds
+    `hslt'`/`htlt'`. -/
+theorem Rartanh_add_real_via_signed (s t X1 X2 Y : Real) (σ : Q) (R_Y : Nat → Nat)
+    (hσ0 : 0 ≤ σ.num) (hσd : 0 < σ.den) (hσlt : σ.num.toNat < σ.den)
+    (hσ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul σ σ))) (hRY : ∀ n, n ≤ R_Y n)
+    (hslt : ∀ m, (s.seq m).num.toNat < (s.seq m).den) (htlt : ∀ m, (t.seq m).num.toNat < (t.seq m).den)
+    (hslt' : ∀ m, (neg (s.seq m)).num.toNat < (s.seq m).den)
+    (htlt' : ∀ m, (neg (t.seq m)).num.toNat < (t.seq m).den)
+    (hbs : ∀ m, Qle (Qabs (s.seq m)) σ) (hbt : ∀ m, Qle (Qabs (t.seq m)) σ)
+    (hbw : ∀ i, Qle (Qabs (wvalR (s.seq i) (t.seq i))) σ)
+    (hX1seq : ∀ j, X1.seq j = artSum (s.seq (Rartanh_R σ j)) (Rartanh_R σ j))
+    (hX2seq : ∀ j, X2.seq j = artSum (t.seq (Rartanh_R σ j)) (Rartanh_R σ j))
+    (hYseq : ∀ n, Y.seq n = artSum (wvalR (s.seq (R_Y n)) (t.seq (R_Y n))) (Rartanh_R σ n)) :
+    Req (Radd X1 X2) Y := by
+  have hsd : ∀ m, 0 < (s.seq m).den := fun m => s.den_pos m
+  have htd : ∀ m, 0 < (t.seq m).den := fun m => t.den_pos m
+  have hσhalf : Qle (mul σ σ) ⟨1, 2⟩ := by
+    have h := hσ2; simp only [Qle, Qsub, add, neg, mul] at h ⊢; push_cast at h ⊢; omega
+  have hRge : ∀ k, k ≤ Rartanh_R σ k := by
+    intro k; unfold Rartanh_R
+    have hk : 1 ≤ σ.den * σ.den + 4 * σ.den := Nat.le_trans (by omega) (Nat.le_add_left _ _)
+    calc k ≤ 1 * (k + 1) := by omega
+      _ ≤ (σ.den * σ.den + 4 * σ.den) * (k + 1) := Nat.mul_le_mul_right _ hk
+  refine Req_of_lin_bound (C := 34) ?_
+  intro n
+  have hae : (Radd X1 X2).seq n
+      = add (artSum (s.seq (Rartanh_R σ (2 * n + 1))) (Rartanh_R σ (2 * n + 1)))
+          (artSum (t.seq (Rartanh_R σ (2 * n + 1))) (Rartanh_R σ (2 * n + 1))) := by
+    show add (X1.seq (2 * n + 1)) (X2.seq (2 * n + 1)) = _; rw [hX1seq, hX2seq]
+  rw [hae, hYseq n]
+  have hWd : 0 < (artSum (wvalR (s.seq (Rartanh_R σ (2 * n + 1))) (t.seq (Rartanh_R σ (2 * n + 1))))
+      (Rartanh_R σ n)).den :=
+    artSum_den_pos (wvalR_den_pos _ _ (wval_inner_pos σ _ _ hσd hσ0 (hsd _) (htd _) (hbs _) (hbt _) hσhalf)) _
+  have hYd : 0 < (artSum (wvalR (s.seq (R_Y n)) (t.seq (R_Y n))) (Rartanh_R σ n)).den :=
+    artSum_den_pos (wvalR_den_pos _ _ (wval_inner_pos σ _ _ hσd hσ0 (hsd _) (htd _) (hbs _) (hbt _) hσhalf)) _
+  have hRd : 0 < (add (artSum (s.seq (Rartanh_R σ (2 * n + 1))) (Rartanh_R σ (2 * n + 1)))
+      (artSum (t.seq (Rartanh_R σ (2 * n + 1))) (Rartanh_R σ (2 * n + 1)))).den :=
+    add_den_pos (artSum_den_pos (hsd _) _) (artSum_den_pos (htd _) _)
+  -- combination leg: the SIGNED rational addition law at the diagonal rationals (already in wvalR form)
+  have hcomb : Qle (Qabs (Qsub
+        (artSum (wvalR (s.seq (Rartanh_R σ (2 * n + 1))) (t.seq (Rartanh_R σ (2 * n + 1)))) (Rartanh_R σ n))
+        (add (artSum (s.seq (Rartanh_R σ (2 * n + 1))) (Rartanh_R σ (2 * n + 1)))
+          (artSum (t.seq (Rartanh_R σ (2 * n + 1))) (Rartanh_R σ (2 * n + 1)))))) (⟨2, n + 1⟩ : Q) :=
+    RartanhConst_add_wvalR_rho (s.seq (Rartanh_R σ (2 * n + 1)))
+      (t.seq (Rartanh_R σ (2 * n + 1))) σ (hsd _) (hslt _) (hslt' _) (htd _) (htlt _) (htlt' _)
+      hσ0 hσd hσlt (wval_inner_pos σ _ _ hσd hσ0 (hsd _) (htd _) (hbs _) (hbt _) hσhalf)
+      (hbs _) (hbt _) (hbw _) n
+  have hvar := artSum_wval_argdiff σ σ (s.seq (Rartanh_R σ (2 * n + 1)))
+    (t.seq (Rartanh_R σ (2 * n + 1))) (s.seq (R_Y n)) (t.seq (R_Y n))
+    hσd hσ0 hσhalf hσ0 hσd hσ2 (hsd _) (htd _) (hsd _) (htd _)
+    (hbs _) (hbt _) (hbs _) (hbt _) (hbw _) (hbw _) (Rartanh_R σ n)
+  have hQbP : Qle (Qbound (Rartanh_R σ (2 * n + 1))) (Qbound n) := by
+    show (1 : Int) * ((n + 1 : Nat) : Int) ≤ 1 * ((Rartanh_R σ (2 * n + 1) + 1 : Nat) : Int)
+    have := hRge (2 * n + 1); rw [Int.one_mul, Int.one_mul]
+    exact_mod_cast (show n + 1 ≤ Rartanh_R σ (2 * n + 1) + 1 by omega)
+  have hQbM : Qle (Qbound (R_Y n)) (Qbound n) := by
+    show (1 : Int) * ((n + 1 : Nat) : Int) ≤ 1 * ((R_Y n + 1 : Nat) : Int)
+    have := hRY n; rw [Int.one_mul, Int.one_mul]
+    exact_mod_cast (show n + 1 ≤ R_Y n + 1 by omega)
+  have hlegB : Qle (Qabs (Qsub
+        (artSum (wvalR (s.seq (Rartanh_R σ (2 * n + 1))) (t.seq (Rartanh_R σ (2 * n + 1)))) (Rartanh_R σ n))
+        (artSum (wvalR (s.seq (R_Y n)) (t.seq (R_Y n))) (Rartanh_R σ n)))) (⟨32, n + 1⟩ : Q) := by
+    refine Qle_trans (Qmul_den_pos Nat.one_pos (add_den_pos
+        (Qabs_den_pos (Qsub_den_pos (hsd _) (hsd _))) (Qabs_den_pos (Qsub_den_pos (htd _) (htd _)))))
+      hvar ?_
+    refine Qle_trans (Qmul_den_pos Nat.one_pos (add_den_pos
+        (add_den_pos (Qbound_den_pos _) (Qbound_den_pos _))
+        (add_den_pos (Qbound_den_pos _) (Qbound_den_pos _))))
+      (Qmul_le_mul_left (by decide) (Qadd_le_add (s.reg _ _) (t.reg _ _))) ?_
+    refine Qle_trans (Qmul_den_pos Nat.one_pos (add_den_pos
+        (add_den_pos (Qbound_den_pos n) (Qbound_den_pos n))
+        (add_den_pos (Qbound_den_pos n) (Qbound_den_pos n))))
+      (Qmul_le_mul_left (by decide)
+        (Qadd_le_add (Qadd_le_add hQbP hQbM) (Qadd_le_add hQbP hQbM))) ?_
+    apply Qeq_le
+    show Qeq (mul ⟨8, 1⟩ (add (add (Qbound n) (Qbound n)) (add (Qbound n) (Qbound n))))
+      (⟨32, n + 1⟩ : Q)
+    simp only [Qeq, mul, add, Qbound]; push_cast; ring_uor
+  have hlegA : Qle (Qabs (Qsub
+        (add (artSum (s.seq (Rartanh_R σ (2 * n + 1))) (Rartanh_R σ (2 * n + 1)))
+          (artSum (t.seq (Rartanh_R σ (2 * n + 1))) (Rartanh_R σ (2 * n + 1))))
+        (artSum (wvalR (s.seq (Rartanh_R σ (2 * n + 1))) (t.seq (Rartanh_R σ (2 * n + 1)))) (Rartanh_R σ n))))
+      (⟨2, n + 1⟩ : Q) := by
+    rw [Qabs_Qsub_comm]; exact hcomb
+  refine Qle_trans (add_den_pos (Qabs_den_pos (Qsub_den_pos hRd hWd))
+      (Qabs_den_pos (Qsub_den_pos hWd hYd)))
+    (Qabs_sub_triangle hRd hWd hYd) ?_
+  refine Qle_trans (add_den_pos (Nat.succ_pos n) (Nat.succ_pos n)) (Qadd_le_add hlegA hlegB) ?_
+  apply Qeq_le; exact Qadd_same_den_loc 2 32 (n + 1)
+
 end UOR.Bridge.F1Square.Analysis
