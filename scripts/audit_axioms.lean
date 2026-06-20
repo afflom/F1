@@ -2899,3 +2899,6 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.tmul_wvalReal_via_gen
 #print axioms Analysis.Rlog_mul_via_gen
 #print axioms Analysis.Rlog_mul_gen
+#print axioms Analysis.RlogPos_mul_gen
+#print axioms Analysis.RlogPos_cnormSq_mul_gen
+#print axioms Analysis.Clog_add_gen
