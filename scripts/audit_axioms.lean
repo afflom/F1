@@ -2874,3 +2874,5 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.TwoArtanh_add_wvalR_rho
 #print axioms Analysis.RartanhConst_add_wvalR_rho
 #print axioms Analysis.Rartanh_add_real_via_signed
+#print axioms Analysis.tmap_abs_lt_one
+#print axioms Analysis.Rlog_mul_via_signed

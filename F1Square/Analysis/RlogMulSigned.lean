@@ -365,4 +365,77 @@ theorem Rartanh_add_real_via_signed (s t X1 X2 Y : Real) (σ : Q) (R_Y : Nat →
   refine Qle_trans (add_den_pos (Nat.succ_pos n) (Nat.succ_pos n)) (Qadd_le_add hlegA hlegB) ?_
   apply Qeq_le; exact Qadd_same_den_loc 2 32 (n + 1)
 
+/-- **`tmap` maps `(0,∞)` into `(−1,1)`** (sign-free): for `q > 0`, both `(tmap q).num.toNat < (tmap q).den`
+    and `(−tmap q).num.toNat < (tmap q).den`, i.e. `|tmap q| < 1`. The two-sided analog of
+    `tmap_nonneg_lt_one`, for the signed `Rlog_mul` whose `artanh` arguments `tmap(x.seq)` wobble below
+    `0` when `x.seq < 1`. -/
+theorem tmap_abs_lt_one (q : Q) (hqd : 0 < q.den) (hqn : 0 < q.num) :
+    (tmap q).num.toNat < (tmap q).den ∧ (neg (tmap q)).num.toNat < (tmap q).den := by
+  have hd0 : (0 : Int) < q.den := by exact_mod_cast hqd
+  have hnum : (tmap q).num = (q.num - (q.den : Int)) * q.den := by
+    unfold tmap mul Qsub Qinv add neg; push_cast; ring_uor
+  have hdenI : ((tmap q).den : Int) = (q.den : Int) * (q.num + q.den) := by
+    show (((tmap q).den : Nat) : Int) = _
+    unfold tmap mul Qsub Qinv add neg
+    push_cast [Int.toNat_of_nonneg (show (0 : Int) ≤ q.num * 1 + 1 * (q.den : Int) by omega)]
+    ring_uor
+  have hdpos : (0 : Int) < ((tmap q).den : Int) := by
+    rw [hdenI]; have := Int.mul_pos hd0 (show (0 : Int) < q.num + q.den by omega); omega
+  have hnd : (tmap q).num < ((tmap q).den : Int) := by
+    rw [hnum, hdenI]
+    have key : (q.den : Int) * (q.num + q.den) - (q.num - q.den) * q.den = 2 * (q.den * q.den) := by
+      ring_uor
+    have hpos : (0 : Int) < 2 * (q.den * q.den) := by have := Int.mul_pos hd0 hd0; omega
+    omega
+  have hnd2 : -(tmap q).num < ((tmap q).den : Int) := by
+    rw [hnum, hdenI]
+    have key : (q.num - q.den) * q.den + (q.den : Int) * (q.num + q.den) = 2 * (q.num * q.den) := by
+      ring_uor
+    have hpos : (0 : Int) < 2 * (q.num * q.den) := by have := Int.mul_pos hqn hd0; omega
+    omega
+  refine ⟨by omega, ?_⟩
+  have he : (neg (tmap q)).num = -(tmap q).num := rfl
+  rw [he]; omega
+
+set_option maxHeartbeats 800000 in
+/-- **Log-multiplication wiring, signed** — the signed analog of `Rlog_mul_via`, routing the real
+    addition through `Rartanh_add_real_via_signed` (so `tx`, `ty` may dip below `0`). -/
+theorem Rlog_mul_via_signed (c tx ty txy : Real) (σ : Q)
+    (hσ0 : 0 ≤ σ.num) (hσd : 0 < σ.den) (hσlt : σ.num.toNat < σ.den)
+    (hσhalf : Qle (mul σ σ) ⟨1, 2⟩)
+    (hslt : ∀ m, (tx.seq m).num.toNat < (tx.seq m).den)
+    (htlt : ∀ m, (ty.seq m).num.toNat < (ty.seq m).den)
+    (hslt' : ∀ m, (neg (tx.seq m)).num.toNat < (tx.seq m).den)
+    (htlt' : ∀ m, (neg (ty.seq m)).num.toNat < (ty.seq m).den)
+    (hbx : ∀ m, Qle (Qabs (tx.seq m)) σ) (hby : ∀ m, Qle (Qabs (ty.seq m)) σ)
+    (hbw : ∀ i, Qle (Qabs (wvalR (tx.seq i) (ty.seq i))) σ) (hbtxy : ∀ m, Qle (Qabs (txy.seq m)) σ)
+    (htmul : Req txy (wvalReal tx ty σ hσd hσ0 hσhalf hbx hby)) :
+    Req (Radd (Rmul c (Rartanh tx σ hσ0 hσd hσlt hbx)) (Rmul c (Rartanh ty σ hσ0 hσd hσlt hby)))
+        (Rmul c (Rartanh txy σ hσ0 hσd hσlt hbtxy)) := by
+  have hσ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul σ σ)) := by
+    have h := hσhalf; simp only [Qle, Qsub, add, neg, mul] at h ⊢; push_cast at h ⊢; omega
+  have hbW : ∀ n, Qle (Qabs ((wvalReal tx ty σ hσd hσ0 hσhalf hbx hby).seq n)) σ :=
+    fun n => hbw (8 * n + 7)
+  have hRY : ∀ n, n ≤ 8 * Rartanh_R σ n + 7 := by
+    intro n
+    have hk : 1 ≤ σ.den * σ.den + 4 * σ.den := Nat.le_trans (by omega) (Nat.le_add_left _ _)
+    have : n ≤ Rartanh_R σ n := by
+      unfold Rartanh_R
+      calc n ≤ 1 * (n + 1) := by omega
+        _ ≤ (σ.den * σ.den + 4 * σ.den) * (n + 1) := Nat.mul_le_mul_right _ hk
+    omega
+  have hadd : Req (Radd (Rartanh tx σ hσ0 hσd hσlt hbx) (Rartanh ty σ hσ0 hσd hσlt hby))
+      (Rartanh (wvalReal tx ty σ hσd hσ0 hσhalf hbx hby) σ hσ0 hσd hσlt hbW) :=
+    Rartanh_add_real_via_signed tx ty (Rartanh tx σ hσ0 hσd hσlt hbx) (Rartanh ty σ hσ0 hσd hσlt hby)
+      (Rartanh (wvalReal tx ty σ hσd hσ0 hσhalf hbx hby) σ hσ0 hσd hσlt hbW)
+      σ (fun n => 8 * Rartanh_R σ n + 7) hσ0 hσd hσlt hσ2 hRY hslt htlt hslt' htlt' hbx hby hbw
+      (fun _ => rfl) (fun _ => rfl) (fun _ => rfl)
+  have hcong : Req (Rartanh (wvalReal tx ty σ hσd hσ0 hσhalf hbx hby) σ hσ0 hσd hσlt hbW)
+      (Rartanh txy σ hσ0 hσd hσlt hbtxy) :=
+    Rartanh_congr (wvalReal tx ty σ hσd hσ0 hσhalf hbx hby) txy σ hσ0 hσd hσlt hσ2 hbW hbtxy
+      (Req_symm htmul)
+  exact Rlog_mul_algebra c (Rartanh tx σ hσ0 hσd hσlt hbx) (Rartanh ty σ hσ0 hσd hσlt hby)
+    (Rartanh (wvalReal tx ty σ hσd hσ0 hσhalf hbx hby) σ hσ0 hσd hσlt hbW)
+    (Rartanh txy σ hσ0 hσd hσlt hbtxy) hadd hcong
+
 end UOR.Bridge.F1Square.Analysis
