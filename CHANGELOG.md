@@ -108,6 +108,12 @@ audit-visible hypothesis, never an axiom).
   diagonal limits agree (`Rlim_congr`). This is the archimedean face of ξ's conjugate-pair zero
   symmetry; the line `Re ψ(1/4 + iτ/2)` of Track 2 is its instance. The first verified analytic
   property atop the item-1 objects (advancing beyond the approximant constructions). Axiom-clean.
+  Now extended to the **full conjugation symmetry** `ψ(s̄) = conj ψ(s)` (`CDigamma_conj`, a `Ceq`):
+  the imaginary part flips, `Im ψ(s̄) = −Im ψ(s)` (`CDigamma_im_conj`), since `Im(1/(s+n)) = −Im s/|s+n|²`
+  negates under `s ↦ s̄` while `|s+n|²` stays fixed — proved via the new generic `genSum_neg`
+  (`Σ(−T) = −ΣT`) and `RReg_neg` (regularity preserved under negation), then `Rlim_neg`. This is the
+  archimedean place's reflection symmetry (ξ's conjugate-pair zero structure), and it exercises the
+  full `Rlim_congr`/`Rlim_neg`/`Rinv_congr` toolkit.
 - **Track 1 — left-sector argument additivity** `CargLeft(zw) = CargLeft z + Carg w`
   (`Analysis/ComplexArgLeftAdd.lean`): left-half-plane `z` (`Re z < 0`) times principal `w`, the
   product again left. Reflects the principal `Carg_add` through the `+π` shift via `−(zw) = (−z)·w`
