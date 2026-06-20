@@ -2914,6 +2914,12 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.CargLeft_tan
 #print axioms Analysis.Cneg_Cmul_left
 #print axioms Analysis.CargLeft_add
+#print axioms Analysis.CdigammaArg_re
+#print axioms Analysis.CdigammaArg_im
+#print axioms Analysis.ofQ_le_CnormSq_CdigammaArg
+#print axioms Analysis.CdigammaArg_witness
+#print axioms Analysis.CdigammaTerm_re
+#print axioms Analysis.CdigammaTerm_im
 #print axioms Analysis.Rcos_sub
 #print axioms Analysis.Rsin_pi_half_sub
 #print axioms Analysis.Rcos_pi_half_sub

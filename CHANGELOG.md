@@ -16,6 +16,17 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **Track 1 (item 1 — the Γ place on the strip) — the complex digamma term**
+  (`Analysis/ComplexDigamma.lean`, increment 1): the archimedean `Γ′/Γ` series
+  `ψ(s) = −γ + Σ_{n≥0} [1/(n+1) − 1/(s+n)]` lifted to complex `s` with `Re s ≥ c > 0` (the strip) —
+  the piece of item 1 the real-line `Gamma.lean` does not provide. Built from the complex reciprocal
+  `Cinv` ALONE (no `Cpow`/`Clog`), so it is entirely free of the `1/16` value-identity barrier. The
+  term layer: the shifted argument `s+n` (`CdigammaArg`), its modulus-squared floor `|s+n|² ≥ c²`
+  (`ofQ_le_CnormSq_CdigammaArg`, from `(Re s+n)² ≥ c²` and `(Im s)² ≥ 0`) and the resulting positivity
+  witness `CdigammaArg_witness` (squared-floor analogue of the real `digammaArg_witness`), and the
+  complex term `CdigammaTerm = 1/(n+1) − 1/(s+n)`. Per-term bounds, regular partial sums, and the
+  limit object `CDigamma` follow in later increments via the generic `RReg_of_real_bound` engine.
+  Axiom-clean.
 - **Track 1 — left-sector argument additivity** `CargLeft(zw) = CargLeft z + Carg w`
   (`Analysis/ComplexArgLeftAdd.lean`): left-half-plane `z` (`Re z < 0`) times principal `w`, the
   product again left. Reflects the principal `Carg_add` through the `+π` shift via `−(zw) = (−z)·w`
