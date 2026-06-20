@@ -731,4 +731,115 @@ def wvalReal_gen (s t : Real) (ρ : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num)
         (mul (⟨2 * (ρ.den : Int) * ρ.den, 1⟩ : Q) (Qbound (2 * ρ.den * ρ.den * (n + 1)))))
     simp only [Qeq, mul, add, Qbound]; push_cast; ring_uor
 
+set_option maxHeartbeats 1600000 in
+/-- **General-radius `tmap(xy) ≈ wvalR(tmap x, tmap y)` diagonal** — the gen analog of `tmul_wvalReal_via`
+    matching `wvalReal_gen`'s `2ρ.den²(n+1)` reindex, via `wval_lip1/2_gen` (constant `ρ.den²`). -/
+theorem tmul_wvalReal_via_gen (x y txy wxy : Real) (ρ : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num)
+    (hρlt : ρ.num.toNat < ρ.den) (hxpos : ∀ n, 0 < (x.seq n).num) (hypos : ∀ n, 0 < (y.seq n).num)
+    (hbx : ∀ m, Qle (Qabs (tmap (x.seq m))) ρ) (hby : ∀ m, Qle (Qabs (tmap (y.seq m))) ρ)
+    (htxyseq : ∀ n, txy.seq n = tmap ((Rmul x y).seq (Rlog_R n)))
+    (hwxyseq : ∀ n, wxy.seq n = wvalR (tmap (x.seq (Rlog_R (2 * ρ.den * ρ.den * (n + 1)))))
+      (tmap (y.seq (Rlog_R (2 * ρ.den * ρ.den * (n + 1)))))) :
+    Req txy wxy := by
+  have hxd : ∀ m, 0 < (x.seq m).den := fun m => x.den_pos m
+  have hyd : ∀ m, 0 < (y.seq m).den := fun m => y.den_pos m
+  have hcax : ∀ m, 0 < (add (x.seq m) ⟨1, 1⟩).num := by
+    intro m; have h := hxpos m; have h2 := Int.ofNat_nonneg (x.seq m).den
+    show 0 < (x.seq m).num * 1 + 1 * ((x.seq m).den : Int); omega
+  have hcay : ∀ m, 0 < (add (y.seq m) ⟨1, 1⟩).num := by
+    intro m; have h := hypos m; have h2 := Int.ofNat_nonneg (y.seq m).den
+    show 0 < (y.seq m).num * 1 + 1 * ((y.seq m).den : Int); omega
+  have hcgex : ∀ m, Qle (⟨1, 1⟩ : Q) (add (x.seq m) ⟨1, 1⟩) := by
+    intro m; have h := hxpos m; have h2 := Int.ofNat_nonneg (x.seq m).den
+    simp only [Qle, add, mul]; push_cast; omega
+  have hcgey : ∀ m, Qle (⟨1, 1⟩ : Q) (add (y.seq m) ⟨1, 1⟩) := by
+    intro m; have h := hypos m; have h2 := Int.ofNat_nonneg (y.seq m).den
+    simp only [Qle, add, mul]; push_cast; omega
+  have htmdx : ∀ m, 0 < (tmap (x.seq m)).den := fun m =>
+    Qmul_den_pos (Qsub_den_pos (hxd m) Nat.one_pos) (Qinv_den_pos (hcax m))
+  have htmdy : ∀ m, 0 < (tmap (y.seq m)).den := fun m =>
+    Qmul_den_pos (Qsub_den_pos (hyd m) Nat.one_pos) (Qinv_den_pos (hcay m))
+  have hcaxy : ∀ a, 0 < (add (mul (x.seq a) (y.seq a)) ⟨1, 1⟩).num := by
+    intro a
+    have hprodn : 0 < (x.seq a).num * (y.seq a).num := Int.mul_pos (hxpos a) (hypos a)
+    have hd : 0 < (((x.seq a).den * (y.seq a).den : Nat) : Int) := by exact_mod_cast Nat.mul_pos (hxd a) (hyd a)
+    show 0 < (x.seq a).num * (y.seq a).num * 1 + 1 * (((x.seq a).den * (y.seq a).den : Nat) : Int); omega
+  have hDpos : ∀ i j, 0 < ((tmap (x.seq i)).den : Int) * (tmap (y.seq j)).den
+      + (tmap (x.seq i)).num * (tmap (y.seq j)).num := fun i j =>
+    wval_inner_pos_gen ρ (tmap (x.seq i)) (tmap (y.seq j)) hρd hρ0 (htmdx i) (htmdy j) (hbx i) (hby j) hρlt
+  have hd2nn : (0 : Int) ≤ (ρ.den : Int) * ρ.den :=
+    Int.mul_nonneg (Int.ofNat_nonneg _) (Int.ofNat_nonneg _)
+  refine Req_of_lin_bound (C := 8 * ρ.den * ρ.den) ?_
+  intro n
+  rw [htxyseq n, hwxyseq n]
+  let A := Ridx x y (Rlog_R n)
+  let B := Rlog_R (2 * ρ.den * ρ.den * (n + 1))
+  show Qle (Qabs (Qsub (tmap (mul (x.seq A) (y.seq A)))
+      (wvalR (tmap (x.seq B)) (tmap (y.seq B))))) (⟨(8 * ρ.den * ρ.den : Nat), n + 1⟩ : Q)
+  have hQbA : Qle (Qbound A) (Qbound n) := by
+    show (1 : Int) * ((n + 1 : Nat) : Int) ≤ 1 * ((A + 1 : Nat) : Int)
+    have hge := Ridx_ge x y (Rlog_R n); have hr : n ≤ Rlog_R n := by unfold Rlog_R; omega
+    rw [Int.one_mul, Int.one_mul]
+    exact_mod_cast (show n + 1 ≤ A + 1 by show n + 1 ≤ Ridx x y (Rlog_R n) + 1; omega)
+  have hQbB : Qle (Qbound B) (Qbound n) := by
+    show (1 : Int) * ((n + 1 : Nat) : Int) ≤ 1 * ((B + 1 : Nat) : Int)
+    have hpos : 0 < 2 * ρ.den * ρ.den := Nat.mul_pos (Nat.mul_pos (by omega) hρd) hρd
+    have hKge : n + 1 ≤ 2 * ρ.den * ρ.den * (n + 1) := by
+      calc n + 1 = 1 * (n + 1) := (Nat.one_mul _).symm
+        _ ≤ 2 * ρ.den * ρ.den * (n + 1) := Nat.mul_le_mul_right _ (by omega)
+    have hr : n ≤ B := by show n ≤ Rlog_R (2 * ρ.den * ρ.den * (n + 1)); unfold Rlog_R; omega
+    rw [Int.one_mul, Int.one_mul]; exact_mod_cast (show n + 1 ≤ B + 1 by omega)
+  have leg1 : Qle (Qabs (Qsub (wvalR (tmap (x.seq A)) (tmap (y.seq A)))
+      (wvalR (tmap (x.seq B)) (tmap (y.seq A))))) (⟨4 * ((ρ.den : Int) * ρ.den), n + 1⟩ : Q) := by
+    refine Qle_trans (Qmul_den_pos Nat.one_pos (Qabs_den_pos (Qsub_den_pos (htmdx A) (htmdx B))))
+      (wval_lip1_gen ρ (tmap (x.seq A)) (tmap (x.seq B)) (tmap (y.seq A)) hρd hρ0
+        (htmdx A) (htmdx B) (htmdy A) (hbx A) (hbx B) (hby A) hρlt) ?_
+    refine Qle_trans (Qmul_den_pos Nat.one_pos (Qmul_den_pos Nat.one_pos
+        (Qabs_den_pos (Qsub_den_pos (hxd A) (hxd B)))))
+      (Qmul_le_mul_left hd2nn (tmap_lip (x.seq A) (x.seq B) (hxd A) (hxd B)
+        (hcax A) (hcax B) (hcgex A) (hcgex B))) ?_
+    refine Qle_trans (Qmul_den_pos Nat.one_pos (Qmul_den_pos Nat.one_pos
+        (add_den_pos (Qbound_den_pos _) (Qbound_den_pos _))))
+      (Qmul_le_mul_left hd2nn (Qmul_le_mul_left (by decide) (x.reg A B))) ?_
+    refine Qle_trans (Qmul_den_pos Nat.one_pos (Qmul_den_pos Nat.one_pos
+        (add_den_pos (Qbound_den_pos n) (Qbound_den_pos n))))
+      (Qmul_le_mul_left hd2nn (Qmul_le_mul_left (by decide) (Qadd_le_add hQbA hQbB))) ?_
+    apply Qeq_le
+    show Qeq (mul (⟨(ρ.den : Int) * ρ.den, 1⟩ : Q) (mul ⟨2, 1⟩ (add (Qbound n) (Qbound n))))
+      (⟨4 * ((ρ.den : Int) * ρ.den), n + 1⟩ : Q)
+    simp only [Qeq, mul, add, Qbound]; push_cast; generalize (ρ.den : Int) = d; ring_uor
+  have leg2 : Qle (Qabs (Qsub (wvalR (tmap (x.seq B)) (tmap (y.seq A)))
+      (wvalR (tmap (x.seq B)) (tmap (y.seq B))))) (⟨4 * ((ρ.den : Int) * ρ.den), n + 1⟩ : Q) := by
+    refine Qle_trans (Qmul_den_pos Nat.one_pos (Qabs_den_pos (Qsub_den_pos (htmdy A) (htmdy B))))
+      (wval_lip2_gen ρ (tmap (x.seq B)) (tmap (y.seq A)) (tmap (y.seq B)) hρd hρ0
+        (htmdx B) (htmdy A) (htmdy B) (hbx B) (hby A) (hby B) hρlt) ?_
+    refine Qle_trans (Qmul_den_pos Nat.one_pos (Qmul_den_pos Nat.one_pos
+        (Qabs_den_pos (Qsub_den_pos (hyd A) (hyd B)))))
+      (Qmul_le_mul_left hd2nn (tmap_lip (y.seq A) (y.seq B) (hyd A) (hyd B)
+        (hcay A) (hcay B) (hcgey A) (hcgey B))) ?_
+    refine Qle_trans (Qmul_den_pos Nat.one_pos (Qmul_den_pos Nat.one_pos
+        (add_den_pos (Qbound_den_pos _) (Qbound_den_pos _))))
+      (Qmul_le_mul_left hd2nn (Qmul_le_mul_left (by decide) (y.reg A B))) ?_
+    refine Qle_trans (Qmul_den_pos Nat.one_pos (Qmul_den_pos Nat.one_pos
+        (add_den_pos (Qbound_den_pos n) (Qbound_den_pos n))))
+      (Qmul_le_mul_left hd2nn (Qmul_le_mul_left (by decide) (Qadd_le_add hQbA hQbB))) ?_
+    apply Qeq_le
+    show Qeq (mul (⟨(ρ.den : Int) * ρ.den, 1⟩ : Q) (mul ⟨2, 1⟩ (add (Qbound n) (Qbound n))))
+      (⟨4 * ((ρ.den : Int) * ρ.den), n + 1⟩ : Q)
+    simp only [Qeq, mul, add, Qbound]; push_cast; generalize (ρ.den : Int) = d; ring_uor
+  refine Qle_trans (Qabs_den_pos (Qsub_den_pos (wvalR_den_pos _ _ (hDpos A A))
+      (wvalR_den_pos _ _ (hDpos B B))))
+    (Qeq_le (Qabs_Qeq (Qsub_congr (tmap_mul_wvalR (x.seq A) (y.seq A) (hxd A) (hyd A)
+      (hcax A) (hcay A) (hcaxy A) (hDpos A A)) (Qeq_refl _)))) ?_
+  refine Qle_trans (add_den_pos (Qabs_den_pos (Qsub_den_pos (wvalR_den_pos _ _ (hDpos A A))
+        (wvalR_den_pos _ _ (hDpos B A))))
+      (Qabs_den_pos (Qsub_den_pos (wvalR_den_pos _ _ (hDpos B A)) (wvalR_den_pos _ _ (hDpos B B)))))
+    (Qabs_sub_triangle (wvalR_den_pos _ _ (hDpos A A)) (wvalR_den_pos _ _ (hDpos B A))
+      (wvalR_den_pos _ _ (hDpos B B))) ?_
+  refine Qle_trans (add_den_pos (Nat.succ_pos n) (Nat.succ_pos n)) (Qadd_le_add leg1 leg2) ?_
+  apply Qeq_le
+  show Qeq (add (⟨4 * ((ρ.den : Int) * ρ.den), n + 1⟩ : Q) (⟨4 * ((ρ.den : Int) * ρ.den), n + 1⟩ : Q))
+    (⟨(8 * ρ.den * ρ.den : Nat), n + 1⟩ : Q)
+  simp only [Qeq, add]; push_cast; generalize (ρ.den : Int) = d; ring_uor
+
 end UOR.Bridge.F1Square.Analysis
