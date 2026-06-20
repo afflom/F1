@@ -538,4 +538,196 @@ theorem CdigammaTerm_im_bound (s : Complex) {c : Q} (hcn : 0 < c.num) (hcd : 0 <
   · refine Rle_trans (Rle_of_Req (Req_symm (Rneg_congr hBeq))) (Rle_trans hkey.1 (Rle_of_Req (Req_symm hfac)))
   · exact Rle_trans (Rle_of_Req hfac) (Rle_trans hkey.2 (Rle_of_Req hBeq))
 
+-- ===========================================================================
+-- Generic convergence: an abstract real term sequence `T` with `|T n| ≤ K/((n+1)n)` (`n ≥ 1`) has
+-- regular reindexed partial sums. Reuses the real-line telescoping infrastructure (`digammaRsum`,
+-- `digammaMidx`, `digammaTailQ`, `digammaTailQ_Midx_le`). Instantiated for `Re Cterm` and `Im Cterm`.
+-- ===========================================================================
+
+/-- Generic partial sum `Σ_{n<N} T n`. -/
+def genSum (T : Nat → Real) : Nat → Real
+  | 0 => zero
+  | (N + 1) => Radd (genSum T N) (T N)
+
+/-- The contiguous difference is a range sum (mirror of `digammaSum_diff_eq`, generic in `T`). -/
+theorem genSum_diff_eq (T : Nat → Real) (N : Nat) :
+    ∀ d, Req (Rsub (genSum T (N + d)) (genSum T N)) (digammaRsum (fun i => T (N + i)) d)
+  | 0 => Radd_neg _
+  | (d + 1) =>
+      Req_trans (digamma_Rsub_Radd_left (genSum T (N + d)) (T (N + d)) (genSum T N))
+        (Radd_congr (genSum_diff_eq T N d) (Req_refl _))
+
+/-- **Generic telescoping tail bound** (mirror of `digammaTail_two_sided`): if `|T m| ≤ K/((m+1)m)`
+    for every `m ≥ 1`, the range sum `Σ_{i<d} T(N+i)` is bounded by `±K·(1/N − 1/(N+d))`. -/
+theorem genTail_two_sided (T : Nat → Real) {K : Q} (hKd : 0 < K.den)
+    (hb : ∀ m, ∀ hm : 1 ≤ m,
+      Rle (Rneg (ofQ (mul K (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKd (digamma_succ_mul_pos hm)))) (T m)
+      ∧ Rle (T m) (ofQ (mul K (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKd (digamma_succ_mul_pos hm))))
+    {N : Nat} (hN : 1 ≤ N) :
+    ∀ d, Rle (Rneg (ofQ (digammaTailQ K N d hN) (digammaTailQ_den_pos K N d hN hKd)))
+          (digammaRsum (fun i => T (N + i)) d)
+        ∧ Rle (digammaRsum (fun i => T (N + i)) d)
+          (ofQ (digammaTailQ K N d hN) (digammaTailQ_den_pos K N d hN hKd))
+  | 0 => by
+    have heq0 : Req (ofQ (digammaTailQ K N 0 hN) (digammaTailQ_den_pos K N 0 hN hKd)) zero := by
+      refine ofQ_congr (digammaTailQ_den_pos K N 0 hN hKd) (by decide) ?_
+      show Qeq (mul K (Qsub (⟨1, N⟩ : Q) (⟨1, N + 0⟩ : Q))) (⟨0, 1⟩ : Q)
+      simp only [Qeq, mul, Qsub, add, neg]; push_cast; ring_uor
+    have hz0 : Req (Rneg (ofQ (digammaTailQ K N 0 hN) (digammaTailQ_den_pos K N 0 hN hKd))) zero := by
+      refine Req_trans (Rneg_congr heq0) ?_
+      exact Req_of_seq_Qeq (fun _ => by simp only [Rneg, zero, ofQ, Qeq, neg]; decide)
+    exact ⟨Rle_of_Req hz0, Rle_of_Req (Req_symm heq0)⟩
+  | (d + 1) => by
+    obtain ⟨hlo, hhi⟩ := genTail_two_sided T hKd hb hN d
+    have hnN : 1 ≤ N + d := by omega
+    obtain ⟨htlo, hthi⟩ := hb (N + d) hnN
+    have hkeyU : Req (Radd (ofQ (digammaTailQ K N d hN) (digammaTailQ_den_pos K N d hN hKd))
+        (ofQ (mul K (⟨1, (N + d + 1) * (N + d)⟩ : Q)) (Qmul_den_pos hKd (digamma_succ_mul_pos hnN))))
+        (ofQ (digammaTailQ K N (d + 1) hN) (digammaTailQ_den_pos K N (d + 1) hN hKd)) := by
+      refine Req_trans (Radd_ofQ_ofQ (digammaTailQ_den_pos K N d hN hKd)
+        (Qmul_den_pos hKd (digamma_succ_mul_pos hnN))) ?_
+      refine ofQ_congr _ (digammaTailQ_den_pos K N (d + 1) hN hKd) ?_
+      show Qeq (add (mul K (Qsub (⟨1, N⟩ : Q) (⟨1, N + d⟩ : Q)))
+          (mul K (⟨1, (N + d + 1) * (N + d)⟩ : Q)))
+        (mul K (Qsub (⟨1, N⟩ : Q) (⟨1, N + (d + 1)⟩ : Q)))
+      simp only [Qeq, mul, Qsub, add, neg]; push_cast; ring_uor
+    have hupper : Rle (digammaRsum (fun i => T (N + i)) (d + 1))
+        (ofQ (digammaTailQ K N (d + 1) hN) (digammaTailQ_den_pos K N (d + 1) hN hKd)) := by
+      show Rle (Radd (digammaRsum (fun i => T (N + i)) d) (T (N + d))) _
+      exact Rle_trans (Radd_le_add hhi hthi) (Rle_of_Req hkeyU)
+    have hkeyL : Req (Rneg (ofQ (digammaTailQ K N (d + 1) hN) (digammaTailQ_den_pos K N (d + 1) hN hKd)))
+        (Radd (Rneg (ofQ (digammaTailQ K N d hN) (digammaTailQ_den_pos K N d hN hKd)))
+          (Rneg (ofQ (mul K (⟨1, (N + d + 1) * (N + d)⟩ : Q))
+            (Qmul_den_pos hKd (digamma_succ_mul_pos hnN))))) :=
+      Req_trans (Rneg_congr (Req_symm hkeyU)) (Rneg_Radd _ _)
+    have hlower : Rle (Rneg (ofQ (digammaTailQ K N (d + 1) hN) (digammaTailQ_den_pos K N (d + 1) hN hKd)))
+        (digammaRsum (fun i => T (N + i)) (d + 1)) := by
+      show Rle _ (Radd (digammaRsum (fun i => T (N + i)) d) (T (N + d)))
+      exact Rle_trans (Rle_of_Req hkeyL) (Radd_le_add hlo htlo)
+    exact ⟨hlower, hupper⟩
+
+/-- **Generic regularity** (mirror of `digammaCore_RReg`): the `K`-reindexed partial sums of a
+    `K/((n+1)n)`-bounded term sequence form a regular sequence. -/
+theorem genSum_RReg (T : Nat → Real) {K : Q} (hKd : 0 < K.den) (hK0 : 0 ≤ K.num)
+    (hb : ∀ m, ∀ hm : 1 ≤ m,
+      Rle (Rneg (ofQ (mul K (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKd (digamma_succ_mul_pos hm)))) (T m)
+      ∧ Rle (T m) (ofQ (mul K (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKd (digamma_succ_mul_pos hm)))) :
+    RReg (fun j => genSum T (digammaMidx K j)) := by
+  refine RReg_of_real_bound _ (fun j k => add ⟨1, j + 1⟩ ⟨1, k + 1⟩)
+    (fun j k => add_den_pos (Nat.succ_pos _) (Nat.succ_pos _)) (fun j k => Qle_refl _) ?_
+  intro j k
+  rcases Nat.le_total j k with hjk | hkj
+  · have hM : digammaMidx K j ≤ digammaMidx K k := digammaMidx_mono K hjk
+    obtain ⟨d, hd⟩ : ∃ d, digammaMidx K k = digammaMidx K j + d := ⟨_, (Nat.add_sub_cancel' hM).symm⟩
+    have hdiff := genSum_diff_eq T (digammaMidx K j) d
+    rw [← hd] at hdiff
+    obtain ⟨hlo, _⟩ := genTail_two_sided T hKd hb (digammaMidx_ge_one K j) d
+    have hneg : Req (Rsub (genSum T (digammaMidx K j)) (genSum T (digammaMidx K k)))
+        (Rneg (digammaRsum (fun i => T (digammaMidx K j + i)) d)) :=
+      Req_trans (Req_symm (Rneg_Rsub _ _)) (Rneg_congr hdiff)
+    have hle : Rle (Rneg (digammaRsum (fun i => T (digammaMidx K j + i)) d))
+        (ofQ (digammaTailQ K (digammaMidx K j) d (digammaMidx_ge_one K j))
+          (digammaTailQ_den_pos K (digammaMidx K j) d (digammaMidx_ge_one K j) hKd)) := by
+      refine Rle_trans (Rle_Rneg hlo) (Rle_of_Req ?_)
+      exact Req_of_seq_Qeq (fun n => by simp only [Rneg, ofQ, Qeq, neg]; push_cast; ring_uor)
+    refine Rle_trans (Rle_of_Req hneg) (Rle_trans hle ?_)
+    refine Rle_trans (Rle_ofQ_ofQ (digammaTailQ_den_pos K (digammaMidx K j) d _ hKd)
+      (Nat.succ_pos _) (digammaTailQ_Midx_le K hKd hK0 j d)) ?_
+    exact Rle_ofQ_ofQ (Nat.succ_pos _) _ (Qle_self_add (by show (0 : Int) ≤ 1; decide))
+  · have hM : digammaMidx K k ≤ digammaMidx K j := digammaMidx_mono K hkj
+    obtain ⟨d, hd⟩ : ∃ d, digammaMidx K j = digammaMidx K k + d := ⟨_, (Nat.add_sub_cancel' hM).symm⟩
+    have hdiff := genSum_diff_eq T (digammaMidx K k) d
+    rw [← hd] at hdiff
+    obtain ⟨_, hhi⟩ := genTail_two_sided T hKd hb (digammaMidx_ge_one K k) d
+    refine Rle_trans (Rle_of_Req hdiff) (Rle_trans hhi ?_)
+    refine Rle_trans (Rle_ofQ_ofQ (digammaTailQ_den_pos K (digammaMidx K k) d _ hKd)
+      (Nat.succ_pos _) (digammaTailQ_Midx_le K hKd hK0 k d)) ?_
+    exact Rle_ofQ_ofQ (Nat.succ_pos _) _ (Qle_add_self (by show (0 : Int) ≤ 1; decide))
+
+-- ===========================================================================
+-- The limit object `CDigamma s = −γ + Σ_{n≥0} [1/(n+1) − 1/(s+n)]`, assembled componentwise as a
+-- pair of Bishop `Rlim`s (the `Ceta`/`Czeta` pattern), each regular by `genSum_RReg`.
+-- ===========================================================================
+
+/-- `0 ≤ (B1 + B2²).num` (the `Re`-component bound constant is non-negative). -/
+private theorem cdig_Kre_num_nonneg {B1 B2 : Q} (hB10 : 0 ≤ B1.num) (hB20 : 0 ≤ B2.num) :
+    0 ≤ (add B1 (mul B2 B2)).num := by
+  show 0 ≤ B1.num * ((B2.den : Int) * (B2.den : Int)) + B2.num * B2.num * (B1.den : Int)
+  exact Int.add_nonneg (Int.mul_nonneg hB10 (Int.mul_nonneg (Int.ofNat_nonneg _) (Int.ofNat_nonneg _)))
+    (Int.mul_nonneg (Int.mul_nonneg hB20 hB20) (Int.ofNat_nonneg _))
+
+/-- `0 ≤ (B1·B2 + B2).num` (the `Im`-component bound constant is non-negative). -/
+private theorem cdig_Kim_num_nonneg {B1 B2 : Q} (hB10 : 0 ≤ B1.num) (hB20 : 0 ≤ B2.num) :
+    0 ≤ (add (mul B1 B2) B2).num := by
+  show 0 ≤ B1.num * B2.num * (B2.den : Int) + B2.num * ((B1.den : Int) * (B2.den : Int))
+  exact Int.add_nonneg (Int.mul_nonneg (Int.mul_nonneg hB10 hB20) (Int.ofNat_nonneg _))
+    (Int.mul_nonneg hB20 (Int.mul_nonneg (Int.ofNat_nonneg _) (Int.ofNat_nonneg _)))
+
+/-- **The `Re`-component partial sums are regular** (via `genSum_RReg` + `CdigammaTerm_re_bound`). -/
+theorem CdigammaReSum_RReg (s : Complex) {c : Q} (hcn : 0 < c.num) (hcd : 0 < c.den)
+    (hcs : Rle (ofQ c hcd) s.re) {B1 B2 : Q} (hB1d : 0 < B1.den) (hB2d : 0 < B2.den)
+    (hB10 : 0 ≤ B1.num) (hB20 : 0 ≤ B2.num)
+    (hB1lo : Rle (Rneg (ofQ B1 hB1d)) (Rsub s.re one)) (hB1hi : Rle (Rsub s.re one) (ofQ B1 hB1d))
+    (hB2lo : Rle (Rneg (ofQ B2 hB2d)) s.im) (hB2hi : Rle s.im (ofQ B2 hB2d)) :
+    RReg (fun j => genSum (fun n => (CdigammaTerm s hcn hcd hcs n).re)
+      (digammaMidx (add B1 (mul B2 B2)) j)) :=
+  genSum_RReg (fun n => (CdigammaTerm s hcn hcd hcs n).re)
+    (add_den_pos hB1d (Qmul_den_pos hB2d hB2d)) (cdig_Kre_num_nonneg hB10 hB20)
+    (fun _m hm => CdigammaTerm_re_bound s hcn hcd hcs hB1d hB2d hB1lo hB1hi hB2lo hB2hi hm)
+
+/-- **The `Im`-component partial sums are regular** (via `genSum_RReg` + `CdigammaTerm_im_bound`). -/
+theorem CdigammaImSum_RReg (s : Complex) {c : Q} (hcn : 0 < c.num) (hcd : 0 < c.den)
+    (hcs : Rle (ofQ c hcd) s.re) {B1 B2 : Q} (hB1d : 0 < B1.den) (hB2d : 0 < B2.den)
+    (hB10 : 0 ≤ B1.num) (hB20 : 0 ≤ B2.num)
+    (hB1lo : Rle (Rneg (ofQ B1 hB1d)) (Rsub s.re one)) (hB1hi : Rle (Rsub s.re one) (ofQ B1 hB1d))
+    (hB2lo : Rle (Rneg (ofQ B2 hB2d)) s.im) (hB2hi : Rle s.im (ofQ B2 hB2d)) :
+    RReg (fun j => genSum (fun n => (CdigammaTerm s hcn hcd hcs n).im)
+      (digammaMidx (add (mul B1 B2) B2) j)) :=
+  genSum_RReg (fun n => (CdigammaTerm s hcn hcd hcs n).im)
+    (add_den_pos (Qmul_den_pos hB1d hB2d) hB2d) (cdig_Kim_num_nonneg hB10 hB20)
+    (fun _m hm => CdigammaTerm_im_bound s hcn hcd hcs hB1d hB2d hB1lo hB1hi hB2lo hB2hi hm)
+
+/-- **The complex digamma core** `Σ_{n≥0} [1/(n+1) − 1/(s+n)]`, a genuine constructive complex number
+    on the strip (`Re s ≥ c > 0`, `|Re s−1| ≤ B1`, `|Im s| ≤ B2`), assembled as `⟨Rlim Re-sums,
+    Rlim Im-sums⟩` (the `Ceta`/`Czeta` componentwise-limit pattern). Each component converges by
+    `CdigammaReSum_RReg`/`CdigammaImSum_RReg` (the `O(1/n²)` term bounds). -/
+def CDigammaCore (s : Complex) {c : Q} (hcn : 0 < c.num) (hcd : 0 < c.den)
+    (hcs : Rle (ofQ c hcd) s.re) {B1 B2 : Q} (hB1d : 0 < B1.den) (hB2d : 0 < B2.den)
+    (hB10 : 0 ≤ B1.num) (hB20 : 0 ≤ B2.num)
+    (hB1lo : Rle (Rneg (ofQ B1 hB1d)) (Rsub s.re one)) (hB1hi : Rle (Rsub s.re one) (ofQ B1 hB1d))
+    (hB2lo : Rle (Rneg (ofQ B2 hB2d)) s.im) (hB2hi : Rle s.im (ofQ B2 hB2d)) : Complex :=
+  ⟨Rlim (fun j => genSum (fun n => (CdigammaTerm s hcn hcd hcs n).re)
+      (digammaMidx (add B1 (mul B2 B2)) j))
+      (CdigammaReSum_RReg s hcn hcd hcs hB1d hB2d hB10 hB20 hB1lo hB1hi hB2lo hB2hi),
+   Rlim (fun j => genSum (fun n => (CdigammaTerm s hcn hcd hcs n).im)
+      (digammaMidx (add (mul B1 B2) B2) j))
+      (CdigammaImSum_RReg s hcn hcd hcs hB1d hB2d hB10 hB20 hB1lo hB1hi hB2lo hB2hi)⟩
+
+/-- **The complex digamma function `ψ(s) = Γ′/Γ(s)`** on the strip, a genuine constructive complex
+    number: `ψ(s) = −γ + Σ_{n≥0} [1/(n+1) − 1/(s+n)]` (the `−γ` added to the real part). The complex
+    lift of the real-line `Digamma`; the archimedean `Γ′/Γ` place off the real axis, built from `Cinv`
+    only (no `Cpow`/`Clog`), hence free of the `1/16` value-identity barrier. -/
+def CDigamma (s : Complex) {c : Q} (hcn : 0 < c.num) (hcd : 0 < c.den)
+    (hcs : Rle (ofQ c hcd) s.re) {B1 B2 : Q} (hB1d : 0 < B1.den) (hB2d : 0 < B2.den)
+    (hB10 : 0 ≤ B1.num) (hB20 : 0 ≤ B2.num)
+    (hB1lo : Rle (Rneg (ofQ B1 hB1d)) (Rsub s.re one)) (hB1hi : Rle (Rsub s.re one) (ofQ B1 hB1d))
+    (hB2lo : Rle (Rneg (ofQ B2 hB2d)) s.im) (hB2hi : Rle s.im (ofQ B2 hB2d)) : Complex :=
+  Cadd (ofReal (Rneg Rgamma_h))
+    (CDigammaCore s hcn hcd hcs hB1d hB2d hB10 hB20 hB1lo hB1hi hB2lo hB2hi)
+
+/-- **`CDigamma` is non-vacuous** (instantiation at `s = 1`, `c = 1`, `B1 = B2 = 0`): `Re s−1 = 0` and
+    `Im s = 0`, both enclosed by the zero bound (all four enclosures are `≈ 0`). -/
+noncomputable def cDigammaWitness : Complex := by
+  have hz0 : Req (ofQ (⟨0, 1⟩ : Q) (by decide)) zero :=
+    Req_of_seq_Qeq (fun _ => by simp only [zero, ofQ, Qeq] <;> decide)
+  have hnz0 : Req (Rneg (ofQ (⟨0, 1⟩ : Q) (by decide))) zero :=
+    Req_of_seq_Qeq (fun _ => by simp only [Rneg, zero, ofQ, Qeq, neg] <;> decide)
+  exact CDigamma Cone (c := ⟨1, 1⟩) (by decide) (by decide)
+    (Rle_of_Req (Req_of_seq_Qeq (fun _ => Qeq_refl _)))
+    (B1 := ⟨0, 1⟩) (B2 := ⟨0, 1⟩) (by decide) (by decide) (by decide) (by decide)
+    (Rle_of_Req (Req_trans hnz0 (Req_symm (Radd_neg one))))
+    (Rle_of_Req (Req_trans (Radd_neg one) (Req_symm hz0)))
+    (Rle_of_Req hnz0)
+    (Rle_of_Req (Req_symm hz0))
+
 end UOR.Bridge.F1Square.Analysis

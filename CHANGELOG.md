@@ -47,6 +47,17 @@ audit-visible hypothesis, never an axiom).
     two `±`-bounded products (combined by abstract `cdig_Rsub_prod_bound`/`cdig_Radd_prod_bound` over
     `Rmul_le_mul_of_abs`/`Rneg_mul_le_of_abs`), then collapsed to a single `K/((n+1)n)`. Both
     components are now summable `O(1/n²)` — the regular-partial-sums and `CDigamma` limit follow.
+  - **Increment 3 — the limit object `CDigamma`** (the complex digamma on the strip). A generic
+    convergence layer (`genSum`/`genTail_two_sided`/`genSum_RReg`) — any real term sequence with
+    `|T n| ≤ K/((n+1)n)` has regular `K`-reindexed partial sums — reusing the real-line telescoping
+    infrastructure (`digammaRsum`/`digammaMidx`/`digammaTailQ_Midx_le`) and the generic
+    `RReg_of_real_bound` engine. Instantiated for both `Re Cterm` and `Im Cterm`
+    (`CdigammaReSum_RReg`/`CdigammaImSum_RReg`), giving the **constructive complex
+    `ψ(s) = −γ + Σ_{n≥0}[1/(n+1) − 1/(s+n)]`** as `⟨Rlim Re-sums, Rlim Im-sums⟩` (the `Ceta`/`Czeta`
+    componentwise-limit pattern), with `−γ` on the real part. This is **item 1's barrier-free
+    archimedean piece complete**: the real-line `Digamma` lifted to complex `s` on the strip, built
+    from `Cinv` alone. (Spouge `Γ(s/2)` itself remains gated on the `1/16` value-identity radius for
+    `Cpow` on diagonal arguments — the recorded open frontier.)
 - **Track 1 — left-sector argument additivity** `CargLeft(zw) = CargLeft z + Carg w`
   (`Analysis/ComplexArgLeftAdd.lean`): left-half-plane `z` (`Re z < 0`) times principal `w`, the
   product again left. Reflects the principal `Carg_add` through the `+π` shift via `−(zw) = (−z)·w`

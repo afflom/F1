@@ -2931,6 +2931,11 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.CdigammaPfac_im_bound
 #print axioms Analysis.CdigammaTerm_re_bound
 #print axioms Analysis.CdigammaTerm_im_bound
+#print axioms Analysis.genSum_diff_eq
+#print axioms Analysis.genTail_two_sided
+#print axioms Analysis.genSum_RReg
+#print axioms Analysis.CdigammaReSum_RReg
+#print axioms Analysis.CdigammaImSum_RReg
 #print axioms Analysis.Rcos_sub
 #print axioms Analysis.Rsin_pi_half_sub
 #print axioms Analysis.Rcos_pi_half_sub
