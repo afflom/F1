@@ -839,4 +839,52 @@ def CSpougeGamma (s : Complex) {c : Q} (hcn : 0 < c.num) (hcd : 0 < c.den)
       (Cexp (Cneg (CspougeBase s a hadp))))
     (CspougeBracket s hcn hcd hcs a hadp N ha)
 
+-- ===========================================================================
+-- The direct `Γ(w)` Spouge variant (Re w > 0), the strip-applicable form needed for `Γ(s/2)`
+-- (Re(s/2) ∈ (0, ½)): `Γ(w) ≈ (w+b)^{w−½}·e^{−(w+b)}·[c₀ + Σ_{k=1}^N cₖ/(w+(k−1))]` (Spouge with
+-- `z = w−1`, base shift `b = a−1`, terms `1/(w+(k−1))`). All terms `w+(k−1)` (`k ≥ 1`) and the base
+-- `w+b` keep `Re > 0` for `Re w > 0`, `b ≥ 0` — so no `Re < 0` arises, unlike `CSpougeGamma(w−1)`.
+-- ===========================================================================
+
+/-- **The direct `Γ(w)` Spouge bracket (downward recursion)** `c₀ + Σ_{k=1}^{m} cₖ/(w+(k−1))` — the
+    `Γ(w)`-form bracket, with the `k`-th reciprocal at `w+(k−1)` (so `k=1` gives `1/w`). Same as
+    `CspougeBracketAux` but with `CdigammaArg w k` (index `k`, not `k+1`) at step `k+1`. -/
+def CspougeBracketWAux (w : Complex) {c : Q} (hcn : 0 < c.num) (hcd : 0 < c.den)
+    (hcw : Rle (ofQ c hcd) w.re) (a : Q) (hadp : 0 < a.den) :
+    (m : Nat) → (ha : ∀ (k : Nat), 1 ≤ k → k ≤ m → Qlt (⟨1, 1⟩ : Q) (Qsub a ⟨(k : Int), 1⟩)) → Complex
+  | 0, _ => ofReal spougeSqrt2pi
+  | (k + 1), ha =>
+      Cadd (CspougeBracketWAux w hcn hcd hcw a hadp k
+              (fun j hj1 hjk => ha j hj1 (Nat.le_succ_of_le hjk)))
+        (Cmul (ofReal (spougeCoeff a hadp (k + 1) (ha (k + 1) (Nat.le_add_left 1 k) (Nat.le_refl _))))
+          (Cinv (CdigammaArg w k) (CdigK c) (CdigammaArg_witness hcn hcd hcw k)))
+
+/-- **The direct `Γ(w)` Spouge bracket** `c₀ + Σ_{k=1}^{N} cₖ/(w+(k−1))` (`Re w ≥ c > 0`). -/
+def CspougeBracketW (w : Complex) {c : Q} (hcn : 0 < c.num) (hcd : 0 < c.den)
+    (hcw : Rle (ofQ c hcd) w.re) (a : Q) (hadp : 0 < a.den) (N : Nat)
+    (ha : ∀ (k : Nat), 1 ≤ k → k ≤ N → Qlt (⟨1, 1⟩ : Q) (Qsub a ⟨(k : Int), 1⟩)) : Complex :=
+  CspougeBracketWAux w hcn hcd hcw a hadp N ha
+
+/-- **The direct complex Spouge `Γ(w)` approximant** (`Re w ≥ c > 0`), the strip-applicable form:
+    `Γ(w) ≈ (w+b)^{w−½} · e^{−(w+b)} · [c₀ + Σ_{k=1}^{N} cₖ/(w+(k−1))]`. The base shift `b` (`≥ 0`) and
+    the coefficient parameter `a` are independent arguments (the bound applies when `b = a−1`,
+    `N = ⌈a⌉−1`, as for the real `SpougeGamma`'s free `a, N`). Unlike `CSpougeGamma(w−1)`, every node
+    here (`w+b`, `w+(k−1)` with `k ≥ 1`) has `Re > 0`, so it is valid throughout the strip
+    (`Re w ∈ (0, ½)` for `Γ(s/2)`). Same barrier-free status: the base power's argument ratio bound
+    `hb` is a caller hypothesis (met by taking `b` large relative to `|Im w|`). -/
+def CSpougeGammaW (w : Complex) {c : Q} (hcn : 0 < c.num) (hcd : 0 < c.den)
+    (hcw : Rle (ofQ c hcd) w.re) (b : Q) (hbd : 0 < b.den) (hbn : 0 ≤ b.num)
+    (ρ : Q) (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den) (hρlt : ρ.num.toNat < ρ.den)
+    (hb : ∀ n, Qle (Qabs ((Rdiv (CspougeBase w b hbd).im (CspougeBase w b hbd).re
+      (digammaArgK c) (CspougeBase_re_witness hcn hcd hcw hbd hbn)).seq n)) ρ)
+    (a : Q) (hadp : 0 < a.den) (N : Nat)
+    (ha : ∀ (k : Nat), 1 ≤ k → k ≤ N → Qlt (⟨1, 1⟩ : Q) (Qsub a ⟨(k : Int), 1⟩)) : Complex :=
+  Cmul
+    (Cmul
+      (Cpow (CspougeBase w b hbd) (CdigK c) (CspougeBase_cnormSq_witness hcn hcd hcw hbd hbn)
+        (digammaArgK c) (CspougeBase_re_witness hcn hcd hcw hbd hbn) ρ hρ0 hρd hρlt hb
+        ⟨Rsub w.re (ofQ ⟨1, 2⟩ (by decide)), w.im⟩)
+      (Cexp (Cneg (CspougeBase w b hbd))))
+    (CspougeBracketW w hcn hcd hcw a hadp N ha)
+
 end UOR.Bridge.F1Square.Analysis

@@ -75,6 +75,13 @@ audit-visible hypothesis, never an axiom).
     the real `SpougeGamma`, this is the constructive approximant object (no `Ceq` to the true `Γ`
     asserted). **Item 1's complex `Γ` on the strip is now built** (object-level), alongside the
     barrier-free complex digamma `CDigamma`.
+  - **Increment 6 — the direct `Γ(w)` Spouge variant `CSpougeGammaW`** (`Re w > 0`), the
+    strip-applicable form for `Γ(s/2)` (`Re(s/2) ∈ (0,½)`). `Γ(w) ≈ (w+b)^{w−½}·e^{−(w+b)}·[c₀ +
+    Σ_{k=1}^N cₖ/(w+(k−1))]` (Spouge with `z = w−1`, base shift `b = a−1`, terms `1/(w+(k−1))`). Unlike
+    `CSpougeGamma(w−1)`, every node (`w+b`, `w+(k−1)` for `k ≥ 1`) keeps `Re > 0` for `Re w > 0`,
+    `b ≥ 0`, so it is valid throughout the strip — the prerequisite for assembling
+    `ξ(s) = ½ s(s−1) π^{−s/2} Γ(s/2) ζ(s)` (item 2; the other factors `π^{−s/2}` via `Cpow` over the
+    real `Rpi` base, and `ζ` via `CzetaStrip`, are in hand).
 - **Track 1 — left-sector argument additivity** `CargLeft(zw) = CargLeft z + Carg w`
   (`Analysis/ComplexArgLeftAdd.lean`): left-half-plane `z` (`Re z < 0`) times principal `w`, the
   product again left. Reflects the principal `Carg_add` through the `+π` shift via `−(zw) = (−z)·w`
