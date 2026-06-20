@@ -205,4 +205,95 @@ theorem sStep1_ge (p : Nat) (hp : 1 ≤ p) :
   show Qeq (⟨1, 2 * p * p⟩ : Q) (mul (⟨1, 2⟩ : Q) (mul (⟨1, p⟩ : Q) (⟨1, p⟩ : Q)))
   simp only [Qeq, mul]; push_cast; ring_uor
 
+-- ===========================================================================
+-- (A3) Telescoping the `1/(2p²)` tail (the `Usum` machinery) → `γ₁ ≥ hSeq1(N) − 1/(2N)`.
+-- ===========================================================================
+
+/-- **Per-step accelerated lower bound** `hSeq1(j+1) − hSeq1 j ≥ −1/(2(j+1)²)`. -/
+theorem hSeq1_step_ge (j : Nat) :
+    Rle (Rneg (ofQ (⟨1, 2 * (j + 1) * (j + 1)⟩ : Q)
+          (Nat.mul_pos (Nat.mul_pos (by decide) (Nat.succ_pos j)) (Nat.succ_pos j))))
+        (Rsub (hSeq1 (j + 1)) (hSeq1 j)) :=
+  Rle_trans (sStep1_ge (j + 1) (Nat.succ_pos j)) (Rle_of_Req (Req_symm (hSeq1_step_eq j)))
+
+/-- **Lower gap bound, U-form** (`d`-induction): `hSeq1(N+d) − hSeq1 N ≥ −(Usum(N+d) − Usum N)`.
+    Mirrors `gSeq_diff_ge_block` on the `Usum` (`1/(2p²)`) telescoping. -/
+theorem hSeq1_diff_ge_U (N : Nat) : ∀ (d : Nat),
+    Rle (Rneg (ofQ (Qsub (Usum (N + d)) (Usum N))
+          (Qsub_den_pos (Usum_den_pos (N + d)) (Usum_den_pos N))))
+        (Rsub (hSeq1 (N + d)) (hSeq1 N)) := by
+  intro d
+  induction d with
+  | zero =>
+      simp only [Nat.add_zero]
+      apply Rle_of_Req
+      refine Req_trans ?_ (Req_symm (Radd_neg (hSeq1 N)))
+      apply Req_of_seq_Qeq; intro n
+      simp only [Rneg, ofQ, zero, Qsub, add, neg, Qeq]; push_cast; ring_uor
+  | succ d ih =>
+      have hstepd : 0 < (⟨1, 2 * ((N + d) + 1) * ((N + d) + 1)⟩ : Q).den :=
+        Nat.mul_pos (Nat.mul_pos (by decide) (Nat.succ_pos (N + d))) (Nat.succ_pos (N + d))
+      have hgapd : 0 < (Qsub (Usum (N + d)) (Usum N)).den :=
+        Qsub_den_pos (Usum_den_pos (N + d)) (Usum_den_pos N)
+      have heq : Req (Rneg (ofQ (Qsub (Usum (N + d + 1)) (Usum N))
+            (Qsub_den_pos (Usum_den_pos (N + d + 1)) (Usum_den_pos N))))
+          (Radd (Rneg (ofQ (⟨1, 2 * ((N + d) + 1) * ((N + d) + 1)⟩ : Q) hstepd))
+                (Rneg (ofQ (Qsub (Usum (N + d)) (Usum N)) hgapd))) :=
+        Req_trans (Rneg_congr (Req_trans
+          (ofQ_congr _ _ (Qeq_symm (Qadd_Qsub_comm _ (Usum (N + d)) (Usum N))))
+          (Req_symm (Radd_ofQ_ofQ hstepd hgapd)))) (Rneg_Radd _ _)
+      exact Rle_trans (Rle_of_Req heq)
+        (Rle_trans (Radd_le_add (hSeq1_step_ge (N + d)) ih)
+          (Rle_of_Req (Rsub_split (hSeq1 (N + d + 1)) (hSeq1 (N + d)) (hSeq1 N))))
+
+/-- **The lower gap bound** `hSeq1(N+d) − hSeq1 N ≥ −1/(2N)` (for `N ≥ 1`). -/
+theorem hSeq1_diff_ge (N : Nat) (hN : 1 ≤ N) (d : Nat) :
+    Rle (Rneg (ofQ (⟨1, 2 * N⟩ : Q) (Nat.mul_pos (by decide) hN)))
+        (Rsub (hSeq1 (N + d)) (hSeq1 N)) := by
+  refine Rle_trans (Rle_Rneg ?_) (hSeq1_diff_ge_U N d)
+  have hmid : 0 < (Qsub (⟨1, 2 * N⟩ : Q) (⟨1, 2 * (N + d)⟩ : Q)).den :=
+    Qsub_den_pos (Nat.mul_pos (by decide) hN) (Nat.mul_pos (by decide) (by omega))
+  refine Rle_trans (Rle_ofQ_ofQ (Qsub_den_pos (Usum_den_pos (N + d)) (Usum_den_pos N)) hmid
+    (Usum_tail_le N hN d)) ?_
+  exact Rle_ofQ_ofQ hmid (Nat.mul_pos (by decide) hN) (Qsub_unit_le (2 * N) (2 * (N + d)))
+
+/-- **`hSeq1(N+d) ≥ hSeq1 N − 1/(2N)`** (uniform in `d`, `N ≥ 1`). -/
+theorem hSeq1_lower_const (N : Nat) (hN : 1 ≤ N) (d : Nat) :
+    Rle (Rsub (hSeq1 N) (ofQ (⟨1, 2 * N⟩ : Q) (Nat.mul_pos (by decide) hN))) (hSeq1 (N + d)) := by
+  refine Rle_trans (Radd_le_add (Rle_refl (hSeq1 N)) (hSeq1_diff_ge N hN d)) (Rle_of_Req ?_)
+  exact Req_symm (sub_add_cancel_real (hSeq1 (N + d)) (hSeq1 N))
+
+/-- **`hSeq1 M ≤ gSeq M`** — the correction `½·(ln(M+1))/(M+1)` is `≥ 0`. -/
+theorem hSeq1_le_gSeq (M : Nat) : Rle (hSeq1 M) (gSeq M) := by
+  refine Rle_of_Rnonneg_Rsub (Rnonneg_congr (Req_symm (Rsub_sub_self (gSeq M)
+    (Rhalf (lnOver (M + 1) (Nat.succ_pos M))))) ?_)
+  exact Rhalf_nonneg (lnOver_nonneg (M + 1) (Nat.succ_pos M))
+
+/-- **`γ₁ ≥ hSeq1 N − 1/(2N)`** for `N ∈ [1, 256]` — each reindexed `gSeqDyadic k = gSeq(2^{2k+8})`
+    (`2^{2k+8} ≥ 256 ≥ N`) is `≥ hSeq1(2^{2k+8}) ≥ hSeq1 N − 1/(2N)`, so the limit `γ₁` is too. -/
+theorem Rgamma1_ge_hSeq1 {N : Nat} (hN : 1 ≤ N) (hN256 : N ≤ 256) :
+    Rle (Rsub (hSeq1 N) (ofQ (⟨1, 2 * N⟩ : Q) (Nat.mul_pos (by decide) hN))) Rgamma1 := by
+  apply Rle_of_Rsub_le_all (C := 2)
+  intro k
+  have hN2k : N ≤ 2 ^ (2 * k + 8) := by
+    have h8 : (2 : Nat) ^ 8 ≤ 2 ^ (2 * k + 8) := Nat.pow_le_pow_right (by omega) (by omega)
+    have h256 : (256 : Nat) = 2 ^ 8 := by decide
+    omega
+  have htend : Rle (Rsub (gSeqDyadic k) Rgamma1) (ofQ (⟨2, k + 1⟩ : Q) (Nat.succ_pos k)) :=
+    RTendsTo_to_Rle (Rlim_tendsTo gSeqDyadic gSeqDyadic_RReg) k
+  have hanchor : Rle (Rsub (hSeq1 N) (ofQ (⟨1, 2 * N⟩ : Q) (Nat.mul_pos (by decide) hN)))
+      (gSeqDyadic k) := by
+    obtain ⟨d, hd⟩ := Nat.le.dest hN2k
+    have h1 : Rle (Rsub (hSeq1 N) (ofQ (⟨1, 2 * N⟩ : Q) (Nat.mul_pos (by decide) hN)))
+        (hSeq1 (N + d)) := hSeq1_lower_const N hN d
+    rw [hd] at h1
+    exact Rle_trans h1 (hSeq1_le_gSeq (2 ^ (2 * k + 8)))
+  refine Rle_trans (Rle_of_Req (Req_symm (Rsub_split
+    (Rsub (hSeq1 N) (ofQ (⟨1, 2 * N⟩ : Q) (Nat.mul_pos (by decide) hN))) (gSeqDyadic k) Rgamma1))) ?_
+  refine Rle_trans (Radd_le_add
+    (Rsub_le_of_le_add (Rle_trans hanchor (Rle_of_Req
+      (Req_symm (Req_trans (Radd_comm zero (gSeqDyadic k)) (Radd_zero (gSeqDyadic k)))))))
+    htend) ?_
+  exact Rle_of_Req (Req_trans (Radd_comm zero _) (Radd_zero _))
+
 end UOR.Bridge.F1Square.Analysis

@@ -3018,3 +3018,9 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.WStep_ge_negDsq
 #print axioms Analysis.WStep_ge
 #print axioms Analysis.sStep1_ge
+#print axioms Analysis.hSeq1_step_ge
+#print axioms Analysis.hSeq1_diff_ge_U
+#print axioms Analysis.hSeq1_diff_ge
+#print axioms Analysis.hSeq1_lower_const
+#print axioms Analysis.hSeq1_le_gSeq
+#print axioms Analysis.Rgamma1_ge_hSeq1
