@@ -438,4 +438,67 @@ theorem Rlog_mul_via_signed (c tx ty txy : Real) (σ : Q)
     (Rartanh (wvalReal tx ty σ hσd hσ0 hσhalf hbx hby) σ hσ0 hσd hσlt hbW)
     (Rartanh txy σ hσ0 hσd hσlt hbtxy) hadd hcong
 
+set_option maxHeartbeats 1600000 in
+/-- **`hbw` bound for `[1/B, B]` arguments** (signed): for positive `a, b` with `a, b ≤ B` and
+    `1 ≤ a·B, b·B` (i.e. `1/B ≤ a, b ≤ B`), `|wvalR(tmap a, tmap b)| ≤ ρ_{B²} = tmap(B²)`. The signed
+    analog of `wvalR_tmap_seq_bound`: `tmap a, tmap b` may be negative, so `hD > 0` is derived from
+    `|tmap| < 1` (`tmap_abs_lt_one`) rather than `tmap ≥ 0`, and the product bound `ab ∈ [1/B², B²]`
+    from the two-sided membership. -/
+theorem wvalR_tmap_seq_bound_signed (a b B : Q) (had : 0 < a.den) (hbd : 0 < b.den) (hBd : 0 < B.den)
+    (hapos : 0 < a.num) (hbpos : 0 < b.num) (haB : Qle a B) (hbB : Qle b B)
+    (haBge : Qle (⟨1, 1⟩ : Q) (mul a B)) (hbBge : Qle (⟨1, 1⟩ : Q) (mul b B)) (hBge : Qle (⟨1, 1⟩ : Q) B) :
+    Qle (Qabs (wvalR (tmap a) (tmap b)))
+        (⟨(mul B B).num - ((mul B B).den : Int), (mul B B).num.toNat + (mul B B).den⟩ : Q) := by
+  have ha0 : 0 ≤ a.num := Int.le_of_lt hapos
+  have hb0 : 0 ≤ b.num := Int.le_of_lt hbpos
+  have hBn : 0 ≤ B.num := by have := hBge; simp only [Qle] at this; omega
+  have ha1' : 0 < (add a ⟨1, 1⟩).num := by
+    show 0 < a.num * 1 + 1 * (a.den : Int); have := Int.ofNat_nonneg a.den; omega
+  have hb1' : 0 < (add b ⟨1, 1⟩).num := by
+    show 0 < b.num * 1 + 1 * (b.den : Int); have := Int.ofNat_nonneg b.den; omega
+  have hab1 : 0 < (add (mul a b) ⟨1, 1⟩).num := by
+    show 0 < a.num * b.num * 1 + 1 * ((a.den * b.den : Nat) : Int)
+    have h1 : 0 < a.num * b.num := Int.mul_pos hapos hbpos
+    have h2 : 0 < ((a.den * b.den : Nat) : Int) := by exact_mod_cast Nat.mul_pos had hbd
+    omega
+  have htad : 0 < (tmap a).den := Qmul_den_pos (Qsub_den_pos had Nat.one_pos) (Qinv_den_pos ha1')
+  have htbd : 0 < (tmap b).den := Qmul_den_pos (Qsub_den_pos hbd Nat.one_pos) (Qinv_den_pos hb1')
+  -- |tmap a|, |tmap b| < 1
+  obtain ⟨hta1, hta2⟩ := tmap_abs_lt_one a had hapos
+  obtain ⟨htb1, htb2⟩ := tmap_abs_lt_one b hbd hbpos
+  have htaL : (tmap a).num < ((tmap a).den : Int) := by have := hta1; omega
+  have htaG : -((tmap a).den : Int) < (tmap a).num := by
+    have := hta2; have he : (neg (tmap a)).num = -(tmap a).num := rfl; rw [he] at this; omega
+  have htbL : (tmap b).num < ((tmap b).den : Int) := by have := htb1; omega
+  have htbG : -((tmap b).den : Int) < (tmap b).num := by
+    have := htb2; have he : (neg (tmap b)).num = -(tmap b).num := rfl; rw [he] at this; omega
+  have hD : 0 < ((tmap a).den : Int) * (tmap b).den + (tmap a).num * (tmap b).num := by
+    have h1 : (0 : Int) < (((tmap a).den : Int) + (tmap a).num) * (((tmap b).den : Int) + (tmap b).num) :=
+      Int.mul_pos (by omega) (by omega)
+    have h2 : (0 : Int) < (((tmap a).den : Int) - (tmap a).num) * (((tmap b).den : Int) - (tmap b).num) :=
+      Int.mul_pos (by omega) (by omega)
+    have hsum : (((tmap a).den : Int) + (tmap a).num) * (((tmap b).den : Int) + (tmap b).num)
+          + (((tmap a).den : Int) - (tmap a).num) * (((tmap b).den : Int) - (tmap b).num)
+        = 2 * (((tmap a).den : Int) * (tmap b).den + (tmap a).num * (tmap b).num) := by
+      generalize ((tmap a).den : Int) = da; generalize ((tmap b).den : Int) = db
+      generalize (tmap a).num = na; generalize (tmap b).num = nb; ring_uor
+    omega
+  have hB2d : 0 < (mul B B).den := Qmul_den_pos hBd hBd
+  have hB2n : 0 ≤ (mul B B).num := Int.mul_nonneg hBn hBn
+  have hMab1 : 0 < (add (mul B B) ⟨1, 1⟩).num := by
+    show 0 < B.num * B.num * 1 + 1 * ((B.den * B.den : Nat) : Int)
+    have h2 : 0 < ((B.den * B.den : Nat) : Int) := by exact_mod_cast Nat.mul_pos hBd hBd
+    have h1 : 0 ≤ B.num * B.num := Int.mul_nonneg hBn hBn; omega
+  have habM : Qle (mul a b) (mul B B) := Qmul_le_mul had hBd hbd ha0 hb0 haB hbB
+  have habMge : Qle (⟨1, 1⟩ : Q) (mul (mul a b) (mul B B)) := by
+    -- (a·b)·(B·B) = (a·B)·(b·B) ≥ 1·1
+    refine Qle_trans (by decide) (Qeq_le (by decide : Qeq (⟨1, 1⟩ : Q) (mul ⟨1, 1⟩ ⟨1, 1⟩))) ?_
+    refine Qle_trans (Qmul_den_pos (Qmul_den_pos had hBd) (Qmul_den_pos hbd hBd))
+      (Qmul_le_mul (by decide) (Qmul_den_pos had hBd) (by decide) (by decide) (by decide)
+        haBge hbBge) ?_
+    apply Qeq_le; simp only [Qeq, mul]; push_cast; ring_uor
+  exact Qle_trans (Qmul_den_pos (Qsub_den_pos hB2d Nat.one_pos) (Qinv_den_pos hMab1))
+    (wvalR_tmap_bound a b B B had hbd ha1' hb1' hab1 hD hB2d hMab1 habM habMge)
+    (Qeq_le (tmap_M_eq hB2d hB2n))
+
 end UOR.Bridge.F1Square.Analysis
