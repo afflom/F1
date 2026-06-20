@@ -886,4 +886,97 @@ theorem Rlog_mul_via_gen (c tx ty txy : Real) (σ : Q) (Kσ : Nat)
     (Rartanh (wvalReal_gen tx ty σ hσd hσ0 hσlt hbx hby) σ hσ0 hσd hσlt hbW)
     (Rartanh txy σ hσ0 hσd hσlt hbtxy) hadd hcong
 
+set_option maxHeartbeats 1600000 in
+/-- **★★ general-radius real log-multiplicativity** `Rlog(x·y) = Rlog x + Rlog y` for `x, y ∈ [1/B, B]`
+    at **any** `B ≥ 1` (no small-radius cap). The fully general analog of `Rlog_mul_signed`: radius
+    alignment via `Rartanh_radius_indep_gen` (`K_B` for `ρ_B`), combination via `Rlog_mul_via_gen` +
+    `tmul_wvalReal_via_gen` + `wvalReal_gen` (`Kσ` for `ρ_{B²}`). `K = den` is the canonical bound. -/
+theorem Rlog_mul_gen (x y : Real) (B : Q) (K_B Kσ : Nat) (hBd : 0 < B.den) (hBge : Qle (⟨1, 1⟩ : Q) B)
+    (hxpos : ∀ n, 0 < (x.seq n).num) (hxhiB : ∀ n, Qle (x.seq n) B)
+    (hxloB : ∀ n, Qle (⟨1, 1⟩ : Q) (mul (x.seq n) B))
+    (hypos : ∀ n, 0 < (y.seq n).num) (hyhiB : ∀ n, Qle (y.seq n) B)
+    (hyloB : ∀ n, Qle (⟨1, 1⟩ : Q) (mul (y.seq n) B))
+    (hB2d : 0 < (mul B B).den) (hB2ge : Qle (⟨1, 1⟩ : Q) (mul B B))
+    (hxypos : ∀ n, 0 < ((Rmul x y).seq n).num) (hxyhi : ∀ n, Qle ((Rmul x y).seq n) (mul B B))
+    (hxylo : ∀ n, Qle (⟨1, 1⟩ : Q) (mul ((Rmul x y).seq n) (mul B B)))
+    (hρσ : Qle (⟨B.num - (B.den : Int), B.num.toNat + B.den⟩ : Q)
+              (⟨(mul B B).num - ((mul B B).den : Int), (mul B B).num.toNat + (mul B B).den⟩ : Q))
+    (hKBF : Qle (⟨1, 1⟩ : Q) (mul (⟨(K_B : Int), 1⟩ : Q)
+      (Qsub ⟨1, 1⟩ (mul ⟨B.num - (B.den : Int), B.num.toNat + B.den⟩
+        ⟨B.num - (B.den : Int), B.num.toNat + B.den⟩))))
+    (hKσF : Qle (⟨1, 1⟩ : Q) (mul (⟨(Kσ : Int), 1⟩ : Q)
+      (Qsub ⟨1, 1⟩ (mul ⟨(mul B B).num - ((mul B B).den : Int), (mul B B).num.toNat + (mul B B).den⟩
+        ⟨(mul B B).num - ((mul B B).den : Int), (mul B B).num.toNat + (mul B B).den⟩))))
+    (hKσr : Kσ ≤ 2 * (((mul B B).num.toNat + (mul B B).den) * ((mul B B).num.toNat + (mul B B).den)
+      + 4 * ((mul B B).num.toNat + (mul B B).den))) :
+    Req (Radd (Rlog x B hBd hBge hxpos hxhiB hxloB) (Rlog y B hBd hBge hypos hyhiB hyloB))
+        (Rlog (Rmul x y) (mul B B) hB2d hB2ge hxypos hxyhi hxylo) := by
+  obtain ⟨hBn, hB1, hρ0, hρd, hρlt, hρ1⟩ := Rlog_radius_facts B hBd hBge
+  obtain ⟨hB2n, hB21, hσ0, hσd, hσlt, hσ1⟩ := Rlog_radius_facts (mul B B) hB2d hB2ge
+  have hden_x : ∀ n, 0 < (Rlog_seq x n).den := fun n => Qmul_den_pos
+    (Qsub_den_pos (x.den_pos _) Nat.one_pos) (Qinv_den_pos (by
+      have := hxpos (Rlog_R n); have h := Int.ofNat_nonneg (x.seq (Rlog_R n)).den
+      show 0 < (x.seq (Rlog_R n)).num * 1 + 1 * ((x.seq (Rlog_R n)).den : Int); omega))
+  have hden_y : ∀ n, 0 < (Rlog_seq y n).den := fun n => Qmul_den_pos
+    (Qsub_den_pos (y.den_pos _) Nat.one_pos) (Qinv_den_pos (by
+      have := hypos (Rlog_R n); have h := Int.ofNat_nonneg (y.seq (Rlog_R n)).den
+      show 0 < (y.seq (Rlog_R n)).num * 1 + 1 * ((y.seq (Rlog_R n)).den : Int); omega))
+  have hden_xy : ∀ n, 0 < (Rlog_seq (Rmul x y) n).den := fun n => Qmul_den_pos
+    (Qsub_den_pos ((Rmul x y).den_pos _) Nat.one_pos) (Qinv_den_pos (by
+      have := hxypos (Rlog_R n); have h := Int.ofNat_nonneg ((Rmul x y).seq (Rlog_R n)).den
+      show 0 < ((Rmul x y).seq (Rlog_R n)).num * 1 + 1 * (((Rmul x y).seq (Rlog_R n)).den : Int); omega))
+  have hbtρx := Rlog_tbound x B hBd hBn hB1 hxhiB hxloB hxpos
+  have hbtρy := Rlog_tbound y B hBd hBn hB1 hyhiB hyloB hypos
+  have hbtσxy := Rlog_tbound (Rmul x y) (mul B B) hB2d hB2n hB21 hxyhi hxylo hxypos
+  have hbxσ : ∀ k, Qle (Qabs (tmap (x.seq k))) (⟨(mul B B).num - ((mul B B).den : Int),
+      (mul B B).num.toNat + (mul B B).den⟩ : Q) := fun k => Qle_trans hρd (hbtρx k) hρσ
+  have hbyσ : ∀ k, Qle (Qabs (tmap (y.seq k))) (⟨(mul B B).num - ((mul B B).den : Int),
+      (mul B B).num.toNat + (mul B B).den⟩ : Q) := fun k => Qle_trans hρd (hbtρy k) hρσ
+  rw [Rlog_eq_Rmul x B hBd hBge hxpos hxhiB hxloB hden_x hρ0 hρd hρlt (fun n => hbtρx (Rlog_R n)),
+    Rlog_eq_Rmul y B hBd hBge hypos hyhiB hyloB hden_y hρ0 hρd hρlt (fun n => hbtρy (Rlog_R n)),
+    Rlog_eq_Rmul (Rmul x y) (mul B B) hB2d hB2ge hxypos hxyhi hxylo hden_xy hσ0 hσd hσlt
+      (fun n => hbtσxy (Rlog_R n))]
+  have hradx : Req (Rartanh ⟨Rlog_seq x, Rlog_regular x hxpos, hden_x⟩
+        ⟨B.num - (B.den : Int), B.num.toNat + B.den⟩ hρ0 hρd hρlt (fun n => hbtρx (Rlog_R n)))
+      (Rartanh ⟨Rlog_seq x, Rlog_regular x hxpos, hden_x⟩
+        ⟨(mul B B).num - ((mul B B).den : Int), (mul B B).num.toNat + (mul B B).den⟩
+        hσ0 hσd hσlt (fun n => hbxσ (Rlog_R n))) :=
+    Rartanh_radius_indep_gen ⟨Rlog_seq x, Rlog_regular x hxpos, hden_x⟩ _ _
+      ⟨B.num - (B.den : Int), B.num.toNat + B.den⟩
+      ⟨(mul B B).num - ((mul B B).den : Int), (mul B B).num.toNat + (mul B B).den⟩
+      ⟨B.num - (B.den : Int), B.num.toNat + B.den⟩ K_B hρd hσd hρ0 hρd hρlt hKBF
+      (fun n => hbtρx (Rlog_R n)) (fun _ => rfl) (fun _ => rfl)
+  have hrady : Req (Rartanh ⟨Rlog_seq y, Rlog_regular y hypos, hden_y⟩
+        ⟨B.num - (B.den : Int), B.num.toNat + B.den⟩ hρ0 hρd hρlt (fun n => hbtρy (Rlog_R n)))
+      (Rartanh ⟨Rlog_seq y, Rlog_regular y hypos, hden_y⟩
+        ⟨(mul B B).num - ((mul B B).den : Int), (mul B B).num.toNat + (mul B B).den⟩
+        hσ0 hσd hσlt (fun n => hbyσ (Rlog_R n))) :=
+    Rartanh_radius_indep_gen ⟨Rlog_seq y, Rlog_regular y hypos, hden_y⟩ _ _
+      ⟨B.num - (B.den : Int), B.num.toNat + B.den⟩
+      ⟨(mul B B).num - ((mul B B).den : Int), (mul B B).num.toNat + (mul B B).den⟩
+      ⟨B.num - (B.den : Int), B.num.toNat + B.den⟩ K_B hρd hσd hρ0 hρd hρlt hKBF
+      (fun n => hbtρy (Rlog_R n)) (fun _ => rfl) (fun _ => rfl)
+  have hvia := Rlog_mul_via_gen (ofQ (⟨2, 1⟩ : Q) (by decide))
+    ⟨Rlog_seq x, Rlog_regular x hxpos, hden_x⟩ ⟨Rlog_seq y, Rlog_regular y hypos, hden_y⟩
+    ⟨Rlog_seq (Rmul x y), Rlog_regular (Rmul x y) hxypos, hden_xy⟩
+    ⟨(mul B B).num - ((mul B B).den : Int), (mul B B).num.toNat + (mul B B).den⟩ Kσ
+    hσ0 hσd hσlt hKσF hKσr
+    (fun m => (tmap_abs_lt_one (x.seq (Rlog_R m)) (x.den_pos _) (hxpos (Rlog_R m))).1)
+    (fun m => (tmap_abs_lt_one (y.seq (Rlog_R m)) (y.den_pos _) (hypos (Rlog_R m))).1)
+    (fun m => (tmap_abs_lt_one (x.seq (Rlog_R m)) (x.den_pos _) (hxpos (Rlog_R m))).2)
+    (fun m => (tmap_abs_lt_one (y.seq (Rlog_R m)) (y.den_pos _) (hypos (Rlog_R m))).2)
+    (fun m => hbxσ (Rlog_R m)) (fun m => hbyσ (Rlog_R m))
+    (fun i => wvalR_tmap_seq_bound_signed (x.seq (Rlog_R i)) (y.seq (Rlog_R i)) B (x.den_pos _)
+      (y.den_pos _) hBd (hxpos (Rlog_R i)) (hypos (Rlog_R i)) (hxhiB (Rlog_R i)) (hyhiB (Rlog_R i))
+      (hxloB (Rlog_R i)) (hyloB (Rlog_R i)) hBge)
+    (fun m => hbtσxy (Rlog_R m))
+    (tmul_wvalReal_via_gen x y ⟨Rlog_seq (Rmul x y), Rlog_regular (Rmul x y) hxypos, hden_xy⟩
+      (wvalReal_gen ⟨Rlog_seq x, Rlog_regular x hxpos, hden_x⟩ ⟨Rlog_seq y, Rlog_regular y hypos, hden_y⟩
+        ⟨(mul B B).num - ((mul B B).den : Int), (mul B B).num.toNat + (mul B B).den⟩
+        hσd hσ0 hσlt (fun m => hbxσ (Rlog_R m)) (fun m => hbyσ (Rlog_R m)))
+      ⟨(mul B B).num - ((mul B B).den : Int), (mul B B).num.toNat + (mul B B).den⟩
+      hσd hσ0 hσlt hxpos hypos hbxσ hbyσ (fun _ => rfl) (fun _ => rfl))
+  exact Req_trans
+    (Radd_congr (Rmul_congr (Req_refl _) hradx) (Rmul_congr (Req_refl _) hrady)) hvia
+
 end UOR.Bridge.F1Square.Analysis
