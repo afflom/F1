@@ -345,4 +345,191 @@ theorem RlogPos_congr_gen (x y : Real) (kx : Nat) (hx : Qlt (Qbound kx) (x.seq k
     (Req_trans (Rlog_congr_gen x y B K hBd hBge hxposB hxhiB hxloB hyposB hyhiB hyloB hKF hKr heq)
       (Req_symm (RlogPos_eq_Rlog_gen y ky hy B K hBd hBge hyposB hyhiB hyloB hKF hKr)))
 
+/-- **`|c| < 1` from the radius** (general): `pc² ≤ qc²` for `|c| ≤ ρ` with `ρ < 1` (`ρ.num.toNat < ρ.den`).
+    The general-radius analog of `wval_csq_le` (no `ρ²≤1/2`). -/
+theorem wval_csq_le_gen (ρ c : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num) (hcd : 0 < c.den)
+    (hc : Qle (Qabs c) ρ) (hρlt : ρ.num.toNat < ρ.den) :
+    c.num * c.num ≤ (c.den : Int) * c.den := by
+  simp only [Qle, Qabs] at hc
+  have hrd : (0 : Int) < ρ.den := by exact_mod_cast hρd
+  have hqc : (0 : Int) < c.den := by exact_mod_cast hcd
+  have hρlt1 : ρ.num ≤ (ρ.den : Int) := by omega
+  have habs : (c.num.natAbs : Int) * ρ.den ≤ ρ.num * c.den := hc
+  have hpcle : (c.num.natAbs : Int) ≤ (c.den : Int) := by
+    have e : ρ.num * (c.den : Int) ≤ (c.den : Int) * ρ.den := by
+      have e2 : (ρ.den : Int) * c.den = (c.den : Int) * ρ.den := by ring_uor
+      rw [← e2]; exact Int.mul_le_mul_of_nonneg_right hρlt1 (Int.le_of_lt hqc)
+    have h1 : (c.num.natAbs : Int) * ρ.den ≤ (c.den : Int) * ρ.den := Int.le_trans habs e
+    exact Int.le_of_mul_le_mul_right h1 hrd
+  have hpc2 : c.num * c.num = (c.num.natAbs : Int) * c.num.natAbs := (Int.natAbs_mul_self' c.num).symm
+  rw [hpc2]
+  exact Int.mul_le_mul hpcle hpcle (Int.ofNat_nonneg _) (Int.le_of_lt hqc)
+
+/-- **The denominator bound from the radius** (general): for `|a|, |c| ≤ ρ < 1`, the shifted denominator
+    clears with factor `ρ.den`: `qa·qc ≤ ρ.den·(qa·qc + pa·pc)` (since `1+ac ≥ 1−ρ² ≥ 1/ρ.den`). The
+    general-radius analog of `wval_halfbound` (`K = ρ.den` replaces the `≤2` of `ρ²≤1/2`). -/
+theorem wval_halfbound_gen (ρ a c : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num)
+    (had : 0 < a.den) (hcd : 0 < c.den)
+    (ha : Qle (Qabs a) ρ) (hc : Qle (Qabs c) ρ) (hρlt : ρ.num.toNat < ρ.den) :
+    (a.den : Int) * c.den ≤ (ρ.den : Int) * ((a.den : Int) * c.den + a.num * c.num) := by
+  simp only [Qle, Qabs] at ha hc
+  have hrd : (0 : Int) < ρ.den := by exact_mod_cast hρd
+  have hqa : (0 : Int) < a.den := by exact_mod_cast had
+  have hqc : (0 : Int) < c.den := by exact_mod_cast hcd
+  have hplt : ρ.num < (ρ.den : Int) := by omega
+  have hqac : (0 : Int) < (a.den : Int) * c.den := Int.mul_pos hqa hqc
+  -- d²·|pa·pc| ≤ p²·(qa·qc)
+  have hppd2 : ((a.num * c.num).natAbs : Int) * ((ρ.den : Int) * ρ.den)
+      ≤ (ρ.num * ρ.num) * ((a.den : Int) * c.den) := by
+    have hm := Int.mul_le_mul ha hc (Int.mul_nonneg (Int.ofNat_nonneg _) (Int.le_of_lt hrd))
+      (Int.mul_nonneg hρ0 (Int.le_of_lt hqa))
+    have eL : ((a.num.natAbs : Int) * ρ.den) * ((c.num.natAbs : Int) * ρ.den)
+        = ((a.num * c.num).natAbs : Int) * ((ρ.den : Int) * ρ.den) := by
+      rw [Int.natAbs_mul]; push_cast; ring_uor
+    have eR : (ρ.num * (a.den : Int)) * (ρ.num * c.den)
+        = (ρ.num * ρ.num) * ((a.den : Int) * c.den) := by ring_uor
+    rw [eL, eR] at hm; exact hm
+  -- p² ≤ d² − d
+  have hdp : ρ.num * ρ.num ≤ (ρ.den : Int) * ρ.den - (ρ.den : Int) := by
+    have h1 : ρ.num * ρ.num ≤ ((ρ.den : Int) - 1) * ((ρ.den : Int) - 1) :=
+      Int.mul_le_mul (by omega) (by omega) hρ0 (by omega)
+    have h2 : ((ρ.den : Int) - 1) * ((ρ.den : Int) - 1) = (ρ.den : Int) * ρ.den - 2 * ρ.den + 1 := by
+      ring_uor
+    omega
+  -- −|pa pc| ≤ pa pc
+  have hpc_ge : -(((a.num * c.num).natAbs : Int)) ≤ a.num * c.num := by
+    rcases Int.natAbs_eq (a.num * c.num) with h | h <;> omega
+  -- prove d-multiplied goal then divide
+  have hmain : (ρ.den : Int) * ((a.den : Int) * c.den)
+      ≤ (ρ.den : Int) * ((ρ.den : Int) * ((a.den : Int) * c.den + a.num * c.num)) := by
+    have hD2nn : (0 : Int) ≤ (ρ.den : Int) * ρ.den := Int.le_of_lt (Int.mul_pos hrd hrd)
+    have hs1 : ((ρ.den : Int) * ρ.den) * (-(((a.num * c.num).natAbs : Int)))
+        ≤ ((ρ.den : Int) * ρ.den) * (a.num * c.num) := Int.mul_le_mul_of_nonneg_left hpc_ge hD2nn
+    have hs2 : ((a.num * c.num).natAbs : Int) * ((ρ.den : Int) * ρ.den)
+        ≤ ((ρ.den : Int) * ρ.den - (ρ.den : Int)) * ((a.den : Int) * c.den) :=
+      Int.le_trans hppd2 (Int.mul_le_mul_of_nonneg_right hdp (Int.le_of_lt hqac))
+    have e1 : ((ρ.den : Int) * ρ.den) * (-(((a.num * c.num).natAbs : Int)))
+        = -(((a.num * c.num).natAbs : Int) * ((ρ.den : Int) * ρ.den)) := by ring_uor
+    have key : (ρ.den : Int) * ((ρ.den : Int) * ((a.den : Int) * c.den + a.num * c.num))
+        - (ρ.den : Int) * ((a.den : Int) * c.den)
+        = ((ρ.den : Int) * ρ.den) * (a.num * c.num)
+          + ((ρ.den : Int) * ρ.den - (ρ.den : Int)) * ((a.den : Int) * c.den) := by ring_uor
+    omega
+  exact Int.le_of_mul_le_mul_left hmain hrd
+
+/-- General `K²` denominator estimate (the `wval_lip1_den` analog): `(qc²−pc²)(qa·qb) ≤ K²·(D_ac·D_bc)`
+    from the two `K`-half-bounds. -/
+private theorem wval_lip1_den_gen (qa pa qb pb qc pc K : Int)
+    (hqa : 0 < qa) (hqb : 0 < qb) (hqc : 0 < qc)
+    (hDac : qa * qc ≤ K * (qa * qc + pa * pc)) (hDbc : qb * qc ≤ K * (qb * qc + pb * pc)) :
+    (qc * qc - pc * pc) * (qa * qb) ≤ (K * K) * ((qa * qc + pa * pc) * (qb * qc + pb * pc)) := by
+  have hacp : 0 < qa * qc := Int.mul_pos hqa hqc
+  have hbcp : 0 < qb * qc := Int.mul_pos hqb hqc
+  have hb_nn : 0 ≤ K * (qa * qc + pa * pc) := by omega
+  have hprod : (qa * qc) * (qb * qc) ≤ (K * (qa * qc + pa * pc)) * (K * (qb * qc + pb * pc)) :=
+    Int.mul_le_mul hDac hDbc (Int.le_of_lt hbcp) hb_nn
+  have hpc2 : (0 : Int) ≤ pc * pc := by rw [← Int.natAbs_mul_self]; exact Int.ofNat_nonneg _
+  have hP : (0 : Int) ≤ (pc * pc) * (qa * qb) :=
+    Int.mul_nonneg hpc2 (Int.le_of_lt (Int.mul_pos hqa hqb))
+  have key1 : (qc * qc) * (qa * qb) - (qc * qc - pc * pc) * (qa * qb) = (pc * pc) * (qa * qb) := by ring_uor
+  have key2 : (qc * qc) * (qa * qb) = (qa * qc) * (qb * qc) := by ring_uor
+  have key3 : (K * (qa * qc + pa * pc)) * (K * (qb * qc + pb * pc))
+      = (K * K) * ((qa * qc + pa * pc) * (qb * qc + pb * pc)) := by ring_uor
+  omega
+
+/-- **`1 + ac > 0` from the radius** (general): `0 < qa·qc + pa·pc` for `|a|, |c| ≤ ρ < 1`. The
+    general-radius analog of `wval_inner_pos` (no `ρ²≤1/2`): `|pa·pc| ≤ (qa−1)(qc−1)` so
+    `qa·qc + pa·pc ≥ qa + qc − 1 ≥ 1`. -/
+theorem wval_inner_pos_gen (ρ a c : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num)
+    (had : 0 < a.den) (hcd : 0 < c.den) (ha : Qle (Qabs a) ρ) (hc : Qle (Qabs c) ρ)
+    (hρlt : ρ.num.toNat < ρ.den) :
+    0 < (a.den : Int) * c.den + a.num * c.num := by
+  simp only [Qle, Qabs] at ha hc
+  have hrd : (0 : Int) < ρ.den := by exact_mod_cast hρd
+  have hqa : (0 : Int) < a.den := by exact_mod_cast had
+  have hqc : (0 : Int) < c.den := by exact_mod_cast hcd
+  have hplt : ρ.num < (ρ.den : Int) := by omega
+  have hpa : (a.num.natAbs : Int) < a.den := by
+    have h1 : (a.num.natAbs : Int) * ρ.den ≤ ρ.num * a.den := ha
+    have h2 : ρ.num * (a.den : Int) ≤ ((ρ.den : Int) - 1) * a.den :=
+      Int.mul_le_mul_of_nonneg_right (by omega) (Int.le_of_lt hqa)
+    have h3 : (a.num.natAbs : Int) * ρ.den < a.den * ρ.den := by
+      have e : ((ρ.den : Int) - 1) * a.den < a.den * ρ.den := by
+        have := Int.mul_pos hqa hrd; have e2 : ((ρ.den : Int) - 1) * a.den = a.den * ρ.den - a.den := by ring_uor
+        omega
+      omega
+    exact Int.lt_of_mul_lt_mul_right h3 (Int.le_of_lt hrd)
+  have hpc : (c.num.natAbs : Int) < c.den := by
+    have h1 : (c.num.natAbs : Int) * ρ.den ≤ ρ.num * c.den := hc
+    have h2 : ρ.num * (c.den : Int) ≤ ((ρ.den : Int) - 1) * c.den :=
+      Int.mul_le_mul_of_nonneg_right (by omega) (Int.le_of_lt hqc)
+    have h3 : (c.num.natAbs : Int) * ρ.den < c.den * ρ.den := by
+      have e : ((ρ.den : Int) - 1) * c.den < c.den * ρ.den := by
+        have := Int.mul_pos hqc hrd; have e2 : ((ρ.den : Int) - 1) * c.den = c.den * ρ.den - c.den := by ring_uor
+        omega
+      omega
+    exact Int.lt_of_mul_lt_mul_right h3 (Int.le_of_lt hrd)
+  have habs : ((a.num * c.num).natAbs : Int) ≤ ((a.den : Int) - 1) * ((c.den : Int) - 1) := by
+    rw [Int.natAbs_mul]; push_cast
+    exact Int.mul_le_mul (by omega) (by omega) (Int.ofNat_nonneg _) (by omega)
+  have hge : -(((a.den : Int) - 1) * ((c.den : Int) - 1)) ≤ a.num * c.num := by
+    rcases Int.natAbs_eq (a.num * c.num) with h | h <;> omega
+  have hexp : (a.den : Int) * c.den - ((a.den : Int) - 1) * ((c.den : Int) - 1)
+      = (a.den : Int) + c.den - 1 := by ring_uor
+  omega
+
+/-- **General-radius binary Lipschitz, first argument**: `|wvalR a c − wvalR b c| ≤ ρ.den²·|a − b|` for
+    `|a|,|b|,|c| ≤ ρ < 1`. The general analog of `wval_lip1` (constant `ρ.den²` replaces `4`), via
+    `wval_halfbound_gen` (`K = ρ.den`) + `wval_lip1_den_gen` (`K²`). -/
+theorem wval_lip1_gen (ρ a b c : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num)
+    (had : 0 < a.den) (hbd : 0 < b.den) (hcd : 0 < c.den)
+    (ha : Qle (Qabs a) ρ) (hb : Qle (Qabs b) ρ) (hc : Qle (Qabs c) ρ)
+    (hρlt : ρ.num.toNat < ρ.den) :
+    Qle (Qabs (Qsub (wvalR a c) (wvalR b c))) (mul (⟨(ρ.den : Int) * ρ.den, 1⟩ : Q) (Qabs (Qsub a b))) := by
+  have hqa : (0 : Int) < a.den := by exact_mod_cast had
+  have hqb : (0 : Int) < b.den := by exact_mod_cast hbd
+  have hqc : (0 : Int) < c.den := by exact_mod_cast hcd
+  have hHac := wval_halfbound_gen ρ a c hρd hρ0 had hcd ha hc hρlt
+  have hHbc := wval_halfbound_gen ρ b c hρd hρ0 hbd hcd hb hc hρlt
+  have hac : 0 < (a.den : Int) * c.den + a.num * c.num := wval_inner_pos_gen ρ a c hρd hρ0 had hcd ha hc hρlt
+  have hbc : 0 < (b.den : Int) * c.den + b.num * c.num := wval_inner_pos_gen ρ b c hρd hρ0 hbd hcd hb hc hρlt
+  have hND := wvalR_argdiff1 a b c hac hbc
+  have hcsq := wval_csq_le_gen ρ c hρd hρ0 hcd hc hρlt
+  have hden := wval_lip1_den_gen (a.den : Int) a.num (b.den : Int) b.num (c.den : Int) c.num (ρ.den : Int)
+    hqa hqb hqc hHac hHbc
+  have hqcpc : (0 : Int) ≤ (c.den : Int) * c.den - c.num * c.num := by omega
+  have hn : (0 : Int) ≤ ((Qsub a b).num.natAbs : Int) := Int.ofNat_nonneg _
+  have hSabs : ((Qsub (wvalR a c) (wvalR b c)).num.natAbs : Int)
+      = ((Qsub a b).num.natAbs : Int) * ((c.den : Int) * c.den - c.num * c.num) := by
+    rw [hND, Int.natAbs_mul]; push_cast; rw [Int.natAbs_of_nonneg hqcpc]
+  have hSden : ((Qsub (wvalR a c) (wvalR b c)).den : Int)
+      = ((a.den : Int) * c.den + a.num * c.num) * ((b.den : Int) * c.den + b.num * c.num) := by
+    have e : (Qsub (wvalR a c) (wvalR b c)).den = (wvalR a c).den * (wvalR b c).den := rfl
+    rw [e, Int.natCast_mul, wvalR_den, wvalR_den,
+      Int.toNat_of_nonneg (Int.le_of_lt hac), Int.toNat_of_nonneg (Int.le_of_lt hbc)]
+  have hTd : (Qsub a b).den = a.den * b.den := rfl
+  simp only [Qle, Qabs, mul]
+  rw [hSabs, hSden, hTd]
+  push_cast
+  have eL : ((Qsub a b).num.natAbs : Int) * ((c.den : Int) * c.den - c.num * c.num)
+        * (1 * ((a.den : Int) * b.den))
+      = ((Qsub a b).num.natAbs : Int)
+          * (((c.den : Int) * c.den - c.num * c.num) * ((a.den : Int) * b.den)) := by ring_uor
+  have eR : (ρ.den : Int) * ρ.den * ((Qsub a b).num.natAbs : Int)
+        * (((a.den : Int) * c.den + a.num * c.num) * ((b.den : Int) * c.den + b.num * c.num))
+      = ((Qsub a b).num.natAbs : Int)
+          * (((ρ.den : Int) * ρ.den) * (((a.den : Int) * c.den + a.num * c.num)
+            * ((b.den : Int) * c.den + b.num * c.num))) := by ring_uor
+  rw [eL, eR]
+  exact Int.mul_le_mul_of_nonneg_left hden hn
+
+/-- **General-radius binary Lipschitz, second argument** (via `wvalR_comm`). -/
+theorem wval_lip2_gen (ρ a c d : Q) (hρd : 0 < ρ.den) (hρ0 : 0 ≤ ρ.num)
+    (had : 0 < a.den) (hcd : 0 < c.den) (hdd : 0 < d.den)
+    (ha : Qle (Qabs a) ρ) (hc : Qle (Qabs c) ρ) (hd : Qle (Qabs d) ρ)
+    (hρlt : ρ.num.toNat < ρ.den) :
+    Qle (Qabs (Qsub (wvalR a c) (wvalR a d))) (mul (⟨(ρ.den : Int) * ρ.den, 1⟩ : Q) (Qabs (Qsub c d))) := by
+  rw [wvalR_comm a c, wvalR_comm a d]
+  exact wval_lip1_gen ρ c d a hρd hρ0 hcd hdd had hc hd ha hρlt
+
 end UOR.Bridge.F1Square.Analysis

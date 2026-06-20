@@ -2889,3 +2889,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rlog_congr_gen
 #print axioms Analysis.RlogPos_eq_Rlog_gen
 #print axioms Analysis.RlogPos_congr_gen
+#print axioms Analysis.wval_csq_le_gen
+#print axioms Analysis.wval_halfbound_gen
+#print axioms Analysis.wval_inner_pos_gen
+#print axioms Analysis.wval_lip1_gen
+#print axioms Analysis.wval_lip2_gen
