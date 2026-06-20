@@ -20,6 +20,14 @@ import F1Square.Analysis.Reflection
 
 namespace UOR.Bridge.F1Square.Analysis
 
+/-- **`exp` commutes with conjugation** `exp(z̄) = conj(exp z)`. From `cos` even and `sin` odd:
+    `exp(z̄) = ⟨e^{Re z}·cos(−Im z), e^{Re z}·sin(−Im z)⟩ = ⟨e^{Re z}·cos(Im z), −e^{Re z}·sin(Im z)⟩
+    = conj(exp z)`. Reusable for conjugation of any `exp`-built object (the conductor `π^{−s/2}`, and the
+    eventual `Γ`/`Cpow` conjugation). -/
+theorem Cexp_conj (z : Complex) : Ceq (Cexp (Cconj z)) (Cconj (Cexp z)) :=
+  ⟨Rmul_congr (Req_refl _) (Rcos_neg z.im),
+   Req_trans (Rmul_congr (Req_refl _) (Rsin_neg z.im)) (Rmul_neg_right (RexpReal z.re) (Rsin z.im))⟩
+
 /-- **`genSum` respects pointwise `≈`** (termwise congruence of the finite partial sum). -/
 theorem genSum_congr (T T' : Nat → Real) (h : ∀ n, Req (T n) (T' n)) :
     ∀ N, Req (genSum T N) (genSum T' N)
