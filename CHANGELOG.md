@@ -100,6 +100,14 @@ audit-visible hypothesis, never an axiom).
   `Rinv_congr` (`1/x ≈ 1/y` from `x ≈ y`, across different positivity witnesses — via the cancellation
   `1/x ≈ (1/x)(y/y) ≈ (1/x)(x/y) ≈ 1/y`, no witness-dependent reindexing), filling a previously-missing
   reciprocal congruence.
+- **Track 1 — real-part conjugation invariance of the complex digamma** `Re ψ(s̄) = Re ψ(s)`
+  (`CDigamma_re_conj`, `Analysis/ComplexDigammaConj.lean`), a genuine *property* of the constructed
+  `CDigamma`. Since `Re(1/(s+n)) = (Re s+n)/|s+n|²` and `|s+n|²` is conjugation-invariant (`Im` enters
+  only squared, `CnormSq_CdigammaArg_conj`), every term's real part agrees (`CdigammaTerm_re_conj`, via
+  `Rinv_congr`), so the two real-part partial-sum sequences are pointwise `≈` (`genSum_congr`) and their
+  diagonal limits agree (`Rlim_congr`). This is the archimedean face of ξ's conjugate-pair zero
+  symmetry; the line `Re ψ(1/4 + iτ/2)` of Track 2 is its instance. The first verified analytic
+  property atop the item-1 objects (advancing beyond the approximant constructions). Axiom-clean.
 - **Track 1 — left-sector argument additivity** `CargLeft(zw) = CargLeft z + Carg w`
   (`Analysis/ComplexArgLeftAdd.lean`): left-half-plane `z` (`Re z < 0`) times principal `w`, the
   product again left. Reflects the principal `Carg_add` through the `+π` shift via `−(zw) = (−z)·w`

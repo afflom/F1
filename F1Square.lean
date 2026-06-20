@@ -180,6 +180,7 @@ import F1Square.Analysis.ComplexArgLeft
 import F1Square.Analysis.ComplexArgLeftAdd
 import F1Square.Analysis.RlimProps
 import F1Square.Analysis.ComplexDigamma
+import F1Square.Analysis.ComplexDigammaConj
 import F1Square.Analysis.ComplexXi
 import F1Square.Analysis.RHWitness
 import F1Square.Analysis.CayleyMap
