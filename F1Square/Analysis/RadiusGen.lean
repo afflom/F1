@@ -842,4 +842,48 @@ theorem tmul_wvalReal_via_gen (x y txy wxy : Real) (ρ : Q) (hρd : 0 < ρ.den) 
     (⟨(8 * ρ.den * ρ.den : Nat), n + 1⟩ : Q)
   simp only [Qeq, add]; push_cast; generalize (ρ.den : Int) = d; ring_uor
 
+set_option maxHeartbeats 1600000 in
+/-- **General-radius log-mult wiring** (gen analog of `Rlog_mul_via_signed`): routes the real addition
+    through `Rartanh_add_real_via_gen` + `Rartanh_congr_gen`, with `wvalReal_gen` (gen reindex). -/
+theorem Rlog_mul_via_gen (c tx ty txy : Real) (σ : Q) (Kσ : Nat)
+    (hσ0 : 0 ≤ σ.num) (hσd : 0 < σ.den) (hσlt : σ.num.toNat < σ.den)
+    (hKσF : Qle (⟨1, 1⟩ : Q) (mul (⟨(Kσ : Int), 1⟩ : Q) (Qsub ⟨1, 1⟩ (mul σ σ))))
+    (hKr : Kσ ≤ 2 * (σ.den * σ.den + 4 * σ.den))
+    (hslt : ∀ m, (tx.seq m).num.toNat < (tx.seq m).den)
+    (htlt : ∀ m, (ty.seq m).num.toNat < (ty.seq m).den)
+    (hslt' : ∀ m, (neg (tx.seq m)).num.toNat < (tx.seq m).den)
+    (htlt' : ∀ m, (neg (ty.seq m)).num.toNat < (ty.seq m).den)
+    (hbx : ∀ m, Qle (Qabs (tx.seq m)) σ) (hby : ∀ m, Qle (Qabs (ty.seq m)) σ)
+    (hbw : ∀ i, Qle (Qabs (wvalR (tx.seq i) (ty.seq i))) σ) (hbtxy : ∀ m, Qle (Qabs (txy.seq m)) σ)
+    (htmul : Req txy (wvalReal_gen tx ty σ hσd hσ0 hσlt hbx hby)) :
+    Req (Radd (Rmul c (Rartanh tx σ hσ0 hσd hσlt hbx)) (Rmul c (Rartanh ty σ hσ0 hσd hσlt hby)))
+        (Rmul c (Rartanh txy σ hσ0 hσd hσlt hbtxy)) := by
+  have hbW : ∀ n, Qle (Qabs ((wvalReal_gen tx ty σ hσd hσ0 hσlt hbx hby).seq n)) σ :=
+    fun n => hbw (2 * σ.den * σ.den * (n + 1))
+  have hRY : ∀ n, n ≤ 2 * σ.den * σ.den * (Rartanh_R σ n + 1) := by
+    intro n
+    have hpos : 0 < 2 * σ.den * σ.den := Nat.mul_pos (Nat.mul_pos (by omega) hσd) hσd
+    have h1 : Rartanh_R σ n + 1 ≤ 2 * σ.den * σ.den * (Rartanh_R σ n + 1) := by
+      calc Rartanh_R σ n + 1 = 1 * (Rartanh_R σ n + 1) := (Nat.one_mul _).symm
+        _ ≤ 2 * σ.den * σ.den * (Rartanh_R σ n + 1) := Nat.mul_le_mul_right _ (by omega)
+    have hRR : n ≤ Rartanh_R σ n := by
+      unfold Rartanh_R
+      have hk : 1 ≤ σ.den * σ.den + 4 * σ.den := Nat.le_trans (by omega) (Nat.le_add_left _ _)
+      calc n ≤ 1 * (n + 1) := by omega
+        _ ≤ (σ.den * σ.den + 4 * σ.den) * (n + 1) := Nat.mul_le_mul_right _ hk
+    omega
+  have hadd : Req (Radd (Rartanh tx σ hσ0 hσd hσlt hbx) (Rartanh ty σ hσ0 hσd hσlt hby))
+      (Rartanh (wvalReal_gen tx ty σ hσd hσ0 hσlt hbx hby) σ hσ0 hσd hσlt hbW) :=
+    Rartanh_add_real_via_gen tx ty (Rartanh tx σ hσ0 hσd hσlt hbx) (Rartanh ty σ hσ0 hσd hσlt hby)
+      (Rartanh (wvalReal_gen tx ty σ hσd hσ0 hσlt hbx hby) σ hσ0 hσd hσlt hbW)
+      σ Kσ (fun n => 2 * σ.den * σ.den * (Rartanh_R σ n + 1)) hσ0 hσd hσlt hKσF hRY
+      hslt htlt hslt' htlt' hbx hby hbw (fun _ => rfl) (fun _ => rfl) (fun _ => rfl)
+  have hcong : Req (Rartanh (wvalReal_gen tx ty σ hσd hσ0 hσlt hbx hby) σ hσ0 hσd hσlt hbW)
+      (Rartanh txy σ hσ0 hσd hσlt hbtxy) :=
+    Rartanh_congr_gen (wvalReal_gen tx ty σ hσd hσ0 hσlt hbx hby) txy σ Kσ hσ0 hσd hσlt hKσF hKr
+      hbW hbtxy (Req_symm htmul)
+  exact Rlog_mul_algebra c (Rartanh tx σ hσ0 hσd hσlt hbx) (Rartanh ty σ hσ0 hσd hσlt hby)
+    (Rartanh (wvalReal_gen tx ty σ hσd hσ0 hσlt hbx hby) σ hσ0 hσd hσlt hbW)
+    (Rartanh txy σ hσ0 hσd hσlt hbtxy) hadd hcong
+
 end UOR.Bridge.F1Square.Analysis
