@@ -518,6 +518,9 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.CDigamma_im_conj
 #print axioms Analysis.CDigamma_conj
 #print axioms Analysis.Cexp_conj
+#print axioms Analysis.CpiPow_conj
+#print axioms Analysis.CxiPoly_conj
+#print axioms Analysis.Cxi_conj
 
 -- v0.8.0 — the first transcendental: Euler's number e via the exponential series.
 #print axioms Analysis.fct_pos

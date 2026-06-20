@@ -114,6 +114,15 @@ audit-visible hypothesis, never an axiom).
   (`Σ(−T) = −ΣT`) and `RReg_neg` (regularity preserved under negation), then `Rlim_neg`. This is the
   archimedean place's reflection symmetry (ξ's conjugate-pair zero structure), and it exercises the
   full `Rlim_congr`/`Rlim_neg`/`Rinv_congr` toolkit.
+- **Track 1 — conjugation symmetry of the completed ξ, reduced to the Γ/ζ factor symmetries**
+  (`Analysis/ComplexXiConj.lean`): `ξ(s̄) = conj ξ(s)` (`Cxi_conj`) — the structural symmetry behind
+  ξ's conjugate-pair zeros. Two factors are conjugation-symmetric outright: the conductor `π^{−s/2}`
+  (`CpiPow_conj`, via the reusable `Cexp_conj`, no `Clog`/modulus baggage) and the polynomial
+  `½s(s−1)` (`CxiPoly_conj`, pure ℂ-ring algebra). The `Γ(s/2)` and `ζ(s)` factors enter `Cxi` as
+  supplied values, so their conjugation is taken as explicit hypotheses and `Cxi_conj` distributes
+  `Cconj` through the product — isolating the genuine remaining content (the Γ conjugation, a large
+  `Clog`/`Cpow` chain; the ζ conjugation) as named audit-visible hypotheses, the program's standard
+  relocation. Axiom-clean.
 - **Track 1 — left-sector argument additivity** `CargLeft(zw) = CargLeft z + Carg w`
   (`Analysis/ComplexArgLeftAdd.lean`): left-half-plane `z` (`Re z < 0`) times principal `w`, the
   product again left. Reflects the principal `Carg_add` through the `+π` shift via `−(zw) = (−z)·w`
