@@ -625,4 +625,137 @@ theorem RlogPos_mul_signed (x y : Real) (kx : Nat) (hx : Qlt (Qbound kx) (x.seq 
     hB2d hB2ge hxypos hxyhi hxylo hρ2 hρσ hσhalf
   exact Req_trans bxy (Req_trans (Req_symm hmul) (Radd_congr (Req_symm bx) (Req_symm by')))
 
+/-- Pure-`Int` core of the lower-bound positivity witness: `d < p·(qn+1)` from `d·qd ≤ p·qn`
+    (`d, p > 0`, `qd ≥ 1`). -/
+private theorem pos_wit_poly (p d qn qd : Int) (hd : 0 < d) (hp : 0 < p) (hqd1 : 1 ≤ qd)
+    (hkey : d * qd ≤ p * qn) : d < p * (qn + 1) := by
+  have h1 : 0 ≤ d * (qd - 1) := Int.mul_nonneg (Int.le_of_lt hd) (by omega)
+  have h1d : d * (qd - 1) = d * qd - d := by ring_uor
+  have h2 : p * (qn + 1) = p * qn + p := by ring_uor
+  omega
+
+/-- **Positivity witness from a lower bound**: if `x.seq n · M ≥ 1` for all `n` (`x ≥ 1/M`, `M > 0`),
+    then `x` has a `RlogPos` positivity witness at index `M.num.toNat` — even when `x < 1`. Lets the
+    symmetric-band assembly furnish the witness for `Rmul (cnormSq z) (cnormSq w)` when the squared
+    moduli dip below 1. -/
+theorem pos_witness_of_mulM_ge (x : Real) (M : Q) (hMpos : 0 < M.num) (hMd : 0 < M.den)
+    (hlo : ∀ n, Qle (⟨1, 1⟩ : Q) (mul (x.seq n) M)) :
+    Qlt (Qbound M.num.toNat) (x.seq M.num.toNat) := by
+  have hd1 : ((M.num.toNat : Nat) : Int) = M.num := Int.toNat_of_nonneg (Int.le_of_lt hMpos)
+  have hdpos : 0 < (x.seq M.num.toNat).den := x.den_pos _
+  have hkey : (x.seq M.num.toNat).den * (M.den : Int) ≤ (x.seq M.num.toNat).num * M.num := by
+    have hk := hlo M.num.toNat
+    simp only [Qle, mul] at hk; push_cast at hk; omega
+  have hMd1 : (1 : Int) ≤ M.den := by exact_mod_cast hMd
+  have hnumpos : 0 < (x.seq M.num.toNat).num := by
+    have hde : (1 : Int) ≤ (x.seq M.num.toNat).den := by exact_mod_cast hdpos
+    have h0 : (0 : Int) < (x.seq M.num.toNat).den * M.den := by
+      have := Int.mul_pos (by exact_mod_cast hdpos : (0:Int) < (x.seq M.num.toNat).den)
+        (by exact_mod_cast hMd : (0:Int) < (M.den:Int)); omega
+    have h1 : (0 : Int) < (x.seq M.num.toNat).num * M.num := by omega
+    rcases Int.lt_trichotomy (x.seq M.num.toNat).num 0 with h | h | h
+    · exfalso; have := Int.mul_neg_of_neg_of_pos h hMpos; omega
+    · exfalso; rw [h] at h1; simp at h1
+    · exact h
+  show Qlt (Qbound M.num.toNat) (x.seq M.num.toNat)
+  simp only [Qlt, Qbound]; push_cast [hd1]
+  have hp := pos_wit_poly (x.seq M.num.toNat).num (x.seq M.num.toNat).den M.num (M.den : Int)
+    (by exact_mod_cast hdpos) hnumpos hMd1 hkey
+  omega
+
+set_option maxHeartbeats 1600000 in
+/-- **The `Clog_add` modulus seam, discharged (symmetric band)**: `log|zw|² = log|z|² + log|w|²` for
+    squared moduli in `[1/B, B]` (moduli on **either** side of 1). The signed analog of
+    `RlogPos_cnormSq_mul`, via `cnormSq_mul` + `RlogPos_congr` + `RlogPos_mul_signed`; the witness for
+    `Rmul (cnormSq z) (cnormSq w)` comes from the lower bound (`pos_witness_of_mulM_ge`) since the
+    product may be `< 1`. -/
+theorem RlogPos_cnormSq_mul_signed (z w : Complex)
+    (knz : Nat) (hknz : Qlt (Qbound knz) ((cnormSq z).seq knz))
+    (knw : Nat) (hknw : Qlt (Qbound knw) ((cnormSq w).seq knw))
+    (knzw : Nat) (hknzw : Qlt (Qbound knzw) ((cnormSq (Cmul z w)).seq knzw))
+    (B : Q) (hBd : 0 < B.den) (hBge : Qle (⟨1, 1⟩ : Q) B)
+    (hXpos : ∀ n, 0 < ((cnormSq z).seq n).num) (hXhi : ∀ n, Qle ((cnormSq z).seq n) B)
+    (hXlo : ∀ n, Qle (⟨1, 1⟩ : Q) (mul ((cnormSq z).seq n) B))
+    (hYpos : ∀ n, 0 < ((cnormSq w).seq n).num) (hYhi : ∀ n, Qle ((cnormSq w).seq n) B)
+    (hYlo : ∀ n, Qle (⟨1, 1⟩ : Q) (mul ((cnormSq w).seq n) B))
+    (hB2d : 0 < (mul B B).den) (hB2ge : Qle (⟨1, 1⟩ : Q) (mul B B))
+    (hXYpos : ∀ n, 0 < ((Rmul (cnormSq z) (cnormSq w)).seq n).num)
+    (hXYhi : ∀ n, Qle ((Rmul (cnormSq z) (cnormSq w)).seq n) (mul B B))
+    (hXYlo : ∀ n, Qle (⟨1, 1⟩ : Q) (mul ((Rmul (cnormSq z) (cnormSq w)).seq n) (mul B B)))
+    (hZWpos : ∀ n, 0 < ((cnormSq (Cmul z w)).seq n).num)
+    (hZWhi : ∀ n, Qle ((cnormSq (Cmul z w)).seq n) (mul B B))
+    (hZWlo : ∀ n, Qle (⟨1, 1⟩ : Q) (mul ((cnormSq (Cmul z w)).seq n) (mul B B)))
+    (hρ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ⟨B.num - (B.den : Int), B.num.toNat + B.den⟩
+              ⟨B.num - (B.den : Int), B.num.toNat + B.den⟩)))
+    (hρσ : Qle (⟨B.num - (B.den : Int), B.num.toNat + B.den⟩ : Q)
+              (⟨(mul B B).num - ((mul B B).den : Int), (mul B B).num.toNat + (mul B B).den⟩ : Q))
+    (hσhalf : Qle (mul ⟨(mul B B).num - ((mul B B).den : Int), (mul B B).num.toNat + (mul B B).den⟩
+              ⟨(mul B B).num - ((mul B B).den : Int), (mul B B).num.toNat + (mul B B).den⟩) ⟨1, 2⟩)
+    (hσ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ⟨(mul B B).num - ((mul B B).den : Int),
+              (mul B B).num.toNat + (mul B B).den⟩ ⟨(mul B B).num - ((mul B B).den : Int),
+              (mul B B).num.toNat + (mul B B).den⟩))) :
+    Req (RlogPos (cnormSq (Cmul z w)) knzw hknzw)
+        (Radd (RlogPos (cnormSq z) knz hknz) (RlogPos (cnormSq w) knw hknw)) := by
+  have hM2pos : 0 < (mul B B).num := by have := hB2ge; simp only [Qle] at this; omega
+  have hxy' : Qlt (Qbound (mul B B).num.toNat)
+      ((Rmul (cnormSq z) (cnormSq w)).seq (mul B B).num.toNat) :=
+    pos_witness_of_mulM_ge (Rmul (cnormSq z) (cnormSq w)) (mul B B) hM2pos hB2d hXYlo
+  refine Req_trans ?_ (RlogPos_mul_signed (cnormSq z) (cnormSq w) knz hknz knw hknw _ hxy'
+    B hBd hBge hXpos hXhi hXlo hYpos hYhi hYlo hB2d hB2ge hXYpos hXYhi hXYlo hρ2 hρσ hσhalf hσ2)
+  exact RlogPos_congr (cnormSq (Cmul z w)) (Rmul (cnormSq z) (cnormSq w)) knzw hknzw _ hxy'
+    (mul B B) hB2d hB2ge hZWpos hZWhi hZWlo hXYpos hXYhi hXYlo hσ2 (cnormSq_mul z w)
+
+set_option maxHeartbeats 1600000 in
+/-- **★★ unconditional complex logarithm additivity (symmetric band)** `Clog(zw) = Clog z + Clog w`,
+    with the modulus seam `hmod` discharged for squared moduli in `[1/B, B]` (moduli on either side of
+    1 — the realistic Hadamard regime). The symmetric-band analog of `Clog_add_bounded`, supplying
+    `hmod` via `RlogPos_cnormSq_mul_signed`. -/
+theorem Clog_add_signed (z w : Complex)
+    (knz : Nat) (hknz : Qlt (Qbound knz) ((cnormSq z).seq knz))
+    (knw : Nat) (hknw : Qlt (Qbound knw) ((cnormSq w).seq knw))
+    (knzw : Nat) (hknzw : Qlt (Qbound knzw) ((cnormSq (Cmul z w)).seq knzw))
+    (kz : Nat) (hkz : Qlt (Qbound kz) (z.re.seq kz))
+    (kw : Nat) (hkw : Qlt (Qbound kw) (w.re.seq kw))
+    (kzw : Nat) (hzw : Qlt (Qbound kzw) ((Cmul z w).re.seq kzw))
+    (ρ : Q) (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den) (hlt : ρ.num.toNat < ρ.den)
+    (hlt16 : (mul (⟨16, 1⟩ : Q) ρ).num.toNat < (mul (⟨16, 1⟩ : Q) ρ).den)
+    (h2ρ : 0 ≤ (Qsub (⟨1, 1⟩ : Q) (mul ⟨2, 1⟩ ρ)).num)
+    (hhalf : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ⟨2, 1⟩ ρ))) (hρ4 : Qle (mul ⟨4, 1⟩ ρ) ⟨1, 1⟩)
+    (hρ2arg : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ρ ρ))) (hρ8 : Qle (mul ⟨2, 1⟩ ρ) ⟨1, 1⟩)
+    (hρ1 : Qle ρ ⟨1, 1⟩)
+    (hbs : ∀ n, Qle (Qabs ((Rdiv z.im z.re kz hkz).seq n)) ρ)
+    (hbt : ∀ n, Qle (Qabs ((Rdiv w.im w.re kw hkw).seq n)) ρ)
+    (hbzw : ∀ n, Qle (Qabs ((Rdiv (Cmul z w).im (Cmul z w).re kzw hzw).seq n)) ρ)
+    (hbw : ∀ n, Qle (Qabs (vval ((Rdiv z.im z.re kz hkz).seq n)
+      ((Rdiv w.im w.re kw hkw).seq n))) ρ)
+    (B : Q) (hBd : 0 < B.den) (hBge : Qle (⟨1, 1⟩ : Q) B)
+    (hXpos : ∀ n, 0 < ((cnormSq z).seq n).num) (hXhi : ∀ n, Qle ((cnormSq z).seq n) B)
+    (hXlo : ∀ n, Qle (⟨1, 1⟩ : Q) (mul ((cnormSq z).seq n) B))
+    (hYpos : ∀ n, 0 < ((cnormSq w).seq n).num) (hYhi : ∀ n, Qle ((cnormSq w).seq n) B)
+    (hYlo : ∀ n, Qle (⟨1, 1⟩ : Q) (mul ((cnormSq w).seq n) B))
+    (hB2d : 0 < (mul B B).den) (hB2ge : Qle (⟨1, 1⟩ : Q) (mul B B))
+    (hXYpos : ∀ n, 0 < ((Rmul (cnormSq z) (cnormSq w)).seq n).num)
+    (hXYhi : ∀ n, Qle ((Rmul (cnormSq z) (cnormSq w)).seq n) (mul B B))
+    (hXYlo : ∀ n, Qle (⟨1, 1⟩ : Q) (mul ((Rmul (cnormSq z) (cnormSq w)).seq n) (mul B B)))
+    (hZWpos : ∀ n, 0 < ((cnormSq (Cmul z w)).seq n).num)
+    (hZWhi : ∀ n, Qle ((cnormSq (Cmul z w)).seq n) (mul B B))
+    (hZWlo : ∀ n, Qle (⟨1, 1⟩ : Q) (mul ((cnormSq (Cmul z w)).seq n) (mul B B)))
+    (hρ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ⟨B.num - (B.den : Int), B.num.toNat + B.den⟩
+              ⟨B.num - (B.den : Int), B.num.toNat + B.den⟩)))
+    (hρσ : Qle (⟨B.num - (B.den : Int), B.num.toNat + B.den⟩ : Q)
+              (⟨(mul B B).num - ((mul B B).den : Int), (mul B B).num.toNat + (mul B B).den⟩ : Q))
+    (hσhalf : Qle (mul ⟨(mul B B).num - ((mul B B).den : Int), (mul B B).num.toNat + (mul B B).den⟩
+              ⟨(mul B B).num - ((mul B B).den : Int), (mul B B).num.toNat + (mul B B).den⟩) ⟨1, 2⟩)
+    (hσ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ⟨(mul B B).num - ((mul B B).den : Int),
+              (mul B B).num.toNat + (mul B B).den⟩ ⟨(mul B B).num - ((mul B B).den : Int),
+              (mul B B).num.toNat + (mul B B).den⟩))) :
+    Ceq (Clog (Cmul z w) knzw hknzw kzw hzw ρ hρ0 hρd hlt hbzw)
+        (Cadd (Clog z knz hknz kz hkz ρ hρ0 hρd hlt hbs)
+              (Clog w knw hknw kw hkw ρ hρ0 hρd hlt hbt)) :=
+  Clog_add z w knz hknz knw hknw knzw hknzw kz hkz kw hkw kzw hzw ρ hρ0 hρd hlt hlt16 h2ρ hhalf hρ4
+    hρ2arg hρ8 hρ1 hbs hbt hbzw hbw
+    (RlogPos_cnormSq_mul_signed z w knz hknz knw hknw knzw hknzw B hBd hBge
+      hXpos hXhi hXlo hYpos hYhi hYlo hB2d hB2ge
+      hXYpos hXYhi hXYlo hZWpos hZWhi hZWlo hρ2 hρσ hσhalf hσ2)
+
 end UOR.Bridge.F1Square.Analysis
