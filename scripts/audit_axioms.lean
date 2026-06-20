@@ -2915,6 +2915,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.tan_pi_half_sub_arctan_eighteen
 #print axioms Analysis.Carg_I
 #print axioms Analysis.CargUpper_tan
+#print axioms Analysis.Carg_conj
 #print axioms Analysis.Rcos_RarctanR_nested
 #print axioms Analysis.Rsin_RarctanR_nested
 #print axioms Analysis.RarctanR_value_eq

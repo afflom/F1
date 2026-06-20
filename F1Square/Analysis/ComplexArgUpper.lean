@@ -20,6 +20,8 @@ Pure Lean 4 core, no Mathlib, no `sorry`/`native_decide`, choice-free; audited b
 import F1Square.Analysis.ComplexArg
 import F1Square.Analysis.TanPiQuarter
 import F1Square.Analysis.RArctanValue
+import F1Square.Analysis.RArctanCongr
+import F1Square.Analysis.Reflection
 
 namespace UOR.Bridge.F1Square.Analysis
 
@@ -82,5 +84,25 @@ theorem CargUpper_tan (z : Complex) (k : Nat) (hk : Qlt (Qbound k) (z.im.seq k))
   -- π/2 − arctan(Re/Im) has tangent Im/Re
   exact Rsin_cos_pi_half_sub_tan_real (RarctanR (Rdiv z.re z.im k hk) ρ hρ0 hρd hρlt hb)
     (Rdiv z.re z.im k hk) (Rdiv z.im z.re kr hkr) hval hts
+
+/-- **★ argument conjugate symmetry** `arg(z̄) = −arg z` (principal sector): `Carg(Cconj z) =
+    −Carg z`. Since `Cconj z = ⟨Re z, −Im z⟩`, its ratio `Im/Re = −(Im z/Re z)`, and `arctan` is odd
+    (`RarctanR_neg`). The complex form of arctan oddness — a building block of cross-sector
+    additivity (it converts a subtracted angle into a conjugate factor). -/
+theorem Carg_conj (z : Complex) (k : Nat) (hk : Qlt (Qbound k) (z.re.seq k))
+    (ρ : Q) (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den) (hρlt : ρ.num.toNat < ρ.den)
+    (hρ2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ρ ρ)))
+    (hb : ∀ n, Qle (Qabs ((Rdiv z.im z.re k hk).seq n)) ρ)
+    (hbc : ∀ n, Qle (Qabs ((Rdiv (Cconj z).im (Cconj z).re k hk).seq n)) ρ) :
+    Req (Carg (Cconj z) k hk ρ hρ0 hρd hρlt hbc) (Rneg (Carg z k hk ρ hρ0 hρd hρlt hb)) := by
+  have hbn : ∀ n, Qle (Qabs ((Rneg (Rdiv z.im z.re k hk)).seq n)) ρ := by
+    intro n
+    show Qle (Qabs (neg ((Rdiv z.im z.re k hk).seq n))) ρ
+    rw [Qabs_neg]; exact hb n
+  have hratio : Req (Rdiv (Cconj z).im (Cconj z).re k hk) (Rneg (Rdiv z.im z.re k hk)) :=
+    Rmul_neg_left z.im (Rinv z.re k hk)
+  refine Req_trans (RarctanR_congr (Rdiv (Cconj z).im (Cconj z).re k hk)
+    (Rneg (Rdiv z.im z.re k hk)) ρ hρ0 hρd hρlt hρ2 hbc hbn hratio) ?_
+  exact RarctanR_neg (Rdiv z.im z.re k hk) ρ hρ0 hρd hρlt hb hbn
 
 end UOR.Bridge.F1Square.Analysis

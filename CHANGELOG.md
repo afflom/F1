@@ -16,6 +16,10 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **Track 1 — ★ argument conjugate symmetry** `arg(z̄) = −arg z` (`Analysis/ComplexArgUpper.lean`,
+  `Carg_conj`): `Carg(Cconj z) = −Carg z`. Since `Cconj z = ⟨Re z, −Im z⟩` has ratio `−(Im z/Re z)` and
+  `arctan` is odd (`RarctanR_neg`, via `RarctanR_congr` on the ratio `Rmul_neg_left`). A building block
+  of cross-sector additivity (it turns a subtracted angle into a conjugate factor). Axiom-clean.
 - **Track 1 — `arctan` is odd** `arctan(−t) = −arctan t` (`Analysis/RArctanValue.lean`,
   `RarctanR_neg`, with rational `arctanTerm_neg`/`arctanSum_neg`) — the conjugate symmetry of the
   argument (`arg(z̄) = −arg z`), since `arctan` sums only odd powers. From the artanh-term oddness
