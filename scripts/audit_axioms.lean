@@ -2877,3 +2877,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.tmap_abs_lt_one
 #print axioms Analysis.Rlog_mul_via_signed
 #print axioms Analysis.wvalR_tmap_seq_bound_signed
+#print axioms Analysis.Rlog_mul_signed
