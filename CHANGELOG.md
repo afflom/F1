@@ -16,6 +16,11 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **Track 1 — `arctan` is odd** `arctan(−t) = −arctan t` (`Analysis/RArctanValue.lean`,
+  `RarctanR_neg`, with rational `arctanTerm_neg`/`arctanSum_neg`) — the conjugate symmetry of the
+  argument (`arg(z̄) = −arg z`), since `arctan` sums only odd powers. From the artanh-term oddness
+  `artTerm_neg` (`(−1)ⁿ` factor preserved). A foundational reusable property toward the cross-sector
+  argument additivity. Axiom-clean (`{propext, Quot.sound}`).
 - **Track 1 — the complex logarithm past `|arg| < π/4`** (`Analysis/ComplexLogUpper.lean`,
   `ClogUpper`): `ClogUpper z = ½·log|z|² + i·(π/2 − arctan(Re/Im))` on the upper sector (`Im z > 0`,
   `|Re/Im| ≤ ρ < 1`, i.e. `|arg| ∈ (π/4, π/2]`) — the extension of the principal `Clog` past its

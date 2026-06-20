@@ -20,8 +20,57 @@ Pure Lean 4 core, no Mathlib, no `sorry`/`native_decide`, choice-free; audited b
 `scripts/honesty_audit.sh`.
 -/
 import F1Square.Analysis.ArctanTan
+import F1Square.Analysis.Gamma
 
 namespace UOR.Bridge.F1Square.Analysis
+
+-- ===========================================================================
+-- arctan is ODD: arctan(−t) = −arctan t — the conjugate symmetry arg(z̄) = −arg z.
+-- (arctanTerm = (−1)ⁿ·artTerm, and artTerm is odd in its base — `artTerm_neg`, Gamma.lean.)
+-- ===========================================================================
+
+/-- **`arctanTerm` is odd in its base**: `arctanTerm (−t) n = −arctanTerm t n` (from `artTerm_neg`). -/
+theorem arctanTerm_neg {t : Q} (htd : 0 < t.den) (n : Nat) :
+    Qeq (arctanTerm (neg t) n) (neg (arctanTerm t n)) := by
+  show Qeq (mul (qpow (⟨-1, 1⟩ : Q) n) (artTerm (neg t) n))
+    (neg (mul (qpow (⟨-1, 1⟩ : Q) n) (artTerm t n)))
+  have hbden : 0 < (mul (qpow (⟨-1, 1⟩ : Q) n) (neg (artTerm t n))).den :=
+    Qmul_den_pos (qpow_den_pos (by decide) n) (artTerm_den_pos htd n)
+  refine Qeq_trans hbden (Qmul_congr (Qeq_refl _) (artTerm_neg htd n)) ?_
+  show (mul (qpow (⟨-1, 1⟩ : Q) n) (neg (artTerm t n))).num
+        * ((neg (mul (qpow (⟨-1, 1⟩ : Q) n) (artTerm t n))).den : Int)
+      = (neg (mul (qpow (⟨-1, 1⟩ : Q) n) (artTerm t n))).num
+        * ((mul (qpow (⟨-1, 1⟩ : Q) n) (neg (artTerm t n))).den : Int)
+  simp only [mul, neg]; push_cast; ring_uor
+
+/-- **`arctanSum` is odd in its base**: `arctanSum (−t) N = −arctanSum t N`. -/
+theorem arctanSum_neg {t : Q} (htd : 0 < t.den) : ∀ N, Qeq (arctanSum (neg t) N) (neg (arctanSum t N))
+  | 0 => arctanTerm_neg htd 0
+  | (N + 1) => by
+      show Qeq (add (arctanSum (neg t) N) (arctanTerm (neg t) (N + 1)))
+        (neg (add (arctanSum t N) (arctanTerm t (N + 1))))
+      have hmid : Qeq (add (arctanSum (neg t) N) (arctanTerm (neg t) (N + 1)))
+          (add (neg (arctanSum t N)) (neg (arctanTerm t (N + 1)))) :=
+        Qadd_congr (arctanSum_neg htd N) (arctanTerm_neg htd (N + 1))
+      have hmidden : 0 < (add (neg (arctanSum t N)) (neg (arctanTerm t (N + 1)))).den :=
+        add_den_pos (arctanSum_den_pos htd N) (arctanTerm_den_pos htd (N + 1))
+      exact Qeq_trans hmidden hmid
+        (Qeq_symm (Qneg_add (arctanSum t N) (arctanTerm t (N + 1))))
+
+/-- **★ `arctan` is odd, real argument**: `arctan(−t) = −arctan t` (`RarctanR (Rneg t) = Rneg
+    (RarctanR t)`). The conjugate symmetry of the argument (`arg(z̄) = −arg z`), since `arctan` is the
+    sum of odd powers. Per-diagonal from `arctanSum_neg` (`(Rneg t).seq m = −t.seq m`). -/
+theorem RarctanR_neg (t : Real) (ρ : Q) (hρ0 : 0 ≤ ρ.num) (hρd : 0 < ρ.den)
+    (hlt : ρ.num.toNat < ρ.den) (hbt : ∀ n, Qle (Qabs (t.seq n)) ρ)
+    (hbn : ∀ n, Qle (Qabs ((Rneg t).seq n)) ρ) :
+    Req (RarctanR (Rneg t) ρ hρ0 hρd hlt hbn) (Rneg (RarctanR t ρ hρ0 hρd hlt hbt)) := by
+  apply Req_of_seq_Qeq
+  intro j
+  show Qeq (arctanSum ((Rneg t).seq (Rartanh_R ρ j)) (Rartanh_R ρ j))
+    (neg (arctanSum (t.seq (Rartanh_R ρ j)) (Rartanh_R ρ j)))
+  show Qeq (arctanSum (neg (t.seq (Rartanh_R ρ j))) (Rartanh_R ρ j))
+    (neg (arctanSum (t.seq (Rartanh_R ρ j)) (Rartanh_R ρ j)))
+  exact arctanSum_neg (t.den_pos _) (Rartanh_R ρ j)
 
 set_option maxHeartbeats 1600000 in
 /-- **cos nested-diagonal bound, real argument**: `|(Rcos (RarctanR t)).seq j − peval(cos∘arctan) q

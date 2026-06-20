@@ -2918,6 +2918,9 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rcos_RarctanR_nested
 #print axioms Analysis.Rsin_RarctanR_nested
 #print axioms Analysis.RarctanR_value_eq
+#print axioms Analysis.arctanTerm_neg
+#print axioms Analysis.arctanSum_neg
+#print axioms Analysis.RarctanR_neg
 #print axioms Analysis.ClogUpper_re
 #print axioms Analysis.ClogUpper_im
 #print axioms Analysis.ClogUpper_I_im
