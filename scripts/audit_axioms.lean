@@ -2907,6 +2907,11 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.sin_eq_cos_pi4
 #print axioms Analysis.Rcos_pi_half
 #print axioms Analysis.Rsin_pi_half
+#print axioms Analysis.Rcos_pi
+#print axioms Analysis.Rsin_pi
+#print axioms Analysis.Rsin_add_pi
+#print axioms Analysis.Rcos_add_pi
+#print axioms Analysis.CargLeft_tan
 #print axioms Analysis.Rcos_sub
 #print axioms Analysis.Rsin_pi_half_sub
 #print axioms Analysis.Rcos_pi_half_sub

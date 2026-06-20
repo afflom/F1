@@ -16,6 +16,13 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **Track 1 — the left-half-plane argument (full-plane atan2)** `CargLeft` (`Analysis/ComplexArgLeft.lean`)
+  with the `π` values (`Analysis/TanPiQuarter.lean`): `cos π = −1`, `sin π = 0` (`Rcos_pi`/`Rsin_pi`,
+  double-angle on `π/2 = Rpi_half`), the π-shift formulas `sin(x+π) = −sin x`, `cos(x+π) = −cos x`
+  (`Rsin_add_pi`/`Rcos_add_pi`), and `CargLeft z = arg(−z) + π` for `Re z < 0` with genuine tangent
+  `tan(CargLeft z) = Im z/Re z` (`CargLeft_tan`, value identity on `−z` + π-shift, `tan(A+π) = tan A`).
+  With the principal `Carg`, `CargUpper`, and `CargLower`, the argument is now defined over the whole
+  punctured plane near the four axes — the `Re z < 0` quadrants of `atan2`. Axiom-clean.
 - **Track 1 — the general complex power** `z^w = exp(w·log z)` (`Analysis/ComplexPowGen.lean`,
   `Cpow`), the bridge from item 0's complex logarithm to item 1's complex Γ. Where `ncpow` gives only
   `n^s` for a *natural* base `n ≥ 2` (the ζ Dirichlet terms), `Cpow` raises a *complex* base on the

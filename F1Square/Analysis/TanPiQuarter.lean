@@ -226,6 +226,47 @@ theorem Rcos_pi_half_sub (x : Real) : Req (Rcos (Rsub Rpi_half x)) (Rsin x) := b
   exact Req_trans (Radd_comm zero (Rsin x)) (Radd_zero (Rsin x))
 
 -- ===========================================================================
+-- π = 2·(π/2): cos π = −1, sin π = 0, and the π-shift formulas (toward the left half-plane).
+-- ===========================================================================
+
+/-- **`π`** = `π/2 + π/2` (the constructive π, via the Gauss-based `Rpi_half`). -/
+def Rpi_full : Real := Radd Rpi_half Rpi_half
+
+/-- **`cos π = −1`**: double-angle `cos(A+A) = cos²A − sin²A = 0 − 1 = −1` (`A = π/2`). -/
+theorem Rcos_pi : Req (Rcos Rpi_full) (Rneg one) := by
+  refine Req_trans (Rcos_add Rpi_half Rpi_half) ?_
+  refine Req_trans (Rsub_congr (Rmul_congr Rcos_pi_half Rcos_pi_half)
+    (Rmul_congr Rsin_pi_half Rsin_pi_half)) ?_
+  refine Req_trans (Rsub_congr (Rmul_zero zero) (Rmul_one one)) ?_
+  exact Req_trans (Radd_comm zero (Rneg one)) (Radd_zero (Rneg one))
+
+/-- **`sin π = 0`**: double-angle `sin(A+A) = cos A·sin A + sin A·cos A = 0 + 0 = 0` (`A = π/2`). -/
+theorem Rsin_pi : Req (Rsin Rpi_full) zero := by
+  refine Req_trans (Rsin_add Rpi_half Rpi_half) ?_
+  refine Req_trans (Radd_congr (Rmul_congr Rcos_pi_half Rsin_pi_half)
+    (Rmul_congr Rsin_pi_half Rcos_pi_half)) ?_
+  refine Req_trans (Radd_congr (Rzero_mul one) (Rmul_zero one)) ?_
+  exact Radd_zero zero
+
+/-- **`sin(x + π) = −sin x`**: `sin x·cos π + cos x·sin π = −sin x + 0`. -/
+theorem Rsin_add_pi (x : Real) : Req (Rsin (Radd x Rpi_full)) (Rneg (Rsin x)) := by
+  refine Req_trans (Rsin_add x Rpi_full) ?_
+  refine Req_trans (Radd_congr (Rmul_congr (Req_refl (Rcos x)) Rsin_pi)
+    (Rmul_congr (Req_refl (Rsin x)) Rcos_pi)) ?_
+  refine Req_trans (Radd_congr (Rmul_zero (Rcos x)) (Rmul_neg_right (Rsin x) one)) ?_
+  refine Req_trans (Radd_comm zero (Rneg (Rmul (Rsin x) one))) ?_
+  exact Req_trans (Radd_zero (Rneg (Rmul (Rsin x) one))) (Rneg_congr (Rmul_one (Rsin x)))
+
+/-- **`cos(x + π) = −cos x`**: `cos x·cos π − sin x·sin π = −cos x − 0`. -/
+theorem Rcos_add_pi (x : Real) : Req (Rcos (Radd x Rpi_full)) (Rneg (Rcos x)) := by
+  refine Req_trans (Rcos_add x Rpi_full) ?_
+  refine Req_trans (Rsub_congr (Rmul_congr (Req_refl (Rcos x)) Rcos_pi)
+    (Rmul_congr (Req_refl (Rsin x)) Rsin_pi)) ?_
+  refine Req_trans (Rsub_congr (Rmul_neg_right (Rcos x) one) (Rmul_zero (Rsin x))) ?_
+  -- Rsub (Rneg (Rmul (Rcos x) one)) zero ≈ Rneg (Rcos x)
+  refine Req_trans (Rsub_zero (Rneg (Rmul (Rcos x) one))) (Rneg_congr (Rmul_one (Rcos x)))
+
+-- ===========================================================================
 -- The reciprocal/complementary tangent: if A has tangent s, then π/2 − A has tangent 1/s.
 -- This is the value-level engine of arctan t = π/2 − arctan(1/t) for large |t|.
 -- ===========================================================================
