@@ -448,4 +448,74 @@ theorem g3Seq_step_ge_block (a j : Nat) (hj : j + 2 ≤ 2 ^ (a + 2)) :
     simp only [mul, Qeq]; try push_cast <;> try ring_uor
   · exact Req_symm (Rmul_neg_right _ _)
 
+
+/-- **Inner block UPPER gap** (`d`-induction): for `N+d+1 ≤ 2^{a+2}`,
+    `g₃(N+d) − g₃(N) ≤ Csum (3(a+2)²) (N+d) − Csum (3(a+2)²) N`. -/
+theorem g3Seq_diff_le_block (a N : Nat) : ∀ (d : Nat), N + d + 1 ≤ 2 ^ (a + 2) →
+    Rle (Rsub (g3Seq (N + d)) (g3Seq N))
+        (ofQ (Qsub (Csum (3 * (((a : Int) + 2) * ((a : Int) + 2))) (N + d))
+            (Csum (3 * (((a : Int) + 2) * ((a : Int) + 2))) N))
+          (Qsub_den_pos (Csum_den_pos _ (N + d)) (Csum_den_pos _ N))) := by
+  intro d
+  induction d with
+  | zero =>
+      intro _
+      simp only [Nat.add_zero]
+      apply Rle_of_Req
+      refine Req_trans (Radd_neg (g3Seq N)) (Req_symm ?_)
+      apply Req_of_seq_Qeq; intro n
+      simp only [ofQ, zero, Qsub, add, neg, Qeq]; push_cast <;> try ring_uor
+  | succ d ih =>
+      intro hd
+      have ihd := ih (by omega)
+      exact Rle_trans
+        (Rle_of_Req (Req_symm (Rsub_split (g3Seq (N + d + 1)) (g3Seq (N + d)) (g3Seq N))))
+        (Rle_trans
+          (Radd_le_add (g3Seq_step_le_block a (N + d) (by omega)) ihd)
+          (Rle_of_Req (Req_trans (Radd_ofQ_ofQ _ _)
+            (ofQ_congr _ _ (Qadd_Qsub_comm _ (Csum (3 * (((a : Int) + 2) * ((a : Int) + 2))) (N + d))
+              (Csum (3 * (((a : Int) + 2) * ((a : Int) + 2))) N))))))
+
+/-- **Inner block LOWER gap** (`d`-induction): for `N+d+1 ≤ 2^{a+2}`,
+    `g₃(N+d) − g₃(N) ≥ −(Csum ((a+2)³) (N+d) − Csum ((a+2)³) N)`. -/
+theorem g3Seq_diff_ge_block (a N : Nat) : ∀ (d : Nat), N + d + 1 ≤ 2 ^ (a + 2) →
+    Rle (Rneg (ofQ (Qsub (Csum (((a : Int) + 2) * ((a : Int) + 2) * ((a : Int) + 2)) (N + d))
+            (Csum (((a : Int) + 2) * ((a : Int) + 2) * ((a : Int) + 2)) N))
+          (Qsub_den_pos (Csum_den_pos _ (N + d)) (Csum_den_pos _ N))))
+        (Rsub (g3Seq (N + d)) (g3Seq N)) := by
+  intro d
+  induction d with
+  | zero =>
+      intro _
+      simp only [Nat.add_zero]
+      apply Rle_of_Req
+      refine Req_trans ?_ (Req_symm (Radd_neg (g3Seq N)))
+      apply Req_of_seq_Qeq; intro n
+      simp only [Rneg, ofQ, zero, Qsub, add, neg, Qeq]; push_cast <;> try ring_uor
+  | succ d ih =>
+      intro hd
+      have ihd := ih (by omega)
+      have hstepd : 0 < (⟨((a : Int) + 2) * ((a : Int) + 2) * ((a : Int) + 2),
+          (N + d + 1) * (N + d + 2)⟩ : Q).den :=
+        Nat.mul_pos (Nat.succ_pos (N + d)) (Nat.succ_pos (N + d + 1))
+      have hgapd : 0 < (Qsub (Csum (((a : Int) + 2) * ((a : Int) + 2) * ((a : Int) + 2)) (N + d))
+          (Csum (((a : Int) + 2) * ((a : Int) + 2) * ((a : Int) + 2)) N)).den :=
+        Qsub_den_pos (Csum_den_pos _ (N + d)) (Csum_den_pos _ N)
+      have heq : Req (Rneg (ofQ (Qsub (Csum (((a : Int) + 2) * ((a : Int) + 2) * ((a : Int) + 2)) (N + d + 1))
+              (Csum (((a : Int) + 2) * ((a : Int) + 2) * ((a : Int) + 2)) N))
+            (Qsub_den_pos (Csum_den_pos _ (N + d + 1)) (Csum_den_pos _ N))))
+          (Radd (Rneg (ofQ (⟨((a : Int) + 2) * ((a : Int) + 2) * ((a : Int) + 2),
+                (N + d + 1) * (N + d + 2)⟩ : Q) hstepd))
+                (Rneg (ofQ (Qsub (Csum (((a : Int) + 2) * ((a : Int) + 2) * ((a : Int) + 2)) (N + d))
+                  (Csum (((a : Int) + 2) * ((a : Int) + 2) * ((a : Int) + 2)) N)) hgapd))) :=
+        Req_trans (Rneg_congr (Req_trans
+          (ofQ_congr _ _ (Qeq_symm (Qadd_Qsub_comm _
+            (Csum (((a : Int) + 2) * ((a : Int) + 2) * ((a : Int) + 2)) (N + d))
+            (Csum (((a : Int) + 2) * ((a : Int) + 2) * ((a : Int) + 2)) N))))
+          (Req_symm (Radd_ofQ_ofQ hstepd hgapd)))) (Rneg_Radd _ _)
+      exact Rle_trans (Rle_of_Req heq)
+        (Rle_trans (Radd_le_add (g3Seq_step_ge_block a (N + d) (by omega)) ihd)
+          (Rle_of_Req (Rsub_split (g3Seq (N + d + 1)) (g3Seq (N + d)) (g3Seq N))))
+
+
 end UOR.Bridge.F1Square.Analysis
