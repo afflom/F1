@@ -322,4 +322,145 @@ def decompForm3 (a b u0 u1 : Real) : Real :=
           (Rmul (ofQ (⟨1, 4⟩ : Q) (by decide))
             (Rmul (Rmul (Rmul (Rsub a b) (Rsub a b)) (Rsub a b)) (Rsub a b))))
 
+/-- **`decompForm3` expands to its 9 canonical monomials** (coefficient-first `RprodL`, `d = a − b` an
+    atom): distribute each of the four grouped terms and normalize. -/
+theorem decompForm3_eq_RsumL (a b u0 u1 : Real) :
+    Req (decompForm3 a b u0 u1)
+      (RsumL [ RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, b, u0],
+               RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, b, u1],
+               Rneg (RprodL [b, b, b, Rsub a b]),
+               RprodL [ofQ (⟨3, 2⟩ : Q) (by decide), b, b, Rsub a b, u1],
+               Rneg (RprodL [ofQ (⟨3, 2⟩ : Q) (by decide), b, b, Rsub a b, Rsub a b]),
+               RprodL [ofQ (⟨3, 2⟩ : Q) (by decide), b, Rsub a b, Rsub a b, u1],
+               Rneg (RprodL [b, Rsub a b, Rsub a b, Rsub a b]),
+               RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), Rsub a b, Rsub a b, Rsub a b, u1],
+               Rneg (RprodL [ofQ (⟨1, 4⟩ : Q) (by decide), Rsub a b, Rsub a b, Rsub a b, Rsub a b]) ]) := by
+  -- the 9 canonical monomials
+  -- hP : P ≈ RsumL [n1, n2, n3]
+  have hn1 : Req (Rmul (Rmul (Rmul b b) b) (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) u0))
+      (RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, b, u0]) :=
+    Req_trans (cube_times_pair b b b (ofQ (⟨1, 2⟩ : Q) (by decide)) u0)
+      (RprodL_perm
+        (((List.Perm.cons b (List.Perm.cons b (List.Perm.swap (ofQ (⟨1, 2⟩ : Q) (by decide)) b [u0]))).trans
+          (List.Perm.cons b (List.Perm.swap (ofQ (⟨1, 2⟩ : Q) (by decide)) b [b, u0]))).trans
+          (List.Perm.swap (ofQ (⟨1, 2⟩ : Q) (by decide)) b [b, b, u0])))
+  have hn2 : Req (Rmul (Rmul (Rmul b b) b) (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) u1))
+      (RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, b, u1]) :=
+    Req_trans (cube_times_pair b b b (ofQ (⟨1, 2⟩ : Q) (by decide)) u1)
+      (RprodL_perm
+        (((List.Perm.cons b (List.Perm.cons b (List.Perm.swap (ofQ (⟨1, 2⟩ : Q) (by decide)) b [u1]))).trans
+          (List.Perm.cons b (List.Perm.swap (ofQ (⟨1, 2⟩ : Q) (by decide)) b [b, u1]))).trans
+          (List.Perm.swap (ofQ (⟨1, 2⟩ : Q) (by decide)) b [b, b, u1])))
+  have hPb : Req (Rmul (Rmul (Rmul b b) b) (Rsub a b)) (RprodL [b, b, b, Rsub a b]) :=
+    Rmul_eq_RprodL4L b b b (Rsub a b)
+  have hP : Req (Rmul (Rmul (Rmul b b) b)
+        (Rsub (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) (Radd u0 u1)) (Rsub a b)))
+      (RsumL [RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, b, u0],
+              RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, b, u1],
+              Rneg (RprodL [b, b, b, Rsub a b])]) := by
+    refine Req_trans (Rmul_sub_distrib (Rmul (Rmul b b) b)
+      (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) (Radd u0 u1)) (Rsub a b)) ?_
+    refine Req_trans (Radd_congr ?_ (Rneg_congr hPb)) (Radd_eq_RsumL3 _ _ _)
+    refine Req_trans (Rmul_congr (Req_refl _)
+      (Rmul_distrib (ofQ (⟨1, 2⟩ : Q) (by decide)) u0 u1)) ?_
+    refine Req_trans (Rmul_distrib (Rmul (Rmul b b) b)
+      (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) u0) (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) u1)) ?_
+    exact Radd_congr hn1 hn2
+  -- hQ2 : Q2 ≈ RsumL [n4, n5]
+  have hQ2a : Req (Rmul (Rmul b b)
+        (Rmul (ofQ (⟨3, 2⟩ : Q) (by decide)) (Rmul (Rsub a b) u1)))
+      (RprodL [ofQ (⟨3, 2⟩ : Q) (by decide), b, b, Rsub a b, u1]) :=
+    Req_trans (pair_times_triple b b (ofQ (⟨3, 2⟩ : Q) (by decide)) (Rsub a b) u1)
+      (RprodL_perm
+        ((List.Perm.cons b (List.Perm.swap (ofQ (⟨3, 2⟩ : Q) (by decide)) b [Rsub a b, u1])).trans
+          (List.Perm.swap (ofQ (⟨3, 2⟩ : Q) (by decide)) b [b, Rsub a b, u1])))
+  have hQ2b : Req (Rmul (Rmul b b)
+        (Rmul (ofQ (⟨3, 2⟩ : Q) (by decide)) (Rmul (Rsub a b) (Rsub a b))))
+      (RprodL [ofQ (⟨3, 2⟩ : Q) (by decide), b, b, Rsub a b, Rsub a b]) :=
+    Req_trans (pair_times_triple b b (ofQ (⟨3, 2⟩ : Q) (by decide)) (Rsub a b) (Rsub a b))
+      (RprodL_perm
+        ((List.Perm.cons b (List.Perm.swap (ofQ (⟨3, 2⟩ : Q) (by decide)) b [Rsub a b, Rsub a b])).trans
+          (List.Perm.swap (ofQ (⟨3, 2⟩ : Q) (by decide)) b [b, Rsub a b, Rsub a b])))
+  have hQ2 : Req (Rmul (Rmul b b)
+        (Rmul (ofQ (⟨3, 2⟩ : Q) (by decide)) (Rmul (Rsub a b) (Rsub u1 (Rsub a b)))))
+      (RsumL [RprodL [ofQ (⟨3, 2⟩ : Q) (by decide), b, b, Rsub a b, u1],
+              Rneg (RprodL [ofQ (⟨3, 2⟩ : Q) (by decide), b, b, Rsub a b, Rsub a b])]) := by
+    refine Req_trans (Rmul_congr (Req_refl _) (Rmul_congr (Req_refl _)
+      (Rmul_sub_distrib (Rsub a b) u1 (Rsub a b)))) ?_
+    refine Req_trans (Rmul_congr (Req_refl _)
+      (Rmul_sub_distrib (ofQ (⟨3, 2⟩ : Q) (by decide)) (Rmul (Rsub a b) u1)
+        (Rmul (Rsub a b) (Rsub a b)))) ?_
+    refine Req_trans (Rmul_sub_distrib (Rmul b b)
+      (Rmul (ofQ (⟨3, 2⟩ : Q) (by decide)) (Rmul (Rsub a b) u1))
+      (Rmul (ofQ (⟨3, 2⟩ : Q) (by decide)) (Rmul (Rsub a b) (Rsub a b)))) ?_
+    exact Req_trans (Radd_congr hQ2a (Rneg_congr hQ2b)) (Radd_eq_RsumL _ _)
+  -- hQ1 : Q1 ≈ RsumL [n6, n7]
+  have hQ1a : Req (Rmul b (Rmul (Rmul (Rsub a b) (Rsub a b))
+        (Rmul (ofQ (⟨3, 2⟩ : Q) (by decide)) u1)))
+      (RprodL [ofQ (⟨3, 2⟩ : Q) (by decide), b, Rsub a b, Rsub a b, u1]) :=
+    Req_trans (single_times_sqpair b (Rsub a b) (Rsub a b) (ofQ (⟨3, 2⟩ : Q) (by decide)) u1)
+      (RprodL_perm
+        (((List.Perm.cons b (List.Perm.cons (Rsub a b)
+            (List.Perm.swap (ofQ (⟨3, 2⟩ : Q) (by decide)) (Rsub a b) [u1]))).trans
+          (List.Perm.cons b (List.Perm.swap (ofQ (⟨3, 2⟩ : Q) (by decide)) (Rsub a b) [Rsub a b, u1]))).trans
+          (List.Perm.swap (ofQ (⟨3, 2⟩ : Q) (by decide)) b [Rsub a b, Rsub a b, u1])))
+  have hQ1b : Req (Rmul b (Rmul (Rmul (Rsub a b) (Rsub a b)) (Rsub a b)))
+      (RprodL [b, Rsub a b, Rsub a b, Rsub a b]) :=
+    Req_trans (Req_symm (Rmul_assoc b (Rmul (Rsub a b) (Rsub a b)) (Rsub a b)))
+      (Req_trans (Rmul_congr (Req_symm (Rmul_assoc b (Rsub a b) (Rsub a b))) (Req_refl _))
+        (Rmul_eq_RprodL4L b (Rsub a b) (Rsub a b) (Rsub a b)))
+  have hQ1 : Req (Rmul b (Rmul (Rmul (Rsub a b) (Rsub a b))
+        (Rsub (Rmul (ofQ (⟨3, 2⟩ : Q) (by decide)) u1) (Rsub a b))))
+      (RsumL [RprodL [ofQ (⟨3, 2⟩ : Q) (by decide), b, Rsub a b, Rsub a b, u1],
+              Rneg (RprodL [b, Rsub a b, Rsub a b, Rsub a b])]) := by
+    refine Req_trans (Rmul_congr (Req_refl _)
+      (Rmul_sub_distrib (Rmul (Rsub a b) (Rsub a b))
+        (Rmul (ofQ (⟨3, 2⟩ : Q) (by decide)) u1) (Rsub a b))) ?_
+    refine Req_trans (Rmul_sub_distrib b
+      (Rmul (Rmul (Rsub a b) (Rsub a b)) (Rmul (ofQ (⟨3, 2⟩ : Q) (by decide)) u1))
+      (Rmul (Rmul (Rsub a b) (Rsub a b)) (Rsub a b))) ?_
+    exact Req_trans (Radd_congr hQ1a (Rneg_congr hQ1b)) (Radd_eq_RsumL _ _)
+  -- hQ0 : Q0 ≈ RsumL [n8, n9]
+  have hQ0a : Req (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide))
+        (Rmul (Rmul (Rmul (Rsub a b) (Rsub a b)) (Rsub a b)) u1))
+      (RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), Rsub a b, Rsub a b, Rsub a b, u1]) :=
+    Rmul_congr (Req_refl _) (Rmul_eq_RprodL4L (Rsub a b) (Rsub a b) (Rsub a b) u1)
+  have hQ0b : Req (Rmul (ofQ (⟨1, 4⟩ : Q) (by decide))
+        (Rmul (Rmul (Rmul (Rsub a b) (Rsub a b)) (Rsub a b)) (Rsub a b)))
+      (RprodL [ofQ (⟨1, 4⟩ : Q) (by decide), Rsub a b, Rsub a b, Rsub a b, Rsub a b]) :=
+    Rmul_congr (Req_refl _) (Rmul_eq_RprodL4L (Rsub a b) (Rsub a b) (Rsub a b) (Rsub a b))
+  have hQ0 : Req
+      (Rsub (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide))
+              (Rmul (Rmul (Rmul (Rsub a b) (Rsub a b)) (Rsub a b)) u1))
+            (Rmul (ofQ (⟨1, 4⟩ : Q) (by decide))
+              (Rmul (Rmul (Rmul (Rsub a b) (Rsub a b)) (Rsub a b)) (Rsub a b))))
+      (RsumL [RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), Rsub a b, Rsub a b, Rsub a b, u1],
+              Rneg (RprodL [ofQ (⟨1, 4⟩ : Q) (by decide), Rsub a b, Rsub a b, Rsub a b, Rsub a b])]) :=
+    Req_trans (Radd_congr hQ0a (Rneg_congr hQ0b)) (Radd_eq_RsumL _ _)
+  -- assemble: decompForm3 = Radd(Radd(Radd P Q2)Q1)Q0
+  unfold decompForm3
+  refine Req_trans (Radd_congr (Radd_congr (Radd_congr hP hQ2) hQ1) hQ0) ?_
+  refine Req_trans (Radd_congr (Radd_congr (Req_symm (RsumL_append
+      [RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, b, u0],
+       RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, b, u1], Rneg (RprodL [b, b, b, Rsub a b])]
+      [RprodL [ofQ (⟨3, 2⟩ : Q) (by decide), b, b, Rsub a b, u1],
+       Rneg (RprodL [ofQ (⟨3, 2⟩ : Q) (by decide), b, b, Rsub a b, Rsub a b])]))
+      (Req_refl _)) (Req_refl _)) ?_
+  refine Req_trans (Radd_congr (Req_symm (RsumL_append
+      [RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, b, u0],
+       RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, b, u1], Rneg (RprodL [b, b, b, Rsub a b]),
+       RprodL [ofQ (⟨3, 2⟩ : Q) (by decide), b, b, Rsub a b, u1],
+       Rneg (RprodL [ofQ (⟨3, 2⟩ : Q) (by decide), b, b, Rsub a b, Rsub a b])]
+      [RprodL [ofQ (⟨3, 2⟩ : Q) (by decide), b, Rsub a b, Rsub a b, u1],
+       Rneg (RprodL [b, Rsub a b, Rsub a b, Rsub a b])])) (Req_refl _)) ?_
+  exact Req_symm (RsumL_append
+    [RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, b, u0],
+     RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, b, u1], Rneg (RprodL [b, b, b, Rsub a b]),
+     RprodL [ofQ (⟨3, 2⟩ : Q) (by decide), b, b, Rsub a b, u1],
+     Rneg (RprodL [ofQ (⟨3, 2⟩ : Q) (by decide), b, b, Rsub a b, Rsub a b]),
+     RprodL [ofQ (⟨3, 2⟩ : Q) (by decide), b, Rsub a b, Rsub a b, u1],
+     Rneg (RprodL [b, Rsub a b, Rsub a b, Rsub a b])]
+    [RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), Rsub a b, Rsub a b, Rsub a b, u1],
+     Rneg (RprodL [ofQ (⟨1, 4⟩ : Q) (by decide), Rsub a b, Rsub a b, Rsub a b, Rsub a b])])
+
 end UOR.Bridge.F1Square.Analysis
