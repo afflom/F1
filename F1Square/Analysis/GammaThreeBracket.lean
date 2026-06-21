@@ -175,4 +175,82 @@ theorem hSeq3_step_eq (j : Nat) :
     (Rmul (ofQ (⟨1, 4⟩ : Q) (by decide))
       (Rsub (logQuartic (j + 2) (Nat.succ_pos (j + 1))) (logQuartic (j + 1) (Nat.succ_pos j))))
 
+-- ===========================================================================
+-- (C2a) Coefficient-consolidation helpers (the rational `RMulNF` collapses for the quartic residual)
+-- and the cube-binomial / W-expansion (the `a = b + δ` substitution algebra).
+-- ===========================================================================
+
+/-- **`½·(3·x) ≈ (3/2)·x`** — the coefficient collapse `½·3 = 3/2` (via `Rmul_ofQ_ofQ` then `ofQ_congr`). -/
+theorem half_three (x : Real) :
+    Req (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) x))
+        (Rmul (ofQ (⟨3, 2⟩ : Q) (by decide)) x) := by
+  have hc : Req (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) (ofQ (⟨3, 1⟩ : Q) (by decide)))
+      (ofQ (⟨3, 2⟩ : Q) (by decide)) :=
+    Req_trans (Rmul_ofQ_ofQ (by decide) (by decide)) (ofQ_congr (by decide) (by decide) (by decide))
+  exact Req_trans (Req_symm (Rmul_assoc (ofQ (⟨1, 2⟩ : Q) (by decide)) (ofQ (⟨3, 1⟩ : Q) (by decide)) x))
+    (Rmul_congr hc (Req_refl x))
+
+/-- **`¼·(6·x) ≈ (3/2)·x`** — the coefficient collapse `¼·6 = 3/2`. -/
+theorem quarter_six (x : Real) :
+    Req (Rmul (ofQ (⟨1, 4⟩ : Q) (by decide)) (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) x))
+        (Rmul (ofQ (⟨3, 2⟩ : Q) (by decide)) x) := by
+  have hc : Req (Rmul (ofQ (⟨1, 4⟩ : Q) (by decide)) (ofQ (⟨6, 1⟩ : Q) (by decide)))
+      (ofQ (⟨3, 2⟩ : Q) (by decide)) :=
+    Req_trans (Rmul_ofQ_ofQ (by decide) (by decide)) (ofQ_congr (by decide) (by decide) (by decide))
+  exact Req_trans (Req_symm (Rmul_assoc (ofQ (⟨1, 4⟩ : Q) (by decide)) (ofQ (⟨6, 1⟩ : Q) (by decide)) x))
+    (Rmul_congr hc (Req_refl x))
+
+/-- **`¼·(4·x) ≈ x`** — the coefficient collapse `¼·4 = 1`. -/
+theorem quarter_four (x : Real) :
+    Req (Rmul (ofQ (⟨1, 4⟩ : Q) (by decide)) (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) x)) x := by
+  have hc : Req (Rmul (ofQ (⟨1, 4⟩ : Q) (by decide)) (ofQ (⟨4, 1⟩ : Q) (by decide))) one :=
+    Req_trans (Rmul_ofQ_ofQ (by decide) (by decide)) (ofQ_congr (by decide) (by decide) (by decide))
+  exact Req_trans (Req_symm (Rmul_assoc (ofQ (⟨1, 4⟩ : Q) (by decide)) (ofQ (⟨4, 1⟩ : Q) (by decide)) x))
+    (Req_trans (Rmul_congr hc (Req_refl x)) (Rone_mul x))
+
+/-- `x + x + x ≈ 3·x` (the additive-to-scalar `3` merge, `ofQ⟨3,1⟩`). -/
+theorem three_merge (x : Real) :
+    Req (Radd (Radd x x) x) (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) x) := by
+  have h3 : Req (Radd (Radd one one) one) (ofQ (⟨3, 1⟩ : Q) (by decide)) := by
+    apply Req_of_seq_Qeq; intro n; simp only [Radd, one, ofQ, add, Qeq]; push_cast
+  have hx1 : Req x (Rmul one x) := Req_symm (Req_trans (Rmul_comm one x) (Rmul_one x))
+  refine Req_trans (Radd_congr (Radd_congr hx1 hx1) hx1) ?_
+  refine Req_trans (Radd_congr (Req_symm (Rmul_distrib_right one one x)) (Req_refl _)) ?_
+  exact Req_trans (Req_symm (Rmul_distrib_right (Radd one one) one x)) (Rmul_congr h3 (Req_refl x))
+
+/-- `x + x + x + x ≈ 4·x` (the additive-to-scalar `4` merge, `ofQ⟨4,1⟩`). -/
+theorem four_merge (x : Real) :
+    Req (Radd (Radd (Radd x x) x) x) (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) x) := by
+  have h4 : Req (Radd (Radd (Radd one one) one) one) (ofQ (⟨4, 1⟩ : Q) (by decide)) := by
+    apply Req_of_seq_Qeq; intro n; simp only [Radd, one, ofQ, add, Qeq]; push_cast
+  have hx1 : Req x (Rmul one x) := Req_symm (Req_trans (Rmul_comm one x) (Rmul_one x))
+  refine Req_trans (Radd_congr (Radd_congr (Radd_congr hx1 hx1) hx1) hx1) ?_
+  refine Req_trans (Radd_congr (Radd_congr
+    (Req_symm (Rmul_distrib_right one one x)) (Req_refl _)) (Req_refl _)) ?_
+  refine Req_trans (Radd_congr (Req_symm (Rmul_distrib_right (Radd one one) one x)) (Req_refl _)) ?_
+  exact Req_trans (Req_symm (Rmul_distrib_right (Radd (Radd one one) one) one x))
+    (Rmul_congr h4 (Req_refl x))
+
+/-- `2·x + x + x + x + x + x ≈ 6·x` — used to merge the six `b²d²` copies of `W`'s cross expansion into
+    `6·(b²d²)` (the `¼·6 = 3/2` consolidation feeds on this). Built as `(2x+x)+x+x+x = ...`. -/
+theorem six_merge (x : Real) :
+    Req (Radd (Radd (Radd (Radd (Radd x x) x) x) x) x) (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) x) := by
+  have h6 : Req (Radd (Radd (Radd (Radd (Radd one one) one) one) one) one)
+      (ofQ (⟨6, 1⟩ : Q) (by decide)) := by
+    apply Req_of_seq_Qeq; intro n; simp only [Radd, one, ofQ, add, Qeq]; push_cast
+  have hx1 : Req x (Rmul one x) := Req_symm (Req_trans (Rmul_comm one x) (Rmul_one x))
+  refine Req_trans (Radd_congr (Radd_congr (Radd_congr (Radd_congr (Radd_congr hx1 hx1) hx1) hx1)
+    hx1) hx1) ?_
+  refine Req_trans (Radd_congr (Radd_congr (Radd_congr (Radd_congr
+    (Req_symm (Rmul_distrib_right one one x)) (Req_refl _)) (Req_refl _)) (Req_refl _))
+    (Req_refl _)) ?_
+  refine Req_trans (Radd_congr (Radd_congr (Radd_congr
+    (Req_symm (Rmul_distrib_right (Radd one one) one x)) (Req_refl _)) (Req_refl _)) (Req_refl _)) ?_
+  refine Req_trans (Radd_congr (Radd_congr
+    (Req_symm (Rmul_distrib_right (Radd (Radd one one) one) one x)) (Req_refl _)) (Req_refl _)) ?_
+  refine Req_trans (Radd_congr
+    (Req_symm (Rmul_distrib_right (Radd (Radd (Radd one one) one) one) one x)) (Req_refl _)) ?_
+  exact Req_trans (Req_symm (Rmul_distrib_right (Radd (Radd (Radd (Radd one one) one) one) one) one x))
+    (Rmul_congr h6 (Req_refl x))
+
 end UOR.Bridge.F1Square.Analysis
