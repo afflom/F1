@@ -133,4 +133,46 @@ theorem lnCubeOver_ge (T D M : Nat) (hD : 0 < D) (hT : T ≤ 21) :
   refine Rle_trans (Rle_of_Req (Rmul_ofQ_ofQ hcubed (Nat.succ_pos M))) ?_
   exact Rmul_le_Rmul_right hovnn (logCube_ge T D M hD hT)
 
+-- ===========================================================================
+-- (C1) The accelerated sequence `hSeq3 j = g₃(j) − ½·(ln(j+1))³/(j+1)` (`→ γ₃`), whose per-step
+-- increment is the trapezoidal residual `sStep3` (`f(x) = (ln x)³/x`, ∫ = ¼(ln x)⁴).
+-- ===========================================================================
+
+/-- The Euler–Maclaurin **accelerated sequence** `hSeq3 j = g₃(j) − ½·(ln(j+1))³/(j+1)` — same limit
+    `γ₃` as `g₃`, but its increment is the summable trapezoidal residual. -/
+def hSeq3 (j : Nat) : Real :=
+  Rsub (g3Seq j) (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) (lnCubeOver (j + 1) (Nat.succ_pos j)))
+
+/-- The **per-step trapezoidal residual** `s_p = ½[(ln(p+1))³/(p+1) + (ln p)³/p] − ¼[(ln(p+1))⁴ −
+    (ln p)⁴]` (`p ≥ 1`) — `O((ln p)³/p³)`, the increment of `hSeq3`. -/
+def sStep3 (p : Nat) (hp : 1 ≤ p) : Real :=
+  Rsub (Radd (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) (lnCubeOver (p + 1) (Nat.succ_pos p)))
+             (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) (lnCubeOver p hp)))
+       (Rmul (ofQ (⟨1, 4⟩ : Q) (by decide))
+         (Rsub (logQuartic (p + 1) (Nat.succ_pos p)) (logQuartic p hp)))
+
+/-- **`hSeq3(j+1) − hSeq3 j ≈ s_{j+1}`** — the increment of the accelerated sequence is the trapezoidal
+    residual (`g3Seq_step_eq` gives `e_{j+1}`; `half_add_self`/`resid_regroup` move the correction). -/
+theorem hSeq3_step_eq (j : Nat) :
+    Req (Rsub (hSeq3 (j + 1)) (hSeq3 j)) (sStep3 (j + 1) (Nat.succ_pos j)) := by
+  unfold hSeq3 sStep3
+  refine Req_trans (Rsub_sub_sub (g3Seq (j + 1))
+    (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) (lnCubeOver (j + 2) (Nat.succ_pos (j + 1))))
+    (g3Seq j) (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) (lnCubeOver (j + 1) (Nat.succ_pos j)))) ?_
+  refine Req_trans (Rsub_congr (g3Seq_step_eq j) (Req_refl _)) ?_
+  -- e_{j+1} = (ln(j+2))³/(j+2) − ¼Δ; rewrite the leading `(ln(j+2))³/(j+2)` as ½·+½·
+  show Req
+    (Rsub (Rsub (lnCubeOver (j + 2) (Nat.succ_pos (j + 1)))
+        (Rmul (ofQ (⟨1, 4⟩ : Q) (by decide))
+          (Rsub (logQuartic (j + 2) (Nat.succ_pos (j + 1))) (logQuartic (j + 1) (Nat.succ_pos j)))))
+      (Rsub (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) (lnCubeOver (j + 2) (Nat.succ_pos (j + 1))))
+        (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) (lnCubeOver (j + 1) (Nat.succ_pos j))))) _
+  refine Req_trans (Rsub_congr
+    (Rsub_congr (half_add_self (lnCubeOver (j + 2) (Nat.succ_pos (j + 1)))) (Req_refl _))
+    (Req_refl _)) ?_
+  exact resid_regroup (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) (lnCubeOver (j + 2) (Nat.succ_pos (j + 1))))
+    (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) (lnCubeOver (j + 1) (Nat.succ_pos j)))
+    (Rmul (ofQ (⟨1, 4⟩ : Q) (by decide))
+      (Rsub (logQuartic (j + 2) (Nat.succ_pos (j + 1))) (logQuartic (j + 1) (Nat.succ_pos j))))
+
 end UOR.Bridge.F1Square.Analysis

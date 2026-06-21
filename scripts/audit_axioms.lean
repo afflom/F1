@@ -2637,6 +2637,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.logCube_ge
 #print axioms Analysis.logQuartic_ge
 #print axioms Analysis.lnCubeOver_ge
+#print axioms Analysis.hSeq3_step_eq
 
 -- v0.21.0 stage G, brick S (the substrate): the finite-truncation PSD predicate `WeilPSD`,
 -- its additive/rank-one structure, the embedding Gram (Gate B free), and the embedding bridge.
