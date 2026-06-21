@@ -70,6 +70,7 @@ import F1Square.Square.AtlasCoxeter
 import F1Square.Square.AtlasSynthesis
 import F1Square.Square.AtlasCruxSynthesis
 import F1Square.Square.CruxFrontierN3
+import F1Square.Square.CruxFrontierN4
 import F1Square.Square.UniformClosure
 import F1Square.Square.CoxeterCandidate
 import F1Square.Square.SinglePrime
@@ -165,6 +166,7 @@ import F1Square.Analysis.GammaThree
 import F1Square.Analysis.ZeroGeometry
 import F1Square.Analysis.LambdaThree
 import F1Square.Analysis.LambdaThreePos
+import F1Square.Analysis.LambdaFour
 import F1Square.Analysis.RMulNF
 import F1Square.Analysis.LiGrowth
 import F1Square.Analysis.ClogAddBounded

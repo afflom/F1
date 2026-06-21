@@ -2410,6 +2410,14 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.genuineLam_three
 #print axioms Analysis.etaThreeSlice
 
+-- v0.22.0 crux frontier: λ₄ closed form on the constructive γ₃ (Analysis/LambdaFour.lean).
+#print axioms Analysis.Reta3
+#print axioms Analysis.Rlambda4_arith
+#print axioms Analysis.Rlambda4
+#print axioms Analysis.genuineArith_four
+#print axioms Analysis.genuineLam_four
+#print axioms Analysis.etaFourSlice
+
 -- v0.20.0 stage F: the Real multiplicative normalizer (Analysis/RMulNF.lean) — κ-form companion of RAddNF.
 #print axioms Analysis.RprodL_nil
 #print axioms Analysis.RprodL_cons
@@ -2827,6 +2835,10 @@ open UOR.Bridge.F1Square
 -- v0.21.0 stage G — crux frontier n=3: the next conquerable coefficient = Pos Rlambda3.
 #print axioms Square.coupling_n3_iff_pos_lambda3
 #print axioms Square.crux_frontier_n3
+
+-- v0.22.0 crux frontier n=4: the next conquerable coefficient = Pos Rlambda4 (γ₃-bearing).
+#print axioms Square.coupling_n4_iff_pos_lambda4
+#print axioms Square.crux_frontier_n4
 
 -- v0.21.0 stage G — uniform closure: closure is one structural fact, not enumeration (§2 thesis).
 #print axioms Square.enumeration_insufficient
