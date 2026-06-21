@@ -253,4 +253,18 @@ theorem six_merge (x : Real) :
   exact Req_trans (Req_symm (Rmul_distrib_right (Radd (Radd (Radd (Radd one one) one) one) one) one x))
     (Rmul_congr h6 (Req_refl x))
 
+/-- Left-nested degree-4 flattening: `((x·y)·z)·w ≈ RprodL [x,y,z,w]`. -/
+theorem Rmul_eq_RprodL4L (x y z w : Real) :
+    Req (Rmul (Rmul (Rmul x y) z) w) (RprodL [x, y, z, w]) :=
+  Req_trans (Rmul_congr (Rmul_eq_RprodL3 x y z) (Req_refl w))
+    (Req_trans (Req_symm (RprodL_append [x, y, z] [w]))
+      (RprodL_perm (by simp)))
+
+/-- Left-nested degree-5 flattening: `(((x·y)·z)·w)·v ≈ RprodL [x,y,z,w,v]`. -/
+theorem Rmul_eq_RprodL5L (x y z w v : Real) :
+    Req (Rmul (Rmul (Rmul (Rmul x y) z) w) v) (RprodL [x, y, z, w, v]) :=
+  Req_trans (Rmul_congr (Rmul_eq_RprodL4L x y z w) (Req_refl v))
+    (Req_trans (Req_symm (RprodL_append [x, y, z, w] [v]))
+      (RprodL_perm (by simp)))
+
 end UOR.Bridge.F1Square.Analysis
