@@ -99,4 +99,81 @@ theorem g3Seq_step_eq (j : Nat) :
     (lnCubeSum (j + 1)) (Rmul (ofQ ⟨1, 4⟩ (by decide)) (logQuartic (j + 1) (by omega)))) ?_
   exact Rsub_congr hA hB
 
+-- ===========================================================================
+-- The quartic algebra: `a⁴ − b⁴ = (a−b)(a³+a²b+ab²+b³)` and the cancellation identity.
+-- ===========================================================================
+
+/-- `c·(x·y) ≈ x·(c·y)` — pull a left factor inward. -/
+theorem Rmul_left_comm3 (c x y : Real) : Req (Rmul c (Rmul x y)) (Rmul x (Rmul c y)) :=
+  Req_trans (Req_symm (Rmul_assoc c x y))
+    (Req_trans (Rmul_congr (Rmul_comm c x) (Req_refl y)) (Rmul_assoc x c y))
+
+set_option maxHeartbeats 1000000 in
+/-- **`(a−b)(a³ + a²b + ab² + b³) ≈ a⁴ − b⁴`** — the difference-of-quartics factoring
+    (the quartic analogue of `cube_diff_identity`), with `a⁴ = ((a·a)·a)·a`, `b⁴ = ((b·b)·b)·b`. -/
+theorem quartic_diff_identity (a b : Real) :
+    Req (Rmul (Rsub a b)
+          (Radd (Radd (Radd (Rmul (Rmul a a) a) (Rmul (Rmul a a) b)) (Rmul (Rmul a b) b))
+            (Rmul (Rmul b b) b)))
+        (Rsub (Rmul (Rmul (Rmul a a) a) a) (Rmul (Rmul (Rmul b b) b) b)) := by
+  refine Req_trans (Rmul_sub_distrib_right a b
+    (Radd (Radd (Radd (Rmul (Rmul a a) a) (Rmul (Rmul a a) b)) (Rmul (Rmul a b) b))
+      (Rmul (Rmul b b) b))) ?_
+  have haS : Req (Rmul a (Radd (Radd (Radd (Rmul (Rmul a a) a) (Rmul (Rmul a a) b)) (Rmul (Rmul a b) b))
+        (Rmul (Rmul b b) b)))
+      (Radd (Radd (Radd (Rmul a (Rmul (Rmul a a) a)) (Rmul a (Rmul (Rmul a a) b)))
+        (Rmul a (Rmul (Rmul a b) b))) (Rmul a (Rmul (Rmul b b) b))) :=
+    Req_trans (Rmul_distrib a (Radd (Radd (Rmul (Rmul a a) a) (Rmul (Rmul a a) b)) (Rmul (Rmul a b) b))
+        (Rmul (Rmul b b) b))
+      (Radd_congr (Req_trans (Rmul_distrib a (Radd (Rmul (Rmul a a) a) (Rmul (Rmul a a) b))
+            (Rmul (Rmul a b) b))
+          (Radd_congr (Rmul_distrib a (Rmul (Rmul a a) a) (Rmul (Rmul a a) b)) (Req_refl _)))
+        (Req_refl _))
+  have hbS : Req (Rmul b (Radd (Radd (Radd (Rmul (Rmul a a) a) (Rmul (Rmul a a) b)) (Rmul (Rmul a b) b))
+        (Rmul (Rmul b b) b)))
+      (Radd (Radd (Radd (Rmul b (Rmul (Rmul a a) a)) (Rmul b (Rmul (Rmul a a) b)))
+        (Rmul b (Rmul (Rmul a b) b))) (Rmul b (Rmul (Rmul b b) b))) :=
+    Req_trans (Rmul_distrib b (Radd (Radd (Rmul (Rmul a a) a) (Rmul (Rmul a a) b)) (Rmul (Rmul a b) b))
+        (Rmul (Rmul b b) b))
+      (Radd_congr (Req_trans (Rmul_distrib b (Radd (Rmul (Rmul a a) a) (Rmul (Rmul a a) b))
+            (Rmul (Rmul a b) b))
+          (Radd_congr (Rmul_distrib b (Rmul (Rmul a a) a) (Rmul (Rmul a a) b)) (Req_refl _)))
+        (Req_refl _))
+  refine Req_trans (Rsub_congr haS hbS) ?_
+  -- cross-term identifications: a·A2B = b·A3, a·AB2 = b·A2B, a·B3 = b·AB2
+  have hx1 : Req (Rmul a (Rmul (Rmul a a) b)) (Rmul b (Rmul (Rmul a a) a)) :=
+    Req_trans (Rmul_left_comm3 a (Rmul a a) b)
+      (Req_trans (Rmul_congr (Req_refl _) (Rmul_comm a b)) (Rmul_left_comm3 (Rmul a a) b a))
+  have hx2 : Req (Rmul a (Rmul (Rmul a b) b)) (Rmul b (Rmul (Rmul a a) b)) :=
+    Req_trans (Rmul_left_comm3 a (Rmul a b) b)
+      (Req_trans
+        (Req_trans (Rmul_left_comm3 (Rmul a b) a b)
+          (Req_trans (Rmul_congr (Req_refl a) (Rmul_assoc a b b))
+            (Req_symm (Rmul_assoc a a (Rmul b b)))))
+        (Req_symm (Rmul_left_comm3 b (Rmul a a) b)))
+  have hx3 : Req (Rmul a (Rmul (Rmul b b) b)) (Rmul b (Rmul (Rmul a b) b)) :=
+    Req_trans (Rmul_left_comm3 a (Rmul b b) b)
+      (Req_trans (Rmul_comm (Rmul b b) (Rmul a b)) (Req_symm (Rmul_left_comm3 b (Rmul a b) b)))
+  refine Req_trans (Rsub_congr
+    (Radd_congr (Radd_congr (Radd_congr (Req_refl _) hx1) hx2) hx3) (Req_refl _)) ?_
+  -- telescope: (((P+M₁)+M₂)+M₃) − (((M₁+M₂)+M₃)+Q) ≈ P − Q
+  have hcancel : ∀ P S Q : Real, Req (Rsub (Radd P S) (Radd S Q)) (Rsub P Q) := by
+    intro P S Q
+    refine Req_trans (Radd_congr (Req_refl (Radd P S)) (Rneg_Radd S Q)) ?_
+    refine Req_trans (Radd_assoc P S (Radd (Rneg S) (Rneg Q))) ?_
+    refine Req_trans (Radd_congr (Req_refl P) (Req_symm (Radd_assoc S (Rneg S) (Rneg Q)))) ?_
+    refine Req_trans (Radd_congr (Req_refl P) (Radd_congr (Radd_neg S) (Req_refl (Rneg Q)))) ?_
+    exact Radd_congr (Req_refl P)
+      (Req_trans (Radd_comm zero (Rneg Q)) (Radd_zero (Rneg Q)))
+  have htel3 : ∀ P M₁ M₂ M₃ Q : Real,
+      Req (Rsub (Radd (Radd (Radd P M₁) M₂) M₃) (Radd (Radd (Radd M₁ M₂) M₃) Q)) (Rsub P Q) := by
+    intro P M₁ M₂ M₃ Q
+    refine Req_trans (Rsub_congr ?_ (Req_refl _)) (hcancel P (Radd (Radd M₁ M₂) M₃) Q)
+    refine Req_trans (Radd_assoc (Radd P M₁) M₂ M₃) ?_
+    refine Req_trans (Radd_assoc P M₁ (Radd M₂ M₃)) ?_
+    exact Radd_congr (Req_refl P) (Req_symm (Radd_assoc M₁ M₂ M₃))
+  refine Req_trans (htel3 (Rmul a (Rmul (Rmul a a) a)) (Rmul b (Rmul (Rmul a a) a))
+    (Rmul b (Rmul (Rmul a a) b)) (Rmul b (Rmul (Rmul a b) b)) (Rmul b (Rmul (Rmul b b) b))) ?_
+  exact Rsub_congr (Rmul_comm a (Rmul (Rmul a a) a)) (Rmul_comm b (Rmul (Rmul b b) b))
+
 end UOR.Bridge.F1Square.Analysis

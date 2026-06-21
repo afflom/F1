@@ -3103,3 +3103,5 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.lnCubeSum_mono
 #print axioms Analysis.logQuartic_nonneg
 #print axioms Analysis.g3Seq_step_eq
+#print axioms Analysis.Rmul_left_comm3
+#print axioms Analysis.quartic_diff_identity
