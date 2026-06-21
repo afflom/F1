@@ -3105,3 +3105,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.g3Seq_step_eq
 #print axioms Analysis.Rmul_left_comm3
 #print axioms Analysis.quartic_diff_identity
+#print axioms Analysis.Rmul_fourth_four
+#print axioms Analysis.cube_mono
+#print axioms Analysis.W3_ge_4b3
+#print axioms Analysis.W3_le_4a3

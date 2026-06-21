@@ -176,4 +176,71 @@ theorem quartic_diff_identity (a b : Real) :
     (Rmul b (Rmul (Rmul a a) b)) (Rmul b (Rmul (Rmul a b) b)) (Rmul b (Rmul (Rmul b b) b))) ?_
   exact Rsub_congr (Rmul_comm a (Rmul (Rmul a a) a)) (Rmul_comm b (Rmul (Rmul b b) b))
 
+/-- **`¼·(((Y+Y)+Y)+Y) ≈ Y`** — the rational coefficient closing the `e₃` decomposition
+    (`¼·4a³ = a³`): distribute `¼`, factor to `(((¼+¼)+¼)+¼)·Y`, and `¼·4 = 1`. -/
+theorem Rmul_fourth_four (Y : Real) :
+    Req (Rmul (ofQ (⟨1, 4⟩ : Q) (by decide)) (Radd (Radd (Radd Y Y) Y) Y)) Y := by
+  have hdist : Req (Rmul (ofQ (⟨1, 4⟩ : Q) (by decide)) (Radd (Radd (Radd Y Y) Y) Y))
+      (Rmul (Radd (Radd (Radd (ofQ (⟨1, 4⟩ : Q) (by decide)) (ofQ (⟨1, 4⟩ : Q) (by decide)))
+        (ofQ (⟨1, 4⟩ : Q) (by decide))) (ofQ (⟨1, 4⟩ : Q) (by decide))) Y) := by
+    refine Req_trans (Rmul_distrib (ofQ (⟨1, 4⟩ : Q) (by decide)) (Radd (Radd Y Y) Y) Y) ?_
+    refine Req_trans (Radd_congr (Rmul_distrib (ofQ (⟨1, 4⟩ : Q) (by decide)) (Radd Y Y) Y)
+      (Req_refl _)) ?_
+    refine Req_trans (Radd_congr (Radd_congr
+      (Rmul_distrib (ofQ (⟨1, 4⟩ : Q) (by decide)) Y Y) (Req_refl _)) (Req_refl _)) ?_
+    refine Req_trans (Radd_congr (Radd_congr
+      (Req_symm (Rmul_distrib_right (ofQ (⟨1, 4⟩ : Q) (by decide)) (ofQ (⟨1, 4⟩ : Q) (by decide)) Y))
+      (Req_refl _)) (Req_refl _)) ?_
+    refine Req_trans (Radd_congr
+      (Req_symm (Rmul_distrib_right (Radd (ofQ (⟨1, 4⟩ : Q) (by decide)) (ofQ (⟨1, 4⟩ : Q) (by decide)))
+        (ofQ (⟨1, 4⟩ : Q) (by decide)) Y)) (Req_refl _)) ?_
+    exact Req_symm (Rmul_distrib_right
+      (Radd (Radd (ofQ (⟨1, 4⟩ : Q) (by decide)) (ofQ (⟨1, 4⟩ : Q) (by decide)))
+        (ofQ (⟨1, 4⟩ : Q) (by decide))) (ofQ (⟨1, 4⟩ : Q) (by decide)) Y)
+  refine Req_trans hdist ?_
+  have hcoef : Req (Radd (Radd (Radd (ofQ (⟨1, 4⟩ : Q) (by decide)) (ofQ (⟨1, 4⟩ : Q) (by decide)))
+      (ofQ (⟨1, 4⟩ : Q) (by decide))) (ofQ (⟨1, 4⟩ : Q) (by decide))) one := by
+    refine Req_trans (Radd_congr (Radd_congr (Radd_ofQ_ofQ (by decide) (by decide)) (Req_refl _))
+      (Req_refl _)) ?_
+    refine Req_trans (Radd_congr (Radd_ofQ_ofQ (by decide) (by decide)) (Req_refl _)) ?_
+    refine Req_trans (Radd_ofQ_ofQ (by decide) (by decide)) ?_
+    exact Req_of_seq_Qeq (fun _ => by
+      show Qeq (add (add (add (⟨1, 4⟩ : Q) ⟨1, 4⟩) ⟨1, 4⟩) ⟨1, 4⟩) ⟨1, 1⟩; decide)
+  exact Req_trans (Rmul_congr hcoef (Req_refl Y)) (Rone_mul Y)
+
+-- ===========================================================================
+-- The `e₃` envelope bounds: `W₃ ∈ [4b³, 4a³]` ⟹ `¼(a⁴−b⁴) ∈ [b³δ, a³δ]` ⟹ summable `e₃`.
+-- ===========================================================================
+
+/-- `b·b·b ≤ a·a·a` for `0 ≤ b ≤ a` (cube monotone), with the `((·)·)·` association. -/
+theorem cube_mono {a b : Real} (hb : Rnonneg b) (ha : Rnonneg a) (hab : Rle b a) :
+    Rle (Rmul (Rmul b b) b) (Rmul (Rmul a a) a) :=
+  Rle_trans (Rmul_le_Rmul_right hb (Rle_trans (Rmul_le_Rmul_right hb hab) (Rmul_le_Rmul_left ha hab)))
+    (Rmul_le_Rmul_left (Rnonneg_Rmul ha ha) hab)
+
+/-- `4b³ ≤ W₃` (each of the four terms of `W₃` is `≥ b³`, for `0 ≤ b ≤ a`). -/
+theorem W3_ge_4b3 {a b : Real} (hb : Rnonneg b) (ha : Rnonneg a) (hab : Rle b a) :
+    Rle (Radd (Radd (Radd (Rmul (Rmul b b) b) (Rmul (Rmul b b) b)) (Rmul (Rmul b b) b))
+          (Rmul (Rmul b b) b))
+        (Radd (Radd (Radd (Rmul (Rmul a a) a) (Rmul (Rmul a a) b)) (Rmul (Rmul a b) b))
+          (Rmul (Rmul b b) b)) := by
+  have h1 : Rle (Rmul (Rmul b b) b) (Rmul (Rmul a a) a) := cube_mono hb ha hab
+  have h2 : Rle (Rmul (Rmul b b) b) (Rmul (Rmul a a) b) :=
+    Rmul_le_Rmul_right hb (Rle_trans (Rmul_le_Rmul_right hb hab) (Rmul_le_Rmul_left ha hab))
+  have h3 : Rle (Rmul (Rmul b b) b) (Rmul (Rmul a b) b) :=
+    Rmul_le_Rmul_right hb (Rmul_le_Rmul_right hb hab)
+  exact Radd_le_add (Radd_le_add (Radd_le_add h1 h2) h3) (Rle_refl _)
+
+/-- `W₃ ≤ 4a³` (each of the four terms of `W₃` is `≤ a³`, for `0 ≤ b ≤ a`). -/
+theorem W3_le_4a3 {a b : Real} (hb : Rnonneg b) (ha : Rnonneg a) (hab : Rle b a) :
+    Rle (Radd (Radd (Radd (Rmul (Rmul a a) a) (Rmul (Rmul a a) b)) (Rmul (Rmul a b) b))
+          (Rmul (Rmul b b) b))
+        (Radd (Radd (Radd (Rmul (Rmul a a) a) (Rmul (Rmul a a) a)) (Rmul (Rmul a a) a))
+          (Rmul (Rmul a a) a)) := by
+  have h2 : Rle (Rmul (Rmul a a) b) (Rmul (Rmul a a) a) := Rmul_le_Rmul_left (Rnonneg_Rmul ha ha) hab
+  have h3 : Rle (Rmul (Rmul a b) b) (Rmul (Rmul a a) a) :=
+    Rle_trans (Rmul_le_Rmul_right hb (Rmul_le_Rmul_left ha hab)) (Rmul_le_Rmul_left (Rnonneg_Rmul ha ha) hab)
+  have h4 : Rle (Rmul (Rmul b b) b) (Rmul (Rmul a a) a) := cube_mono hb ha hab
+  exact Radd_le_add (Radd_le_add (Radd_le_add (Rle_refl _) h2) h3) h4
+
 end UOR.Bridge.F1Square.Analysis
