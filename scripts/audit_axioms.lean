@@ -2650,6 +2650,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.pair_times_triple
 #print axioms Analysis.single_times_sqpair
 #print axioms Analysis.cube_binom
+#print axioms Analysis.partA3_eq
 #print axioms Analysis.decompForm3_eq_RsumL
 
 -- v0.21.0 stage G, brick S (the substrate): the finite-truncation PSD predicate `WeilPSD`,

@@ -374,6 +374,65 @@ theorem cube_binom (b d : Real) :
     (Radd (Rmul (Rmul b b) b) (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul (Rmul b b) d)))
     (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul (Rmul b d) d)) (Rmul (Rmul d d) d))
 
+set_option maxHeartbeats 8000000 in
+/-- **PART A** of `lhsForm3`: `½·a³·u1 → ½b³u1 + (3/2)b²δu1 + (3/2)bδ²u1 + ½δ³u1` (`a = b+δ`,
+    `cube_binom`, distribute, `½·3 = 3/2` via `half_three`), as the 4 canonical monomials
+    `n2, n4, n6, n8` (`δ = a − b`). -/
+theorem partA3_eq (a b u1 : Real) :
+    Req (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) (Rmul (Rmul (Rmul a a) a) u1))
+      (Radd (Radd (Radd
+          (RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), b, b, b, u1])
+          (RprodL [ofQ (⟨3, 2⟩ : Q) (by decide), b, b, Rsub a b, u1]))
+          (RprodL [ofQ (⟨3, 2⟩ : Q) (by decide), b, Rsub a b, Rsub a b, u1]))
+          (RprodL [ofQ (⟨1, 2⟩ : Q) (by decide), Rsub a b, Rsub a b, Rsub a b, u1])) := by
+  have ha := sub_add_cancel_real a b
+  -- a³ ≈ b³ + 3b²δ + 3bδ² + δ³
+  have ha3 : Req (Rmul (Rmul a a) a)
+      (Radd (Radd (Radd (Rmul (Rmul b b) b)
+                (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul (Rmul b b) (Rsub a b))))
+            (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul (Rmul b (Rsub a b)) (Rsub a b))))
+          (Rmul (Rmul (Rsub a b) (Rsub a b)) (Rsub a b))) :=
+    Req_trans (Rmul_congr (Rmul_congr ha ha) ha) (cube_binom b (Rsub a b))
+  -- ½·(a³·u1): rewrite a³, distribute u1 then ½
+  refine Req_trans (Rmul_congr (Req_refl _) (Rmul_congr ha3 (Req_refl u1))) ?_
+  refine Req_trans (Rmul_congr (Req_refl _)
+    (Req_trans (Rmul_distrib_right (Radd (Radd (Rmul (Rmul b b) b)
+        (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul (Rmul b b) (Rsub a b))))
+        (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul (Rmul b (Rsub a b)) (Rsub a b))))
+      (Rmul (Rmul (Rsub a b) (Rsub a b)) (Rsub a b)) u1)
+      (Radd_congr (Req_trans (Rmul_distrib_right (Radd (Rmul (Rmul b b) b)
+          (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul (Rmul b b) (Rsub a b))))
+          (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul (Rmul b (Rsub a b)) (Rsub a b))) u1)
+        (Radd_congr (Rmul_distrib_right (Rmul (Rmul b b) b)
+          (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul (Rmul b b) (Rsub a b))) u1) (Req_refl _)))
+        (Req_refl _)))) ?_
+  refine Req_trans (Rmul_distrib (ofQ (⟨1, 2⟩ : Q) (by decide))
+    (Radd (Radd (Rmul (Rmul (Rmul b b) b) u1)
+        (Rmul (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul (Rmul b b) (Rsub a b))) u1))
+      (Rmul (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul (Rmul b (Rsub a b)) (Rsub a b))) u1))
+    (Rmul (Rmul (Rmul (Rsub a b) (Rsub a b)) (Rsub a b)) u1)) ?_
+  refine Req_trans (Radd_congr (Rmul_distrib (ofQ (⟨1, 2⟩ : Q) (by decide))
+    (Radd (Rmul (Rmul (Rmul b b) b) u1)
+      (Rmul (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul (Rmul b b) (Rsub a b))) u1))
+    (Rmul (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul (Rmul b (Rsub a b)) (Rsub a b))) u1))
+    (Req_refl _)) ?_
+  refine Req_trans (Radd_congr (Radd_congr (Rmul_distrib (ofQ (⟨1, 2⟩ : Q) (by decide))
+    (Rmul (Rmul (Rmul b b) b) u1)
+    (Rmul (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul (Rmul b b) (Rsub a b))) u1))
+    (Req_refl _)) (Req_refl _)) ?_
+  -- now normalize the four monomials
+  refine Radd_congr (Radd_congr (Radd_congr ?_ ?_) ?_) ?_
+  · exact Rmul_congr (Req_refl _) (Rmul_eq_RprodL4L b b b u1)
+  · exact Req_trans (Rmul_congr (Req_refl _)
+      (Rmul_assoc (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul (Rmul b b) (Rsub a b)) u1))
+      (Req_trans (half_three (Rmul (Rmul (Rmul b b) (Rsub a b)) u1))
+        (Rmul_congr (Req_refl _) (Rmul_eq_RprodL4L b b (Rsub a b) u1)))
+  · exact Req_trans (Rmul_congr (Req_refl _)
+      (Rmul_assoc (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul (Rmul b (Rsub a b)) (Rsub a b)) u1))
+      (Req_trans (half_three (Rmul (Rmul (Rmul b (Rsub a b)) (Rsub a b)) u1))
+        (Rmul_congr (Req_refl _) (Rmul_eq_RprodL4L b (Rsub a b) (Rsub a b) u1)))
+  · exact Rmul_congr (Req_refl _) (Rmul_eq_RprodL4L (Rsub a b) (Rsub a b) (Rsub a b) u1)
+
 -- ===========================================================================
 -- (C2b) The quartic residual decomposition `sStep3 ≈ decompForm3 = b³·C2 + b²·R2 + b·R1 + R0`
 -- (`d = a − b`, `C2 = ½(u0+u1) − d`, `R2 = (3/2)·d·(u1−d)`, `R1 = d²·((3/2)u1 − d)`,
