@@ -3094,3 +3094,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.archLoR_le
 #print axioms Analysis.Rlambda3_pos
 #print axioms Square.coupling_n3_positive
+#print axioms Analysis.zetaSum_four_70_ge
+#print axioms Analysis.zeta4_lower
+#print axioms Analysis.zetaU_four_70_le
+#print axioms Analysis.zeta4_upper

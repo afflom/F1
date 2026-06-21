@@ -218,4 +218,26 @@ theorem zeta3_upper : Rle (zeta 3 (by decide)) (ofQ (⟨1217, 1000⟩ : Q) (by d
   Rle_trans (zeta_le_partial 3 (by decide) 70)
     (Rle_ofQ_ofQ (zetaU_den_pos 3 70) (by decide) zetaU_three_70_le)
 
+set_option maxHeartbeats 4000000 in
+set_option maxRecDepth 8192 in
+/-- `Σ_{k=1}^{71} 1/k⁴ ≥ 1082/1000` (`ζ(4) ≈ 1.0823232`; one rational `decide`). -/
+theorem zetaSum_four_70_ge : Qle (⟨1082, 1000⟩ : Q) (zetaSum 4 70) := by decide
+
+/-- **`ζ(4) ≥ 1.082`** — lower bracket for `ζ(4) = π⁴/90 ≈ 1.0823232`. The `+(15/16)ζ(4)` term of the
+    `n = 4` archimedean coupling (`genArchTerm 4 4`) needs this lower bound (toward `Pos Rlambda4`). -/
+theorem zeta4_lower : Rle (ofQ (⟨1082, 1000⟩ : Q) (by decide)) (zeta 4 (by decide)) :=
+  Rle_trans (Rle_ofQ_ofQ (by decide) (zetaSum_den_pos 4 70) zetaSum_four_70_ge)
+    (zeta_ge_partial 4 (by decide) 70)
+
+set_option maxHeartbeats 4000000 in
+set_option maxRecDepth 8192 in
+/-- `zetaU 4 70 = Σ_{k=1}^{71} 1/k⁴ + 1/71 ≤ 1097/1000` (one rational `decide`; `≈ 1.0964`). -/
+theorem zetaU_four_70_le : Qle (zetaU 4 70) (⟨1097, 1000⟩ : Q) := by decide
+
+/-- **`ζ(4) ≤ 1.097`** — (loose) upper bracket for `ζ(4)`, via the decreasing upper sequence `zetaU`
+    at `N = 70`. With `zeta4_lower` this two-sided-brackets `ζ(4) ∈ [1.082, 1.097]`. -/
+theorem zeta4_upper : Rle (zeta 4 (by decide)) (ofQ (⟨1097, 1000⟩ : Q) (by decide)) :=
+  Rle_trans (zeta_le_partial 4 (by decide) 70)
+    (Rle_ofQ_ofQ (zetaU_den_pos 4 70) (by decide) zetaU_four_70_le)
+
 end UOR.Bridge.F1Square.Analysis
