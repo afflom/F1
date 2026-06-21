@@ -295,4 +295,109 @@ theorem e3Step_ge_num (p : Nat) (hp : 1 ≤ p) :
     (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p)) (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp)))) ?_
   exact Rsub_le_sub (Rle_refl _) (quarter_diff_le p hp)
 
+/-- **`b³·δ ≤ ¼(a⁴−b⁴)`** (`b = ln p`, `δ = a−b`): from `quartic_diff_identity`, `4b³ ≤ W₃`
+    (`W3_ge_4b3`), and `¼·4b³ = b³` (`Rmul_fourth_four`). -/
+theorem quarter_diff_ge (p : Nat) (hp : 1 ≤ p) :
+    Rle (Rmul (logCube p hp) (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp)))
+        (Rmul (ofQ (⟨1, 4⟩ : Q) (by decide))
+          (Rsub (logQuartic (p + 1) (Nat.succ_pos p)) (logQuartic p hp))) := by
+  have hδnn : Rnonneg (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp)) :=
+    Rnonneg_Rsub_of_Rle (logN_mono hp (Nat.le_succ p))
+  refine Rle_trans (Rle_of_Req (Req_symm (Req_trans (Rmul_left_comm3 (ofQ (⟨1, 4⟩ : Q) (by decide))
+    (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
+    (Radd (Radd (Radd (Rmul (Rmul (logN p hp) (logN p hp)) (logN p hp))
+      (Rmul (Rmul (logN p hp) (logN p hp)) (logN p hp)))
+      (Rmul (Rmul (logN p hp) (logN p hp)) (logN p hp)))
+      (Rmul (Rmul (logN p hp) (logN p hp)) (logN p hp))))
+    (Req_trans (Rmul_congr (Req_refl _)
+      (Rmul_fourth_four (Rmul (Rmul (logN p hp) (logN p hp)) (logN p hp))))
+      (Rmul_comm (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
+        (Rmul (Rmul (logN p hp) (logN p hp)) (logN p hp))))))) ?_
+  refine Rle_trans (Rmul_le_Rmul_left (Rnonneg_ofQ (by decide) (by decide))
+    (Rmul_le_Rmul_left hδnn (W3_ge_4b3 (Rnonneg_logN p hp) (Rnonneg_logN (p + 1) (Nat.succ_pos p))
+      (logN_mono hp (Nat.le_succ p))))) ?_
+  exact Rle_of_Req (Rmul_congr (Req_refl _)
+    (quartic_diff_identity (logN (p + 1) (Nat.succ_pos p)) (logN p hp)))
+
+/-- **`X + X + X ≈ 3·X`** (repeated-add to scalar). -/
+theorem Rthree_mul (X : Real) :
+    Req (Radd (Radd X X) X) (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide)) X) := by
+  have hc : Req (ofQ (⟨3, 1⟩ : Q) (by decide))
+      (Radd (Radd (ofQ (⟨1, 1⟩ : Q) (by decide)) (ofQ (⟨1, 1⟩ : Q) (by decide)))
+        (ofQ (⟨1, 1⟩ : Q) (by decide))) := by
+    refine Req_symm (Req_trans (Radd_congr (Radd_ofQ_ofQ (by decide) (by decide)) (Req_refl _)) ?_)
+    refine Req_trans (Radd_ofQ_ofQ (by decide) (by decide)) ?_
+    exact ofQ_congr (by decide) (by decide)
+      (by show Qeq (add (add (⟨1, 1⟩ : Q) ⟨1, 1⟩) ⟨1, 1⟩) ⟨3, 1⟩; decide)
+  refine Req_symm (Req_trans (Rmul_congr hc (Req_refl X)) ?_)
+  refine Req_trans (Rmul_distrib_right (Radd (ofQ (⟨1, 1⟩ : Q) (by decide))
+    (ofQ (⟨1, 1⟩ : Q) (by decide))) (ofQ (⟨1, 1⟩ : Q) (by decide)) X) ?_
+  exact Radd_congr (Req_trans (Rmul_distrib_right (ofQ (⟨1, 1⟩ : Q) (by decide))
+    (ofQ (⟨1, 1⟩ : Q) (by decide)) X) (Radd_congr (Rone_mul X) (Rone_mul X))) (Rone_mul X)
+
+set_option maxHeartbeats 1000000 in
+/-- **`e₃ ≤ 3a²/(p(p+1))`** (`a = ln(p+1)`) — the summable UPPER envelope, via
+    `e₃ = a³u − ¼(a⁴−b⁴) ≤ a³u − b³u = (a³−b³)u = δW₂u`, `δu ≤ 1/(p(p+1))`, `W₂ ≤ 3a²`. -/
+theorem e3Step_le_num (p : Nat) (hp : 1 ≤ p) :
+    Rle (e3Step p hp)
+        (Rmul (ofQ (⟨3, p * (p + 1)⟩ : Q) (Nat.mul_pos hp (Nat.succ_pos p)))
+          (Rmul (logN (p + 1) (Nat.succ_pos p)) (logN (p + 1) (Nat.succ_pos p)))) := by
+  have ha2nn : Rnonneg (Rmul (logN (p + 1) (Nat.succ_pos p)) (logN (p + 1) (Nat.succ_pos p))) :=
+    Rnonneg_Rmul_self _
+  have hδnn : Rnonneg (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp)) :=
+    Rnonneg_Rsub_of_Rle (logN_mono hp (Nat.le_succ p))
+  have hunn : Rnonneg (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p)) :=
+    Rnonneg_ofQ (Nat.succ_pos p) (by show (0 : Int) ≤ 1; decide)
+  have hb3nn : Rnonneg (logCube p hp) := logCube_nonneg p hp
+  -- W₂ ≤ 3a²
+  have hW2le : Rle (Radd (Radd (Rmul (logN (p + 1) (Nat.succ_pos p)) (logN (p + 1) (Nat.succ_pos p)))
+        (Rmul (logN (p + 1) (Nat.succ_pos p)) (logN p hp))) (Rmul (logN p hp) (logN p hp)))
+      (Rmul (ofQ (⟨3, 1⟩ : Q) (by decide))
+        (Rmul (logN (p + 1) (Nat.succ_pos p)) (logN (p + 1) (Nat.succ_pos p)))) := by
+    have hab : Rle (logN p hp) (logN (p + 1) (Nat.succ_pos p)) := logN_mono hp (Nat.le_succ p)
+    have ha : Rnonneg (logN (p + 1) (Nat.succ_pos p)) := Rnonneg_logN (p + 1) (Nat.succ_pos p)
+    have hb : Rnonneg (logN p hp) := Rnonneg_logN p hp
+    refine Rle_trans (Radd_le_add (Radd_le_add (Rle_refl _)
+      (Rmul_le_Rmul_left ha hab)) (Rle_trans (Rmul_le_Rmul_right hb hab) (Rmul_le_Rmul_left ha hab)))
+      (Rle_of_Req (Rthree_mul (Rmul (logN (p + 1) (Nat.succ_pos p)) (logN (p + 1) (Nat.succ_pos p)))))
+  -- δ·u ≤ 1/(p(p+1))
+  have hδu : Rle (Rmul (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
+        (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p)))
+      (ofQ (⟨1, p * (p + 1)⟩ : Q) (Nat.mul_pos hp (Nat.succ_pos p))) :=
+    Rle_trans (Rmul_le_Rmul_right hunn (deltaLog_upper p hp))
+      (Rle_of_Req (Req_trans (Rmul_ofQ_ofQ (a := (⟨1, p⟩ : Q)) (b := (⟨1, p + 1⟩ : Q)) hp (Nat.succ_pos p))
+        (ofQ_congr (Qmul_den_pos (a := (⟨1, p⟩ : Q)) (b := (⟨1, p + 1⟩ : Q)) hp (Nat.succ_pos p))
+          (Nat.mul_pos hp (Nat.succ_pos p))
+          (by show Qeq (mul (⟨1, p⟩ : Q) ⟨1, p + 1⟩) ⟨1, p * (p + 1)⟩
+              simp only [mul, Qeq]; push_cast; ring_uor))))
+  -- chain: e₃ ≤ Rsub(a³u)(b³δ) ≤ Rsub(a³u)(b³u) ≈ (a³−b³)u ≈ (δW₂)u ≈ (δu)W₂ ≤ (δu)(3a²) ≤ (1/(p(p+1)))(3a²) ≈ target
+  refine Rle_trans (Rsub_le_sub (Rle_refl _) (quarter_diff_ge p hp)) ?_
+  refine Rle_trans (Rsub_le_sub (Rle_refl _)
+    (Rmul_le_Rmul_left hb3nn (deltaLog_lower p hp))) ?_
+  refine Rle_trans (Rle_of_Req (Req_symm (Rmul_sub_distrib_right (logCube (p + 1) (Nat.succ_pos p))
+    (logCube p hp) (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p))))) ?_
+  refine Rle_trans (Rle_of_Req (Rmul_congr
+    (Req_symm (cube_diff_identity (logN (p + 1) (Nat.succ_pos p)) (logN p hp))) (Req_refl _))) ?_
+  -- (δW₂)u ≈ (δu)W₂
+  refine Rle_trans (Rle_of_Req (Req_trans (Rmul_assoc (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
+      (Radd (Radd (Rmul (logN (p + 1) (Nat.succ_pos p)) (logN (p + 1) (Nat.succ_pos p)))
+          (Rmul (logN (p + 1) (Nat.succ_pos p)) (logN p hp))) (Rmul (logN p hp) (logN p hp)))
+      (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p)))
+    (Req_trans (Rmul_congr (Req_refl _) (Rmul_comm _ (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p))))
+      (Req_symm (Rmul_assoc (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
+        (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p))
+        (Radd (Radd (Rmul (logN (p + 1) (Nat.succ_pos p)) (logN (p + 1) (Nat.succ_pos p)))
+          (Rmul (logN (p + 1) (Nat.succ_pos p)) (logN p hp))) (Rmul (logN p hp) (logN p hp)))))))) ?_
+  -- (δu)W₂ ≤ (δu)(3a²) ≤ (1/(p(p+1)))(3a²) ≈ target
+  refine Rle_trans (Rmul_le_Rmul_left (Rnonneg_Rmul hδnn hunn) hW2le) ?_
+  refine Rle_trans (Rmul_le_Rmul_right (Rnonneg_Rmul (Rnonneg_ofQ (by decide) (by decide)) ha2nn) hδu) ?_
+  refine Rle_of_Req (Req_trans (Req_symm (Rmul_assoc
+    (ofQ (⟨1, p * (p + 1)⟩ : Q) (Nat.mul_pos hp (Nat.succ_pos p)))
+    (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul (logN (p + 1) (Nat.succ_pos p)) (logN (p + 1) (Nat.succ_pos p)))))
+    (Rmul_congr (Req_trans (Rmul_ofQ_ofQ (Nat.mul_pos hp (Nat.succ_pos p)) (by decide))
+      (ofQ_congr (Qmul_den_pos (Nat.mul_pos hp (Nat.succ_pos p)) (by decide))
+        (Nat.mul_pos hp (Nat.succ_pos p))
+        (by show Qeq (mul (⟨1, p * (p + 1)⟩ : Q) ⟨3, 1⟩) ⟨3, p * (p + 1)⟩
+            simp only [mul, Qeq]; push_cast; ring_uor))) (Req_refl _)))
+
 end UOR.Bridge.F1Square.Analysis
