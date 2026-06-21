@@ -683,4 +683,200 @@ theorem g3_TL_le (j : Nat) :
   push_cast at hcast; omega
 
 
+
+/-- Outer UPPER sum `Σ_{i<e} 3(A+i+2)²/2^{A+i}`. -/
+def WUsum3 (A : Nat) : Nat → Q
+  | 0 => ⟨0, 1⟩
+  | (e + 1) => add (WUsum3 A e) ⟨3 * (((↑(A + e) : Int) + 2) * ((↑(A + e) : Int) + 2)), 2 ^ (A + e)⟩
+
+theorem WUsum3_den_pos (A : Nat) : ∀ e, 0 < (WUsum3 A e).den
+  | 0 => Nat.one_pos
+  | (e + 1) => add_den_pos (WUsum3_den_pos A e) (Nat.pos_pow_of_pos (A + e) (by decide))
+
+/-- Outer LOWER sum `Σ_{i<e} (A+i+2)³/2^{A+i}`. -/
+def WLsum3 (A : Nat) : Nat → Q
+  | 0 => ⟨0, 1⟩
+  | (e + 1) => add (WLsum3 A e)
+      ⟨((↑(A + e) : Int) + 2) * ((↑(A + e) : Int) + 2) * ((↑(A + e) : Int) + 2), 2 ^ (A + e)⟩
+
+theorem WLsum3_den_pos (A : Nat) : ∀ e, 0 < (WLsum3 A e).den
+  | 0 => Nat.one_pos
+  | (e + 1) => add_den_pos (WLsum3_den_pos A e) (Nat.pos_pow_of_pos (A + e) (by decide))
+
+/-- **Outer UPPER bound**: `g₃(2^{A+e}) − g₃(2^A) ≤ WUsum3 A e`. -/
+theorem g3Seq_diff_le_outer (A : Nat) : ∀ e,
+    Rle (Rsub (g3Seq (2 ^ (A + e))) (g3Seq (2 ^ A))) (ofQ (WUsum3 A e) (WUsum3_den_pos A e)) := by
+  intro e
+  induction e with
+  | zero =>
+      apply Rle_of_Req
+      refine Req_trans (Radd_neg (g3Seq (2 ^ A))) (Req_symm ?_)
+      apply Req_of_seq_Qeq; intro n
+      simp only [WUsum3, ofQ, zero, Qeq]
+  | succ e ih =>
+      have hstepd : 0 < (⟨3 * (((↑(A + e) : Int) + 2) * ((↑(A + e) : Int) + 2)), 2 ^ (A + e)⟩ : Q).den :=
+        Nat.pos_pow_of_pos (A + e) (by decide)
+      have hgapd : 0 < (WUsum3 A e).den := WUsum3_den_pos A e
+      have heq : Req (ofQ (WUsum3 A (e + 1)) (WUsum3_den_pos A (e + 1)))
+          (Radd (ofQ (⟨3 * (((↑(A + e) : Int) + 2) * ((↑(A + e) : Int) + 2)), 2 ^ (A + e)⟩ : Q) hstepd)
+                (ofQ (WUsum3 A e) hgapd)) :=
+        Req_trans (ofQ_congr _ _ (by simp only [WUsum3, Qeq, add]; push_cast <;> try ring_uor))
+          (Req_symm (Radd_ofQ_ofQ hstepd hgapd))
+      exact Rle_trans
+        (Rle_of_Req (Req_symm (Rsub_split (g3Seq (2 ^ (A + e + 1))) (g3Seq (2 ^ (A + e)))
+          (g3Seq (2 ^ A)))))
+        (Rle_trans (Radd_le_add (g3Seq_block_le (A + e)) ih) (Rle_of_Req (Req_symm heq)))
+
+/-- **Outer LOWER bound**: `g₃(2^{A+e}) − g₃(2^A) ≥ −WLsum3 A e`. -/
+theorem g3Seq_diff_ge_outer (A : Nat) : ∀ e,
+    Rle (Rneg (ofQ (WLsum3 A e) (WLsum3_den_pos A e))) (Rsub (g3Seq (2 ^ (A + e))) (g3Seq (2 ^ A))) := by
+  intro e
+  induction e with
+  | zero =>
+      apply Rle_of_Req
+      refine Req_trans ?_ (Req_symm (Radd_neg (g3Seq (2 ^ A))))
+      apply Req_of_seq_Qeq; intro n
+      simp only [Rneg, WLsum3, ofQ, zero, neg, Qeq]; push_cast
+  | succ e ih =>
+      have hstepd : 0 < (⟨((↑(A + e) : Int) + 2) * ((↑(A + e) : Int) + 2) * ((↑(A + e) : Int) + 2),
+          2 ^ (A + e)⟩ : Q).den := Nat.pos_pow_of_pos (A + e) (by decide)
+      have hgapd : 0 < (WLsum3 A e).den := WLsum3_den_pos A e
+      have heq : Req (Rneg (ofQ (WLsum3 A (e + 1)) (WLsum3_den_pos A (e + 1))))
+          (Radd (Rneg (ofQ (⟨((↑(A + e) : Int) + 2) * ((↑(A + e) : Int) + 2) * ((↑(A + e) : Int) + 2),
+                2 ^ (A + e)⟩ : Q) hstepd)) (Rneg (ofQ (WLsum3 A e) hgapd))) :=
+        Req_trans (Rneg_congr (Req_trans
+          (ofQ_congr _ _ (by simp only [WLsum3, Qeq, add]; push_cast <;> try ring_uor))
+          (Req_symm (Radd_ofQ_ofQ hstepd hgapd)))) (Rneg_Radd _ _)
+      exact Rle_trans (Rle_of_Req heq)
+        (Rle_trans (Radd_le_add (g3Seq_block_ge (A + e)) ih)
+          (Rle_of_Req (Rsub_split (g3Seq (2 ^ (A + e + 1))) (g3Seq (2 ^ (A + e))) (g3Seq (2 ^ A)))))
+
+/-- **Upper antiderivative tail** `WUsum3 A e ≤ Q_U(A)/2^A − Q_U(A+e)/2^{A+e}`, `Q_U(m)=6m²+36m+66`. -/
+theorem WUsum3_tail_le (A : Nat) : ∀ e,
+    Qle (WUsum3 A e)
+        (Qsub (⟨(6 * A * A + 36 * A + 66 : Int), 2 ^ A⟩ : Q)
+          ⟨(6 * (A + e) * (A + e) + 36 * (A + e) + 66 : Int), 2 ^ (A + e)⟩)
+  | 0 => by
+      simp only [Nat.add_zero]; apply Qeq_le
+      simp only [WUsum3, Qsub, add, neg, Qeq]; push_cast <;> try ring_uor
+  | (e + 1) => by
+      have hT : 0 < (Qsub (⟨(6 * A * A + 36 * A + 66 : Int), 2 ^ A⟩ : Q)
+          ⟨(6 * (A + e) * (A + e) + 36 * (A + e) + 66 : Int), 2 ^ (A + e)⟩).den :=
+        Qsub_den_pos (Nat.pos_pow_of_pos A (by decide)) (Nat.pos_pow_of_pos (A + e) (by decide))
+      have hS : 0 < (Qsub (⟨(6 * (A + e) * (A + e) + 36 * (A + e) + 66 : Int), 2 ^ (A + e)⟩ : Q)
+          ⟨(6 * (A + e + 1) * (A + e + 1) + 36 * (A + e + 1) + 66 : Int), 2 ^ (A + e + 1)⟩).den :=
+        Qsub_den_pos (Nat.pos_pow_of_pos (A + e) (by decide)) (Nat.pos_pow_of_pos (A + e + 1) (by decide))
+      have h2 : (2 : Nat) ^ (A + e + 1) = 2 * 2 ^ (A + e) := by rw [Nat.pow_succ]; omega
+      have hinc : Qeq (⟨3 * (((↑(A + e) : Int) + 2) * ((↑(A + e) : Int) + 2)), 2 ^ (A + e)⟩ : Q)
+          (Qsub (⟨(6 * (A + e) * (A + e) + 36 * (A + e) + 66 : Int), 2 ^ (A + e)⟩ : Q)
+            ⟨(6 * (A + e + 1) * (A + e + 1) + 36 * (A + e + 1) + 66 : Int), 2 ^ (A + e + 1)⟩) := by
+        simp only [h2, Qsub, add, neg, Qeq]; push_cast <;> try ring_uor
+      exact Qle_trans (add_den_pos hT hS)
+        (Qadd_le_add (WUsum3_tail_le A e) (Qeq_le hinc)) (Qeq_le (Qadd_Qsub_fwd _ _ _))
+
+/-- **Lower antiderivative tail** `WLsum3 A e ≤ Q_L(A)/2^A − Q_L(A+e)/2^{A+e}`,
+    `Q_L(m)=2m³+18m²+66m+102` (the cubic discrete antiderivative). -/
+theorem WLsum3_tail_le (A : Nat) : ∀ e,
+    Qle (WLsum3 A e)
+        (Qsub (⟨(2 * A * A * A + 18 * A * A + 66 * A + 102 : Int), 2 ^ A⟩ : Q)
+          ⟨(2 * (A + e) * (A + e) * (A + e) + 18 * (A + e) * (A + e) + 66 * (A + e) + 102 : Int),
+            2 ^ (A + e)⟩)
+  | 0 => by
+      simp only [Nat.add_zero]; apply Qeq_le
+      simp only [WLsum3, Qsub, add, neg, Qeq]; push_cast <;> try ring_uor
+  | (e + 1) => by
+      have hT : 0 < (Qsub (⟨(2 * A * A * A + 18 * A * A + 66 * A + 102 : Int), 2 ^ A⟩ : Q)
+          ⟨(2 * (A + e) * (A + e) * (A + e) + 18 * (A + e) * (A + e) + 66 * (A + e) + 102 : Int),
+            2 ^ (A + e)⟩).den :=
+        Qsub_den_pos (Nat.pos_pow_of_pos A (by decide)) (Nat.pos_pow_of_pos (A + e) (by decide))
+      have hS : 0 < (Qsub (⟨(2 * (A + e) * (A + e) * (A + e) + 18 * (A + e) * (A + e)
+            + 66 * (A + e) + 102 : Int), 2 ^ (A + e)⟩ : Q)
+          ⟨(2 * (A + e + 1) * (A + e + 1) * (A + e + 1) + 18 * (A + e + 1) * (A + e + 1)
+            + 66 * (A + e + 1) + 102 : Int), 2 ^ (A + e + 1)⟩).den :=
+        Qsub_den_pos (Nat.pos_pow_of_pos (A + e) (by decide)) (Nat.pos_pow_of_pos (A + e + 1) (by decide))
+      have h2 : (2 : Nat) ^ (A + e + 1) = 2 * 2 ^ (A + e) := by rw [Nat.pow_succ]; omega
+      have hinc : Qeq (⟨((↑(A + e) : Int) + 2) * ((↑(A + e) : Int) + 2) * ((↑(A + e) : Int) + 2),
+            2 ^ (A + e)⟩ : Q)
+          (Qsub (⟨(2 * (A + e) * (A + e) * (A + e) + 18 * (A + e) * (A + e) + 66 * (A + e) + 102 : Int),
+              2 ^ (A + e)⟩ : Q)
+            ⟨(2 * (A + e + 1) * (A + e + 1) * (A + e + 1) + 18 * (A + e + 1) * (A + e + 1)
+              + 66 * (A + e + 1) + 102 : Int), 2 ^ (A + e + 1)⟩) := by
+        simp only [h2, Qsub, add, neg, Qeq]; push_cast <;> try ring_uor
+      exact Qle_trans (add_den_pos hT hS)
+        (Qadd_le_add (WLsum3_tail_le A e) (Qeq_le hinc)) (Qeq_le (Qadd_Qsub_fwd _ _ _))
+
+/-- The reindexed `γ₃` defining sequence `g₃(2^{M(j)})`, `M(j) = 2j+14`. -/
+def g3SeqDyadic (j : Nat) : Real := g3Seq (2 ^ gamma3Midx j)
+
+/-- **Pairwise Cauchy (upper)**: for `j ≤ k`, `g3SeqDyadic k − g3SeqDyadic j ≤ 1/(j+1)`. -/
+theorem g3_pair_le {j k : Nat} (hjk : j ≤ k) :
+    Rle (Rsub (g3SeqDyadic k) (g3SeqDyadic j)) (ofQ (⟨1, j + 1⟩ : Q) (Nat.succ_pos j)) := by
+  simp only [g3SeqDyadic]
+  obtain ⟨e, he⟩ := Nat.le.dest (gamma3Midx_mono hjk)
+  rw [← he]
+  refine Rle_trans (g3Seq_diff_le_outer (gamma3Midx j) e) ?_
+  have hmid : 0 < (Qsub (⟨(6 * gamma3Midx j * gamma3Midx j + 36 * gamma3Midx j + 66 : Int),
+        2 ^ gamma3Midx j⟩ : Q)
+      ⟨(6 * (gamma3Midx j + e) * (gamma3Midx j + e) + 36 * (gamma3Midx j + e) + 66 : Int),
+        2 ^ (gamma3Midx j + e)⟩).den :=
+    Qsub_den_pos (Nat.pos_pow_of_pos _ (by decide)) (Nat.pos_pow_of_pos _ (by decide))
+  have hmid2 : 0 < (⟨(6 * gamma3Midx j * gamma3Midx j + 36 * gamma3Midx j + 66 : Int),
+      2 ^ gamma3Midx j⟩ : Q).den := Nat.pos_pow_of_pos _ (by decide)
+  exact Rle_trans (Rle_ofQ_ofQ (WUsum3_den_pos _ _) hmid (WUsum3_tail_le (gamma3Midx j) e))
+    (Rle_trans (Rle_ofQ_ofQ hmid hmid2 (Qsub_le_left _ _ (by
+        have h : (0 : Int) ≤ (↑(gamma3Midx j) : Int) + (↑e : Int) := by
+          have := Int.ofNat_nonneg (gamma3Midx j); have := Int.ofNat_nonneg e; omega
+        have h2 := Int.mul_nonneg (Int.mul_nonneg (by decide : (0 : Int) ≤ 6) h) h
+        have h3 := Int.mul_nonneg (by decide : (0 : Int) ≤ 36) h
+        omega) _ _))
+      (Rle_ofQ_ofQ hmid2 (Nat.succ_pos j) (g3_TU_le j)))
+
+/-- **Pairwise Cauchy (lower)**: for `j ≤ k`, `g3SeqDyadic k − g3SeqDyadic j ≥ −1/(j+1)`. -/
+theorem g3_pair_ge {j k : Nat} (hjk : j ≤ k) :
+    Rle (Rneg (ofQ (⟨1, j + 1⟩ : Q) (Nat.succ_pos j))) (Rsub (g3SeqDyadic k) (g3SeqDyadic j)) := by
+  simp only [g3SeqDyadic]
+  obtain ⟨e, he⟩ := Nat.le.dest (gamma3Midx_mono hjk)
+  rw [← he]
+  refine Rle_trans (Rle_Rneg ?_) (g3Seq_diff_ge_outer (gamma3Midx j) e)
+  have hmid : 0 < (Qsub (⟨(2 * gamma3Midx j * gamma3Midx j * gamma3Midx j
+        + 18 * gamma3Midx j * gamma3Midx j + 66 * gamma3Midx j + 102 : Int), 2 ^ gamma3Midx j⟩ : Q)
+      ⟨(2 * (gamma3Midx j + e) * (gamma3Midx j + e) * (gamma3Midx j + e)
+        + 18 * (gamma3Midx j + e) * (gamma3Midx j + e) + 66 * (gamma3Midx j + e) + 102 : Int),
+        2 ^ (gamma3Midx j + e)⟩).den :=
+    Qsub_den_pos (Nat.pos_pow_of_pos _ (by decide)) (Nat.pos_pow_of_pos _ (by decide))
+  have hmid2 : 0 < (⟨(2 * gamma3Midx j * gamma3Midx j * gamma3Midx j
+      + 18 * gamma3Midx j * gamma3Midx j + 66 * gamma3Midx j + 102 : Int), 2 ^ gamma3Midx j⟩ : Q).den :=
+    Nat.pos_pow_of_pos _ (by decide)
+  exact Rle_trans (Rle_ofQ_ofQ (WLsum3_den_pos _ _) hmid (WLsum3_tail_le (gamma3Midx j) e))
+    (Rle_trans (Rle_ofQ_ofQ hmid hmid2 (Qsub_le_left _ _ (by
+        have h : (0 : Int) ≤ (↑(gamma3Midx j) : Int) + (↑e : Int) := by
+          have := Int.ofNat_nonneg (gamma3Midx j); have := Int.ofNat_nonneg e; omega
+        have h2 := Int.mul_nonneg (Int.mul_nonneg (Int.mul_nonneg (by decide : (0 : Int) ≤ 2) h) h) h
+        have h3 := Int.mul_nonneg (Int.mul_nonneg (by decide : (0 : Int) ≤ 18) h) h
+        have h4 := Int.mul_nonneg (by decide : (0 : Int) ≤ 66) h
+        omega) _ _))
+      (Rle_ofQ_ofQ hmid2 (Nat.succ_pos j) (g3_TL_le j)))
+
+/-- **The reindexed `γ₃` sequence is regular** (`RReg`) — the input to Bishop's `Rlim`. -/
+theorem g3SeqDyadic_RReg : RReg g3SeqDyadic := by
+  refine RReg_of_real_bound _ (fun j k => add ⟨1, j + 1⟩ ⟨1, k + 1⟩)
+    (fun j k => add_den_pos (Nat.succ_pos _) (Nat.succ_pos _)) (fun j k => Qle_refl _) ?_
+  intro j k
+  rcases Nat.le_total j k with hjk | hkj
+  · exact Rle_trans (Rle_of_Req (Req_symm (Rneg_Rsub (g3SeqDyadic k) (g3SeqDyadic j))))
+      (Rle_trans (Rle_trans (Rle_Rneg (g3_pair_ge hjk)) (Rle_of_Req (Rneg_neg _)))
+        (Rle_ofQ_ofQ (Nat.succ_pos _) (add_den_pos (Nat.succ_pos _) (Nat.succ_pos _))
+          (Qle_self_add (by show (0 : Int) ≤ 1; decide))))
+  · exact Rle_trans (g3_pair_le hkj)
+      (Rle_ofQ_ofQ (Nat.succ_pos _) (add_den_pos (Nat.succ_pos _) (Nat.succ_pos _))
+        (Qle_trans (b := add ⟨1, k + 1⟩ ⟨1, j + 1⟩)
+          (add_den_pos (Nat.succ_pos _) (Nat.succ_pos _))
+          (Qle_self_add (p := ⟨1, j + 1⟩) (by show (0 : Int) ≤ 1; decide))
+          (Qeq_le (by simp only [Qeq, add]; push_cast <;> try ring_uor))))
+
+/-- **The third Stieltjes constant `γ₃`**, as a genuine constructive real: the Bishop limit of the
+    reindexed defining sequence `g₃(2^{2j+14})`. `γ₃ ≈ +0.00205`. -/
+def Rgamma3 : Real := Rlim g3SeqDyadic g3SeqDyadic_RReg
+
+
 end UOR.Bridge.F1Square.Analysis

@@ -3131,3 +3131,12 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.g3_cube_lin
 #print axioms Analysis.g3_domination_L
 #print axioms Analysis.g3_TL_le
+#print axioms Analysis.WUsum3_den_pos
+#print axioms Analysis.WLsum3_den_pos
+#print axioms Analysis.g3Seq_diff_le_outer
+#print axioms Analysis.g3Seq_diff_ge_outer
+#print axioms Analysis.WUsum3_tail_le
+#print axioms Analysis.WLsum3_tail_le
+#print axioms Analysis.g3_pair_le
+#print axioms Analysis.g3_pair_ge
+#print axioms Analysis.g3SeqDyadic_RReg
