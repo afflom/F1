@@ -3114,3 +3114,6 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.quarter_diff_ge
 #print axioms Analysis.Rthree_mul
 #print axioms Analysis.e3Step_le_num
+#print axioms Analysis.logCube_le_block
+#print axioms Analysis.g3Seq_step_le_block
+#print axioms Analysis.g3Seq_step_ge_block

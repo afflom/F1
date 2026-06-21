@@ -287,7 +287,7 @@ theorem e3Step_ge_num (p : Nat) (hp : 1 ≤ p) :
     have huvp : Req (Rneg (ofQ (⟨1, p * (p + 1)⟩ : Q) (Nat.mul_pos hp (Nat.succ_pos p))))
         (Rsub (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p)) (ofQ (⟨1, p⟩ : Q) hp)) :=
       Req_of_seq_Qeq (fun n => by
-        simp only [Rsub, Radd, Rneg, ofQ, Qeq, neg, add]; push_cast; ring_uor)
+        simp only [Rsub, Radd, Rneg, ofQ, Qeq, neg, add]; try push_cast <;> try ring_uor)
     exact Rle_trans (Rle_of_Req huvp)
       (Rsub_le_sub (Rle_refl _) (deltaLog_upper p hp))
   refine Rle_trans (Rmul_le_Rmul_left ha3nn hud) ?_
@@ -369,7 +369,7 @@ theorem e3Step_le_num (p : Nat) (hp : 1 ≤ p) :
         (ofQ_congr (Qmul_den_pos (a := (⟨1, p⟩ : Q)) (b := (⟨1, p + 1⟩ : Q)) hp (Nat.succ_pos p))
           (Nat.mul_pos hp (Nat.succ_pos p))
           (by show Qeq (mul (⟨1, p⟩ : Q) ⟨1, p + 1⟩) ⟨1, p * (p + 1)⟩
-              simp only [mul, Qeq]; push_cast; ring_uor))))
+              simp only [mul, Qeq]; try push_cast <;> try ring_uor))))
   -- chain: e₃ ≤ Rsub(a³u)(b³δ) ≤ Rsub(a³u)(b³u) ≈ (a³−b³)u ≈ (δW₂)u ≈ (δu)W₂ ≤ (δu)(3a²) ≤ (1/(p(p+1)))(3a²) ≈ target
   refine Rle_trans (Rsub_le_sub (Rle_refl _) (quarter_diff_ge p hp)) ?_
   refine Rle_trans (Rsub_le_sub (Rle_refl _)
@@ -398,6 +398,54 @@ theorem e3Step_le_num (p : Nat) (hp : 1 ≤ p) :
       (ofQ_congr (Qmul_den_pos (Nat.mul_pos hp (Nat.succ_pos p)) (by decide))
         (Nat.mul_pos hp (Nat.succ_pos p))
         (by show Qeq (mul (⟨1, p * (p + 1)⟩ : Q) ⟨3, 1⟩) ⟨3, p * (p + 1)⟩
-            simp only [mul, Qeq]; push_cast; ring_uor))) (Req_refl _)))
+            simp only [mul, Qeq]; try push_cast <;> try ring_uor))) (Req_refl _)))
+
+-- ===========================================================================
+-- Brick 4: dyadic-block telescoping → regularity → `Rgamma3`.
+-- ===========================================================================
+
+/-- **Cubed block-log cap** `logN(j+2)³ ≤ (a+2)³` for `j+2 ≤ 2^{a+2}`. -/
+theorem logCube_le_block (a j : Nat) (hj : j + 2 ≤ 2 ^ (a + 2)) :
+    Rle (logCube (j + 2) (by omega)) (ofQ (⟨((a : Int) + 2) * ((a : Int) + 2) * ((a : Int) + 2), 1⟩ : Q)
+      Nat.one_pos) := by
+  have hcapnn : Rnonneg (ofQ (⟨((a : Int) + 2) * ((a : Int) + 2), 1⟩ : Q) Nat.one_pos) := by
+    refine Rnonneg_ofQ Nat.one_pos ?_
+    have := Int.ofNat_nonneg a
+    exact Int.mul_nonneg (by omega) (by omega)
+  refine Rle_trans (Rmul_le_Rmul_right (Rnonneg_logN _ _) (logSq_le_block a j hj)) ?_
+  refine Rle_trans (Rmul_le_Rmul_left hcapnn (logN_le_block a j hj)) ?_
+  exact Rle_of_Req (Req_trans (Rmul_ofQ_ofQ Nat.one_pos Nat.one_pos)
+    (ofQ_congr _ _ (by simp only [mul, Qeq]; try push_cast <;> try ring_uor)))
+
+/-- **Per-step block UPPER bound** `g₃(j+1) − g₃(j) ≤ 3(a+2)²/((j+1)(j+2))` for `j+2 ≤ 2^{a+2}`. -/
+theorem g3Seq_step_le_block (a j : Nat) (hj : j + 2 ≤ 2 ^ (a + 2)) :
+    Rle (Rsub (g3Seq (j + 1)) (g3Seq j))
+        (ofQ (⟨3 * (((a : Int) + 2) * ((a : Int) + 2)), (j + 1) * (j + 2)⟩ : Q)
+          (Nat.mul_pos (Nat.succ_pos j) (Nat.succ_pos (j + 1)))) := by
+  refine Rle_trans (Rle_of_Req (g3Seq_step_eq j)) ?_
+  refine Rle_trans (e3Step_le_num (j + 1) (Nat.succ_pos j)) ?_
+  have hden : 0 < (⟨3, (j + 1) * (j + 2)⟩ : Q).den := Nat.mul_pos (Nat.succ_pos j) (Nat.succ_pos (j + 1))
+  refine Rle_trans (Rmul_le_Rmul_left (Rnonneg_ofQ hden (by show (0 : Int) ≤ 3; decide))
+    (logSq_le_block a j hj)) ?_
+  exact Rle_of_Req (Req_trans (Rmul_ofQ_ofQ hden Nat.one_pos)
+    (ofQ_congr _ _ (by simp only [mul, Qeq]; try push_cast <;> try ring_uor)))
+
+/-- **Per-step block LOWER bound** `g₃(j+1) − g₃(j) ≥ −(a+2)³/((j+1)(j+2))` for `j+2 ≤ 2^{a+2}`. -/
+theorem g3Seq_step_ge_block (a j : Nat) (hj : j + 2 ≤ 2 ^ (a + 2)) :
+    Rle (Rneg (ofQ (⟨((a : Int) + 2) * ((a : Int) + 2) * ((a : Int) + 2), (j + 1) * (j + 2)⟩ : Q)
+          (Nat.mul_pos (Nat.succ_pos j) (Nat.succ_pos (j + 1)))))
+        (Rsub (g3Seq (j + 1)) (g3Seq j)) := by
+  refine Rle_trans ?_ (Rle_of_Req (Req_symm (g3Seq_step_eq j)))
+  refine Rle_trans ?_ (e3Step_ge_num (j + 1) (Nat.succ_pos j))
+  have hden : 0 < (⟨1, (j + 1) * (j + 2)⟩ : Q).den :=
+    Nat.mul_pos (Nat.succ_pos j) (Nat.succ_pos (j + 1))
+  have hofdnn : Rnonneg (ofQ (⟨1, (j + 1) * (j + 2)⟩ : Q) hden) :=
+    Rnonneg_ofQ hden (by show (0 : Int) ≤ 1; decide)
+  have hneg := Rle_Rneg (Rmul_le_Rmul_right hofdnn (logCube_le_block a j hj))
+  refine Rle_trans (Rle_of_Req ?_) (Rle_trans hneg (Rle_of_Req ?_))
+  · apply Rneg_congr
+    refine Req_symm (Req_trans (Rmul_ofQ_ofQ Nat.one_pos hden) (ofQ_congr _ _ ?_))
+    simp only [mul, Qeq]; try push_cast <;> try ring_uor
+  · exact Req_symm (Rmul_neg_right _ _)
 
 end UOR.Bridge.F1Square.Analysis
