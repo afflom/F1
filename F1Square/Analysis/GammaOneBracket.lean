@@ -579,4 +579,53 @@ theorem sStep1_le (p : Nat) (hp : 1 ≤ p) :
     (by show Qeq (mul (⟨1, 2⟩ : Q) (mul (⟨1, p⟩ : Q) (⟨1, p⟩ : Q))) (⟨1, 2 * p * p⟩ : Q)
         simp only [Qeq, mul]; push_cast; ring_uor)
 
+/-- **`s_{j+1} = hSeq1(j+1) − hSeq1 j ≤ 1/(2(j+1)²)`** — the per-step upper increment. -/
+theorem hSeq1_step_le (j : Nat) :
+    Rle (Rsub (hSeq1 (j + 1)) (hSeq1 j))
+        (ofQ (⟨1, 2 * (j + 1) * (j + 1)⟩ : Q)
+          (Nat.mul_pos (Nat.mul_pos (by decide) (Nat.succ_pos j)) (Nat.succ_pos j))) :=
+  Rle_trans (Rle_of_Req (hSeq1_step_eq j)) (sStep1_le (j + 1) (Nat.succ_pos j))
+
+/-- **Upper gap bound, U-form** (`d`-induction): `hSeq1(N+d) − hSeq1 N ≤ Usum(N+d) − Usum N`. -/
+theorem hSeq1_diff_le_U (N : Nat) : ∀ (d : Nat),
+    Rle (Rsub (hSeq1 (N + d)) (hSeq1 N))
+        (ofQ (Qsub (Usum (N + d)) (Usum N))
+          (Qsub_den_pos (Usum_den_pos (N + d)) (Usum_den_pos N))) := by
+  intro d
+  induction d with
+  | zero =>
+      simp only [Nat.add_zero]
+      apply Rle_of_Req
+      refine Req_trans (Radd_neg (hSeq1 N)) ?_
+      apply Req_of_seq_Qeq; intro n
+      simp only [ofQ, zero, Qsub, add, neg, Qeq]; push_cast; ring_uor
+  | succ d ih =>
+      have hstepd : 0 < (⟨1, 2 * ((N + d) + 1) * ((N + d) + 1)⟩ : Q).den :=
+        Nat.mul_pos (Nat.mul_pos (by decide) (Nat.succ_pos (N + d))) (Nat.succ_pos (N + d))
+      have hgapd : 0 < (Qsub (Usum (N + d)) (Usum N)).den :=
+        Qsub_den_pos (Usum_den_pos (N + d)) (Usum_den_pos N)
+      have heq : Req (ofQ (Qsub (Usum (N + d + 1)) (Usum N))
+            (Qsub_den_pos (Usum_den_pos (N + d + 1)) (Usum_den_pos N)))
+          (Radd (ofQ (⟨1, 2 * ((N + d) + 1) * ((N + d) + 1)⟩ : Q) hstepd)
+                (ofQ (Qsub (Usum (N + d)) (Usum N)) hgapd)) :=
+        Req_trans (ofQ_congr _ _ (Qeq_symm (Qadd_Qsub_comm _ (Usum (N + d)) (Usum N))))
+          (Req_symm (Radd_ofQ_ofQ hstepd hgapd))
+      exact Rle_trans (Rle_of_Req (Req_symm (Rsub_split (hSeq1 (N + d + 1)) (hSeq1 (N + d)) (hSeq1 N))))
+        (Rle_trans (Radd_le_add (hSeq1_step_le (N + d)) ih) (Rle_of_Req (Req_symm heq)))
+
+/-- **The upper gap bound** `hSeq1(N+d) − hSeq1 N ≤ 1/(2N)` (for `N ≥ 1`). -/
+theorem hSeq1_diff_le (N : Nat) (hN : 1 ≤ N) (d : Nat) :
+    Rle (Rsub (hSeq1 (N + d)) (hSeq1 N)) (ofQ (⟨1, 2 * N⟩ : Q) (Nat.mul_pos (by decide) hN)) := by
+  refine Rle_trans (hSeq1_diff_le_U N d) ?_
+  have hmid : 0 < (Qsub (⟨1, 2 * N⟩ : Q) (⟨1, 2 * (N + d)⟩ : Q)).den :=
+    Qsub_den_pos (Nat.mul_pos (by decide) hN) (Nat.mul_pos (by decide) (by omega))
+  exact Rle_trans (Rle_ofQ_ofQ (Qsub_den_pos (Usum_den_pos (N + d)) (Usum_den_pos N)) hmid
+      (Usum_tail_le N hN d))
+    (Rle_ofQ_ofQ hmid (Nat.mul_pos (by decide) hN) (Qsub_unit_le (2 * N) (2 * (N + d))))
+
+/-- **`hSeq1(N+d) ≤ hSeq1 N + 1/(2N)`** (uniform in `d`, `N ≥ 1`). -/
+theorem hSeq1_upper_const (N : Nat) (hN : 1 ≤ N) (d : Nat) :
+    Rle (hSeq1 (N + d)) (Radd (hSeq1 N) (ofQ (⟨1, 2 * N⟩ : Q) (Nat.mul_pos (by decide) hN))) :=
+  Rle_add_of_Rsub_le (hSeq1_diff_le N hN d)
+
 end UOR.Bridge.F1Square.Analysis
