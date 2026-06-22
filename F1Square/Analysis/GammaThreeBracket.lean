@@ -1425,4 +1425,93 @@ theorem corr_le (j : Nat) :
   push_cast
   ring_uor
 
+/-- **`γ₃ ≤ hSeq3(N) + 11/(N+1) + (2j+15)³/(2(2^{2j+14}+1)) + 1/(j+1)`** — the dyadic limit bound
+    (`Rgamma3_le_dyadic`) with the correction extracted (`g3Seq_eq_hSeq3_add`), the dyadic anchor
+    telescoped down to `N` (`hSeq3_upper_const`), and the correction capped (`corr_le`). -/
+theorem Rgamma3_le_hSeq3 (N j : Nat) (hN : 1 ≤ N) (hNj : N ≤ 2 ^ (2 * j + 14)) :
+    Rle Rgamma3
+      (Radd (Radd (Radd (hSeq3 N) (ofQ (⟨11, N + 1⟩ : Q) (Nat.succ_pos N)))
+          (ofQ (⟨(2 * (j : Int) + 15) * (2 * (j : Int) + 15) * (2 * (j : Int) + 15),
+              2 * (2 ^ (2 * j + 14) + 1)⟩ : Q) (Nat.mul_pos (by decide) (Nat.succ_pos _))))
+        (ofQ (⟨1, j + 1⟩ : Q) (Nat.succ_pos j))) := by
+  refine Rle_trans (Rgamma3_le_dyadic j) (Radd_le_add ?_ (Rle_refl _))
+  refine Rle_trans (Rle_of_Req (g3Seq_eq_hSeq3_add (2 ^ (2 * j + 14)))) ?_
+  refine Radd_le_add ?_ (corr_le j)
+  obtain ⟨k, hk⟩ := Nat.le.dest hNj
+  rw [← hk]
+  exact hSeq3_upper_const N hN k
+
+/-- The **rational upper bound on `hSeq3 N`** (depth `T`, denominator `D`) as a single `Q`. -/
+def gBound3 (T D N : Nat) : Q :=
+  add (add (lnCubeSumUp T D (N + 1))
+      (neg (mul (⟨1, 4⟩ : Q) (mul (mul (mul (logLowBound T D N) (logLowBound T D N))
+        (logLowBound T D N)) (logLowBound T D N)))))
+    (neg (mul (⟨1, 2⟩ : Q) (mul (mul (mul (logLowBound T D N) (logLowBound T D N))
+      (logLowBound T D N)) (⟨1, N + 1⟩ : Q))))
+
+theorem gBound3_den_pos (T D N : Nat) (hD : 0 < D) : 0 < (gBound3 T D N).den :=
+  add_den_pos (add_den_pos (lnCubeSumUp_den_pos T D hD (N + 1))
+      (Qmul_den_pos (by decide) (Qmul_den_pos (Qmul_den_pos (Qmul_den_pos (logLowBound_den_pos T D hD N)
+        (logLowBound_den_pos T D hD N)) (logLowBound_den_pos T D hD N)) (logLowBound_den_pos T D hD N))))
+    (Qmul_den_pos (by decide) (Qmul_den_pos (Qmul_den_pos (Qmul_den_pos (logLowBound_den_pos T D hD N)
+      (logLowBound_den_pos T D hD N)) (logLowBound_den_pos T D hD N)) (Nat.succ_pos N)))
+
+set_option maxRecDepth 40000 in
+/-- **`hSeq3 N ≤ ofQ(gBound3 T D N)`** (`T ≤ 21`) — the rational upper bound (`lnCubeSum_le`,
+    `logQuartic_ge`, `lnCubeOver_ge`), collapsing the all-`ofQ` Rsub-tower to the single `gBound3`. -/
+theorem hSeq3_le_gBound3 (T D N : Nat) (hD : 0 < D) (hT : T ≤ 21) :
+    Rle (hSeq3 N) (ofQ (gBound3 T D N) (gBound3_den_pos T D N hD)) := by
+  have LLd := logLowBound_den_pos T D hD N
+  -- ¼·(logLowBound)⁴ ≤ ¼·(ln(N+1))⁴
+  have hquart : Rle (ofQ (mul (⟨1, 4⟩ : Q) (mul (mul (mul (logLowBound T D N) (logLowBound T D N))
+          (logLowBound T D N)) (logLowBound T D N)))
+        (Qmul_den_pos (by decide) (Qmul_den_pos (Qmul_den_pos (Qmul_den_pos LLd LLd) LLd) LLd)))
+      (Rmul (ofQ (⟨1, 4⟩ : Q) (by decide)) (logQuartic (N + 1) (Nat.succ_pos N))) :=
+    Rle_trans (Rle_of_Req (Req_symm (Rmul_ofQ_ofQ (by decide)
+        (Qmul_den_pos (Qmul_den_pos (Qmul_den_pos LLd LLd) LLd) LLd))))
+      (Rmul_le_Rmul_left (Rnonneg_ofQ (by decide) (by decide)) (logQuartic_ge T D N hD hT))
+  -- ½·(logLowBound)³/(N+1) ≤ ½·(ln(N+1))³/(N+1)
+  have hcube : Rle (ofQ (mul (⟨1, 2⟩ : Q) (mul (mul (mul (logLowBound T D N) (logLowBound T D N))
+          (logLowBound T D N)) (⟨1, N + 1⟩ : Q)))
+        (Qmul_den_pos (by decide) (Qmul_den_pos (Qmul_den_pos (Qmul_den_pos LLd LLd) LLd) (Nat.succ_pos N))))
+      (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) (lnCubeOver (N + 1) (Nat.succ_pos N))) :=
+    Rle_trans (Rle_of_Req (Req_symm (Rmul_ofQ_ofQ (by decide)
+        (Qmul_den_pos (Qmul_den_pos (Qmul_den_pos LLd LLd) LLd) (Nat.succ_pos N)))))
+      (Rmul_le_Rmul_left (Rnonneg_ofQ (by decide) (by decide)) (lnCubeOver_ge T D N hD hT))
+  unfold hSeq3 g3Seq
+  refine Rle_trans (Rsub_le_sub (Rsub_le_sub (lnCubeSum_le T D hD (N + 1)) hquart) hcube) ?_
+  exact Rle_of_Req (Req_of_seq_Qeq (fun _ => Qeq_refl _))
+
+-- ===========================================================================
+-- (C6) **THE BRACKET: `γ₃ ≤ 1/8`** — `γ₃ ≤ hSeq3(200) + 11/201 + corr + 1/51`
+-- (`Rgamma3_le_hSeq3` at `N=200, j=50`), `hSeq3(200) ≤ gBound3 3 10⁸ 200` (`hSeq3_le_gBound3`),
+-- `corr ≤ 1/51`, and one big-integer `decide`.
+-- ===========================================================================
+
+/-- **`corr ≤ 1/51` at `j = 50`** — `(2·50+15)³·51 ≤ 2(2^{114}+1)` (poly ≤ exp, one `decide`). -/
+theorem corr_weaken50 :
+    Rle (ofQ (⟨(2 * (50 : Int) + 15) * (2 * (50 : Int) + 15) * (2 * (50 : Int) + 15),
+          2 * (2 ^ (2 * 50 + 14) + 1)⟩ : Q) (Nat.mul_pos (by decide) (Nat.succ_pos _)))
+        (ofQ (⟨1, 50 + 1⟩ : Q) (Nat.succ_pos 50)) :=
+  Rle_ofQ_ofQ (Nat.mul_pos (by decide) (Nat.succ_pos _)) (Nat.succ_pos 50) (by decide)
+
+set_option maxRecDepth 40000 in
+/-- The numeric heart: `gBound3 3 10⁸ 200 + 11/201 + 1/51 + 1/51 ≤ 1/8` — one big-integer `decide`. -/
+theorem gamma3_decide :
+    Qle (add (add (add (gBound3 3 100000000 200) (⟨11, 200 + 1⟩ : Q)) (⟨1, 50 + 1⟩ : Q))
+        (⟨1, 50 + 1⟩ : Q))
+      (⟨1, 8⟩ : Q) := by decide
+
+set_option maxRecDepth 40000 in
+/-- **`γ₃ ≤ 1/8`** — the certified loose UPPER bracket on the third Stieltjes constant, the only
+    `γ₃` input to `Pos Rlambda4` (`−(2/3)γ₃` enters with a tiny coefficient). -/
+theorem Rgamma3_le : Rle Rgamma3 (ofQ (⟨1, 8⟩ : Q) (by decide)) := by
+  refine Rle_trans (Rgamma3_le_hSeq3 200 50 (by decide) (by decide)) ?_
+  refine Rle_trans (Radd_le_add (Radd_le_add (Radd_le_add
+    (hSeq3_le_gBound3 3 100000000 200 (by decide) (by decide)) (Rle_refl _)) corr_weaken50)
+    (Rle_refl _)) ?_
+  refine Rle_trans (Rle_of_Req (Req_of_seq_Qeq (fun _ => Qeq_refl _))) ?_
+  exact Rle_ofQ_ofQ (add_den_pos (add_den_pos (add_den_pos (gBound3_den_pos 3 100000000 200 (by decide))
+      (Nat.succ_pos 200)) (Nat.succ_pos 50)) (Nat.succ_pos 50)) (by decide) gamma3_decide
+
 end UOR.Bridge.F1Square.Analysis
