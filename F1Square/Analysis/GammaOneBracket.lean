@@ -391,4 +391,192 @@ theorem Rgamma1_ge_neg0762 : Rle (ofQ (⟨-762, 10000⟩ : Q) (by decide)) Rgamm
   refine Rle_trans ?_ (Rle_of_Req (Req_symm (Rsub_ofQ_ofQ hgbd h400)))
   exact Rle_ofQ_ofQ (by decide) (add_den_pos hgbd h400n) gamma1_lo_decide
 
+-- ===========================================================================
+-- (B) The UPPER direction: `γ₁ ≤ hSeq1(N) + 1/(2N)` → `γ₁ ≤ −0.07` (the dominant `Pos λ₄` input).
+-- Mirrors (A) flipped: per-step `WStep ≤ δ²`, telescoping up, dyadic limit with the correction.
+-- ===========================================================================
+
+-- `logN` opaque downstream: keeps `isDefEq`/`whnf` from expanding the heavy `RexpReal`/artanh
+-- definition when matching the nested `δ = log(p+1) − log p` atoms (avoids exponential blowup).
+attribute [local irreducible] logN
+
+/-- `(x+y) − y ≈ x`. -/
+theorem Radd_sub_cancel (x y : Real) : Req (Rsub (Radd x y) y) x :=
+  Req_trans (Radd_assoc x y (Rneg y)) (Req_trans (Radd_congr (Req_refl x) (Radd_neg y)) (Radd_zero x))
+
+/-- `(X+Y) − W ≈ (X−W) + Y`. -/
+theorem Rsub_add_swap (X Y W : Real) : Req (Rsub (Radd X Y) W) (Radd (Rsub X W) Y) :=
+  Req_trans (Radd_assoc X Y (Rneg W))
+    (Req_trans (Radd_congr (Req_refl X) (Radd_comm Y (Rneg W))) (Req_symm (Radd_assoc X (Rneg W) Y)))
+
+/-- **Abstract trapezoid UPPER cancellation**: `(a·u1+b·u0) − (a²−b²) ≤ (a−b)²` whenever `b ≥ 0`,
+    `u1 ≤ a−b`, and the keystone `b·((u0+u1)−2δ) ≤ δ²` holds (`δ = a−b`).  `WStep ≈ Z − δ²` with
+    `Z = S − 2bδ ≈ b·((u0+u1)−2δ) + δ·u1 ≤ δ² + δ² = 2δ²`, so `WStep ≤ δ²`. -/
+theorem WStep_le_Dsq_gen (a b u0 u1 : Real) (hbnn : Rnonneg b) (hδnn : Rnonneg (Rsub a b))
+    (hu1δ : Rle u1 (Rsub a b))
+    (hkey : Rle (Rmul b (Rsub (Radd u0 u1) (Radd (Rsub a b) (Rsub a b)))) (Rmul (Rsub a b) (Rsub a b))) :
+    Rle (Rsub (Radd (Rmul a u1) (Rmul b u0)) (Rsub (Rmul a a) (Rmul b b)))
+        (Rmul (Rsub a b) (Rsub a b)) := by
+  -- hWid : WStep + δ² ≈ Z := S − b·2δ
+  have hWid : Req (Radd (Rsub (Radd (Rmul a u1) (Rmul b u0)) (Rsub (Rmul a a) (Rmul b b)))
+        (Rmul (Rsub a b) (Rsub a b)))
+      (Rsub (Radd (Rmul a u1) (Rmul b u0)) (Rmul b (Radd (Rsub a b) (Rsub a b)))) := by
+    have hstep : Req (Radd (Radd (Radd (Rmul a u1) (Rmul b u0))
+          (Rneg (Rsub (Rmul a a) (Rmul b b)))) (Rmul (Rsub a b) (Rsub a b)))
+        (Radd (Radd (Rmul a u1) (Rmul b u0))
+          (Rneg (Rsub (Rsub (Rmul a a) (Rmul b b)) (Rmul (Rsub a b) (Rsub a b))))) := by
+      refine Req_trans (Radd_assoc (Radd (Rmul a u1) (Rmul b u0))
+        (Rneg (Rsub (Rmul a a) (Rmul b b))) (Rmul (Rsub a b) (Rsub a b))) ?_
+      refine Radd_congr (Req_refl _) ?_
+      refine Req_trans (Radd_comm (Rneg (Rsub (Rmul a a) (Rmul b b)))
+        (Rmul (Rsub a b) (Rsub a b))) ?_
+      exact Req_symm (Rneg_Rsub (Rsub (Rmul a a) (Rmul b b)) (Rmul (Rsub a b) (Rsub a b)))
+    refine Req_trans hstep ?_
+    exact Rsub_congr (Req_refl _) (sq_diff_identity_b a b)
+  -- hScancel : S − b(u0+u1) ≈ δ·u1
+  have hScancel : Req (Rsub (Radd (Rmul a u1) (Rmul b u0)) (Rmul b (Radd u0 u1)))
+      (Rmul (Rsub a b) u1) := by
+    refine Req_trans (Rsub_congr (Req_refl _) (Rmul_distrib b u0 u1)) ?_
+    refine Req_trans (Rsub_congr (Radd_comm (Rmul a u1) (Rmul b u0)) (Req_refl _)) ?_
+    refine Req_trans (add_sub_add_cancel_left (Rmul b u0) (Rmul a u1) (Rmul b u1)) ?_
+    exact Req_symm (Rmul_sub_distrib_right a b u1)
+  -- WStep ≈ Z − δ²
+  have hWStep_eq : Req (Rsub (Radd (Rmul a u1) (Rmul b u0)) (Rsub (Rmul a a) (Rmul b b)))
+      (Rsub (Rsub (Radd (Rmul a u1) (Rmul b u0)) (Rmul b (Radd (Rsub a b) (Rsub a b))))
+        (Rmul (Rsub a b) (Rsub a b))) :=
+    Req_symm (Req_trans (Rsub_congr (Req_symm hWid) (Req_refl _)) (Radd_sub_cancel _ _))
+  -- Z ≈ b·((u0+u1)−2δ) + δ·u1
+  have hZeq : Req (Rsub (Radd (Rmul a u1) (Rmul b u0)) (Rmul b (Radd (Rsub a b) (Rsub a b))))
+      (Radd (Rmul b (Rsub (Radd u0 u1) (Radd (Rsub a b) (Rsub a b)))) (Rmul (Rsub a b) u1)) := by
+    have hS_eq : Req (Radd (Rmul a u1) (Rmul b u0))
+        (Radd (Rmul b (Radd u0 u1)) (Rmul (Rsub a b) u1)) :=
+      Req_trans (sub_add_cancel_real (Radd (Rmul a u1) (Rmul b u0)) (Rmul b (Radd u0 u1)))
+        (Radd_congr (Req_refl _) hScancel)
+    refine Req_trans (Rsub_congr hS_eq (Req_refl _)) ?_
+    refine Req_trans (Rsub_add_swap (Rmul b (Radd u0 u1)) (Rmul (Rsub a b) u1)
+      (Rmul b (Radd (Rsub a b) (Rsub a b)))) ?_
+    exact Radd_congr (Req_symm (Rmul_sub_distrib b (Radd u0 u1) (Radd (Rsub a b) (Rsub a b))))
+      (Req_refl _)
+  -- Z ≤ δ² + δ²
+  have hZle : Rle (Rsub (Radd (Rmul a u1) (Rmul b u0)) (Rmul b (Radd (Rsub a b) (Rsub a b))))
+      (Radd (Rmul (Rsub a b) (Rsub a b)) (Rmul (Rsub a b) (Rsub a b))) :=
+    Rle_trans (Rle_of_Req hZeq) (Radd_le_add hkey (Rmul_le_Rmul_left hδnn hu1δ))
+  exact Rle_trans (Rle_of_Req hWStep_eq) (Rsub_le_of_le_add hZle)
+
+/-- **`δ ≥ 2/(2p+1)`** — the first artanh term (`deltaLog_lower_tight T=0`, `dMinusQ 0 p = 2/(2p+1)`). -/
+theorem delta_ge_2over (p : Nat) (hp : 1 ≤ p) :
+    Rle (ofQ (⟨2, 2 * p + 1⟩ : Q) (Nat.succ_pos (2 * p)))
+      (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp)) := by
+  refine Rle_trans (Rle_of_Req (ofQ_congr (Nat.succ_pos (2 * p)) (dMinusQ_den_pos 0 p) ?_))
+    (deltaLog_lower_tight p 0 hp (by omega))
+  show Qeq (⟨2, 2 * p + 1⟩ : Q) (dMinusQ 0 p)
+  simp only [Qeq, dMinusQ, artSum, artTerm, qpow, npow, mul]; push_cast; ring_uor
+
+set_option maxHeartbeats 8000000 in
+/-- **`(u0+u1) − 2δ ≤ 1/(p(p+1)(2p+1))`** — `2δ ≥ 4/(2p+1)` (`delta_ge_2over`), and
+    `(1/p+1/(p+1)) − 4/(2p+1) = 1/(p(p+1)(2p+1))` exactly. -/
+theorem sum_2delta_le (p : Nat) (hp : 1 ≤ p) :
+    Rle (Rsub (Radd (ofQ (⟨1, p⟩ : Q) hp) (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p)))
+        (Radd (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
+              (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))))
+      (ofQ (⟨1, p * (p + 1) * (2 * p + 1)⟩ : Q)
+        (Nat.mul_pos (Nat.mul_pos hp (Nat.succ_pos p)) (Nat.succ_pos (2 * p)))) := by
+  have h2p1 : 0 < 2 * p + 1 := by omega
+  have heq4 : Req (ofQ (⟨4, 2 * p + 1⟩ : Q) h2p1)
+      (Radd (ofQ (⟨2, 2 * p + 1⟩ : Q) h2p1) (ofQ (⟨2, 2 * p + 1⟩ : Q) h2p1)) :=
+    Req_symm (Req_trans (Radd_ofQ_ofQ h2p1 h2p1) (ofQ_congr (add_den_pos h2p1 h2p1) h2p1
+      (by show Qeq (add (⟨2, 2 * p + 1⟩ : Q) (⟨2, 2 * p + 1⟩ : Q)) (⟨4, 2 * p + 1⟩ : Q)
+          simp only [Qeq, add]; push_cast; ring_uor)))
+  have h2dlo : Rle (ofQ (⟨4, 2 * p + 1⟩ : Q) h2p1)
+      (Radd (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
+            (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))) :=
+    Rle_trans (Rle_of_Req heq4) (Radd_le_add (delta_ge_2over p hp) (delta_ge_2over p hp))
+  refine Rle_trans (Rsub_le_sub (Rle_refl _) h2dlo) ?_
+  refine Rle_trans (Rle_of_Req (Rsub_congr (Radd_ofQ_ofQ (a := (⟨1, p⟩ : Q))
+    (b := (⟨1, p + 1⟩ : Q)) hp (Nat.succ_pos p)) (Req_refl _))) ?_
+  refine Rle_of_Req (Req_trans (Rsub_ofQ_ofQ (add_den_pos (a := (⟨1, p⟩ : Q))
+    (b := (⟨1, p + 1⟩ : Q)) hp (Nat.succ_pos p)) h2p1) ?_)
+  apply ofQ_congr
+  show Qeq (add (add (⟨1, p⟩ : Q) (⟨1, p + 1⟩ : Q)) (neg (⟨4, 2 * p + 1⟩ : Q)))
+    (⟨1, p * (p + 1) * (2 * p + 1)⟩ : Q)
+  simp only [Qeq, add, neg]; push_cast; ring_uor
+
+set_option maxHeartbeats 8000000 in
+/-- **`δ² ≥ 4/(2p+1)²`** — from `δ ≥ 2/(2p+1)` (`delta_ge_2over`), squared. -/
+theorem dsq_ge_4over (p : Nat) (hp : 1 ≤ p) :
+    Rle (ofQ (⟨4, (2 * p + 1) * (2 * p + 1)⟩ : Q) (Nat.mul_pos (Nat.succ_pos (2 * p)) (Nat.succ_pos (2 * p))))
+      (Rmul (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
+            (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))) := by
+  have h2p1 : 0 < 2 * p + 1 := by omega
+  have hδnn : Rnonneg (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp)) :=
+    Rnonneg_Rsub_of_Rle (logN_mono hp (Nat.le_succ p))
+  have heqsq : Req (ofQ (⟨4, (2 * p + 1) * (2 * p + 1)⟩ : Q) (Nat.mul_pos h2p1 h2p1))
+      (Rmul (ofQ (⟨2, 2 * p + 1⟩ : Q) h2p1) (ofQ (⟨2, 2 * p + 1⟩ : Q) h2p1)) :=
+    Req_symm (Req_trans (Rmul_ofQ_ofQ h2p1 h2p1) (ofQ_congr (Qmul_den_pos h2p1 h2p1)
+      (Nat.mul_pos h2p1 h2p1)
+      (by show Qeq (mul (⟨2, 2 * p + 1⟩ : Q) (⟨2, 2 * p + 1⟩ : Q)) (⟨4, (2 * p + 1) * (2 * p + 1)⟩ : Q)
+          simp only [Qeq, mul]; push_cast; ring_uor)))
+  exact Rle_trans (Rle_of_Req heqsq)
+    (Rle_trans (Rmul_le_Rmul_right (Rnonneg_ofQ h2p1 (by show (0 : Int) ≤ 2; decide)) (delta_ge_2over p hp))
+      (Rmul_le_Rmul_left hδnn (delta_ge_2over p hp)))
+
+set_option maxHeartbeats 8000000 in
+/-- **The keystone** `b·((u0+u1)−2δ) ≤ δ²` (`sum_2delta_le`, `b ≤ p`, `dsq_ge_4over`,
+    `1/((p+1)(2p+1)) ≤ 4/(2p+1)²`). -/
+theorem WStep_hkey (p : Nat) (hp : 1 ≤ p) :
+    Rle (Rmul (logN p hp) (Rsub (Radd (ofQ (⟨1, p⟩ : Q) hp) (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p)))
+        (Radd (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
+              (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp)))))
+      (Rmul (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
+            (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))) := by
+  have h2p1 : 0 < 2 * p + 1 := by omega
+  have hden3 : 0 < p * (p + 1) * (2 * p + 1) := Nat.mul_pos (Nat.mul_pos hp (Nat.succ_pos p)) h2p1
+  have hsqden : 0 < (2 * p + 1) * (2 * p + 1) := Nat.mul_pos h2p1 h2p1
+  have hbm : Rle (Rmul (logN p hp) (Rsub (Radd (ofQ (⟨1, p⟩ : Q) hp) (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p)))
+        (Radd (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
+              (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp)))))
+      (ofQ (⟨(p : Int), p * (p + 1) * (2 * p + 1)⟩ : Q) hden3) := by
+    refine Rle_trans (Rmul_le_Rmul_left (Rnonneg_logN p hp) (sum_2delta_le p hp)) ?_
+    refine Rle_trans (Rmul_le_Rmul_right (Rnonneg_ofQ hden3 (by show (0 : Int) ≤ 1; decide))
+      (logN_le_self p hp)) ?_
+    refine Rle_of_Req (Req_trans (Rmul_ofQ_ofQ Nat.one_pos hden3) (ofQ_congr
+      (Qmul_den_pos Nat.one_pos hden3) hden3 ?_))
+    show Qeq (mul (⟨(p : Int), 1⟩ : Q) (⟨1, p * (p + 1) * (2 * p + 1)⟩ : Q))
+      (⟨(p : Int), p * (p + 1) * (2 * p + 1)⟩ : Q)
+    simp only [Qeq, mul]; push_cast; ring_uor
+  refine Rle_trans hbm (Rle_trans (Rle_ofQ_ofQ hden3 hsqden ?_) (dsq_ge_4over p hp))
+  show Qle (⟨(p : Int), p * (p + 1) * (2 * p + 1)⟩ : Q) (⟨4, (2 * p + 1) * (2 * p + 1)⟩ : Q)
+  simp only [Qle]
+  have key : p * ((2 * p + 1) * (2 * p + 1)) ≤ 4 * (p * (p + 1) * (2 * p + 1)) := by
+    have hid : 4 * (p * (p + 1) * (2 * p + 1))
+        = p * ((2 * p + 1) * (2 * p + 1)) + p * (2 * p + 3) * (2 * p + 1) := by
+      have : ((4 * (p * (p + 1) * (2 * p + 1)) : Nat) : Int)
+          = ((p * ((2 * p + 1) * (2 * p + 1)) + p * (2 * p + 3) * (2 * p + 1) : Nat) : Int) := by
+        push_cast; ring_uor
+      exact_mod_cast this
+    omega
+  exact_mod_cast key
+
+/-- **`WStep(p) ≤ δ²`** — the per-step trapezoidal residual upper bound (`WStep_le_Dsq_gen` + `WStep_hkey`). -/
+theorem WStep_le_Dsq (p : Nat) (hp : 1 ≤ p) :
+    Rle (WStep p hp) (Rmul (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
+                          (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))) := by
+  unfold WStep lnOver
+  exact WStep_le_Dsq_gen (logN (p + 1) (Nat.succ_pos p)) (logN p hp)
+    (ofQ (⟨1, p⟩ : Q) (by show 0 < p; omega)) (ofQ (⟨1, p + 1⟩ : Q) (by show 0 < p + 1; omega))
+    (Rnonneg_logN p hp) (Rnonneg_Rsub_of_Rle (logN_mono hp (Nat.le_succ p)))
+    (deltaLog_lower p hp) (WStep_hkey p hp)
+
+/-- **`s_{j+1} ≤ 1/(2(j+1)²)`** — the per-step upper bound on the accelerated increment. -/
+theorem sStep1_le (p : Nat) (hp : 1 ≤ p) :
+    Rle (sStep1 p hp) (ofQ (⟨1, 2 * p * p⟩ : Q) (Nat.mul_pos (Nat.mul_pos (by decide) hp) hp)) := by
+  have hppd : 0 < (mul (⟨1, p⟩ : Q) (⟨1, p⟩ : Q)).den := Qmul_den_pos hp hp
+  have hWle : Rle (WStep p hp) (ofQ (mul (⟨1, p⟩ : Q) (⟨1, p⟩ : Q)) hppd) :=
+    Rle_trans (WStep_le_Dsq p hp) (dsq_self_le p hp)
+  refine Rle_trans (Rhalf_le_Rhalf hWle) (Rle_of_Req ?_)
+  refine Req_trans (Rhalf_ofQ (mul (⟨1, p⟩ : Q) (⟨1, p⟩ : Q)) hppd) ?_
+  exact ofQ_congr (Qmul_den_pos (by decide) hppd) (Nat.mul_pos (Nat.mul_pos (by decide) hp) hp)
+    (by show Qeq (mul (⟨1, 2⟩ : Q) (mul (⟨1, p⟩ : Q) (⟨1, p⟩ : Q))) (⟨1, 2 * p * p⟩ : Q)
+        simp only [Qeq, mul]; push_cast; ring_uor)
+
 end UOR.Bridge.F1Square.Analysis
