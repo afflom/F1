@@ -1141,4 +1141,95 @@ theorem C2_le (p : Nat) (hp : 1 ≤ p) :
   push_cast
   ring_uor
 
+/-- `X − Y ≤ X` when `Y ≥ 0`. -/
+theorem Rsub_le_self (X : Real) {Y : Real} (hY : Rnonneg Y) : Rle (Rsub X Y) X :=
+  Rle_of_Rnonneg_Rsub (Rnonneg_congr (Req_symm (Rsub_sub_self X Y)) hY)
+
+/-- `X·Y ≤ 0` when `X ≥ 0` and `Y ≤ 0`. -/
+theorem Rmul_nonpos_left {X Y : Real} (hX : Rnonneg X) (hY : Rle Y zero) : Rle (Rmul X Y) zero :=
+  Rle_trans (Rmul_le_Rmul_left hX hY) (Rle_of_Req (Rmul_zero X))
+
+/-- `x − y ≤ 0` when `x ≤ y`. -/
+theorem Rle_sub_zero {x y : Real} (h : Rle x y) : Rle (Rsub x y) zero := by
+  refine Rle_of_Rnonneg_Rsub (Rnonneg_congr ?_ (Rnonneg_Rsub_of_Rle h))
+  exact Req_symm (Req_trans (Req_trans (Radd_comm zero (Rneg (Rsub x y))) (Radd_zero _))
+    (Rneg_Rsub_swap x y))
+
+/-- `1/ad ≤ 1/bd` (as `ofQ`) when `bd ≤ ad`. -/
+theorem Rle_ofQ_num1 {ad bd : Nat} (had : 0 < ad) (hbd : 0 < bd) (h : bd ≤ ad) :
+    Rle (ofQ (⟨1, ad⟩ : Q) had) (ofQ (⟨1, bd⟩ : Q) hbd) :=
+  Rle_ofQ_ofQ had hbd (by show (1 : Int) * (bd : Int) ≤ (1 : Int) * (ad : Int); omega)
+
+/-- `⟨c,D⟩ + ⟨c',D⟩ ≈ ⟨c+c',D⟩` (same denominator). -/
+theorem Radd_ofQ_same (c1 c2 : Int) (D : Nat) (hD : 0 < D) :
+    Req (Radd (ofQ (⟨c1, D⟩ : Q) hD) (ofQ (⟨c2, D⟩ : Q) hD)) (ofQ (⟨c1 + c2, D⟩ : Q) hD) := by
+  refine Req_trans (Radd_ofQ_ofQ hD hD) (ofQ_congr (add_den_pos hD hD) hD ?_)
+  show Qeq (add (⟨c1, D⟩ : Q) (⟨c2, D⟩ : Q)) (⟨c1 + c2, D⟩ : Q)
+  simp only [Qeq, add]
+  push_cast
+  ring_uor
+
+/-- **`R0 = ½δ³u1 − ¼δ⁴ ≤ 1/(p(p+1))`** (drop `−¼δ⁴ ≤ 0`, `δ³ ≤ 1/p³`, `u1 = 1/(p+1)`,
+    `p(p+1) ≤ 2p³(p+1)`). -/
+theorem R0_le (p : Nat) (hp : 1 ≤ p) :
+    Rle (Rsub (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide))
+            (Rmul (Rmul (Rmul (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
+                (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp)))
+              (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp)))
+              (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p))))
+          (Rmul (ofQ (⟨1, 4⟩ : Q) (by decide))
+            (Rmul (Rmul (Rmul (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
+                (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp)))
+              (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp)))
+              (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp)))))
+        (ofQ (⟨1, p * (p + 1)⟩ : Q) (Nat.mul_pos hp (Nat.succ_pos p))) := by
+  have hδnn : Rnonneg (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp)) :=
+    Rnonneg_Rsub_of_Rle (logN_mono hp (Nat.le_succ p))
+  have hu1nn : Rnonneg (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p)) :=
+    Rnonneg_ofQ (Nat.succ_pos p) (by show (0 : Int) ≤ 1; decide)
+  -- drop −¼δ⁴: R0 ≤ ½δ³u1
+  refine Rle_trans (Rsub_le_self _ (Rnonneg_Rmul (Rnonneg_ofQ (by decide) (by decide))
+    (Rnonneg_Rmul (Rnonneg_Rmul (Rnonneg_Rmul_self _) hδnn) hδnn))) ?_
+  -- ½δ³u1 ≤ ½·(1/p³)·(1/(p+1))
+  refine Rle_trans (Rmul_le_Rmul_left (Rnonneg_ofQ (by decide) (by decide))
+    (Rmul_le_Rmul_right hu1nn (dcube_self_le p hp))) ?_
+  refine Rle_trans (Rle_of_Req (Rmul_congr (Req_refl _)
+    (Rmul_ofQ_ofQ (a := mul (mul (⟨1, p⟩ : Q) (⟨1, p⟩ : Q)) (⟨1, p⟩ : Q)) (b := (⟨1, p + 1⟩ : Q))
+      (Qmul_den_pos (Qmul_den_pos hp hp) hp) (Nat.succ_pos p)))) ?_
+  refine Rle_trans (Rle_of_Req (Rmul_ofQ_ofQ (a := (⟨1, 2⟩ : Q))
+    (b := mul (mul (mul (⟨1, p⟩ : Q) (⟨1, p⟩ : Q)) (⟨1, p⟩ : Q)) (⟨1, p + 1⟩ : Q)) (by decide)
+    (Qmul_den_pos (Qmul_den_pos (Qmul_den_pos hp hp) hp) (Nat.succ_pos p)))) ?_
+  refine Rle_ofQ_ofQ _ (Nat.mul_pos hp (Nat.succ_pos p)) ?_
+  show Qle (mul (⟨1, 2⟩ : Q) (mul (mul (mul (⟨1, p⟩ : Q) (⟨1, p⟩ : Q)) (⟨1, p⟩ : Q)) (⟨1, p + 1⟩ : Q)))
+    (⟨1, p * (p + 1)⟩ : Q)
+  simp only [Qle, mul, Int.one_mul, Int.mul_one]
+  have hcube : p ≤ p * p * p := by
+    have := Nat.le_mul_of_pos_right p (show 0 < p * p by exact Nat.mul_pos hp hp)
+    simpa [Nat.mul_assoc] using this
+  have key : p * (p + 1) ≤ 2 * (p * p * p * (p + 1)) := by
+    have h2 : p * (p + 1) ≤ (p * p * p) * (p + 1) := Nat.mul_le_mul_right (p + 1) hcube
+    have h3 : (p * p * p) * (p + 1) ≤ 2 * (p * p * p * (p + 1)) := by
+      have := Nat.mul_le_mul_right (p + 1) (show p * p * p ≤ 2 * (p * p * p) by omega)
+      omega
+    omega
+  exact_mod_cast key
+
+/-- **`b²·R2 = b²·(3/2)δ(u1−δ) ≤ 0`** (`u1 ≤ δ`, so `u1−δ ≤ 0`; the rest is `≥ 0`). -/
+theorem b2R2_le (p : Nat) (hp : 1 ≤ p) :
+    Rle (Rmul (Rmul (logN p hp) (logN p hp))
+          (Rmul (ofQ (⟨3, 2⟩ : Q) (by decide))
+            (Rmul (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))
+              (Rsub (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p))
+                (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))))))
+        zero := by
+  have hδnn : Rnonneg (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp)) :=
+    Rnonneg_Rsub_of_Rle (logN_mono hp (Nat.le_succ p))
+  -- u1 − δ ≤ 0
+  have hu1δ : Rle (Rsub (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p))
+        (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))) zero :=
+    Rle_sub_zero (deltaLog_lower p hp)
+  exact Rmul_nonpos_left (Rnonneg_Rmul_self _)
+    (Rmul_nonpos_left (Rnonneg_ofQ (by decide) (by decide))
+      (Rmul_nonpos_left hδnn hu1δ))
+
 end UOR.Bridge.F1Square.Analysis
