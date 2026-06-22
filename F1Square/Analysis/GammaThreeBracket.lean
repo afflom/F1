@@ -1376,4 +1376,53 @@ theorem Rgamma3_le_dyadic (j : Nat) :
     (Radd (g3SeqDyadic j) (ofQ (⟨1, j + 1⟩ : Q) (Nat.succ_pos j)))))) ?_
   exact Rle_trans (Radd_le_add htend (Rle_sub_zero hanchor)) (Rle_of_Req (Radd_zero _))
 
+/-- **`g3Seq M = hSeq3 M + ½·(ln(M+1))³/(M+1)`** — the accelerator's correction term, made explicit. -/
+theorem g3Seq_eq_hSeq3_add (M : Nat) :
+    Req (g3Seq M) (Radd (hSeq3 M)
+        (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) (lnCubeOver (M + 1) (Nat.succ_pos M)))) := by
+  unfold hSeq3
+  refine Req_symm (Req_trans (Radd_assoc (g3Seq M) (Rneg _) _) ?_)
+  refine Req_trans (Radd_congr (Req_refl _) (Req_trans (Radd_comm (Rneg _) _) (Radd_neg _))) ?_
+  exact Radd_zero (g3Seq M)
+
+/-- **Block cube cap at an arbitrary argument** `logCube K ≤ (a+2)³` for `2 ≤ K ≤ 2^{a+2}`
+    (`logCube_le_block` with the `j+2` form discharged by `Nat.sub_add_cancel`). -/
+theorem logCube_le_cap (K a : Nat) (hK : 1 ≤ K) (hK2 : 2 ≤ K) (h : K ≤ 2 ^ (a + 2)) :
+    Rle (logCube K hK)
+      (ofQ (⟨((a : Int) + 2) * ((a : Int) + 2) * ((a : Int) + 2), 1⟩ : Q) Nat.one_pos) := by
+  obtain ⟨m, rfl⟩ : ∃ m, K = m + 2 := ⟨K - 2, by omega⟩
+  exact logCube_le_block a m h
+
+/-- **The correction term `½·(ln(M+1))³/(M+1)` at `M = 2^{2j+14}` is `≤ (2j+15)³/(2(M+1))`**
+    (`logCube_le_cap` at `a = 2j+13`, `M+1 ≤ 2^{2j+15}`). -/
+theorem corr_le (j : Nat) :
+    Rle (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide))
+          (lnCubeOver (2 ^ (2 * j + 14) + 1) (Nat.succ_pos _)))
+        (ofQ (⟨(2 * (j : Int) + 15) * (2 * (j : Int) + 15) * (2 * (j : Int) + 15),
+            2 * (2 ^ (2 * j + 14) + 1)⟩ : Q)
+          (Nat.mul_pos (by decide) (Nat.succ_pos _))) := by
+  have hpow : 1 ≤ 2 ^ (2 * j + 14) := Nat.pos_pow_of_pos _ (by decide)
+  have hbnd : 2 ^ (2 * j + 14) + 1 ≤ 2 ^ ((2 * j + 13) + 2) := by
+    have he : (2 * j + 13) + 2 = (2 * j + 14) + 1 := by omega
+    have hps : 2 ^ ((2 * j + 14) + 1) = 2 * 2 ^ (2 * j + 14) := by rw [Nat.pow_succ]; omega
+    rw [he, hps]; omega
+  have hcap := logCube_le_cap (2 ^ (2 * j + 14) + 1) (2 * j + 13) (Nat.succ_pos _) (by omega) hbnd
+  -- ½·(logCube·u) ≤ ½·(ofQ(2j+15)³·u) ≈ ofQ((2j+15)³, 2(M+1))
+  unfold lnCubeOver
+  refine Rle_trans (Rmul_le_Rmul_left (Rnonneg_ofQ (by decide) (by decide))
+    (Rmul_le_Rmul_right (Rnonneg_ofQ (Nat.succ_pos _) (by show (0 : Int) ≤ 1; decide)) hcap)) ?_
+  refine Rle_trans (Rle_of_Req (Rmul_congr (Req_refl _)
+    (Rmul_ofQ_ofQ (a := (⟨((2 * (j : Int) + 13) + 2) * ((2 * (j : Int) + 13) + 2)
+        * ((2 * (j : Int) + 13) + 2), 1⟩ : Q))
+      (b := (⟨1, 2 ^ (2 * j + 14) + 1⟩ : Q)) Nat.one_pos (Nat.succ_pos _)))) ?_
+  refine Rle_of_Req (Req_trans (Rmul_ofQ_ofQ (by decide) (Qmul_den_pos Nat.one_pos (Nat.succ_pos _)))
+    (ofQ_congr _ _ ?_))
+  show Qeq (mul (⟨1, 2⟩ : Q) (mul (⟨((2 * (j : Int) + 13) + 2) * ((2 * (j : Int) + 13) + 2)
+        * ((2 * (j : Int) + 13) + 2), 1⟩ : Q) (⟨1, 2 ^ (2 * j + 14) + 1⟩ : Q)))
+    (⟨(2 * (j : Int) + 15) * (2 * (j : Int) + 15) * (2 * (j : Int) + 15),
+        2 * (2 ^ (2 * j + 14) + 1)⟩ : Q)
+  simp only [Qeq, mul]
+  push_cast
+  ring_uor
+
 end UOR.Bridge.F1Square.Analysis
