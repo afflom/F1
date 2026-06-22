@@ -3229,9 +3229,9 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rgamma1_le_hSeq1_up
 #print axioms Analysis.gBound1up_den_pos
 #print axioms Analysis.hSeq1_le_gBound1up
-#print axioms Analysis.corr1_weaken300
+#print axioms Analysis.corr1_weaken800
 #print axioms Analysis.gamma1_up_decide
-#print axioms Analysis.Rgamma1_le_neg065
+#print axioms Analysis.Rgamma1_le_neg0677
 #print axioms Analysis.nat_succ_le_two_pow
 #print axioms Analysis.Radd_sub_self_cancel
 #print axioms Analysis.Rsub_add_swap
