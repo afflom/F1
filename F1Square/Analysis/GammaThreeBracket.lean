@@ -1097,4 +1097,48 @@ theorem logCube_le_self27 (p : Nat) (hp : 1 ≤ p) :
       (by show Qeq (mul (⟨27, 1⟩ : Q) (⟨(p : Int), 1⟩ : Q)) (⟨27 * (p : Int), 1⟩ : Q)
           simp only [Qeq, mul])))
 
+-- ===========================================================================
+-- (C4) The per-step UPPER bound `sStep3 p ≤ 31/(p(p+1))` on the trapezoidal residual `decompForm3`.
+-- The four terms (`b = ln p`, `δ = a−b`, `u0 = 1/p`, `u1 = 1/(p+1)`):
+--   b³·C2 ≤ 27/(p(p+1))   (C2 = ½(u0+u1)−δ ≤ 1/(2p(p+1)(2p+1)), b³ ≤ 27p, drop 2p+1≥p)
+--   b²·R2 ≤ 0             (R2 = (3/2)δ(u1−δ),  u1 ≤ δ)
+--   b·R1  ≤ 3/(p(p+1))    (R1 = δ²((3/2)u1−δ) ≤ (3/2)δ²u1, b ≤ p, δ² ≤ 1/p², drop −δ)
+--   R0    ≤ 1/(p(p+1))    (R0 = ½δ³u1 − ¼δ⁴ ≤ ½δ³u1, δ³ ≤ 1/p³, drop −¼δ⁴)
+-- The crude denominators (all `p(p+1)`) keep the sum a single `⟨31, p(p+1)⟩` — a loose bound, which
+-- is all `Pos λ₄` needs (`−(2/3)γ₃` enters with tiny coefficient).
+-- ===========================================================================
+
+/-- **The tight `C2` ceiling** `C2 = ½(1/p+1/(p+1)) − δ ≤ 1/(2p(p+1)(2p+1))` — the trapezoidal error
+    is `Θ(1/p³)`.  `δ ≥ 2/(2p+1)` (`deltaLog_lower_tight` at depth `T = 0`, the first artanh term), and
+    `dPlusQ 0 p − dMinusQ 0 p = 1/(2p(p+1)(2p+1))` exactly. -/
+theorem C2_le (p : Nat) (hp : 1 ≤ p) :
+    Rle (Rsub (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide))
+            (Radd (ofQ (⟨1, p⟩ : Q) hp) (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p))))
+          (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp)))
+        (ofQ (⟨1, 2 * p * (p + 1) * (2 * p + 1)⟩ : Q)
+          (Nat.mul_pos (Nat.mul_pos (Nat.mul_pos (by decide) hp) (Nat.succ_pos p)) (by omega))) := by
+  have hMd : 0 < (mul (⟨1, 2⟩ : Q) (add (⟨1, p⟩ : Q) (⟨1, p + 1⟩ : Q))).den :=
+    Qmul_den_pos (by decide)
+      (add_den_pos (a := (⟨1, p⟩ : Q)) (b := (⟨1, p + 1⟩ : Q)) hp (Nat.succ_pos p))
+  -- M_real ≈ ofQ(M_Q)
+  have hMeq : Req (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide))
+        (Radd (ofQ (⟨1, p⟩ : Q) hp) (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p))))
+      (ofQ (mul (⟨1, 2⟩ : Q) (add (⟨1, p⟩ : Q) (⟨1, p + 1⟩ : Q))) hMd) :=
+    Req_trans (Rmul_congr (Req_refl _)
+        (Radd_ofQ_ofQ (a := (⟨1, p⟩ : Q)) (b := (⟨1, p + 1⟩ : Q)) hp (Nat.succ_pos p)))
+      (Rmul_ofQ_ofQ (by decide)
+        (add_den_pos (a := (⟨1, p⟩ : Q)) (b := (⟨1, p + 1⟩ : Q)) hp (Nat.succ_pos p)))
+  -- δ ≥ ofQ(dMinusQ 0 p)
+  have hδlo := deltaLog_lower_tight p 0 hp (by omega)
+  -- C2 = M_real − δ ≤ ofQ(M_Q) − ofQ(dMinusQ 0 p) ≈ ofQ(M_Q − dMinusQ) ≈ target
+  refine Rle_trans (Rle_of_Req (Rsub_congr hMeq (Req_refl _))) ?_
+  refine Rle_trans (Radd_le_add (Rle_refl _) (Rle_Rneg hδlo)) ?_
+  refine Rle_of_Req (Req_trans (Rsub_ofQ_ofQ hMd (dMinusQ_den_pos 0 p)) ?_)
+  apply ofQ_congr
+  show Qeq (add (mul (⟨1, 2⟩ : Q) (add (⟨1, p⟩ : Q) (⟨1, p + 1⟩ : Q)))
+      (neg (dMinusQ 0 p))) (⟨1, 2 * p * (p + 1) * (2 * p + 1)⟩ : Q)
+  simp only [Qeq, dMinusQ, artSum, artTerm, qpow, npow, mul, add, neg]
+  push_cast
+  ring_uor
+
 end UOR.Bridge.F1Square.Analysis
