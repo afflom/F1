@@ -1311,4 +1311,18 @@ theorem b3C2_le (p : Nat) (hp : 1 ≤ p) :
     omega
   exact_mod_cast key
 
+/-- **The per-step UPPER bound** `sStep3 p ≤ 31/(p(p+1))` — `sStep3 ≈ decompForm3 = b³C2 + b²R2 + bR1 + R0`
+    (`sStep3_decomp`), bounded termwise (`27 + 0 + 3 + 1 = 31`, common denominator `p(p+1)`). -/
+theorem sStep3_le (p : Nat) (hp : 1 ≤ p) :
+    Rle (sStep3 p hp) (ofQ (⟨31, p * (p + 1)⟩ : Q) (Nat.mul_pos hp (Nat.succ_pos p))) := by
+  have hD : 0 < p * (p + 1) := Nat.mul_pos hp (Nat.succ_pos p)
+  refine Rle_trans (Rle_of_Req (sStep3_decomp p hp)) ?_
+  refine Rle_trans (Radd_le_add (Radd_le_add (Radd_le_add (b3C2_le p hp) (b2R2_le p hp))
+    (bR1_le p hp)) (R0_le p hp)) ?_
+  refine Rle_of_Req ?_
+  -- ((⟨27⟩ + 0) + ⟨3⟩) + ⟨1⟩ ≈ ⟨31⟩
+  refine Req_trans (Radd_congr (Radd_congr (Radd_zero _) (Req_refl _)) (Req_refl _)) ?_
+  refine Req_trans (Radd_congr (Radd_ofQ_same 27 3 (p * (p + 1)) hD) (Req_refl _)) ?_
+  exact Radd_ofQ_same 30 1 (p * (p + 1)) hD
+
 end UOR.Bridge.F1Square.Analysis
