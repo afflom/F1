@@ -1098,13 +1098,13 @@ theorem logCube_le_self27 (p : Nat) (hp : 1 ≤ p) :
           simp only [Qeq, mul])))
 
 -- ===========================================================================
--- (C4) The per-step UPPER bound `sStep3 p ≤ 31/(p(p+1))` on the trapezoidal residual `decompForm3`.
+-- (C4) The per-step UPPER bound `sStep3 p ≤ 11/(p(p+1))` on the trapezoidal residual `decompForm3`.
 -- The four terms (`b = ln p`, `δ = a−b`, `u0 = 1/p`, `u1 = 1/(p+1)`):
---   b³·C2 ≤ 27/(p(p+1))   (C2 = ½(u0+u1)−δ ≤ 1/(2p(p+1)(2p+1)), b³ ≤ 27p, drop 2p+1≥p)
+--   b³·C2 ≤ 7/(p(p+1))    (C2 = ½(u0+u1)−δ ≤ 1/(2p(p+1)(2p+1)), b³ ≤ 27p, 27/(2(p+1)(2p+1))≤7/(p(p+1)))
 --   b²·R2 ≤ 0             (R2 = (3/2)δ(u1−δ),  u1 ≤ δ)
 --   b·R1  ≤ 3/(p(p+1))    (R1 = δ²((3/2)u1−δ) ≤ (3/2)δ²u1, b ≤ p, δ² ≤ 1/p², drop −δ)
 --   R0    ≤ 1/(p(p+1))    (R0 = ½δ³u1 − ¼δ⁴ ≤ ½δ³u1, δ³ ≤ 1/p³, drop −¼δ⁴)
--- The crude denominators (all `p(p+1)`) keep the sum a single `⟨31, p(p+1)⟩` — a loose bound, which
+-- The crude denominators (all `p(p+1)`) keep the sum a single `⟨11, p(p+1)⟩` — a loose bound, which
 -- is all `Pos λ₄` needs (`−(2/3)γ₃` enters with tiny coefficient).
 -- ===========================================================================
 
@@ -1283,14 +1283,14 @@ theorem bR1_le (p : Nat) (hp : 1 ≤ p) :
     omega
   exact_mod_cast key
 
-/-- **`b³·C2 ≤ 27/(p(p+1))`** — the dominant term: `b³ = (ln p)³ ≤ 27p` (`logCube_le_self27`),
-    `C2 ≤ 1/(2p(p+1)(2p+1))` (`C2_le`), so `b³·C2 ≤ 27p/(2p(p+1)(2p+1)) ≤ 27/(p(p+1))`. -/
+/-- **`b³·C2 ≤ 7/(p(p+1))`** — the dominant term: `b³ = (ln p)³ ≤ 27p` (`logCube_le_self27`),
+    `C2 ≤ 1/(2p(p+1)(2p+1))` (`C2_le`), so `b³·C2 ≤ 27p/(2p(p+1)(2p+1)) ≤ 7/(p(p+1))`. -/
 theorem b3C2_le (p : Nat) (hp : 1 ≤ p) :
     Rle (Rmul (Rmul (Rmul (logN p hp) (logN p hp)) (logN p hp))
           (Rsub (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide))
               (Radd (ofQ (⟨1, p⟩ : Q) hp) (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p))))
             (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))))
-        (ofQ (⟨27, p * (p + 1)⟩ : Q) (Nat.mul_pos hp (Nat.succ_pos p))) := by
+        (ofQ (⟨7, p * (p + 1)⟩ : Q) (Nat.mul_pos hp (Nat.succ_pos p))) := by
   have h27nn : Rnonneg (ofQ (⟨27 * (p : Int), 1⟩ : Q) Nat.one_pos) :=
     Rnonneg_ofQ Nat.one_pos (by show (0 : Int) ≤ 27 * (p : Int); omega)
   refine Rle_trans (Rmul_le_Rmul_right (C2_nonneg p hp) (logCube_le_self27 p hp)) ?_
@@ -1300,46 +1300,46 @@ theorem b3C2_le (p : Nat) (hp : 1 ≤ p) :
     (Nat.mul_pos (Nat.mul_pos (Nat.mul_pos (by decide) hp) (Nat.succ_pos p)) (by omega)))) ?_
   refine Rle_ofQ_ofQ _ (Nat.mul_pos hp (Nat.succ_pos p)) ?_
   show Qle (mul (⟨27 * (p : Int), 1⟩ : Q) (⟨1, 2 * p * (p + 1) * (2 * p + 1)⟩ : Q))
-    (⟨27, p * (p + 1)⟩ : Q)
+    (⟨7, p * (p + 1)⟩ : Q)
   simp only [Qle, mul, Int.one_mul, Int.mul_one, Nat.one_mul, Nat.mul_one]
-  have key : 27 * p * (p * (p + 1)) ≤ 27 * (2 * p * (p + 1) * (2 * p + 1)) := by
-    have e1 : ((27 * (2 * p * (p + 1) * (2 * p + 1)) : Nat) : Int)
-        = ((27 * p * (p * (p + 1)) + 27 * p * (p + 1) * (3 * p + 2) : Nat) : Int) := by
+  have key : 27 * p * (p * (p + 1)) ≤ 7 * (2 * p * (p + 1) * (2 * p + 1)) := by
+    have e1 : ((7 * (2 * p * (p + 1) * (2 * p + 1)) : Nat) : Int)
+        = ((27 * p * (p * (p + 1)) + p * (p + 1) * (p + 14) : Nat) : Int) := by
       push_cast; ring_uor
-    have n1 : 27 * (2 * p * (p + 1) * (2 * p + 1))
-        = 27 * p * (p * (p + 1)) + 27 * p * (p + 1) * (3 * p + 2) := by exact_mod_cast e1
+    have n1 : 7 * (2 * p * (p + 1) * (2 * p + 1))
+        = 27 * p * (p * (p + 1)) + p * (p + 1) * (p + 14) := by exact_mod_cast e1
     omega
   exact_mod_cast key
 
-/-- **The per-step UPPER bound** `sStep3 p ≤ 31/(p(p+1))` — `sStep3 ≈ decompForm3 = b³C2 + b²R2 + bR1 + R0`
-    (`sStep3_decomp`), bounded termwise (`27 + 0 + 3 + 1 = 31`, common denominator `p(p+1)`). -/
+/-- **The per-step UPPER bound** `sStep3 p ≤ 11/(p(p+1))` — `sStep3 ≈ decompForm3 = b³C2 + b²R2 + bR1 + R0`
+    (`sStep3_decomp`), bounded termwise (`7 + 0 + 3 + 1 = 11`, common denominator `p(p+1)`). -/
 theorem sStep3_le (p : Nat) (hp : 1 ≤ p) :
-    Rle (sStep3 p hp) (ofQ (⟨31, p * (p + 1)⟩ : Q) (Nat.mul_pos hp (Nat.succ_pos p))) := by
+    Rle (sStep3 p hp) (ofQ (⟨11, p * (p + 1)⟩ : Q) (Nat.mul_pos hp (Nat.succ_pos p))) := by
   have hD : 0 < p * (p + 1) := Nat.mul_pos hp (Nat.succ_pos p)
   refine Rle_trans (Rle_of_Req (sStep3_decomp p hp)) ?_
   refine Rle_trans (Radd_le_add (Radd_le_add (Radd_le_add (b3C2_le p hp) (b2R2_le p hp))
     (bR1_le p hp)) (R0_le p hp)) ?_
   refine Rle_of_Req ?_
-  -- ((⟨27⟩ + 0) + ⟨3⟩) + ⟨1⟩ ≈ ⟨31⟩
+  -- ((⟨7⟩ + 0) + ⟨3⟩) + ⟨1⟩ ≈ ⟨11⟩
   refine Req_trans (Radd_congr (Radd_congr (Radd_zero _) (Req_refl _)) (Req_refl _)) ?_
-  refine Req_trans (Radd_congr (Radd_ofQ_same 27 3 (p * (p + 1)) hD) (Req_refl _)) ?_
-  exact Radd_ofQ_same 30 1 (p * (p + 1)) hD
+  refine Req_trans (Radd_congr (Radd_ofQ_same 7 3 (p * (p + 1)) hD) (Req_refl _)) ?_
+  exact Radd_ofQ_same 10 1 (p * (p + 1)) hD
 
 -- ===========================================================================
--- (C5) Telescoping `Σ sStep3 ≤ 31/(N+1)` → `γ₃ ≤ hSeq3(N) + 31/(N+1)`, then a rational ceiling.
+-- (C5) Telescoping `Σ sStep3 ≤ 11/(N+1)` → `γ₃ ≤ hSeq3(N) + 11/(N+1)`, then a rational ceiling.
 -- ===========================================================================
 
-/-- **Telescoping tail (upper)**: `hSeq3(N+k) ≤ hSeq3(N) + (31/(N+1) − 31/(N+k+1))` (`N ≥ 1`). -/
+/-- **Telescoping tail (upper)**: `hSeq3(N+k) ≤ hSeq3(N) + (11/(N+1) − 11/(N+k+1))` (`N ≥ 1`). -/
 theorem hSeq3_tele (N : Nat) (hN : 1 ≤ N) : ∀ k,
     Rle (hSeq3 (N + k))
-        (Radd (hSeq3 N) (Rsub (ofQ (⟨31, N + 1⟩ : Q) (Nat.succ_pos N))
-            (ofQ (⟨31, N + k + 1⟩ : Q) (Nat.succ_pos (N + k))))) := by
+        (Radd (hSeq3 N) (Rsub (ofQ (⟨11, N + 1⟩ : Q) (Nat.succ_pos N))
+            (ofQ (⟨11, N + k + 1⟩ : Q) (Nat.succ_pos (N + k))))) := by
   intro k
   induction k with
   | zero =>
     refine Rle_of_Req ?_
     exact Req_trans (Req_symm (Radd_zero (hSeq3 N)))
-      (Radd_congr (Req_refl _) (Req_symm (Radd_neg (ofQ (⟨31, N + 1⟩ : Q) (Nat.succ_pos N)))))
+      (Radd_congr (Req_refl _) (Req_symm (Radd_neg (ofQ (⟨11, N + 1⟩ : Q) (Nat.succ_pos N)))))
   | succ k ih =>
     refine Rle_trans (Rle_of_Req (sub_add_cancel_real (hSeq3 (N + k + 1)) (hSeq3 (N + k)))) ?_
     refine Rle_trans (Rle_of_Req (Radd_congr (Req_refl _) (hSeq3_step_eq (N + k)))) ?_
@@ -1347,17 +1347,33 @@ theorem hSeq3_tele (N : Nat) (hN : 1 ≤ N) : ∀ k,
     refine Rle_of_Req (Req_trans (Radd_assoc (hSeq3 N) _ _) ?_)
     refine Radd_congr (Req_refl (hSeq3 N)) ?_
     apply Req_of_seq_Qeq; intro _
-    show Qeq (add (add (⟨31, N + 1⟩ : Q) (neg (⟨31, N + k + 1⟩ : Q)))
-        (⟨31, (N + k + 1) * ((N + k + 1) + 1)⟩ : Q))
-      (add (⟨31, N + 1⟩ : Q) (neg (⟨31, N + (k + 1) + 1⟩ : Q)))
+    show Qeq (add (add (⟨11, N + 1⟩ : Q) (neg (⟨11, N + k + 1⟩ : Q)))
+        (⟨11, (N + k + 1) * ((N + k + 1) + 1)⟩ : Q))
+      (add (⟨11, N + 1⟩ : Q) (neg (⟨11, N + (k + 1) + 1⟩ : Q)))
     simp only [Qeq, add, neg, mul]
     push_cast
     ring_uor
 
-/-- **`hSeq3(N+k) ≤ hSeq3(N) + 31/(N+1)`** (uniform in `k`, `N ≥ 1`) — drop the nonneg `−31/(N+k+1)`. -/
+/-- **`hSeq3(N+k) ≤ hSeq3(N) + 11/(N+1)`** (uniform in `k`, `N ≥ 1`) — drop the nonneg `−11/(N+k+1)`. -/
 theorem hSeq3_upper_const (N : Nat) (hN : 1 ≤ N) (k : Nat) :
-    Rle (hSeq3 (N + k)) (Radd (hSeq3 N) (ofQ (⟨31, N + 1⟩ : Q) (Nat.succ_pos N))) := by
+    Rle (hSeq3 (N + k)) (Radd (hSeq3 N) (ofQ (⟨11, N + 1⟩ : Q) (Nat.succ_pos N))) := by
   refine Rle_trans (hSeq3_tele N hN k) (Radd_le_add (Rle_refl _) ?_)
-  exact Rsub_le_self _ (Rnonneg_ofQ (Nat.succ_pos (N + k)) (by show (0 : Int) ≤ 31; decide))
+  exact Rsub_le_self _ (Rnonneg_ofQ (Nat.succ_pos (N + k)) (by show (0 : Int) ≤ 11; decide))
+
+/-- **`γ₃ ≤ g3SeqDyadic j + 1/(j+1)`** — the dyadic Cauchy tail `g3_pair_le` carried to the limit. -/
+theorem Rgamma3_le_dyadic (j : Nat) :
+    Rle Rgamma3 (Radd (g3SeqDyadic j) (ofQ (⟨1, j + 1⟩ : Q) (Nat.succ_pos j))) := by
+  apply Rle_of_Rsub_le_all (C := 2)
+  intro k
+  have htend : Rle (Rsub Rgamma3 (g3SeqDyadic (j + k))) (ofQ (⟨2, k + 1⟩ : Q) (Nat.succ_pos k)) := by
+    refine Rle_trans (RTendsTo_to_Rle_lower (Rlim_tendsTo g3SeqDyadic g3SeqDyadic_RReg) (j + k)) ?_
+    exact Rle_ofQ_ofQ (Nat.succ_pos (j + k)) (Nat.succ_pos k)
+      (by show (2 : Int) * ((k : Int) + 1) ≤ 2 * ((j : Int) + (k : Int) + 1); omega)
+  have hanchor : Rle (g3SeqDyadic (j + k))
+      (Radd (g3SeqDyadic j) (ofQ (⟨1, j + 1⟩ : Q) (Nat.succ_pos j))) :=
+    Rle_add_of_Rsub_le (g3_pair_le (Nat.le_add_right j k))
+  refine Rle_trans (Rle_of_Req (Req_symm (Rsub_split Rgamma3 (g3SeqDyadic (j + k))
+    (Radd (g3SeqDyadic j) (ofQ (⟨1, j + 1⟩ : Q) (Nat.succ_pos j)))))) ?_
+  exact Rle_trans (Radd_le_add htend (Rle_sub_zero hanchor)) (Rle_of_Req (Radd_zero _))
 
 end UOR.Bridge.F1Square.Analysis
