@@ -90,4 +90,76 @@ theorem Rgamma_gamma2_le :
   refine Rle_trans (Rmul_le_Rmul_right (Rnonneg_ofQ (by decide) (by decide)) Rgamma_h_le_578) ?_
   exact Rle_of_Req (Rmul_ofQ_ofQ (by decide) (by decide))
 
+-- ===========================================================================
+-- (E) η-anchor uppers (η₁ tightened to γ₁≤−0.0677; η₃ new) and the `nsmulR` collapses.
+-- ===========================================================================
+
+/-- **`η₁ = γ² + 2γ₁ ≤ 198685/10⁶`** — tightened with `γ₁ ≤ −0.0677` (vs `reta1_le`'s `−0.055`). -/
+theorem reta1_le4 : Rle Reta1 (ofQ (⟨198685, 1000000⟩ : Q) (by decide)) := by
+  unfold Reta1
+  have hlin : Rle (Rmul (ofQ (⟨2, 1⟩ : Q) (by decide)) Rgamma1)
+      (ofQ (mul (⟨2, 1⟩ : Q) (⟨-677, 10000⟩ : Q)) (by decide)) :=
+    Rle_trans (Rmul_le_Rmul_left (Rnonneg_ofQ (by decide) (by decide)) Rgamma1_le_neg0677)
+      (Rle_of_Req (Rmul_ofQ_ofQ (by decide) (by decide)))
+  refine Rle_trans (Radd_le_add Rgamma_sq_le hlin) ?_
+  refine Rle_trans (Rle_of_Req (Radd_ofQ_ofQ (by decide) (by decide))) ?_
+  exact Rle_ofQ_ofQ (by decide) (by decide) (by decide)
+
+set_option maxRecDepth 8192 in
+/-- **`η₃ ≤ 145303/10⁶`** — `η₃ = γ⁴ + 4γ²γ₁ + 2γ₁² + 2γγ₂ + (2/3)γ₃` bounded by the five product
+    uppers (`Rgamma_pow4_le`, `Rgamma_sq_gamma1_le`, `Rgamma1_sq_le`, `Rgamma_gamma2_le`, `Rgamma3_le`),
+    each rounded to a `10⁶` literal so the sum keeps denominator `10⁶` (`Radd_ofQ_same`). -/
+theorem reta3_le : Rle Reta3 (ofQ (⟨145303, 1000000⟩ : Q) (by decide)) := by
+  unfold Reta3
+  have hT1 : Rle (Rmul (Rmul (Rmul Rgamma_h Rgamma_h) Rgamma_h) Rgamma_h)
+      (ofQ (⟨111613, 1000000⟩ : Q) (by decide)) :=
+    Rle_trans Rgamma_pow4_le (Rle_ofQ_ofQ (by decide) (by decide) (by decide))
+  have hT2 : Rle (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul Rgamma_h Rgamma_h) Rgamma1))
+      (ofQ (⟨-90157, 1000000⟩ : Q) (by decide)) :=
+    Rle_trans (Rmul_le_Rmul_left (Rnonneg_ofQ (by decide) (by decide)) Rgamma_sq_gamma1_le)
+      (Rle_trans (Rle_of_Req (Rmul_ofQ_ofQ (by decide) (by decide)))
+        (Rle_ofQ_ofQ (by decide) (by decide) (by decide)))
+  have hT3 : Rle (Rmul (ofQ (⟨2, 1⟩ : Q) (by decide)) (Rmul Rgamma1 Rgamma1))
+      (ofQ (⟨11613, 1000000⟩ : Q) (by decide)) :=
+    Rle_trans (Rmul_le_Rmul_left (Rnonneg_ofQ (by decide) (by decide)) Rgamma1_sq_le)
+      (Rle_trans (Rle_of_Req (Rmul_ofQ_ofQ (by decide) (by decide)))
+        (Rle_ofQ_ofQ (by decide) (by decide) (by decide)))
+  have hT4 : Rle (Rmul (ofQ (⟨2, 1⟩ : Q) (by decide)) (Rmul Rgamma_h Rgamma2))
+      (ofQ (⟨28900, 1000000⟩ : Q) (by decide)) :=
+    Rle_trans (Rmul_le_Rmul_left (Rnonneg_ofQ (by decide) (by decide)) Rgamma_gamma2_le)
+      (Rle_trans (Rle_of_Req (Rmul_ofQ_ofQ (by decide) (by decide)))
+        (Rle_ofQ_ofQ (by decide) (by decide) (by decide)))
+  have hT5 : Rle (Rmul (ofQ (⟨2, 3⟩ : Q) (by decide)) Rgamma3)
+      (ofQ (⟨83334, 1000000⟩ : Q) (by decide)) :=
+    Rle_trans (Rmul_le_Rmul_left (Rnonneg_ofQ (by decide) (by decide)) Rgamma3_le)
+      (Rle_trans (Rle_of_Req (Rmul_ofQ_ofQ (by decide) (by decide)))
+        (Rle_ofQ_ofQ (by decide) (by decide) (by decide)))
+  refine Rle_trans (Radd_le_add (Radd_le_add (Radd_le_add (Radd_le_add hT1 hT2) hT3) hT4) hT5) ?_
+  have hD : 0 < (1000000 : Nat) := by decide
+  refine Rle_of_Req (Req_trans (Radd_congr (Radd_congr (Radd_congr
+    (Radd_ofQ_same 111613 (-90157) 1000000 hD) (Req_refl _)) (Req_refl _)) (Req_refl _)) ?_)
+  refine Req_trans (Radd_congr (Radd_congr (Radd_ofQ_same 21456 11613 1000000 hD)
+    (Req_refl _)) (Req_refl _)) ?_
+  refine Req_trans (Radd_congr (Radd_ofQ_same 33069 28900 1000000 hD) (Req_refl _)) ?_
+  exact Radd_ofQ_same 61969 83334 1000000 hD
+
+/-- `nsmulR 4 X ≤ 4·xu`. -/
+theorem nsmulR4_le {X : Real} {xu : Q} (hxu : 0 < xu.den) (h : Rle X (ofQ xu hxu)) :
+    Rle (nsmulR 4 X) (ofQ (mul (⟨4, 1⟩ : Q) xu) (Qmul_den_pos (by decide) hxu)) := by
+  show Rle (Radd (Radd (Radd X X) X) X) _
+  refine Rle_trans (Radd_le_add (Radd_le_add (Radd_le_add h h) h) h) (Rle_of_Req ?_)
+  refine Req_of_seq_Qeq (fun n => ?_)
+  show Qeq (add (add (add xu xu) xu) xu) (mul (⟨4, 1⟩ : Q) xu)
+  simp only [Qeq, add, mul]; push_cast; ring_uor
+
+/-- `nsmulR 6 X ≤ 6·xu`. -/
+theorem nsmulR6_le {X : Real} {xu : Q} (hxu : 0 < xu.den) (h : Rle X (ofQ xu hxu)) :
+    Rle (nsmulR 6 X) (ofQ (mul (⟨6, 1⟩ : Q) xu) (Qmul_den_pos (by decide) hxu)) := by
+  show Rle (Radd (Radd (Radd (Radd (Radd X X) X) X) X) X) _
+  refine Rle_trans (Radd_le_add (Radd_le_add (Radd_le_add (Radd_le_add (Radd_le_add h h) h) h) h) h)
+    (Rle_of_Req ?_)
+  refine Req_of_seq_Qeq (fun n => ?_)
+  show Qeq (add (add (add (add (add xu xu) xu) xu) xu) xu) (mul (⟨6, 1⟩ : Q) xu)
+  simp only [Qeq, add, mul]; push_cast; ring_uor
+
 end UOR.Bridge.F1Square.Analysis
