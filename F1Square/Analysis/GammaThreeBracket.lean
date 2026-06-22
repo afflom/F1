@@ -1283,4 +1283,32 @@ theorem bR1_le (p : Nat) (hp : 1 ≤ p) :
     omega
   exact_mod_cast key
 
+/-- **`b³·C2 ≤ 27/(p(p+1))`** — the dominant term: `b³ = (ln p)³ ≤ 27p` (`logCube_le_self27`),
+    `C2 ≤ 1/(2p(p+1)(2p+1))` (`C2_le`), so `b³·C2 ≤ 27p/(2p(p+1)(2p+1)) ≤ 27/(p(p+1))`. -/
+theorem b3C2_le (p : Nat) (hp : 1 ≤ p) :
+    Rle (Rmul (Rmul (Rmul (logN p hp) (logN p hp)) (logN p hp))
+          (Rsub (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide))
+              (Radd (ofQ (⟨1, p⟩ : Q) hp) (ofQ (⟨1, p + 1⟩ : Q) (Nat.succ_pos p))))
+            (Rsub (logN (p + 1) (Nat.succ_pos p)) (logN p hp))))
+        (ofQ (⟨27, p * (p + 1)⟩ : Q) (Nat.mul_pos hp (Nat.succ_pos p))) := by
+  have h27nn : Rnonneg (ofQ (⟨27 * (p : Int), 1⟩ : Q) Nat.one_pos) :=
+    Rnonneg_ofQ Nat.one_pos (by show (0 : Int) ≤ 27 * (p : Int); omega)
+  refine Rle_trans (Rmul_le_Rmul_right (C2_nonneg p hp) (logCube_le_self27 p hp)) ?_
+  refine Rle_trans (Rmul_le_Rmul_left h27nn (C2_le p hp)) ?_
+  refine Rle_trans (Rle_of_Req (Rmul_ofQ_ofQ (a := (⟨27 * (p : Int), 1⟩ : Q))
+    (b := (⟨1, 2 * p * (p + 1) * (2 * p + 1)⟩ : Q)) Nat.one_pos
+    (Nat.mul_pos (Nat.mul_pos (Nat.mul_pos (by decide) hp) (Nat.succ_pos p)) (by omega)))) ?_
+  refine Rle_ofQ_ofQ _ (Nat.mul_pos hp (Nat.succ_pos p)) ?_
+  show Qle (mul (⟨27 * (p : Int), 1⟩ : Q) (⟨1, 2 * p * (p + 1) * (2 * p + 1)⟩ : Q))
+    (⟨27, p * (p + 1)⟩ : Q)
+  simp only [Qle, mul, Int.one_mul, Int.mul_one, Nat.one_mul, Nat.mul_one]
+  have key : 27 * p * (p * (p + 1)) ≤ 27 * (2 * p * (p + 1) * (2 * p + 1)) := by
+    have e1 : ((27 * (2 * p * (p + 1) * (2 * p + 1)) : Nat) : Int)
+        = ((27 * p * (p * (p + 1)) + 27 * p * (p + 1) * (3 * p + 2) : Nat) : Int) := by
+      push_cast; ring_uor
+    have n1 : 27 * (2 * p * (p + 1) * (2 * p + 1))
+        = 27 * p * (p * (p + 1)) + 27 * p * (p + 1) * (3 * p + 2) := by exact_mod_cast e1
+    omega
+  exact_mod_cast key
+
 end UOR.Bridge.F1Square.Analysis
