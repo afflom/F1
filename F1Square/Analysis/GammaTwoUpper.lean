@@ -183,4 +183,96 @@ theorem sStep_le (p : Nat) (hp : 1 ≤ p) :
   refine Req_trans (Radd_congr (Radd_zero _) (Req_refl _)) ?_
   exact Radd_ofQ_same 1 1 (p * (p + 1)) hD
 
+-- ===========================================================================
+-- (S3) Telescoping `Σ sStep ≤ 2/(N+1)` → `γ₂ ≤ hSeq(N) + 2/(N+1)`, then a rational ceiling.
+-- ===========================================================================
+
+/-- **Telescoping tail (upper)**: `hSeq(N+k) ≤ hSeq(N) + (2/(N+1) − 2/(N+k+1))` (`N ≥ 1`). -/
+theorem hSeq_tele_up (N : Nat) (hN : 1 ≤ N) : ∀ k,
+    Rle (hSeq (N + k))
+        (Radd (hSeq N) (Rsub (ofQ (⟨2, N + 1⟩ : Q) (Nat.succ_pos N))
+            (ofQ (⟨2, N + k + 1⟩ : Q) (Nat.succ_pos (N + k))))) := by
+  intro k
+  induction k with
+  | zero =>
+    refine Rle_of_Req ?_
+    exact Req_trans (Req_symm (Radd_zero (hSeq N)))
+      (Radd_congr (Req_refl _) (Req_symm (Radd_neg (ofQ (⟨2, N + 1⟩ : Q) (Nat.succ_pos N)))))
+  | succ k ih =>
+    refine Rle_trans (Rle_of_Req (sub_add_cancel_real (hSeq (N + k + 1)) (hSeq (N + k)))) ?_
+    refine Rle_trans (Rle_of_Req (Radd_congr (Req_refl _) (hSeq_step_eq (N + k)))) ?_
+    refine Rle_trans (Radd_le_add ih (sStep_le (N + k + 1) (Nat.succ_pos (N + k)))) ?_
+    refine Rle_of_Req (Req_trans (Radd_assoc (hSeq N) _ _) ?_)
+    refine Radd_congr (Req_refl (hSeq N)) ?_
+    apply Req_of_seq_Qeq; intro _
+    show Qeq (add (add (⟨2, N + 1⟩ : Q) (neg (⟨2, N + k + 1⟩ : Q)))
+        (⟨2, (N + k + 1) * ((N + k + 1) + 1)⟩ : Q))
+      (add (⟨2, N + 1⟩ : Q) (neg (⟨2, N + (k + 1) + 1⟩ : Q)))
+    simp only [Qeq, add, neg, mul]; push_cast; ring_uor
+
+/-- **`hSeq(N+k) ≤ hSeq(N) + 2/(N+1)`** (uniform in `k`, `N ≥ 1`). -/
+theorem hSeq_upper_const (N : Nat) (hN : 1 ≤ N) (k : Nat) :
+    Rle (hSeq (N + k)) (Radd (hSeq N) (ofQ (⟨2, N + 1⟩ : Q) (Nat.succ_pos N))) := by
+  refine Rle_trans (hSeq_tele_up N hN k) (Radd_le_add (Rle_refl _) ?_)
+  exact Rsub_le_self _ (Rnonneg_ofQ (Nat.succ_pos (N + k)) (by show (0 : Int) ≤ 2; decide))
+
+/-- **`γ₂ ≤ g2SeqDyadic j + 1/(j+1)`** — the dyadic Cauchy tail `g2_pair_le` carried to the limit. -/
+theorem Rgamma2_le_dyadic (j : Nat) :
+    Rle Rgamma2 (Radd (g2SeqDyadic j) (ofQ (⟨1, j + 1⟩ : Q) (Nat.succ_pos j))) := by
+  apply Rle_of_Rsub_le_all (C := 2)
+  intro k
+  have htend : Rle (Rsub Rgamma2 (g2SeqDyadic (j + k))) (ofQ (⟨2, k + 1⟩ : Q) (Nat.succ_pos k)) := by
+    refine Rle_trans (RTendsTo_to_Rle_lower (Rlim_tendsTo g2SeqDyadic g2SeqDyadic_RReg) (j + k)) ?_
+    exact Rle_ofQ_ofQ (Nat.succ_pos (j + k)) (Nat.succ_pos k)
+      (by show (2 : Int) * ((k : Int) + 1) ≤ 2 * ((j : Int) + (k : Int) + 1); omega)
+  have hanchor : Rle (g2SeqDyadic (j + k))
+      (Radd (g2SeqDyadic j) (ofQ (⟨1, j + 1⟩ : Q) (Nat.succ_pos j))) :=
+    Rle_add_of_Rsub_le (g2_pair_le (Nat.le_add_right j k))
+  refine Rle_trans (Rle_of_Req (Req_symm (Rsub_split Rgamma2 (g2SeqDyadic (j + k))
+    (Radd (g2SeqDyadic j) (ofQ (⟨1, j + 1⟩ : Q) (Nat.succ_pos j)))))) ?_
+  exact Rle_trans (Radd_le_add htend (Rle_sub_zero hanchor)) (Rle_of_Req (Radd_zero _))
+
+/-- **`g2Seq M = hSeq M + ½·(ln(M+1))²/(M+1)`** — the accelerator correction made explicit. -/
+theorem g2Seq_eq_hSeq_add (M : Nat) :
+    Req (g2Seq M) (Radd (hSeq M)
+        (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) (lnSqOver (M + 1) (Nat.succ_pos M)))) := by
+  unfold hSeq
+  refine Req_symm (Req_trans (Radd_assoc (g2Seq M) (Rneg _) _) ?_)
+  refine Req_trans (Radd_congr (Req_refl _) (Req_trans (Radd_comm (Rneg _) _) (Radd_neg _))) ?_
+  exact Radd_zero (g2Seq M)
+
+/-- **Block square cap at an arbitrary argument** `logN K · logN K ≤ (a+2)²` for `2 ≤ K ≤ 2^{a+2}`. -/
+theorem logSq_le_cap (K a : Nat) (hK : 1 ≤ K) (hK2 : 2 ≤ K) (h : K ≤ 2 ^ (a + 2)) :
+    Rle (Rmul (logN K hK) (logN K hK))
+      (ofQ (⟨((a : Int) + 2) * ((a : Int) + 2), 1⟩ : Q) Nat.one_pos) := by
+  obtain ⟨m, rfl⟩ : ∃ m, K = m + 2 := ⟨K - 2, by omega⟩
+  exact logSq_le_block a m h
+
+/-- **The correction `½·(ln(M+1))²/(M+1)` at `M = 2^{2j+8}` is `≤ (2j+9)²/(2(M+1))`** (`logSq_le_cap`). -/
+theorem corr2_le (j : Nat) :
+    Rle (Rmul (ofQ (⟨1, 2⟩ : Q) (by decide)) (lnSqOver (2 ^ (2 * j + 8) + 1) (Nat.succ_pos _)))
+        (ofQ (⟨(2 * (j : Int) + 9) * (2 * (j : Int) + 9), 2 * (2 ^ (2 * j + 8) + 1)⟩ : Q)
+          (Nat.mul_pos (by decide) (Nat.succ_pos _))) := by
+  have hbnd : 2 ^ (2 * j + 8) + 1 ≤ 2 ^ ((2 * j + 7) + 2) := by
+    have h1 : 2 ^ ((2 * j + 7) + 2) = 2 ^ (2 * j + 8) + 2 ^ (2 * j + 8) := by
+      have heq : 2 ^ ((2 * j + 7) + 2) = 2 ^ ((2 * j + 8) + 1) := by
+        rw [show (2 * j + 7) + 2 = (2 * j + 8) + 1 from by omega]
+      rw [heq, Nat.pow_succ]; omega
+    have hpow : 1 ≤ 2 ^ (2 * j + 8) := Nat.pos_pow_of_pos _ (by decide)
+    omega
+  have hcap := logSq_le_cap (2 ^ (2 * j + 8) + 1) (2 * j + 7) (Nat.succ_pos _)
+    (by have h := Nat.pos_pow_of_pos (2 * j + 8) (show 0 < 2 by decide); omega) hbnd
+  unfold lnSqOver
+  refine Rle_trans (Rmul_le_Rmul_left (Rnonneg_ofQ (by decide) (by decide))
+    (Rmul_le_Rmul_right (Rnonneg_ofQ (Nat.succ_pos _) (by show (0 : Int) ≤ 1; decide)) hcap)) ?_
+  refine Rle_trans (Rle_of_Req (Rmul_congr (Req_refl _)
+    (Rmul_ofQ_ofQ (a := (⟨((2 * (j : Int) + 7) + 2) * ((2 * (j : Int) + 7) + 2), 1⟩ : Q))
+      (b := (⟨1, 2 ^ (2 * j + 8) + 1⟩ : Q)) Nat.one_pos (Nat.succ_pos _)))) ?_
+  refine Rle_of_Req (Req_trans (Rmul_ofQ_ofQ (by decide) (Qmul_den_pos Nat.one_pos (Nat.succ_pos _)))
+    (ofQ_congr _ _ ?_))
+  show Qeq (mul (⟨1, 2⟩ : Q) (mul (⟨((2 * (j : Int) + 7) + 2) * ((2 * (j : Int) + 7) + 2), 1⟩ : Q)
+        (⟨1, 2 ^ (2 * j + 8) + 1⟩ : Q)))
+    (⟨(2 * (j : Int) + 9) * (2 * (j : Int) + 9), 2 * (2 ^ (2 * j + 8) + 1)⟩ : Q)
+  simp only [Qeq, mul]; push_cast; ring_uor
+
 end UOR.Bridge.F1Square.Analysis
