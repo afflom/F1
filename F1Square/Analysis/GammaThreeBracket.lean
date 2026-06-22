@@ -640,6 +640,74 @@ theorem W_expand (a b : Real) :
     (Radd_assoc (Rmul (Rmul a a) a) (Radd (Rmul (Rmul a a) b) (Rmul (Rmul a b) b))
       (Rmul (Rmul b b) b))) ?_
   exact Req_trans (Radd_congr ha3 hS2) (W_collect b (Rsub a b))
+
+set_option maxHeartbeats 8000000 in
+/-- **PART C** of `lhsForm3`: `¼·δ·W → b³δ + (3/2)b²δ² + bδ³ + ¼δ⁴` (`δ = a−b`, `W = a³+a²b+ab²+b³`),
+    the POSITIVE monomials `n3,n5,n7,n9` (which `lhsForm3` then subtracts).  `W_expand`, distribute `δ`
+    and `¼`, collapse `¼·4 = 1` (`quarter_four`) / `¼·6 = 3/2` (`quarter_six`), normalize. -/
+theorem partC3_eq (a b : Real) :
+    Req (Rmul (ofQ (⟨1, 4⟩ : Q) (by decide))
+          (Rmul (Rsub a b)
+            (Radd (Radd (Radd (Rmul (Rmul a a) a) (Rmul (Rmul a a) b)) (Rmul (Rmul a b) b))
+              (Rmul (Rmul b b) b))))
+      (Radd (Radd (Radd (RprodL [b, b, b, Rsub a b])
+            (RprodL [ofQ (⟨3, 2⟩ : Q) (by decide), b, b, Rsub a b, Rsub a b]))
+          (RprodL [b, Rsub a b, Rsub a b, Rsub a b]))
+        (RprodL [ofQ (⟨1, 4⟩ : Q) (by decide), Rsub a b, Rsub a b, Rsub a b, Rsub a b])) := by
+  -- W ≈ 4b³+6b²δ+4bδ²+δ³
+  refine Req_trans (Rmul_congr (Req_refl _) (Rmul_congr (Req_refl (Rsub a b)) (W_expand a b))) ?_
+  -- distribute δ over the 4-term sum
+  refine Req_trans (Rmul_congr (Req_refl _)
+    (Req_trans (Rmul_distrib (Rsub a b)
+        (Radd (Radd (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul b b) b))
+            (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul b b) (Rsub a b))))
+          (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul b (Rsub a b)) (Rsub a b))))
+        (Rmul (Rmul (Rsub a b) (Rsub a b)) (Rsub a b)))
+      (Radd_congr (Req_trans (Rmul_distrib (Rsub a b)
+          (Radd (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul b b) b))
+            (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul b b) (Rsub a b))))
+          (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul b (Rsub a b)) (Rsub a b))))
+        (Radd_congr (Rmul_distrib (Rsub a b)
+          (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul b b) b))
+          (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul b b) (Rsub a b)))) (Req_refl _)))
+        (Req_refl _)))) ?_
+  -- distribute ¼ over the 4-term sum
+  refine Req_trans (Rmul_distrib (ofQ (⟨1, 4⟩ : Q) (by decide))
+    (Radd (Radd (Rmul (Rsub a b) (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul b b) b)))
+        (Rmul (Rsub a b) (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul b b) (Rsub a b)))))
+      (Rmul (Rsub a b) (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul b (Rsub a b)) (Rsub a b)))))
+    (Rmul (Rsub a b) (Rmul (Rmul (Rsub a b) (Rsub a b)) (Rsub a b)))) ?_
+  refine Req_trans (Radd_congr (Rmul_distrib (ofQ (⟨1, 4⟩ : Q) (by decide))
+    (Radd (Rmul (Rsub a b) (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul b b) b)))
+        (Rmul (Rsub a b) (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul b b) (Rsub a b)))))
+      (Rmul (Rsub a b) (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul b (Rsub a b)) (Rsub a b)))))
+    (Req_refl _)) ?_
+  refine Req_trans (Radd_congr (Radd_congr (Rmul_distrib (ofQ (⟨1, 4⟩ : Q) (by decide))
+    (Rmul (Rsub a b) (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul b b) b)))
+    (Rmul (Rsub a b) (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul b b) (Rsub a b)))))
+    (Req_refl _)) (Req_refl _)) ?_
+  -- normalize the four monomials
+  refine Radd_congr (Radd_congr (Radd_congr ?_ ?_) ?_) ?_
+  · exact Req_trans (Rmul_congr (Req_refl _)
+      (Rmul_left_comm3 (Rsub a b) (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul b b) b)))
+      (Req_trans (quarter_four (Rmul (Rsub a b) (Rmul (Rmul b b) b)))
+        (Req_trans (Rmul_comm (Rsub a b) (Rmul (Rmul b b) b))
+          (Rmul_eq_RprodL4L b b b (Rsub a b))))
+  · exact Req_trans (Rmul_congr (Req_refl _)
+      (Rmul_left_comm3 (Rsub a b) (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul b b) (Rsub a b))))
+      (Req_trans (quarter_six (Rmul (Rsub a b) (Rmul (Rmul b b) (Rsub a b))))
+        (Rmul_congr (Req_refl _)
+          (Req_trans (Rmul_comm (Rsub a b) (Rmul (Rmul b b) (Rsub a b)))
+            (Rmul_eq_RprodL4L b b (Rsub a b) (Rsub a b)))))
+  · exact Req_trans (Rmul_congr (Req_refl _)
+      (Rmul_left_comm3 (Rsub a b) (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul b (Rsub a b)) (Rsub a b))))
+      (Req_trans (quarter_four (Rmul (Rsub a b) (Rmul (Rmul b (Rsub a b)) (Rsub a b))))
+        (Req_trans (Rmul_comm (Rsub a b) (Rmul (Rmul b (Rsub a b)) (Rsub a b)))
+          (Rmul_eq_RprodL4L b (Rsub a b) (Rsub a b) (Rsub a b))))
+  · exact Rmul_congr (Req_refl _)
+      (Req_trans (Rmul_comm (Rsub a b) (Rmul (Rmul (Rsub a b) (Rsub a b)) (Rsub a b)))
+        (Rmul_eq_RprodL4L (Rsub a b) (Rsub a b) (Rsub a b) (Rsub a b)))
+
 -- ===========================================================================
 -- (C2b) The quartic residual decomposition `sStep3 ≈ decompForm3 = b³·C2 + b²·R2 + b·R1 + R0`
 -- (`d = a − b`, `C2 = ½(u0+u1) − d`, `R2 = (3/2)·d·(u1−d)`, `R1 = d²·((3/2)u1 − d)`,
