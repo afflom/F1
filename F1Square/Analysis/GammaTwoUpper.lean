@@ -1,9 +1,9 @@
 /-
 F1 square — v0.22.0 crux frontier: **the LOOSE UPPER bracket on the second Stieltjes constant `γ₂`**
-(`γ₂ ≤ 1/20`), the last constant input to `Pos Rlambda4` (the n=4 prime–archimedean coupling).
+(`γ₂ ≤ 1/40`), the last constant input to `Pos Rlambda4` (the n=4 prime–archimedean coupling).
 
 `λ₄`'s arithmetic side carries `−2γγ₂` through `η₃`; with `γ > 0` a LOOSE UPPER bound `γ₂ ≤ ε`
-(`ε` modest, here `1/20`) suffices to control it (the `Pos λ₄` margin is `≈ +0.054` once `γ₁ ≤ −0.0677`
+(`ε` modest, here `1/40`) suffices to control it (the `Pos λ₄` margin is `≈ +0.054` once `γ₁ ≤ −0.0677`
 and `γ₃ ≤ 1/8` are in place). This file builds that upper bracket by the SAME DISCRETE Euler–Maclaurin
 acceleration as `GammaTwoBracket` (the `γ₂` LOWER bound) — but in the UPPER direction, mirroring the
 `γ₃`/`γ₁` upper pipelines.
@@ -291,7 +291,7 @@ theorem Rgamma2_le_hSeq2_up (N j : Nat) (hN : 1 ≤ N) (hNj : N ≤ 2 ^ (2 * j +
   exact hSeq_upper_const N hN k
 
 -- ===========================================================================
--- (S4) The rational ceiling `hSeq(N) ≤ gBound2up` and the final `decide`: `γ₂ ≤ 1/20`.
+-- (S4) The rational ceiling `hSeq(N) ≤ gBound2up` and the final `decide`: `γ₂ ≤ 1/40`.
 -- ===========================================================================
 
 /-- The accumulated rational upper bound for `Σ_{k=1}^N (ln k)²/k` (round up, denominator `D`). -/
@@ -396,17 +396,17 @@ theorem corr2_weaken100 :
   omega
 
 set_option maxRecDepth 40000 in
-/-- The numeric heart: `gBound2up 4 10⁶ 200 + 2/201 + 1/101² + 1/101 ≤ 1/20` — one `decide`. -/
+/-- The numeric heart: `gBound2up 4 10⁶ 200 + 2/201 + 1/101² + 1/101 ≤ 1/40` — one `decide`. -/
 theorem gamma2_up_decide :
     Qle (add (add (add (gBound2up 4 1000000 200) (⟨2, 200 + 1⟩ : Q)) (⟨1, (100 + 1) * (100 + 1)⟩ : Q))
         (⟨1, 100 + 1⟩ : Q))
-      (⟨1, 20⟩ : Q) := by decide
+      (⟨1, 40⟩ : Q) := by decide
 
 set_option maxRecDepth 40000 in
-/-- **`γ₂ ≤ 1/20`** — the certified LOOSE upper bracket on the second Stieltjes constant, the last
+/-- **`γ₂ ≤ 1/40`** — the certified LOOSE upper bracket on the second Stieltjes constant, the last
     constant input to `Pos λ₄`.  `γ₂ ≤ hSeq(200) + 2/201 + corr + 1/101` (`Rgamma2_le_hSeq2_up`,
     `j = 100`), `hSeq(200) ≤ gBound2up 4 10⁶ 200`, `corr ≤ 1/101²`, and one big-integer `decide`. -/
-theorem Rgamma2_le : Rle Rgamma2 (ofQ (⟨1, 20⟩ : Q) (by decide)) := by
+theorem Rgamma2_le : Rle Rgamma2 (ofQ (⟨1, 40⟩ : Q) (by decide)) := by
   refine Rle_trans (Rgamma2_le_hSeq2_up 200 100 (by decide)
     (Nat.le_trans (show (200 : Nat) ≤ 2 ^ 8 by decide)
       (Nat.pow_le_pow_right (by decide) (by decide)))) ?_
