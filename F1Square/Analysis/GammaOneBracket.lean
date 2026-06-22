@@ -404,6 +404,21 @@ attribute [local irreducible] logN
 theorem Radd_sub_cancel (x y : Real) : Req (Rsub (Radd x y) y) x :=
   Req_trans (Radd_assoc x y (Rneg y)) (Req_trans (Radd_congr (Req_refl x) (Radd_neg y)) (Radd_zero x))
 
+/-- `n + 1 ≤ 2ⁿ` (replaces the renamed `Nat.lt_two_pow`). -/
+theorem nat_succ_le_two_pow : ∀ n : Nat, n + 1 ≤ 2 ^ n
+  | 0 => by decide
+  | (n + 1) => by
+    have ih := nat_succ_le_two_pow n
+    have h2 : 1 ≤ 2 ^ n := Nat.pos_pow_of_pos n (by decide)
+    have hps : 2 ^ (n + 1) = 2 ^ n + 2 ^ n := by rw [Nat.pow_succ]; omega
+    omega
+
+/-- `x ≤ y ⟹ x − y ≤ 0`. -/
+theorem Rle_sub_zero {x y : Real} (h : Rle x y) : Rle (Rsub x y) zero := by
+  refine Rle_of_Rnonneg_Rsub (Rnonneg_congr ?_ (Rnonneg_Rsub_of_Rle h))
+  exact Req_symm (Req_trans (Req_trans (Radd_comm zero (Rneg (Rsub x y))) (Radd_zero _))
+    (Rneg_Rsub_swap x y))
+
 /-- `(X+Y) − W ≈ (X−W) + Y`. -/
 theorem Rsub_add_swap (X Y W : Real) : Req (Rsub (Radd X Y) W) (Radd (Rsub X W) Y) :=
   Req_trans (Radd_assoc X Y (Rneg W))
@@ -627,5 +642,69 @@ theorem hSeq1_diff_le (N : Nat) (hN : 1 ≤ N) (d : Nat) :
 theorem hSeq1_upper_const (N : Nat) (hN : 1 ≤ N) (d : Nat) :
     Rle (hSeq1 (N + d)) (Radd (hSeq1 N) (ofQ (⟨1, 2 * N⟩ : Q) (Nat.mul_pos (by decide) hN))) :=
   Rle_add_of_Rsub_le (hSeq1_diff_le N hN d)
+
+/-- **`γ₁ ≤ gSeqDyadic j + 1/(j+1)`** — the raw-`gSeq` upper gap (`gSeq_le_anchor`) carried to the limit. -/
+theorem Rgamma1_le_dyadic (j : Nat) :
+    Rle Rgamma1 (Radd (gSeqDyadic j) (ofQ (⟨1, j + 1⟩ : Q) (Nat.succ_pos j))) := by
+  apply Rle_of_Rsub_le_all (C := 2)
+  intro k
+  have htend : Rle (Rsub Rgamma1 (gSeqDyadic (j + k))) (ofQ (⟨2, k + 1⟩ : Q) (Nat.succ_pos k)) := by
+    refine Rle_trans (RTendsTo_to_Rle_lower (Rlim_tendsTo gSeqDyadic gSeqDyadic_RReg) (j + k)) ?_
+    exact Rle_ofQ_ofQ (Nat.succ_pos (j + k)) (Nat.succ_pos k)
+      (by show (2 : Int) * ((k : Int) + 1) ≤ 2 * ((j : Int) + (k : Int) + 1); omega)
+  have hMpos : 0 < 2 ^ gammaMidx j := Nat.pos_pow_of_pos _ (by decide)
+  have hanchor : Rle (gSeqDyadic (j + k))
+      (Radd (gSeqDyadic j) (ofQ (⟨1, j + 1⟩ : Q) (Nat.succ_pos j))) := by
+    refine Rle_trans (gSeq_le_anchor hMpos
+      (Nat.pow_le_pow_right (by decide) (gammaMidx_mono (Nat.le_add_right j k)))) ?_
+    refine Radd_le_add (Rle_refl _) (Rle_ofQ_ofQ (Nat.mul_pos (by decide) hMpos) (Nat.succ_pos j) ?_)
+    show Qle (⟨1, 2 * 2 ^ gammaMidx j⟩ : Q) (⟨1, j + 1⟩ : Q)
+    show (1 : Int) * ((j : Int) + 1) ≤ (1 : Int) * (2 * 2 ^ gammaMidx j : Nat)
+    simp only [gammaMidx, Int.one_mul]
+    have h1 := nat_succ_le_two_pow j
+    have h2 : 2 ^ j ≤ 2 ^ (2 * j + 8) := Nat.pow_le_pow_right (by decide) (by omega)
+    have : j + 1 ≤ 2 * 2 ^ (2 * j + 8) := by omega
+    exact_mod_cast this
+  refine Rle_trans (Rle_of_Req (Req_symm (Rsub_split Rgamma1 (gSeqDyadic (j + k))
+    (Radd (gSeqDyadic j) (ofQ (⟨1, j + 1⟩ : Q) (Nat.succ_pos j)))))) ?_
+  exact Rle_trans (Radd_le_add htend (Rle_sub_zero hanchor)) (Rle_of_Req (Radd_zero _))
+
+/-- **`gSeq M = hSeq1 M + ½·(ln(M+1))/(M+1)`** — the accelerator correction made explicit. -/
+theorem gSeq_eq_hSeq1_add (M : Nat) :
+    Req (gSeq M) (Radd (hSeq1 M) (Rhalf (lnOver (M + 1) (Nat.succ_pos M)))) := by
+  unfold hSeq1
+  refine Req_symm (Req_trans (Radd_assoc (gSeq M) (Rneg _) _) ?_)
+  refine Req_trans (Radd_congr (Req_refl _) (Req_trans (Radd_comm (Rneg _) _) (Radd_neg _))) ?_
+  exact Radd_zero (gSeq M)
+
+/-- **Block log cap at an arbitrary argument** `logN K ≤ a+2` for `2 ≤ K ≤ 2^{a+2}`. -/
+theorem logN_le_cap (K a : Nat) (hK : 1 ≤ K) (hK2 : 2 ≤ K) (h : K ≤ 2 ^ (a + 2)) :
+    Rle (logN K hK) (ofQ (⟨(a + 2 : Int), 1⟩ : Q) Nat.one_pos) := by
+  obtain ⟨m, rfl⟩ : ∃ m, K = m + 2 := ⟨K - 2, by omega⟩
+  exact logN_le_block a m h
+
+/-- **The correction `½·ln(M+1)/(M+1)` at `M = 2^{2j+8}` is `≤ (2j+9)/(2(M+1))`** (`logN_le_cap`). -/
+theorem corr1_le (j : Nat) :
+    Rle (Rhalf (lnOver (2 ^ (2 * j + 8) + 1) (Nat.succ_pos _)))
+        (ofQ (⟨2 * (j : Int) + 9, 2 * (2 ^ (2 * j + 8) + 1)⟩ : Q)
+          (Nat.mul_pos (by decide) (Nat.succ_pos _))) := by
+  have hbnd : 2 ^ (2 * j + 8) + 1 ≤ 2 ^ ((2 * j + 7) + 2) := by
+    have h1 : 2 ^ ((2 * j + 7) + 2) = 2 ^ (2 * j + 8) + 2 ^ (2 * j + 8) := by
+      have heq : 2 ^ ((2 * j + 7) + 2) = 2 ^ ((2 * j + 8) + 1) := by
+        rw [show (2 * j + 7) + 2 = (2 * j + 8) + 1 from by omega]
+      rw [heq, Nat.pow_succ]; omega
+    have hpow : 1 ≤ 2 ^ (2 * j + 8) := Nat.pos_pow_of_pos _ (by decide)
+    omega
+  have hcap := logN_le_cap (2 ^ (2 * j + 8) + 1) (2 * j + 7) (Nat.succ_pos _)
+    (by have h := Nat.pos_pow_of_pos (2 * j + 8) (show 0 < 2 by decide); omega) hbnd
+  unfold lnOver
+  refine Rle_trans (Rhalf_le_Rhalf (Rmul_le_Rmul_right
+    (Rnonneg_ofQ (Nat.succ_pos _) (by show (0 : Int) ≤ 1; decide)) hcap)) ?_
+  refine Rle_of_Req (Req_trans (Rhalf_congr (Rmul_ofQ_ofQ Nat.one_pos (Nat.succ_pos _))) ?_)
+  refine Req_trans (Rhalf_ofQ _ (Qmul_den_pos Nat.one_pos (Nat.succ_pos _))) ?_
+  apply ofQ_congr
+  show Qeq (mul (⟨1, 2⟩ : Q) (mul (⟨(2 * j + 7 : Int) + 2, 1⟩ : Q) (⟨1, 2 ^ (2 * j + 8) + 1⟩ : Q)))
+    (⟨2 * (j : Int) + 9, 2 * (2 ^ (2 * j + 8) + 1)⟩ : Q)
+  simp only [Qeq, mul]; push_cast; ring_uor
 
 end UOR.Bridge.F1Square.Analysis
