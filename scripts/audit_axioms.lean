@@ -3292,3 +3292,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.CTendsTo_unique
 #print axioms Analysis.CTendsTo_Clim
 #print axioms Analysis.Clim_congr
+#print axioms Analysis.CsumN_re
+#print axioms Analysis.CsumN_im
+#print axioms Analysis.CsumN_congr
+#print axioms Analysis.CprodN_congr
+#print axioms Analysis.CprodN_succ_one
