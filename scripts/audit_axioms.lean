@@ -3357,3 +3357,6 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.thetaArg_lower
 #print axioms Analysis.thetaTerm_le
 #print axioms Analysis.thetaTerm_RReg
+#print axioms Analysis.Rnonneg_Rlim_theta
+#print axioms Analysis.genSum_nonneg
+#print axioms Analysis.thetaFn_nonneg

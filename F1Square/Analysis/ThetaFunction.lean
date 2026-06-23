@@ -93,4 +93,27 @@ theorem thetaTerm_RReg (t : Real) (ht : Rle one t) :
 def thetaFn (t : Real) (ht : Rle one t) : Real :=
   Rlim (fun j => genSum (thetaTerm t) (digammaMidx (⟨1, 1⟩ : Q) j)) (thetaTerm_RReg t ht)
 
+/-- Non-negativity passes to a Bishop limit (local copy of `BLPipeline.Rnonneg_Rlim`, to avoid the
+    `Analysis → Square` import). -/
+theorem Rnonneg_Rlim_theta {X : Nat → Real} (h : RReg X) (hX : ∀ k, Rnonneg (X k)) :
+    Rnonneg (Rlim X h) := by
+  intro n
+  have hbc := hX (4 * n + 3) (4 * n + 3)
+  have hbd : 0 < (neg (Qbound (4 * n + 3))).den := by show 0 < 4 * n + 3 + 1; omega
+  have hab : Qle (neg (Qbound n)) (neg (Qbound (4 * n + 3))) := by
+    simp only [Qle, neg, Qbound]; push_cast; omega
+  rw [Rlim_seq]
+  exact Qle_trans hbd hab hbc
+
+/-- The partial sum `Σ_{n<N} T n` of pointwise-non-negative terms is non-negative. -/
+theorem genSum_nonneg {T : Nat → Real} (hT : ∀ n, Rnonneg (T n)) : ∀ N, Rnonneg (genSum T N)
+  | 0 => Rnonneg_zero
+  | (N + 1) => Rnonneg_Radd (genSum_nonneg hT N) (hT N)
+
+/-- **The Jacobi theta function is non-negative** — a sum of the non-negative terms `e^{−(m+1)²πt}`,
+    taken to its convergent limit. -/
+theorem thetaFn_nonneg (t : Real) (ht : Rle one t) : Rnonneg (thetaFn t ht) :=
+  Rnonneg_Rlim_theta (thetaTerm_RReg t ht)
+    (fun j => genSum_nonneg (fun _ => RexpReal_nonneg _) (digammaMidx (⟨1, 1⟩ : Q) j))
+
 end UOR.Bridge.F1Square.Analysis
