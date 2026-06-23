@@ -3349,4 +3349,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.witnessSum_mapidx_congr
 #print axioms Analysis.witnessSum_hadFactor_eq_liRatio
 #print axioms Analysis.hadamard_witnessSum_nonneg_on_line
+#print axioms Analysis.hadFactor_zero
+#print axioms Analysis.CprodN_const_one
+#print axioms Analysis.hadamard_prod_zero
 #print axioms Analysis.RexpReal_le_of_le

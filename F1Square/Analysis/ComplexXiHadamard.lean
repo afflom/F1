@@ -130,6 +130,29 @@ theorem witnessSum_hadFactor_eq_liRatio {gs zs : Complex} (H : HadamardXi Cone g
   witnessSum_mapidx_congr _ _
     (fun j => hadFactor_one_eq_liRatio (H.ρ j) (H.kwit j) (H.hwit j)) n (List.range M)
 
+/-- **The Hadamard factor at `s = 0` is `1`** (`1 − 0/ρ = 1`). -/
+theorem hadFactor_zero (ρ : Complex) (k : Nat) (hk : Qlt (Qbound k) ((CnormSq ρ).seq k)) :
+    Ceq (hadFactor Czero ρ k hk) Cone :=
+  Ceq_trans
+    (Cadd_congr (Ceq_refl Cone)
+      (Cneg_congr (Ceq_trans (Cmul_comm Czero (Cinv ρ k hk)) (cmul_czero (Cinv ρ k hk)))))
+    (Ceq_trans (Cadd_congr (Ceq_refl Cone) (⟨Rneg_zero, Rneg_zero⟩ : Ceq (Cneg Czero) Czero))
+      (cadd_zero Cone))
+
+/-- **A product of `Cone`s is `Cone`.** -/
+theorem CprodN_const_one : ∀ M, Ceq (CprodN (fun _ => Cone) M) Cone
+  | 0 => Ceq_refl Cone
+  | (m + 1) => Ceq_trans (Cmul_congr (CprodN_const_one m) (Ceq_refl Cone)) (Cmul_one Cone)
+
+/-- **The Hadamard partial products at `s = 0` are `1`** — every factor is `1` (`hadFactor_zero`), so
+    the product is `1` (`CprodN_const_one`). This validates the `factored` seam's normalization: at
+    `s = 0`, `ξ(0) = ξ(0)·∏(1 − 0/ρ) = ξ(0)·1`. -/
+theorem hadamard_prod_zero {gs zs : Complex} (H : HadamardXi Czero gs zs) (M : Nat) :
+    Ceq (CprodN (fun j => hadFactor Czero (H.ρ j) (H.kwit j) (H.hwit j)) M) Cone :=
+  Ceq_trans
+    (CprodN_congr (fun j => hadFactor_zero (H.ρ j) (H.kwit j) (H.hwit j)) M)
+    (CprodN_const_one M)
+
 /-- **Li-positivity from the Hadamard product, under RH** — if every zero `ρⱼ` of the Hadamard
     product lies on the critical line, then the Li witness sum over its `s = 1` factors is `≥ 0` for
     every partial range `M` and order `n`.
