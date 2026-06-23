@@ -95,6 +95,7 @@ import F1Square.Analysis.Complex
 import F1Square.Analysis.ComplexLimit
 import F1Square.Analysis.ComplexSeries
 import F1Square.Analysis.ComplexLogConj
+import F1Square.Analysis.ComplexConjAlgebra
 import F1Square.Analysis.Complete
 import F1Square.Analysis.Exp
 import F1Square.Analysis.ExpGen

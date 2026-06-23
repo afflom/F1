@@ -3303,3 +3303,10 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Cpow_conj
 #print axioms Analysis.Carg_conj
 #print axioms Analysis.Clim_Cconj
+#print axioms Analysis.Cconj_congr
+#print axioms Analysis.Cconj_Cconj
+#print axioms Analysis.Cconj_Cadd
+#print axioms Analysis.Cconj_Cneg
+#print axioms Analysis.Cconj_ofReal
+#print axioms Analysis.Cconj_Czero
+#print axioms Analysis.CsumN_Cconj
