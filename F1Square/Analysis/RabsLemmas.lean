@@ -30,6 +30,11 @@ theorem Rabs_Radd (a b : Real) : Rle (Rabs (Radd a b)) (Radd (Rabs a) (Rabs b)) 
 /-- `|0| = 0`. -/
 theorem Rabs_zero : Req (Rabs zero) zero := Req_of_seq_Qeq (fun _ => Qeq_refl _)
 
+/-- **`|q| = q` for a non-negative rational** (embedded): `Rabs (ofQ q) = ofQ q` when `q.num ≥ 0`. -/
+theorem Rabs_ofQ_nonneg {q : Q} (hq : 0 < q.den) (hn : 0 ≤ q.num) :
+    Req (Rabs (ofQ q hq)) (ofQ q hq) :=
+  Req_of_seq_Qeq (fun _ => Qabs_of_nonneg hn)
+
 /-- **The finite-sum triangle inequality** `|Σ_{i<N} F i| ≤ Σ_{i<N} |F i|`. -/
 theorem RsumN_Rabs_le (F : Nat → Real) :
     ∀ N, Rle (Rabs (RsumN F N)) (RsumN (fun i => Rabs (F i)) N)

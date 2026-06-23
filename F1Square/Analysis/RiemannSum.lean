@@ -93,6 +93,22 @@ theorem riemannSum_add (f g : Real → Real) (N : Nat) :
         (fun i => g (ofQ (⟨(i : Int), N + 1⟩ : Q) (Nat.succ_pos N))) (N + 1)))
     (Rmul_distrib _ _ _)
 
+/-- **Finite sums subtract**: `Σ(F−G) = ΣF − ΣG`. -/
+theorem RsumN_Rsub (F G : Nat → Real) : ∀ N,
+    Req (RsumN (fun i => Rsub (F i) (G i)) N) (Rsub (RsumN F N) (RsumN G N))
+  | 0 => Req_symm (Radd_neg zero)
+  | (N + 1) =>
+      Req_trans (Radd_congr (RsumN_Rsub F G N) (Req_refl (Rsub (F N) (G N))))
+        (Req_trans
+          (Radd_swap (RsumN F N) (Rneg (RsumN G N)) (F N) (Rneg (G N)))
+          (Radd_congr (Req_refl (Radd (RsumN F N) (F N)))
+            (Req_symm (Rneg_Radd (RsumN G N) (G N)))))
+
+/-- **The even refinement point equals the coarser point**: `2j/(2M) = j/M`. -/
+theorem dyadic_even_point (j M : Nat) (hM : 0 < M) :
+    Req (ofQ (⟨2 * j, 2 * M⟩ : Q) (Nat.mul_pos (by decide) hM)) (ofQ (⟨j, M⟩ : Q) hM) :=
+  ofQ_congr (Nat.mul_pos (by decide) hM) hM (by simp only [Qeq]; push_cast; ring_uor)
+
 /-- **Even–odd sum split** `Σ_{i<2N} F(i) = Σ_{j<N} F(2j) + Σ_{j<N} F(2j+1)` — the combinatorial heart
     of dyadic Riemann-sum refinement (a `2N`-point sum reindexed as `N` even/odd pairs). Reusable. -/
 theorem RsumN_split2 (F : Nat → Real) : ∀ N,

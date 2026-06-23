@@ -3381,6 +3381,9 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.riemannSum_nonneg
 #print axioms Analysis.riemannSum_add
 #print axioms Analysis.RsumN_split2
+#print axioms Analysis.RsumN_Rsub
+#print axioms Analysis.dyadic_even_point
 #print axioms Analysis.Rabs_Radd
 #print axioms Analysis.Rabs_zero
+#print axioms Analysis.Rabs_ofQ_nonneg
 #print axioms Analysis.RsumN_Rabs_le
