@@ -3390,3 +3390,5 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rabs_Rneg
 #print axioms Analysis.Rneg_le_of_Rabs_le
 #print axioms Analysis.RsumN_Rabs_le
+#print axioms Analysis.dyadic_pair_spacing
+#print axioms Analysis.dyadic_pair_lip
