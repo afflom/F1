@@ -3419,3 +3419,9 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.riemannIntegralI_le
 #print axioms Analysis.const_lip0
 #print axioms Analysis.Cintegral_const
+#print axioms Analysis.Qle_of_not_le
+#print axioms Analysis.Qavg_le_right
+#print axioms Analysis.Qavg_ge_left
+#print axioms Analysis.sqrtBisect_den_pos
+#print axioms Analysis.sqrtBisect_width
+#print axioms Analysis.sqrtBisect_inv
