@@ -235,4 +235,37 @@ theorem riemannIntegral_nonneg {f : Real → Real} {L : Q} (hLd : 0 < L.den) (hL
     Rlim_add_const (dyadicR f 0) _ (dyadicSum_RReg hLd hLn hlip hfc) hZReg
   exact Rnonneg_congr hEq (Rnonneg_Rlim_seq hZReg hZnn)
 
+/-- Monotonicity passes to a Bishop limit (`∀k, X k ≤ Y k ⟹ lim X ≤ lim Y`). -/
+theorem Rlim_le_seq {X Y : Nat → Real} (hX : RReg X) (hY : RReg Y) (h : ∀ k, Rle (X k) (Y k)) :
+    Rle (Rlim X hX) (Rlim Y hY) := by
+  intro n
+  rw [Rlim_seq, Rlim_seq]
+  refine Qle_trans
+    (add_den_pos ((Y (4 * n + 3)).den_pos (4 * n + 3)) (by show 0 < 4 * n + 3 + 1; omega))
+    (h (4 * n + 3) (4 * n + 3)) (Qadd_le_add (Qle_refl _) ?_)
+  simp only [Qle]; push_cast; omega
+
+/-- **`∫₀¹ f ≤ ∫₀¹ g` for `f ≤ g`** (with a shared Lipschitz modulus `L`, so both integrals sample
+    the same dyadic schedule). Monotonicity of the certified integral: each dyadic sum is monotone
+    (`riemannSum_le`), so the limits compare (`Rlim_le_seq`). -/
+theorem riemannIntegral_le {f g : Real → Real} {L : Q} (hLd : 0 < L.den) (hLn : 0 ≤ L.num)
+    (hlipf : ∀ x y, Rle (Rabs (Rsub (f x) (f y))) (Rmul (ofQ L hLd) (Rabs (Rsub x y))))
+    (hfcf : ∀ x y, Req x y → Req (f x) (f y))
+    (hlipg : ∀ x y, Rle (Rabs (Rsub (g x) (g y))) (Rmul (ofQ L hLd) (Rabs (Rsub x y))))
+    (hfcg : ∀ x y, Req x y → Req (g x) (g y)) (hfg : ∀ x, Rle (f x) (g x)) :
+    Rle (riemannIntegral hLd hLn hlipf hfcf) (riemannIntegral hLd hLn hlipg hfcg) := by
+  have hZfReg : RReg (fun j => Radd (dyadicR f 0) (genSum (dyadicTerm f) (digammaMidx L j))) :=
+    RReg_add_const (dyadicR f 0) _ (dyadicSum_RReg hLd hLn hlipf hfcf)
+  have hZgReg : RReg (fun j => Radd (dyadicR g 0) (genSum (dyadicTerm g) (digammaMidx L j))) :=
+    RReg_add_const (dyadicR g 0) _ (dyadicSum_RReg hLd hLn hlipg hfcg)
+  have hZle : ∀ j, Rle (Radd (dyadicR f 0) (genSum (dyadicTerm f) (digammaMidx L j)))
+      (Radd (dyadicR g 0) (genSum (dyadicTerm g) (digammaMidx L j))) := fun j =>
+    Rle_trans (Rle_of_Req (Req_symm (dyadicR_eq f (digammaMidx L j))))
+      (Rle_trans (riemannSum_le (2 ^ digammaMidx L j - 1) (fun i _ => hfg _))
+        (Rle_of_Req (dyadicR_eq g (digammaMidx L j))))
+  refine Rle_trans (Rle_of_Req (Req_symm
+      (Rlim_add_const (dyadicR f 0) _ (dyadicSum_RReg hLd hLn hlipf hfcf) hZfReg))) ?_
+  exact Rle_trans (Rlim_le_seq hZfReg hZgReg hZle)
+    (Rle_of_Req (Rlim_add_const (dyadicR g 0) _ (dyadicSum_RReg hLd hLn hlipg hfcg) hZgReg))
+
 end UOR.Bridge.F1Square.Analysis

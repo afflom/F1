@@ -3407,3 +3407,5 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Radd_Rsub_cancel
 #print axioms Analysis.dyadicR_eq
 #print axioms Analysis.riemannIntegral_nonneg
+#print axioms Analysis.Rlim_le_seq
+#print axioms Analysis.riemannIntegral_le
