@@ -3415,3 +3415,5 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.affineMap_diff
 #print axioms Analysis.affine_lip
 #print axioms Analysis.riemannIntegralI_const
+#print axioms Analysis.riemannIntegralI_nonneg
+#print axioms Analysis.riemannIntegralI_le

@@ -79,4 +79,27 @@ theorem riemannIntegralI_const (c : Real) (a w : Q) (ha : 0 < a.den) (hw : 0 < w
         (Rmul (ofQ w hw) c) :=
   Rmul_congr (Req_refl _) (riemannIntegral_const_gen c _ _ _ _)
 
+/-- **`∫_a^{a+w} f ≥ 0` for `f ≥ 0`** (width `w ≥ 0`) — inherits from the unit-interval positivity,
+    scaled by the non-negative width. -/
+theorem riemannIntegralI_nonneg {f : Real → Real} {L : Q} (hLd : 0 < L.den) (hLn : 0 ≤ L.num)
+    (hlip : ∀ x y, Rle (Rabs (Rsub (f x) (f y))) (Rmul (ofQ L hLd) (Rabs (Rsub x y))))
+    (hfc : ∀ x y, Req x y → Req (f x) (f y)) (hfnn : ∀ x, Rnonneg (f x))
+    (a w : Q) (ha : 0 < a.den) (hw : 0 < w.den) (hwn : 0 ≤ w.num) :
+    Rnonneg (riemannIntegralI hLd hLn hlip hfc a w ha hw hwn) :=
+  Rnonneg_Rmul (Rnonneg_ofQ hw hwn)
+    (riemannIntegral_nonneg _ _ _ _ (fun x => hfnn (affineMap a w ha hw x)))
+
+/-- **`∫_a^{a+w} f ≤ ∫_a^{a+w} g` for `f ≤ g`** (shared modulus `L`, width `w ≥ 0`) — inherits from
+    the unit-interval monotonicity, scaled by the non-negative width. -/
+theorem riemannIntegralI_le {f g : Real → Real} {L : Q} (hLd : 0 < L.den) (hLn : 0 ≤ L.num)
+    (hlipf : ∀ x y, Rle (Rabs (Rsub (f x) (f y))) (Rmul (ofQ L hLd) (Rabs (Rsub x y))))
+    (hfcf : ∀ x y, Req x y → Req (f x) (f y))
+    (hlipg : ∀ x y, Rle (Rabs (Rsub (g x) (g y))) (Rmul (ofQ L hLd) (Rabs (Rsub x y))))
+    (hfcg : ∀ x y, Req x y → Req (g x) (g y)) (hfg : ∀ x, Rle (f x) (g x))
+    (a w : Q) (ha : 0 < a.den) (hw : 0 < w.den) (hwn : 0 ≤ w.num) :
+    Rle (riemannIntegralI hLd hLn hlipf hfcf a w ha hw hwn)
+        (riemannIntegralI hLd hLn hlipg hfcg a w ha hw hwn) :=
+  Rmul_le_Rmul_left (Rnonneg_ofQ hw hwn)
+    (riemannIntegral_le _ _ _ _ _ _ (fun x => hfg (affineMap a w ha hw x)))
+
 end UOR.Bridge.F1Square.Analysis
