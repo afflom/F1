@@ -85,4 +85,21 @@ def CprodConv (F : Nat → Complex) : Prop := CReg (CprodN F)
 /-- The **complex infinite product** `∏_k F k` — the limit of the partial products, given convergence. -/
 def CprodInf (F : Nat → Complex) (h : CprodConv F) : Complex := Clim (CprodN F) h
 
+/-- The partial-sum real-part sequence **is** the real partial-sum of the real parts (as functions). -/
+theorem CsumN_re_fun (F : Nat → Complex) :
+    (fun N => (CsumN F N).re) = RsumN (fun n => (F n).re) := funext (CsumN_re F)
+
+/-- The partial-sum imaginary-part sequence **is** the real partial-sum of the imaginary parts. -/
+theorem CsumN_im_fun (F : Nat → Complex) :
+    (fun N => (CsumN F N).im) = RsumN (fun n => (F n).im) := funext (CsumN_im F)
+
+/-- **Complex-series convergence reduces to two real-series convergences**: `Σ F` converges iff both
+    the real-part series `Σ Re(F)` and imaginary-part series `Σ Im(F)` are regular (`RReg`). This is
+    the bridge that lets any concrete complex series be shown convergent via the real completeness —
+    the workhorse for the Hadamard/log-derivative limits. -/
+theorem CsumConv_iff (F : Nat → Complex) :
+    CsumConv F ↔ RReg (RsumN (fun n => (F n).re)) ∧ RReg (RsumN (fun n => (F n).im)) := by
+  unfold CsumConv CReg
+  rw [CsumN_re_fun F, CsumN_im_fun F]
+
 end UOR.Bridge.F1Square.Analysis
