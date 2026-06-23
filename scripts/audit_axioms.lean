@@ -3332,3 +3332,10 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.CxiPoly_symm
 #print axioms Analysis.Cxi_eq_poly_completed
 #print axioms Analysis.Cxi_functional_equation
+#print axioms Analysis.oneSub_oneSub
+#print axioms Analysis.oneSub_eq_conj_on_critical
+#print axioms Analysis.CnegHalf_congr
+#print axioms Analysis.CpiPow_congr
+#print axioms Analysis.CxiPoly_congr
+#print axioms Analysis.Cxi_congr
+#print axioms Analysis.Cxi_real_on_critical_line

@@ -134,4 +134,72 @@ theorem Cxi_functional_equation (s gs zs g₁ z₁ : Complex)
     (Ceq_trans (Cmul_congr (CxiPoly_symm s) hfe)
       (Ceq_symm (Cxi_eq_poly_completed (oneSub s) g₁ z₁)))
 
+-- ===========================================================================
+-- Consequences: reflection is an involution; on the critical line `1−s = s̄`;
+-- and (with the conjugation symmetry, item 2) ξ is real on the critical line.
+-- ===========================================================================
+
+/-- **The reflection `s ↦ 1−s` is an involution**: `1 − (1 − s) ≈ s`. (Consistency of the functional
+    equation: applying it twice is the identity.) -/
+theorem oneSub_oneSub (s : Complex) : Ceq (oneSub (oneSub s)) s := by
+  refine ⟨?_, ?_⟩
+  · refine Req_trans (Radd_congr (Req_refl one) (Rneg_Radd one (Rneg s.re))) ?_
+    refine Req_trans (Radd_congr (Req_refl one)
+      (Radd_congr (Req_refl (Rneg one)) (Rneg_neg s.re))) ?_
+    refine Req_trans (Req_symm (Radd_assoc one (Rneg one) s.re)) ?_
+    refine Req_trans (Radd_congr (Radd_neg one) (Req_refl s.re)) ?_
+    exact Req_trans (Radd_comm zero s.re) (Radd_zero s.re)
+  · refine Req_trans (Radd_comm zero (Rneg (Radd zero (Rneg s.im)))) ?_
+    refine Req_trans (Radd_zero (Rneg (Radd zero (Rneg s.im)))) ?_
+    refine Req_trans (Rneg_congr (Req_trans (Radd_comm zero (Rneg s.im)) (Radd_zero (Rneg s.im)))) ?_
+    exact Rneg_neg s.im
+
+/-- **On the critical line, reflection coincides with conjugation**: if `Re s = ½` then `1 − s ≈ s̄`.
+    (`1 − s = (1 − Re s) − i·Im s = ½ − i·Im s = Re s − i·Im s = s̄`.) The bridge that turns the
+    functional equation into a statement about `conj`. -/
+theorem oneSub_eq_conj_on_critical (s : Complex)
+    (hcrit : Req s.re (ofQ (⟨1, 2⟩ : Q) (by decide))) :
+    Ceq (oneSub s) (Cconj s) := by
+  refine ⟨?_, ?_⟩
+  · refine Req_trans (Radd_congr (Req_refl one) (Rneg_congr hcrit)) ?_
+    refine Req_trans ?_ (Req_symm hcrit)
+    refine Req_trans (Radd_congr (Req_refl one) (Rneg_ofQ (⟨1, 2⟩ : Q) (by decide))) ?_
+    refine Req_trans (Radd_ofQ_ofQ (a := (⟨1, 1⟩ : Q)) (b := neg (⟨1, 2⟩ : Q))
+      (by decide) (by decide)) ?_
+    exact ofQ_congr (by decide) (by decide) (by decide)
+  · exact Req_trans (Radd_comm zero (Rneg s.im)) (Radd_zero (Rneg s.im))
+
+-- --- Congruence of ξ in its `s` argument (the polynomial and conductor factors). ---
+
+/-- `CnegHalf` is `≈`-congruent in `s`. -/
+theorem CnegHalf_congr {s s' : Complex} (h : Ceq s s') : Ceq (CnegHalf s) (CnegHalf s') :=
+  ⟨Rneg_congr (Rmul_congr (Req_refl _) h.1), Rneg_congr (Rmul_congr (Req_refl _) h.2)⟩
+
+/-- `CpiPow` (the conductor `π^{−s/2}`) is `≈`-congruent in `s`. -/
+theorem CpiPow_congr {s s' : Complex} (h : Ceq s s') : Ceq (CpiPow s) (CpiPow s') :=
+  Cexp_congr (Cmul_congr (CnegHalf_congr h) (Ceq_refl _))
+
+/-- `CxiPoly` (the prefactor `½s(s−1)`) is `≈`-congruent in `s`. -/
+theorem CxiPoly_congr {s s' : Complex} (h : Ceq s s') : Ceq (CxiPoly s) (CxiPoly s') :=
+  Cmul_congr (Ceq_refl _) (Cmul_congr h (Cadd_congr h (Ceq_refl _)))
+
+/-- **ξ is `≈`-congruent in its `s` argument** (factor values held fixed). -/
+theorem Cxi_congr {s s' : Complex} (g z : Complex) (h : Ceq s s') :
+    Ceq (Cxi s g z) (Cxi s' g z) :=
+  Cmul_congr (Cmul_congr (Cmul_congr (CxiPoly_congr h) (CpiPow_congr h)) (Ceq_refl g)) (Ceq_refl z)
+
+/-- **ξ is real on the critical line** — the principal structural consequence of the functional
+    equation. On `Re s = ½`, the functional equation `ξ(s) = ξ(1−s)` (`hfe`) and the conjugation
+    symmetry `ξ(s̄) = conj ξ(s)` (`hconj`, item 2 / `Cxi_conj`) combine — via `1 − s ≈ s̄` — to force
+    `ξ(s) ≈ conj ξ(s)`, i.e. `ξ(s)` is real. (This is the foundation of Hardy's real `Z`-function and
+    of locating zeros on the line.) Stated generically in the factor values `gs, zs` and their `1−s`
+    counterparts `gc, zc` (which on the line equal the `s̄` factors), hence realization-independent. -/
+theorem Cxi_real_on_critical_line (s gs zs gc zc : Complex)
+    (hcrit : Req s.re (ofQ (⟨1, 2⟩ : Q) (by decide)))
+    (hfe : Ceq (Cxi s gs zs) (Cxi (oneSub s) gc zc))
+    (hconj : Ceq (Cxi (Cconj s) gc zc) (Cconj (Cxi s gs zs))) :
+    Ceq (Cxi s gs zs) (Cconj (Cxi s gs zs)) :=
+  Ceq_trans hfe
+    (Ceq_trans (Cxi_congr gc zc (oneSub_eq_conj_on_critical s hcrit)) hconj)
+
 end UOR.Bridge.F1Square.Analysis
