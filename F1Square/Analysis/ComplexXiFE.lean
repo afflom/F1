@@ -228,4 +228,16 @@ theorem Cxi_zero_conj (s gs zs gc zc : Complex)
     Ceq (Cxi (Cconj s) gc zc) Czero :=
   Ceq_trans hconj (Ceq_trans (Cconj_congr hz) Cconj_Czero)
 
+/-- **The fourth corner of the zero quadruple `{ρ, 1−ρ, ρ̄, 1−ρ̄}`**: from `ξ(s)=0`, conjugation gives
+    `ξ(s̄)=0` (`Cxi_zero_conj`), then the functional equation at `s̄` gives `ξ(1−s̄)=0`
+    (`Cxi_zero_reflect`). Composing the two symmetries, every zero is accompanied by `1−s̄` (the
+    diagonal of the quadruple). On the critical line `1−s̄ = s`, so the quadruple collapses to the
+    conjugate pair `{ρ, ρ̄}`. -/
+theorem Cxi_zero_conj_reflect (s gs zs gc zc g' z' : Complex)
+    (hconj : Ceq (Cxi (Cconj s) gc zc) (Cconj (Cxi s gs zs)))
+    (hfe_conj : Ceq (Cxi (Cconj s) gc zc) (Cxi (oneSub (Cconj s)) g' z'))
+    (hz : Ceq (Cxi s gs zs) Czero) :
+    Ceq (Cxi (oneSub (Cconj s)) g' z') Czero :=
+  Cxi_zero_reflect (Cconj s) gc zc g' z' hfe_conj (Cxi_zero_conj s gs zs gc zc hconj hz)
+
 end UOR.Bridge.F1Square.Analysis
