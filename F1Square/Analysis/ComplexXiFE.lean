@@ -29,6 +29,7 @@ import F1Square.Analysis.EulerMaclaurin
 import F1Square.Analysis.EtaVariation
 import F1Square.Analysis.LiLinearize
 import F1Square.Analysis.ComplexArgLeftAdd
+import F1Square.Analysis.ComplexConjAlgebra
 
 namespace UOR.Bridge.F1Square.Analysis
 
@@ -201,5 +202,30 @@ theorem Cxi_real_on_critical_line (s gs zs gc zc : Complex)
     Ceq (Cxi s gs zs) (Cconj (Cxi s gs zs)) :=
   Ceq_trans hfe
     (Ceq_trans (Cxi_congr gc zc (oneSub_eq_conj_on_critical s hcrit)) hconj)
+
+-- ===========================================================================
+-- Zero-set symmetries: the functional equation and conjugation force the zeros
+-- of ξ to pair `(ρ, 1−ρ)` and `(ρ, ρ̄)` — the basis of the Hadamard pairing
+-- (item 5) and of the critical-line focus.
+-- ===========================================================================
+
+/-- **Zeros reflect under `s ↦ 1−s`**: if `ξ(s) = ξ(1−s)` (the functional equation) and `ξ(s) = 0`,
+    then `ξ(1−s) = 0`. So the nontrivial zero set is symmetric about `Re s = ½` — the pairing
+    `(ρ, 1−ρ)` that makes the Hadamard product converge. -/
+theorem Cxi_zero_reflect (s gs zs g₁ z₁ : Complex)
+    (hfe : Ceq (Cxi s gs zs) (Cxi (oneSub s) g₁ z₁))
+    (hz : Ceq (Cxi s gs zs) Czero) :
+    Ceq (Cxi (oneSub s) g₁ z₁) Czero :=
+  Ceq_trans (Ceq_symm hfe) hz
+
+/-- **Zeros reflect under conjugation `s ↦ s̄`**: if `ξ(s̄) = conj ξ(s)` (item 2) and `ξ(s) = 0`, then
+    `ξ(s̄) = 0`. So the zero set is symmetric about the real axis — the pairing `(ρ, ρ̄)`. (Combined
+    with `Cxi_zero_reflect`, zeros come in quadruples `ρ, 1−ρ, ρ̄, 1−ρ̄`, collapsing to conjugate
+    pairs on the critical line.) -/
+theorem Cxi_zero_conj (s gs zs gc zc : Complex)
+    (hconj : Ceq (Cxi (Cconj s) gc zc) (Cconj (Cxi s gs zs)))
+    (hz : Ceq (Cxi s gs zs) Czero) :
+    Ceq (Cxi (Cconj s) gc zc) Czero :=
+  Ceq_trans hconj (Ceq_trans (Cconj_congr hz) Cconj_Czero)
 
 end UOR.Bridge.F1Square.Analysis
