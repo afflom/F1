@@ -3323,3 +3323,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.CzetaStrip_conj
 #print axioms Analysis.CspougeBracketWAux_conj
 #print axioms Analysis.CspougeBracketW_conj
+#print axioms Analysis.CSpougeGammaW_conj
