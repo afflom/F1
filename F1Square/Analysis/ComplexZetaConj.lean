@@ -93,4 +93,29 @@ theorem etaDenomInv_conj (s : Complex)
     exact Rneg_congr (Req_trans (Rmul_congr hde.2 hinv)
       (Rmul_neg_left (etaDenom s).im (Rinv (CnormSq (etaDenom s)) k hk)))
 
+-- ===========================================================================
+-- (C) The η numerator: the paired partial sums conjugate (the core of `Ceta_conj`).
+-- ===========================================================================
+
+/-- **Conjugation of the term difference** `cpowNegDiff (s̄) n = conj(cpowNegDiff s n)`
+    (`cpowNegDiff = n^{−s} − (n+1)^{−s}`): `Cconj` distributes over the subtraction, `cpowNeg_conj`
+    does each term. -/
+theorem cpowNegDiff_conj (s : Complex) (n : Nat) :
+    Ceq (cpowNegDiff (Cconj s) n) (Cconj (cpowNegDiff s n)) := by
+  unfold cpowNegDiff Csub
+  exact Ceq_trans (Cadd_congr (cpowNeg_conj s n) (Cneg_congr (cpowNeg_conj s (n + 1))))
+    (Ceq_symm (Ceq_trans (Cconj_Cadd (cpowNeg s n) (Cneg (cpowNeg s (n + 1))))
+      (Cadd_congr (Ceq_refl _) (Cconj_Cneg (cpowNeg s (n + 1))))))
+
+/-- **Conjugation of the η paired partial sum** `czEtaPaired (s̄) K = conj(czEtaPaired s K)` — by
+    induction: each block is a `Cadd` of `cpowNegDiff`s, both of which conjugate (`Cconj_Cadd`,
+    `cpowNegDiff_conj`).  This is the numerator core of the ζ-strip conjugation `Ceta_conj`/`hz`:
+    `Re/Im (Ceta) = Rlim ((czEtaPaired …).re/.im)`. -/
+theorem czEtaPaired_conj (s : Complex) : ∀ K,
+    Ceq (czEtaPaired (Cconj s) K) (Cconj (czEtaPaired s K))
+  | 0 => Ceq_symm Cconj_Czero
+  | (K + 1) =>
+      Ceq_trans (Cadd_congr (czEtaPaired_conj s K) (cpowNegDiff_conj s (2 * K + 1)))
+        (Ceq_symm (Cconj_Cadd (czEtaPaired s K) (cpowNegDiff s (2 * K + 1))))
+
 end UOR.Bridge.F1Square.Analysis

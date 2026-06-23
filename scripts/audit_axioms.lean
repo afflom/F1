@@ -3317,3 +3317,5 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.etaDenom_conj
 #print axioms Analysis.Cinv_congr
 #print axioms Analysis.etaDenomInv_conj
+#print axioms Analysis.cpowNegDiff_conj
+#print axioms Analysis.czEtaPaired_conj
