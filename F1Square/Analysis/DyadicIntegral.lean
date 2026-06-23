@@ -14,6 +14,7 @@ Pure Lean 4 core, no Mathlib, no `sorry`/`native_decide`, choice-free; audited b
 
 import F1Square.Analysis.RiemannConv
 import F1Square.Analysis.ComplexDigamma
+import F1Square.Analysis.RlimProps
 
 namespace UOR.Bridge.F1Square.Analysis
 
@@ -96,5 +97,52 @@ def riemannIntegral {f : Real → Real} {L : Q} (hLd : 0 < L.den) (hLn : 0 ≤ L
     (hfc : ∀ x y, Req x y → Req (f x) (f y)) : Real :=
   Radd (dyadicR f 0)
     (Rlim (fun j => genSum (dyadicTerm f) (digammaMidx L j)) (dyadicSum_RReg hLd hLn hlip hfc))
+
+/-- The telescoping rearrangement `(a − b) + (c − a) ≈ c − b`. -/
+theorem Radd_Rsub_Rsub (a b c : Real) :
+    Req (Radd (Rsub a b) (Rsub c a)) (Rsub c b) :=
+  Req_trans (Radd_comm (Rsub a b) (Rsub c a))
+    (Req_trans (Radd_assoc c (Rneg a) (Radd a (Rneg b)))
+      (Radd_congr (Req_refl c)
+        (Req_trans (Req_symm (Radd_assoc (Rneg a) a (Rneg b)))
+          (Req_trans
+            (Radd_congr (Req_trans (Radd_comm (Rneg a) a) (Radd_neg a)) (Req_refl (Rneg b)))
+            (Req_trans (Radd_comm zero (Rneg b)) (Radd_zero (Rneg b)))))))
+
+/-- **The dyadic increments telescope**: `Σ_{k<M}(D_{k+1} − D_k) ≈ D_M − D_0`. So the integral
+    `riemannIntegral f = D_0 + lim Σ` is the Bishop limit of the dyadic Riemann sums `D_k`. -/
+theorem genSum_telescope (f : Real → Real) :
+    ∀ M, Req (genSum (dyadicTerm f) M) (Rsub (dyadicR f M) (dyadicR f 0))
+  | 0 => Req_symm (Radd_neg (dyadicR f 0))
+  | (M + 1) => by
+      refine Req_trans (Radd_congr (genSum_telescope f M) (Req_refl _)) ?_
+      exact Radd_Rsub_Rsub (dyadicR f M) (dyadicR f 0) (dyadicR f (M + 1))
+
+/-- The Lipschitz witness for a constant integrand (constant `0`). -/
+private theorem const_lip (c : Real) : ∀ x y,
+    Rle (Rabs (Rsub c c)) (Rmul (ofQ (⟨0, 1⟩ : Q) (by decide)) (Rabs (Rsub x y))) := by
+  intro x y
+  have hL : Req (Rabs (Rsub c c)) zero := Req_trans (Rabs_congr (Radd_neg c)) Rabs_zero
+  have hz0 : Req (ofQ (⟨0, 1⟩ : Q) (by decide)) zero := Req_of_seq_Qeq (fun _ => Qeq_refl _)
+  have hR : Req (Rmul (ofQ (⟨0, 1⟩ : Q) (by decide)) (Rabs (Rsub x y))) zero :=
+    Req_trans (Rmul_congr hz0 (Req_refl _))
+      (Req_trans (Rmul_comm zero (Rabs (Rsub x y))) (Rmul_zero (Rabs (Rsub x y))))
+  exact Rle_trans (Rle_of_Req hL) (Rle_of_Req (Req_symm hR))
+
+/-- **`∫₀¹ c = c`** — the certified integral of a constant integrand is the constant. The dyadic
+    sums are all `≈ c` (`riemannSum_const`), so every telescoped partial sum is `≈ 0` and the limit
+    vanishes; the `D_0` anchor carries the value. -/
+theorem riemannIntegral_const (c : Real) :
+    Req (riemannIntegral (f := fun _ => c) (L := (⟨0, 1⟩ : Q)) (by decide) (by decide)
+          (const_lip c) (fun _ _ _ => Req_refl c)) c := by
+  have hz : ∀ j, Req (genSum (dyadicTerm (fun _ => c)) (digammaMidx (⟨0, 1⟩ : Q) j)) zero := by
+    intro j
+    refine Req_trans (genSum_telescope (fun _ => c) (digammaMidx (⟨0, 1⟩ : Q) j)) ?_
+    exact Req_trans
+      (Rsub_congr (riemannSum_const c (2 ^ digammaMidx (⟨0, 1⟩ : Q) j - 1))
+        (riemannSum_const c (2 ^ 0 - 1)))
+      (Radd_neg c)
+  refine Req_trans (Radd_congr (Req_refl _) (Rlim_zero _ _ hz)) ?_
+  exact Req_trans (Radd_zero _) (riemannSum_const c (2 ^ 0 - 1))
 
 end UOR.Bridge.F1Square.Analysis

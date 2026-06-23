@@ -3397,3 +3397,6 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.qmul_den_anti
 #print axioms Analysis.dyadicTerm_bound
 #print axioms Analysis.dyadicSum_RReg
+#print axioms Analysis.Radd_Rsub_Rsub
+#print axioms Analysis.genSum_telescope
+#print axioms Analysis.riemannIntegral_const
