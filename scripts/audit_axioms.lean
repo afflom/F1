@@ -3325,3 +3325,10 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.CspougeBracketW_conj
 #print axioms Analysis.CSpougeGammaW_conj
 #print axioms Analysis.Cxi_conj_built
+#print axioms Analysis.Cneg_Cneg
+#print axioms Analysis.cmul_cneg_cneg
+#print axioms Analysis.oneSub_eq_neg_sub
+#print axioms Analysis.oneSub_sub_one
+#print axioms Analysis.CxiPoly_symm
+#print axioms Analysis.Cxi_eq_poly_completed
+#print axioms Analysis.Cxi_functional_equation
