@@ -3425,3 +3425,9 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.sqrtBisect_den_pos
 #print axioms Analysis.sqrtBisect_width
 #print axioms Analysis.sqrtBisect_inv
+#print axioms Analysis.sqLo_mono
+#print axioms Analysis.sqLo_incr_le
+#print axioms Analysis.sqrtK_den_pos
+#print axioms Analysis.sqrtK_num_nonneg
+#print axioms Analysis.sqrt_env_le
+#print axioms Analysis.sqrtTerm_bound
