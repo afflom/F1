@@ -3431,3 +3431,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.sqrtK_num_nonneg
 #print axioms Analysis.sqrt_env_le
 #print axioms Analysis.sqrtTerm_bound
+#print axioms Analysis.Qle_of_sq_le
+#print axioms Analysis.sqLo_le_sqHi_cross
+#print axioms Analysis.genSum_sqrtTerm_eq
+#print axioms Analysis.Rsqrt_nonneg
+#print axioms Analysis.Rsqrt_le_sqHi
