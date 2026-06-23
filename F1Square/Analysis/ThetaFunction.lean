@@ -22,6 +22,7 @@ Pure Lean 4 core, no Mathlib, no `sorry`/`native_decide`, choice-free; audited b
 import F1Square.Analysis.RealPow
 import F1Square.Analysis.Pi
 import F1Square.Analysis.ComplexDigamma
+import F1Square.Analysis.ExpRealMono
 
 namespace UOR.Bridge.F1Square.Analysis
 
@@ -115,5 +116,45 @@ theorem genSum_nonneg {T : Nat → Real} (hT : ∀ n, Rnonneg (T n)) : ∀ N, Rn
 theorem thetaFn_nonneg (t : Real) (ht : Rle one t) : Rnonneg (thetaFn t ht) :=
   Rnonneg_Rlim_theta (thetaTerm_RReg t ht)
     (fun j => genSum_nonneg (fun _ => RexpReal_nonneg _) (digammaMidx (⟨1, 1⟩ : Q) j))
+
+/-- **Monotonicity passes to Bishop limits**: pointwise `X k ≤ Y k` gives `lim X ≤ lim Y` (a general
+    reusable companion to `Rnonneg_Rlim`, previously absent). -/
+theorem Rlim_le_Rlim {X Y : Nat → Real} (hX : RReg X) (hY : RReg Y) (h : ∀ k, Rle (X k) (Y k)) :
+    Rle (Rlim X hX) (Rlim Y hY) := by
+  intro n
+  rw [Rlim_seq, Rlim_seq]
+  have hk := h (4 * n + 3) (4 * n + 3)
+  have hmid : 0 < (add ((Y (4 * n + 3)).seq (4 * n + 3)) (⟨2, 4 * n + 3 + 1⟩ : Q)).den :=
+    add_den_pos ((Y (4 * n + 3)).den_pos (4 * n + 3)) (by show 0 < 4 * n + 3 + 1; omega)
+  refine Qle_trans hmid hk (Qadd_le_add (Qle_refl _) ?_)
+  simp only [Qle]; push_cast; omega
+
+/-- The partial sum `Σ_{n<N} T n` is monotone under pointwise `≤` of the summands. -/
+theorem genSum_le {T U : Nat → Real} (h : ∀ m, Rle (T m) (U m)) :
+    ∀ N, Rle (genSum T N) (genSum U N)
+  | 0 => Rle_refl zero
+  | (N + 1) => Radd_le_add (genSum_le h N) (h N)
+
+/-- **The theta exponent is monotone in `t`**: `(m+1)²πt₁ ≤ (m+1)²πt₂` for `t₁ ≤ t₂`. -/
+theorem thetaArg_mono {t₁ t₂ : Real} (h : Rle t₁ t₂) (m : Nat) :
+    Rle (thetaArg t₁ m) (thetaArg t₂ m) := by
+  have hpi_nn : Rnonneg Rpi :=
+    Rnonneg_congr (Rsub_zero Rpi)
+      (Rnonneg_Rsub_of_Rle (Rle_trans (Rle_ofQ_ofQ (by decide) (by decide) (by decide))
+        Rpi_lower_three))
+  exact Rmul_le_Rmul_left (Rnonneg_ofQ Nat.one_pos (Int.ofNat_nonneg _))
+    (Rmul_le_Rmul_left hpi_nn h)
+
+/-- **The theta term is antitone in `t`**: `e^{−(m+1)²πt₂} ≤ e^{−(m+1)²πt₁}` for `t₁ ≤ t₂`. -/
+theorem thetaTerm_antitone {t₁ t₂ : Real} (h : Rle t₁ t₂) (m : Nat) :
+    Rle (thetaTerm t₂ m) (thetaTerm t₁ m) :=
+  RexpReal_le_of_le (Rle_Rneg (thetaArg_mono h m))
+
+/-- **The Jacobi theta function is antitone in `t`** (`t ≥ 1`): `ψ(t₂) ≤ ψ(t₁)` for `t₁ ≤ t₂` — more
+    decay at larger `t`. -/
+theorem thetaFn_antitone {t₁ t₂ : Real} (ht₁ : Rle one t₁) (ht₂ : Rle one t₂) (h : Rle t₁ t₂) :
+    Rle (thetaFn t₂ ht₂) (thetaFn t₁ ht₁) :=
+  Rlim_le_Rlim (thetaTerm_RReg t₂ ht₂) (thetaTerm_RReg t₁ ht₁)
+    (fun j => genSum_le (fun m => thetaTerm_antitone h m) (digammaMidx (⟨1, 1⟩ : Q) j))
 
 end UOR.Bridge.F1Square.Analysis

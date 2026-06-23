@@ -3360,3 +3360,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rnonneg_Rlim_theta
 #print axioms Analysis.genSum_nonneg
 #print axioms Analysis.thetaFn_nonneg
+#print axioms Analysis.Rlim_le_Rlim
+#print axioms Analysis.genSum_le
+#print axioms Analysis.thetaArg_mono
+#print axioms Analysis.thetaTerm_antitone
+#print axioms Analysis.thetaFn_antitone
