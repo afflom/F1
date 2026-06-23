@@ -3343,3 +3343,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.hadamard_factor_one_is_cayley
 #print axioms Analysis.Cxi_zero_reflect
 #print axioms Analysis.Cxi_zero_conj
+#print axioms Analysis.Cnpow_congr
+#print axioms Analysis.witnessTerm_congr
+#print axioms Analysis.witnessSum_mapidx_congr
+#print axioms Analysis.witnessSum_hadFactor_eq_liRatio

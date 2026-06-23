@@ -32,6 +32,7 @@ import F1Square.Analysis.ComplexSeries
 import F1Square.Analysis.ComplexXi
 import F1Square.Analysis.EulerMaclaurin
 import F1Square.Analysis.LiLinearize
+import F1Square.Analysis.RHWitness
 
 namespace UOR.Bridge.F1Square.Analysis
 
@@ -87,5 +88,46 @@ structure HadamardXi (s gs zs : Complex) where
 theorem hadamard_factor_one_is_cayley {gs zs : Complex} (H : HadamardXi Cone gs zs) (j : Nat) :
     Ceq (hadFactor Cone (H.ρ j) (H.kwit j) (H.hwit j)) (liRatio (H.ρ j) (H.kwit j) (H.hwit j)) :=
   hadFactor_one_eq_liRatio (H.ρ j) (H.kwit j) (H.hwit j)
+
+-- ===========================================================================
+-- Item 6 (algebraic link): the Hadamard product's `s = 1` factors feed the
+-- `bl` witness sum. `Σ(1 − Re(wⁿ))` is congruent under `≈` of the factors, so
+-- the Li witness sum over the `zeroCayley` factors equals the witness sum over
+-- the Hadamard factors at `s = 1`. (The zero-FORM of `λₙ` is thus algebraic and
+-- built; the remaining `bl` content is only the explicit-formula equality to the
+-- arithmetic η-form, which the Hadamard product cannot supply.)
+-- ===========================================================================
+
+/-- `Cnpow` is `≈`-congruent in its base: `z ≈ z' ⟹ zⁿ ≈ z'ⁿ`. -/
+theorem Cnpow_congr {z z' : Complex} (h : Ceq z z') : ∀ n, Ceq (Cnpow z n) (Cnpow z' n)
+  | 0 => Ceq_refl Cone
+  | (k + 1) => Cmul_congr h (Cnpow_congr h k)
+
+/-- The per-zero Li witness term `1 − Re(wⁿ)` is `≈`-congruent in `w`. -/
+theorem witnessTerm_congr {w w' : Complex} (h : Ceq w w') (n : Nat) :
+    Req (Rsub one (Cnpow w n).re) (Rsub one (Cnpow w' n).re) :=
+  Rsub_congr (Req_refl one) (Cnpow_congr h n).1
+
+/-- **The witness sum is congruent under pointwise `≈` of mapped factors**: for any index list `is`
+    and factor functions `f ≈ g`, `witnessSum (is.map f) n = witnessSum (is.map g) n`. -/
+theorem witnessSum_mapidx_congr (f g : Nat → Complex) (h : ∀ k, Ceq (f k) (g k)) (n : Nat) :
+    ∀ (is : List Nat), Req (witnessSum (is.map f) n) (witnessSum (is.map g) n)
+  | [] => Req_refl _
+  | (i :: rest) =>
+      Radd_congr (witnessTerm_congr (h i) n) (witnessSum_mapidx_congr f g h n rest)
+
+/-- **The `bl` witness sum is the witness sum of the Hadamard product's `s = 1` factors**: for every
+    partial range `M`, the Li witness sum over the Cayley factors `liRatio ρⱼ` (the `zeroCayley` of
+    `bl`) equals the witness sum over the Hadamard factors `hadFactor 1 ρⱼ`. With the seam `factored`,
+    this is the algebraic shape of item 6 — the analytic product (item 5) and the arithmetic zero-sum
+    (`bl`) are the same object, factor by factor. The only content left in `bl` is the explicit-formula
+    equality of this zero-form to the η-form `genuineLamSeq`. -/
+theorem witnessSum_hadFactor_eq_liRatio {gs zs : Complex} (H : HadamardXi Cone gs zs) (M n : Nat) :
+    Req (witnessSum ((List.range M).map
+            (fun j => hadFactor Cone (H.ρ j) (H.kwit j) (H.hwit j))) n)
+        (witnessSum ((List.range M).map
+            (fun j => liRatio (H.ρ j) (H.kwit j) (H.hwit j))) n) :=
+  witnessSum_mapidx_congr _ _
+    (fun j => hadFactor_one_eq_liRatio (H.ρ j) (H.kwit j) (H.hwit j)) n (List.range M)
 
 end UOR.Bridge.F1Square.Analysis
