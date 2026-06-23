@@ -62,4 +62,35 @@ theorem etaDenom_conj (s : Complex) : Ceq (etaDenom (Cconj s)) (Cconj (etaDenom 
   refine Ceq_symm (Ceq_trans (Cconj_Cadd Cone (Cneg (etaTwoPow s))) ?_)
   exact Cadd_congr Cconj_Cone (Cconj_Cneg (etaTwoPow s))
 
+/-- **`Cinv` respects `≈`**: `z ≈ w ⟹ 1/z ≈ 1/w` (with their own positivity witnesses). From
+    `cnormSq` congruence + `Rinv_congr`, componentwise. -/
+theorem Cinv_congr {z w : Complex} (k : Nat) (hk : Qlt (Qbound k) ((CnormSq z).seq k))
+    (k' : Nat) (hk' : Qlt (Qbound k') ((CnormSq w).seq k')) (h : Ceq z w) :
+    Ceq (Cinv z k hk) (Cinv w k' hk') := by
+  have hnorm : Req (CnormSq z) (CnormSq w) := Radd_congr (Rmul_congr h.1 h.1) (Rmul_congr h.2 h.2)
+  have hinv : Req (Rinv (CnormSq z) k hk) (Rinv (CnormSq w) k' hk') := Rinv_congr hk hk' hnorm
+  exact ⟨Rmul_congr h.1 hinv, Rneg_congr (Rmul_congr h.2 hinv)⟩
+
+/-- **Conjugation of the inverted ζ-strip denominator** `etaDenomInv (s̄) = conj(etaDenomInv s)` —
+    `etaDenomInv = 1/etaDenom`, so `etaDenom_conj` (`Cinv_congr`) + `Cinv_conj` give it. (The shared
+    witness `hk` serves `Cconj(etaDenom s)` too: `|conj x|² = |x|²` holds at every index.) -/
+theorem etaDenomInv_conj (s : Complex)
+    (k : Nat) (hk : Qlt (Qbound k) ((CnormSq (etaDenom s)).seq k))
+    (k' : Nat) (hk' : Qlt (Qbound k') ((CnormSq (etaDenom (Cconj s))).seq k')) :
+    Ceq (etaDenomInv (Cconj s) k' hk') (Cconj (etaDenomInv s k hk)) := by
+  have hde := etaDenom_conj s
+  -- |etaDenom(s̄)|² ≈ |etaDenom s|²  (via etaDenom_conj then CnormSq_conj), so the reciprocals agree
+  have hnormeq : Req (CnormSq (etaDenom (Cconj s))) (CnormSq (etaDenom s)) :=
+    Req_trans (Radd_congr (Rmul_congr hde.1 hde.1) (Rmul_congr hde.2 hde.2)) (CnormSq_conj (etaDenom s))
+  have hinv : Req (Rinv (CnormSq (etaDenom (Cconj s))) k' hk') (Rinv (CnormSq (etaDenom s)) k hk) :=
+    Rinv_congr hk' hk hnormeq
+  refine ⟨?_, ?_⟩
+  · show Req (Rmul (etaDenom (Cconj s)).re (Rinv (CnormSq (etaDenom (Cconj s))) k' hk'))
+            (Rmul (etaDenom s).re (Rinv (CnormSq (etaDenom s)) k hk))
+    exact Rmul_congr hde.1 hinv
+  · show Req (Rneg (Rmul (etaDenom (Cconj s)).im (Rinv (CnormSq (etaDenom (Cconj s))) k' hk')))
+            (Rneg (Rneg (Rmul (etaDenom s).im (Rinv (CnormSq (etaDenom s)) k hk))))
+    exact Rneg_congr (Req_trans (Rmul_congr hde.2 hinv)
+      (Rmul_neg_left (etaDenom s).im (Rinv (CnormSq (etaDenom s)) k hk)))
+
 end UOR.Bridge.F1Square.Analysis
