@@ -3286,3 +3286,9 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.ilq4_den_pos
 #print axioms Analysis.iilq4_den_pos
 #print axioms Analysis.archLoQ4_den_pos
+#print axioms Analysis.Clim_re
+#print axioms Analysis.Clim_im
+#print axioms Analysis.Clim_tendsTo
+#print axioms Analysis.CTendsTo_unique
+#print axioms Analysis.CTendsTo_Clim
+#print axioms Analysis.Clim_congr

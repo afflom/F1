@@ -92,6 +92,7 @@ import F1Square.Analysis.RingTac
 import F1Square.Analysis.QOrder
 import F1Square.Analysis.Real
 import F1Square.Analysis.Complex
+import F1Square.Analysis.ComplexLimit
 import F1Square.Analysis.Complete
 import F1Square.Analysis.Exp
 import F1Square.Analysis.ExpGen
