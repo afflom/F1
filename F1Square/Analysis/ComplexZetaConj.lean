@@ -118,4 +118,64 @@ theorem czEtaPaired_conj (s : Complex) : ∀ K,
       Ceq_trans (Cadd_congr (czEtaPaired_conj s K) (cpowNegDiff_conj s (2 * K + 1)))
         (Ceq_symm (Cconj_Cadd (czEtaPaired s K) (cpowNegDiff s (2 * K + 1))))
 
+/-- **Conjugation of η** `Ceta (s̄) = conj(Ceta s)`.  `Re/Im (Ceta) = Rlim` of the `re`/`im` of the
+    paired partial sums, which conjugate (`czEtaPaired_conj`); so the real-part limits agree
+    (`Rlim_congr`) and the imaginary-part limit negates (`Rlim_congr` + `Rlim_neg`). The `s̄`-side
+    bounds/blocks are passed in (`(Cconj s).re = s.re`, so `hσ`/`hsb` are reused). -/
+theorem Ceta_conj (s : Complex) {sb T : Q} (hsbd : 0 < sb.den) (hsb0 : 0 ≤ sb.num)
+    (hTd : 0 < T.den) (hT0 : 0 ≤ T.num) (hσ : Rnonneg s.re) (hsb : Rle s.re (ofQ sb hsbd))
+    (hT1 : Rle (Rneg (ofQ T hTd)) s.im) (hT2 : Rle s.im (ofQ T hTd))
+    {τ : Q} (hτn : 0 < τ.num) (hτd : 0 < τ.den)
+    (hblk : ∀ k, 1 ≤ k → Rle (Rsub (EtaVSum s T hTd (2 ^ (k + 1))) (EtaVSum s T hTd (2 ^ k)))
+        (ofQ (mul (Vconst sb T) (qpow (Qinv (add ⟨1, 1⟩ τ)) k))
+          (Qmul_den_pos (Vconst_den_pos hsbd hTd)
+            (qpow_den_pos (Qinv_den_pos (by simp only [add]; push_cast; omega)) k))))
+    (hT1c : Rle (Rneg (ofQ T hTd)) (Cconj s).im) (hT2c : Rle (Cconj s).im (ofQ T hTd))
+    (hblkc : ∀ k, 1 ≤ k → Rle (Rsub (EtaVSum (Cconj s) T hTd (2 ^ (k + 1))) (EtaVSum (Cconj s) T hTd (2 ^ k)))
+        (ofQ (mul (Vconst sb T) (qpow (Qinv (add ⟨1, 1⟩ τ)) k))
+          (Qmul_den_pos (Vconst_den_pos hsbd hTd)
+            (qpow_den_pos (Qinv_den_pos (by simp only [add]; push_cast; omega)) k)))) :
+    Ceq (Ceta (Cconj s) hsbd hsb0 hTd hT0 hσ hsb hT1c hT2c hτn hτd hblkc)
+        (Cconj (Ceta s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 hτn hτd hblk)) := by
+  have hnegreg : RReg (fun j => Rneg (etaImSeq s τ sb T j)) :=
+    RReg_neg (fun j => etaImSeq s τ sb T j)
+      (etaIm_RReg s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 hτn hτd hblk)
+  refine ⟨?_, ?_⟩
+  · exact Rlim_congr (fun j => etaReSeq (Cconj s) τ sb T j) (fun j => etaReSeq s τ sb T j)
+      (etaRe_RReg (Cconj s) hsbd hsb0 hTd hT0 hσ hsb hT1c hT2c hτn hτd hblkc)
+      (etaRe_RReg s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 hτn hτd hblk)
+      (fun j => (czEtaPaired_conj s (2 ^ (etaMidx τ sb T j - 1))).1)
+  · refine Req_trans (Rlim_congr (fun j => etaImSeq (Cconj s) τ sb T j)
+      (fun j => Rneg (etaImSeq s τ sb T j))
+      (etaIm_RReg (Cconj s) hsbd hsb0 hTd hT0 hσ hsb hT1c hT2c hτn hτd hblkc) hnegreg
+      (fun j => (czEtaPaired_conj s (2 ^ (etaMidx τ sb T j - 1))).2)) ?_
+    exact Rlim_neg (fun j => etaImSeq s τ sb T j)
+      (etaIm_RReg s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 hτn hτd hblk) hnegreg
+
+/-- **Conjugation of the ζ-strip** `ζ(s̄) = conj ζ(s)` — `CzetaStrip = Ceta · etaDenomInv`, so
+    `Cconj_Cmul` distributes and the two factors conjugate (`Ceta_conj`, `etaDenomInv_conj`). This is
+    the ζ-side discharge of `Cxi_conj`'s `hz` (the `s̄`-side bounds/blocks and inverse-witness are
+    supplied; `(Cconj s).re = s.re`, so `hσ`/`hsb` are reused). -/
+theorem CzetaStrip_conj (s : Complex) {sb T : Q} (hsbd : 0 < sb.den) (hsb0 : 0 ≤ sb.num)
+    (hTd : 0 < T.den) (hT0 : 0 ≤ T.num) (hσ : Rnonneg s.re) (hsb : Rle s.re (ofQ sb hsbd))
+    (hT1 : Rle (Rneg (ofQ T hTd)) s.im) (hT2 : Rle s.im (ofQ T hTd))
+    {τ : Q} (hτn : 0 < τ.num) (hτd : 0 < τ.den)
+    (hblk : ∀ k, 1 ≤ k → Rle (Rsub (EtaVSum s T hTd (2 ^ (k + 1))) (EtaVSum s T hTd (2 ^ k)))
+        (ofQ (mul (Vconst sb T) (qpow (Qinv (add ⟨1, 1⟩ τ)) k))
+          (Qmul_den_pos (Vconst_den_pos hsbd hTd)
+            (qpow_den_pos (Qinv_den_pos (by simp only [add]; push_cast; omega)) k))))
+    (hT1c : Rle (Rneg (ofQ T hTd)) (Cconj s).im) (hT2c : Rle (Cconj s).im (ofQ T hTd))
+    (hblkc : ∀ k, 1 ≤ k → Rle (Rsub (EtaVSum (Cconj s) T hTd (2 ^ (k + 1))) (EtaVSum (Cconj s) T hTd (2 ^ k)))
+        (ofQ (mul (Vconst sb T) (qpow (Qinv (add ⟨1, 1⟩ τ)) k))
+          (Qmul_den_pos (Vconst_den_pos hsbd hTd)
+            (qpow_den_pos (Qinv_den_pos (by simp only [add]; push_cast; omega)) k))))
+    (k : Nat) (hk : Qlt (Qbound k) ((CnormSq (etaDenom s)).seq k))
+    (k' : Nat) (hk' : Qlt (Qbound k') ((CnormSq (etaDenom (Cconj s))).seq k')) :
+    Ceq (CzetaStrip (Cconj s) hsbd hsb0 hTd hT0 hσ hsb hT1c hT2c hτn hτd hblkc k' hk')
+        (Cconj (CzetaStrip s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 hτn hτd hblk k hk)) :=
+  Ceq_trans
+    (Cmul_congr (Ceta_conj s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 hτn hτd hblk hT1c hT2c hblkc)
+      (etaDenomInv_conj s k hk k' hk'))
+    (Ceq_symm (Cconj_Cmul (Ceta s hsbd hsb0 hTd hT0 hσ hsb hT1 hT2 hτn hτd hblk) (etaDenomInv s k hk)))
+
 end UOR.Bridge.F1Square.Analysis
