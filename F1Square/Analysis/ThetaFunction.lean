@@ -158,6 +158,49 @@ theorem thetaFn_antitone {t₁ t₂ : Real} (ht₁ : Rle one t₁) (ht₂ : Rle 
   Rlim_le_Rlim (thetaTerm_RReg t₂ ht₂) (thetaTerm_RReg t₁ ht₁)
     (fun j => genSum_le (fun m => thetaTerm_antitone h m) (digammaMidx (⟨1, 1⟩ : Q) j))
 
+/-- `π·t ≥ 3` for `t ≥ 1` (`π ≥ 3` is `Rpi_lower_three`). -/
+theorem three_le_pi_mul (t : Real) (ht : Rle one t) :
+    Rle (ofQ (⟨3, 1⟩ : Q) (by decide)) (Rmul Rpi t) := by
+  have hpi3 : Rle (ofQ (⟨3, 1⟩ : Q) (by decide)) Rpi := Rpi_lower_three
+  have hpi_nn : Rnonneg Rpi :=
+    Rnonneg_congr (Rsub_zero Rpi)
+      (Rnonneg_Rsub_of_Rle (Rle_trans (Rle_ofQ_ofQ (by decide) (by decide) (by decide)) hpi3))
+  exact Rle_trans hpi3
+    (Rle_trans (Rle_of_Req (Req_symm (Rmul_one Rpi))) (Rmul_le_Rmul_left hpi_nn ht))
+
+/-- **The tighter term majorant** `e^{−(m+1)²πt} ≤ 1/((m+1)(m+2))` (`t ≥ 1`, all `m`): the exponent
+    `(m+1)²πt ≥ (m+1)(m+2)` (via `πt ≥ 3` and `3(m+1)² ≥ (m+1)(m+2)`), then `Rexp_neg_le_ratio`. The
+    comparison uses explicit `Int.mul_le_mul` (no `simp [mul]`, which whnf-blows-up on the factor-3
+    product). The majorant telescopes: `1/((m+1)(m+2)) = 1/(m+1) − 1/(m+2)`. -/
+theorem thetaTerm_le2 (t : Real) (ht : Rle one t) (m : Nat) :
+    Rle (thetaTerm t m)
+      (ofQ (mul (⟨1, 1⟩ : Q) (⟨1, (m + 1) * (m + 2)⟩ : Q))
+        (Qmul_den_pos (by decide) (Nat.mul_pos (Nat.succ_pos m) (Nat.succ_pos (m + 1))))) := by
+  have hmulpos : 0 < ((m + 1) * (m + 2) : Nat) := Nat.mul_pos (Nat.succ_pos m) (Nat.succ_pos (m + 1))
+  have hτn : 0 < (⟨((m + 1) * (m + 2) : Nat), 1⟩ : Q).num := by
+    show (0 : Int) < ((m + 1) * (m + 2) : Nat); exact_mod_cast hmulpos
+  have hlow : Rle (ofQ (⟨((m + 1) * (m + 2) : Nat), 1⟩ : Q) Nat.one_pos) (thetaArg t m) := by
+    have hstep : Rle (Rmul (RofNat ((m + 1) * (m + 1))) (ofQ (⟨3, 1⟩ : Q) (by decide)))
+        (thetaArg t m) :=
+      Rmul_le_Rmul_left (Rnonneg_ofQ Nat.one_pos (Int.ofNat_nonneg _)) (three_le_pi_mul t ht)
+    refine Rle_trans ?_
+      (Rle_trans (Rle_of_Req (Req_symm (Rmul_ofQ_ofQ Nat.one_pos (by decide)))) hstep)
+    refine Rle_ofQ_ofQ Nat.one_pos (Qmul_den_pos Nat.one_pos (by decide)) ?_
+    have hI : (↑((m + 1) * (m + 2)) : Int) ≤ ↑((m + 1) * (m + 1)) * 3 := by
+      have hNat : (m + 1) * (m + 2) ≤ (m + 1) * (m + 1) * 3 := by
+        rw [Nat.mul_assoc]; exact Nat.mul_le_mul (Nat.le_refl (m + 1)) (by omega)
+      calc (↑((m + 1) * (m + 2)) : Int) ≤ ↑((m + 1) * (m + 1) * 3) := by exact_mod_cast hNat
+        _ = ↑((m + 1) * (m + 1)) * 3 := by push_cast; ring_uor
+    exact Int.mul_le_mul_of_nonneg_right hI (by exact_mod_cast Nat.zero_le 1)
+  have hd : 0 < (add (⟨1, 1⟩ : Q) (⟨((m + 1) * (m + 2) : Nat), 1⟩ : Q)).num := by
+    show (0 : Int) < 1 * ((1 : Nat) : Int) + ((m + 1) * (m + 2) : Nat) * ((1 : Nat) : Int)
+    have : (0 : Int) ≤ ((m + 1) * (m + 2) : Nat) := Int.ofNat_nonneg _
+    omega
+  refine Rle_trans (Rexp_neg_le_ratio hτn Nat.one_pos hlow) ?_
+  refine Rle_ofQ_ofQ (Qinv_den_pos hd)
+    (Qmul_den_pos (by decide) (Nat.mul_pos (Nat.succ_pos m) (Nat.succ_pos (m + 1)))) ?_
+  simp only [Qle, Qinv, add, mul]; omega
+
 /-- The `m`-th theta term respects `≈` in `t`. -/
 theorem thetaTerm_congr {t₁ t₂ : Real} (h : Req t₁ t₂) (m : Nat) :
     Req (thetaTerm t₁ m) (thetaTerm t₂ m) :=
@@ -174,5 +217,48 @@ theorem thetaFn_congr {t₁ t₂ : Real} (ht₁ : Rle one t₁) (ht₂ : Rle one
     Req (thetaFn t₁ ht₁) (thetaFn t₂ ht₂) :=
   Rlim_congr _ _ (thetaTerm_RReg t₁ ht₁) (thetaTerm_RReg t₂ ht₂)
     (fun j => genSumTheta_congr (fun m => thetaTerm_congr h m) (digammaMidx (⟨1, 1⟩ : Q) j))
+
+-- ===========================================================================
+-- An explicit upper bound `ψ(t) ≤ 1` (for `t ≥ 1`), via the telescoping majorant
+-- `e^{−(m+1)²πt} ≤ 1/((m+1)(m+2))`, `Σ_{m<N} 1/((m+1)(m+2)) = N/(N+1) ≤ 1`.
+-- ===========================================================================
+
+/-- The telescoping rational majorant `1/((m+1)(m+2))` of the `m`-th theta term. -/
+def boundTele (m : Nat) : Real :=
+  ofQ (mul (⟨1, 1⟩ : Q) (⟨1, (m + 1) * (m + 2)⟩ : Q))
+    (Qmul_den_pos (by decide) (Nat.mul_pos (Nat.succ_pos m) (Nat.succ_pos (m + 1))))
+
+/-- **The telescoping sum** `Σ_{m<N} 1/((m+1)(m+2)) = N/(N+1)`. -/
+theorem genSum_boundTele : ∀ N, Req (genSum boundTele N) (ofQ (⟨(N : Int), N + 1⟩ : Q) (Nat.succ_pos N))
+  | 0 => Req_refl _
+  | (N + 1) =>
+      Req_trans (Radd_congr (genSum_boundTele N) (Req_refl (boundTele N)))
+        (Req_trans
+          (Radd_ofQ_ofQ (Nat.succ_pos N)
+            (Qmul_den_pos (by decide) (Nat.mul_pos (Nat.succ_pos N) (Nat.succ_pos (N + 1)))))
+          (ofQ_congr _ (Nat.succ_pos (N + 1)) (by
+            simp only [Qeq, add, mul]; push_cast; ring_uor)))
+
+/-- **A Bishop limit is `≤` a rational constant** if every term is — the constant-majorant companion
+    to `Rlim_le_Rlim`. -/
+theorem Rlim_le_ofQ {X : Nat → Real} (hX : RReg X) {C : Q} (hCd : 0 < C.den)
+    (h : ∀ k, Rle (X k) (ofQ C hCd)) : Rle (Rlim X hX) (ofQ C hCd) := by
+  intro n
+  rw [Rlim_seq]
+  have hk := h (4 * n + 3) (4 * n + 3)
+  have hmid : 0 < (add C (⟨2, 4 * n + 3 + 1⟩ : Q)).den :=
+    add_den_pos hCd (by show 0 < 4 * n + 3 + 1; omega)
+  refine Qle_trans hmid hk (Qadd_le_add (Qle_refl _) ?_)
+  simp only [Qle]; push_cast; omega
+
+/-- **The Jacobi theta function is bounded by `1`** (`t ≥ 1`): `ψ(t) ≤ 1`. Every partial sum is
+    `≤ Σ_{m<N} 1/((m+1)(m+2)) = N/(N+1) ≤ 1` (`thetaTerm_le2` + `genSum_le` + `genSum_boundTele`),
+    and the limit inherits the bound (`Rlim_le_ofQ`). -/
+theorem thetaFn_le_one (t : Real) (ht : Rle one t) :
+    Rle (thetaFn t ht) (ofQ (⟨1, 1⟩ : Q) (by decide)) :=
+  Rlim_le_ofQ (thetaTerm_RReg t ht) (by decide) (fun j =>
+    Rle_trans (genSum_le (fun m => thetaTerm_le2 t ht m) (digammaMidx (⟨1, 1⟩ : Q) j))
+      (Rle_trans (Rle_of_Req (genSum_boundTele (digammaMidx (⟨1, 1⟩ : Q) j)))
+        (Rle_ofQ_ofQ (Nat.succ_pos _) (by decide) (by simp only [Qle]; push_cast; omega))))
 
 end UOR.Bridge.F1Square.Analysis
