@@ -3381,3 +3381,6 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.riemannSum_nonneg
 #print axioms Analysis.riemannSum_add
 #print axioms Analysis.RsumN_split2
+#print axioms Analysis.Rabs_Radd
+#print axioms Analysis.Rabs_zero
+#print axioms Analysis.RsumN_Rabs_le
