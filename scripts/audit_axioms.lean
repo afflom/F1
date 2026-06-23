@@ -3386,4 +3386,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rabs_Radd
 #print axioms Analysis.Rabs_zero
 #print axioms Analysis.Rabs_ofQ_nonneg
+#print axioms Analysis.Rle_of_Rabs_le
+#print axioms Analysis.Rabs_Rneg
+#print axioms Analysis.Rneg_le_of_Rabs_le
 #print axioms Analysis.RsumN_Rabs_le

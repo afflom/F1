@@ -30,6 +30,20 @@ theorem Rabs_Radd (a b : Real) : Rle (Rabs (Radd a b)) (Radd (Rabs a) (Rabs b)) 
 /-- `|0| = 0`. -/
 theorem Rabs_zero : Req (Rabs zero) zero := Req_of_seq_Qeq (fun _ => Qeq_refl _)
 
+/-- **`|x| ≤ B ⟹ x ≤ B`** (one side of the two-sided characterization), via `a ≤ |a|`. -/
+theorem Rle_of_Rabs_le {x B : Real} (h : Rle (Rabs x) B) : Rle x B := fun n =>
+  Qle_trans (Qabs_den_pos (x.den_pos n)) (Qle_self_Qabs (x.seq n)) (h n)
+
+/-- **`|−x| = |x|`.** -/
+theorem Rabs_Rneg (x : Real) : Req (Rabs (Rneg x)) (Rabs x) :=
+  Req_of_seq_Qeq (fun n => by
+    show Qeq (Qabs (neg (x.seq n))) (Qabs (x.seq n)); rw [Qabs_neg]; exact Qeq_refl _)
+
+/-- **`|x| ≤ B ⟹ −B ≤ x`** (the other side), via `|−x| = |x|` and `Rle_of_Rabs_le`. -/
+theorem Rneg_le_of_Rabs_le {x B : Real} (h : Rle (Rabs x) B) : Rle (Rneg B) x :=
+  Rle_trans (Rle_Rneg (Rle_of_Rabs_le (Rle_trans (Rle_of_Req (Rabs_Rneg x)) h)))
+    (Rle_of_Req (Rneg_neg x))
+
 /-- **`|q| = q` for a non-negative rational** (embedded): `Rabs (ofQ q) = ofQ q` when `q.num ≥ 0`. -/
 theorem Rabs_ofQ_nonneg {q : Q} (hq : 0 < q.den) (hn : 0 ≤ q.num) :
     Req (Rabs (ofQ q hq)) (ofQ q hq) :=
