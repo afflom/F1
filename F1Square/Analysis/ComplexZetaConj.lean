@@ -1,0 +1,65 @@
+/-
+F1 square — Track 1: **conjugation of the ζ-strip denominator** `1 − 2^{1−s}` — the toolbox-based
+ζ-side pieces of `Cxi_conj`'s `hz` (`ζ(s̄) = conj ζ(s)`).
+
+`CzetaStrip s = Ceta s · etaDenomInv s` with `etaDenom s = 1 − 2·2^{−s}` (`CriticalZeta.lean`). The
+denominator factor conjugates cleanly through the toolbox: the natural-base power `ncpow` is
+`Cexp`-built on a real `RlogNat`, so `ncpow_conj` is `Cexp_conj` + `Rmul_neg_left`; this lifts to
+`cpowNeg_conj`, `etaTwoPow_conj` (`2·2^{−s}`), and `etaDenom_conj` (`1 − ·`). (The numerator
+`Ceta_conj` lives in the `etaReSeq`/`etaImSeq` internals of `EtaVariation` — a separate brick.)
+
+`ncpow_conj` is independently useful: it is the conjugation of every Dirichlet term `n^{−s}`.
+
+Pure Lean 4 core, no Mathlib, no `sorry`/`native_decide`, choice-free; audited by `scripts/honesty_audit.sh`.
+-/
+
+import F1Square.Analysis.CriticalZeta
+import F1Square.Analysis.ComplexConjAlgebra
+import F1Square.Analysis.ComplexDigammaConj
+import F1Square.Analysis.ComplexArgLower
+
+namespace UOR.Bridge.F1Square.Analysis
+
+/-- `Cone` is conjugation-fixed (`conj 1 = 1`). -/
+theorem Cconj_Cone : Ceq (Cconj Cone) Cone :=
+  ⟨Req_refl one, Rneg_zero⟩
+
+/-- **Conjugation of the natural-base power**: `(conj z)` raised to base `n` is the conjugate —
+    `ncpow n (z̄) = conj(ncpow n z)`.  `ncpow n z = exp⟨Re z·log n, Im z·log n⟩` with `log n` real, so
+    `Cexp_conj` carries the conjugation once the imaginary part `(−Im z)·log n = −(Im z·log n)`
+    (`Rmul_neg_left`). This is the conjugation of every Dirichlet term `n^{−s}`. -/
+theorem ncpow_conj (n : Nat) (hn : 2 ≤ n) (z : Complex) :
+    Ceq (ncpow n hn (Cconj z)) (Cconj (ncpow n hn z)) := by
+  refine Ceq_trans (Cexp_congr (z := ⟨Rmul (Cconj z).re (RlogNat n hn), Rmul (Cconj z).im (RlogNat n hn)⟩)
+    (w := Cconj ⟨Rmul z.re (RlogNat n hn), Rmul z.im (RlogNat n hn)⟩)
+    ⟨Req_refl _, Rmul_neg_left z.im (RlogNat n hn)⟩)
+    (Cexp_conj ⟨Rmul z.re (RlogNat n hn), Rmul z.im (RlogNat n hn)⟩)
+
+/-- **Conjugation of `cpowNeg`** (`n^{−s}` with the program's branch convention): `cpowNeg (s̄) n =
+    conj(cpowNeg s n)`.  For `n ≥ 2` it is `ncpow_conj` (`Cneg(Cconj s) = Cconj(Cneg s)` definitionally);
+    for `n < 2` both sides are `1`. -/
+theorem cpowNeg_conj (s : Complex) (n : Nat) :
+    Ceq (cpowNeg (Cconj s) n) (Cconj (cpowNeg s n)) := by
+  unfold cpowNeg
+  by_cases h : 2 ≤ n
+  · simp only [dif_pos h]
+    exact ncpow_conj n h (Cneg s)
+  · simp only [dif_neg h]
+    exact Cconj_Cone
+
+/-- **Conjugation of `etaTwoPow`** `2·2^{−s}`: `etaTwoPow (s̄) = conj(etaTwoPow s)`. -/
+theorem etaTwoPow_conj (s : Complex) : Ceq (etaTwoPow (Cconj s)) (Cconj (etaTwoPow s)) := by
+  unfold etaTwoPow
+  exact Ceq_trans (Cmul_congr (Ceq_symm (Cconj_ofReal (RofNat 2))) (cpowNeg_conj s 2))
+    (Ceq_symm (Cconj_Cmul (ofReal (RofNat 2)) (cpowNeg s 2)))
+
+/-- **Conjugation of the ζ-strip denominator** `etaDenom s = 1 − 2·2^{−s}`:
+    `etaDenom (s̄) = conj(etaDenom s)`.  The constant `1` and the subtraction conjugate trivially;
+    `etaTwoPow_conj` does the rest. -/
+theorem etaDenom_conj (s : Complex) : Ceq (etaDenom (Cconj s)) (Cconj (etaDenom s)) := by
+  unfold etaDenom Csub
+  refine Ceq_trans (Cadd_congr (Ceq_refl Cone) (Cneg_congr (etaTwoPow_conj s))) ?_
+  refine Ceq_symm (Ceq_trans (Cconj_Cadd Cone (Cneg (etaTwoPow s))) ?_)
+  exact Cadd_congr Cconj_Cone (Cconj_Cneg (etaTwoPow s))
+
+end UOR.Bridge.F1Square.Analysis

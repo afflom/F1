@@ -3310,3 +3310,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Cconj_ofReal
 #print axioms Analysis.Cconj_Czero
 #print axioms Analysis.CsumN_Cconj
+#print axioms Analysis.Cconj_Cone
+#print axioms Analysis.ncpow_conj
+#print axioms Analysis.cpowNeg_conj
+#print axioms Analysis.etaTwoPow_conj
+#print axioms Analysis.etaDenom_conj
