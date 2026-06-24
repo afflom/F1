@@ -11,8 +11,29 @@ Pure Lean 4 core, no Mathlib, no `sorry`/`native_decide`, choice-free; audited b
 
 import F1Square.Analysis.Gamma
 import F1Square.Analysis.RartanhBounds
+import F1Square.Analysis.ThetaLipschitz
 
 namespace UOR.Bridge.F1Square.Analysis
+
+/-- **Directed exp-Lipschitz**: `exp a − exp b ≤ 4·max(a−b,0)·exp a`. Via the exact factorization
+    `exp a − exp b = (1 − exp(−(a−b)))·exp a` (`RexpReal_add`, since `exp(−(a−b))·exp a = exp b`) and the
+    order-free variation `1 − exp(−z) ≤ 4·max(z,0)` (`RexpReal_one_sub_neg_le_maxZero`). The exp half of
+    the `RrpowPos` Lipschitz: with `a, b` bounded above (so `exp a ≤ M`) this is genuine Lipschitz. -/
+theorem RexpReal_sub_le (a b : Real) :
+    Rle (Rsub (RexpReal a) (RexpReal b))
+      (Rmul (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (RmaxZero (Rsub a b))) (RexpReal a)) := by
+  have hEa : Req (Rmul (RexpReal (Rneg (Rsub a b))) (RexpReal a)) (RexpReal b) := by
+    refine Req_trans (Req_symm (RexpReal_add (Rneg (Rsub a b)) a)) (RexpReal_congr ?_)
+    exact Req_trans (Radd_congr (Rneg_Rsub a b) (Req_refl a))
+      (Req_trans (Radd_assoc b (Rneg a) a)
+        (Req_trans (Radd_congr (Req_refl b) (Req_trans (Radd_comm (Rneg a) a) (Radd_neg a)))
+          (Radd_zero b)))
+  have hid : Req (Rmul (Rsub one (RexpReal (Rneg (Rsub a b)))) (RexpReal a))
+      (Rsub (RexpReal a) (RexpReal b)) :=
+    Req_trans (Rmul_sub_distrib_right one (RexpReal (Rneg (Rsub a b))) (RexpReal a))
+      (Rsub_congr (Rone_mul (RexpReal a)) hEa)
+  exact Rle_trans (Rle_of_Req (Req_symm hid))
+    (Rmul_le_Rmul_right (RexpReal_nonneg a) (RexpReal_one_sub_neg_le_maxZero (Rsub a b)))
 
 /-- **`x^y ≤ exp(y·(x−1))`** for a non-negative exponent `y` and a base `x` presented in `[1,B]` at a
     small radius. Directly from `RlogPos_le_sub_one` (`log x ≤ x−1`): `y·log x ≤ y·(x−1)` (`Rmul`-monotone,
