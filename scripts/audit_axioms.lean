@@ -3507,3 +3507,5 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.clampOne_eq_of_ge
 #print axioms Analysis.clampOne_lipschitz
 #print axioms Analysis.clampOne_congr
+#print axioms Analysis.riemannIntegral_le_unit
+#print axioms Analysis.riemannIntegralI_le_unit
