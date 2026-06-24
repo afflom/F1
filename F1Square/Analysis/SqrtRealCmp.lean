@@ -93,4 +93,15 @@ theorem Rsqrt_mono {q q' : Q} (hqd : 0 < q.den) (hq'd : 0 < q'.den)
   refine Rle_trans (Rle_of_Req (Rsqrt_sq q hqd hq))
     (Rle_trans (Rle_ofQ_ofQ hqd hq'd hqq') (Rle_of_Req (Req_symm (Rsqrt_sq q' hq'd hq'))))
 
+/-- **`√1 = 1`** — the unit radicand (its own square root). -/
+theorem Rsqrt_one : Req (Rsqrt (⟨1, 1⟩ : Q) (by decide) (by decide)) one := by
+  refine Req_symm (Rsqrt_unique (y := one) (by decide) (by decide) ?_ ?_)
+  · exact Rnonneg_ofQ (by decide) (by decide)
+  · exact Req_trans (Rmul_one one) (Req_of_seq_Qeq (fun _ => Qeq_refl _))
+
+/-- **`√q ≥ 1` for `q ≥ 1`** — squaring is monotone, anchored at `√1 = 1`. -/
+theorem Rsqrt_ge_one {q : Q} (hqd : 0 < q.den) (hq : Qle (⟨0, 1⟩ : Q) q)
+    (h1q : Qle (⟨1, 1⟩ : Q) q) : Rle one (Rsqrt q hqd hq) :=
+  Rle_trans (Rle_of_Req (Req_symm Rsqrt_one)) (Rsqrt_mono (by decide) hqd (by decide) hq h1q)
+
 end UOR.Bridge.F1Square.Analysis

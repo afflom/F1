@@ -3460,3 +3460,5 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rle_of_Rsq_le
 #print axioms Analysis.Rsqrt_unique
 #print axioms Analysis.Rsqrt_mono
+#print axioms Analysis.Rsqrt_one
+#print axioms Analysis.Rsqrt_ge_one
