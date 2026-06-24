@@ -71,4 +71,113 @@ theorem Rsqrt_lipschitz {x y : Q} (hxd : 0 < x.den) (hyd : 0 < y.den)
   refine Rle_trans (Rmul_le_Rmul_left (Rnonneg_ofQ (by decide) (by decide)) hchain) ?_
   exact Rle_of_Req (Rmul_ofQ_ofQ (by decide) (Qabs_den_pos (Qsub_den_pos hxd hyd)))
 
+-- ===========================================================================
+-- The real-radicand square root `√a` for `a ≥ 1`, as the limit of the rational √'s of the shifted
+-- approximants `cₙ = a_{4n+3} + 2/(4n+4) ≥ 1` (the shift makes `cₙ ≥ 1` automatic, the reindex
+-- tightens the Lipschitz modulus `½·|cⱼ−cₖ|` to `1/(2(j+1))+1/(2(k+1)) ≤ 1/(j+1)+1/(k+1)`).
+-- ===========================================================================
+
+/-- `Qeq` commutes with `Qabs` (the rational reverse of `Rabs_congr`). -/
+private theorem Qabs_congr_q {a b : Q} (h : Qeq a b) : Qeq (Qabs a) (Qabs b) := by
+  have key : a.num.natAbs * b.den = b.num.natAbs * a.den := by
+    unfold Qeq at h
+    have hh := congrArg Int.natAbs h
+    rw [Int.natAbs_mul, Int.natAbs_mul, Int.natAbs_ofNat, Int.natAbs_ofNat] at hh
+    exact hh
+  show ((a.num.natAbs : Int)) * (b.den : Int) = ((b.num.natAbs : Int)) * (a.den : Int)
+  exact_mod_cast key
+
+/-- The shifted rational approximant `cₙ = a_{4n+3} + 2/(4n+4)` of `a` — always `≥ 1` when `a ≥ 1`. -/
+def rsqrtRealSeq (a : Real) (n : Nat) : Q := add (a.seq (4 * n + 3)) (⟨2, 4 * n + 4⟩ : Q)
+
+theorem rsqrtRealSeq_den_pos (a : Real) (n : Nat) : 0 < (rsqrtRealSeq a n).den :=
+  add_den_pos (a.den_pos _) (by show 0 < 4 * n + 4; omega)
+
+/-- `cₙ ≥ 1` — exactly the `a ≥ 1` regularity statement at index `4n+3` (the shift is `Qbound`). -/
+theorem rsqrtRealSeq_ge_one (a : Real) (ha : Rle one a) (n : Nat) :
+    Qle (⟨1, 1⟩ : Q) (rsqrtRealSeq a n) := ha (4 * n + 3)
+
+theorem rsqrtRealSeq_ge_zero (a : Real) (ha : Rle one a) (n : Nat) :
+    Qle (⟨0, 1⟩ : Q) (rsqrtRealSeq a n) :=
+  Qle_trans (by decide) (by decide : Qle (⟨0, 1⟩ : Q) (⟨1, 1⟩ : Q)) (rsqrtRealSeq_ge_one a ha n)
+
+/-- The sequence of rational square roots `√cₙ`. -/
+def rsqrtRealX (a : Real) (ha : Rle one a) (n : Nat) : Real :=
+  Rsqrt (rsqrtRealSeq a n) (rsqrtRealSeq_den_pos a n) (rsqrtRealSeq_ge_zero a ha n)
+
+set_option maxHeartbeats 800000 in
+/-- **The approximant gap** `|cⱼ − cₖ| ≤ 4/(4j+4) + 4/(4k+4)` — triangle split into the `a`-gap (from
+    `a`'s regularity) and the `2/(4·+4)`-gap (both bounded by `2/(4·+4)`). -/
+theorem rsqrtRealSeq_diff_le (a : Real) (j k : Nat) :
+    Qle (Qabs (Qsub (rsqrtRealSeq a j) (rsqrtRealSeq a k)))
+        (add (add (⟨1, 4 * j + 4⟩ : Q) (⟨1, 4 * k + 4⟩ : Q))
+             (add (⟨2, 4 * j + 4⟩ : Q) (⟨2, 4 * k + 4⟩ : Q))) := by
+  have hjd : 0 < (⟨2, 4 * j + 4⟩ : Q).den := by show 0 < 4 * j + 4; omega
+  have hkd : 0 < (⟨2, 4 * k + 4⟩ : Q).den := by show 0 < 4 * k + 4; omega
+  have heq : Qeq (Qsub (rsqrtRealSeq a j) (rsqrtRealSeq a k))
+      (add (Qsub (a.seq (4 * j + 3)) (a.seq (4 * k + 3)))
+           (Qsub (⟨2, 4 * j + 4⟩ : Q) (⟨2, 4 * k + 4⟩ : Q))) := by
+    simp only [rsqrtRealSeq, Qeq, Qsub, add, neg]; push_cast; ring_uor
+  have h1 : Qeq (Qabs (⟨2, 4 * j + 4⟩ : Q)) (⟨2, 4 * j + 4⟩ : Q) :=
+    Qabs_of_nonneg (by show (0 : Int) ≤ 2; decide)
+  have h2 : Qeq (Qabs (neg (⟨2, 4 * k + 4⟩ : Q))) (⟨2, 4 * k + 4⟩ : Q) := by
+    rw [Qabs_neg]; exact Qabs_of_nonneg (by show (0 : Int) ≤ 2; decide)
+  have hbd : Qle (Qabs (Qsub (⟨2, 4 * j + 4⟩ : Q) (⟨2, 4 * k + 4⟩ : Q)))
+      (add (⟨2, 4 * j + 4⟩ : Q) (⟨2, 4 * k + 4⟩ : Q)) :=
+    Qle_trans (add_den_pos (Qabs_den_pos hjd) (Qabs_den_pos hkd))
+      (Qabs_add_le (⟨2, 4 * j + 4⟩ : Q) (neg (⟨2, 4 * k + 4⟩ : Q)))
+      (Qadd_le_add (Qeq_le h1) (Qeq_le h2))
+  have hareg : Qle (Qabs (Qsub (a.seq (4 * j + 3)) (a.seq (4 * k + 3))))
+      (add (⟨1, 4 * j + 4⟩ : Q) (⟨1, 4 * k + 4⟩ : Q)) := by
+    have h := a.reg (4 * j + 3) (4 * k + 3); unfold Qbound at h; exact h
+  have e1 : Qle (Qabs (Qsub (rsqrtRealSeq a j) (rsqrtRealSeq a k)))
+      (Qabs (add (Qsub (a.seq (4 * j + 3)) (a.seq (4 * k + 3)))
+           (Qsub (⟨2, 4 * j + 4⟩ : Q) (⟨2, 4 * k + 4⟩ : Q)))) :=
+    Qeq_le (Qabs_congr_q heq)
+  have e2 : Qle (Qabs (add (Qsub (a.seq (4 * j + 3)) (a.seq (4 * k + 3)))
+        (Qsub (⟨2, 4 * j + 4⟩ : Q) (⟨2, 4 * k + 4⟩ : Q))))
+      (add (Qabs (Qsub (a.seq (4 * j + 3)) (a.seq (4 * k + 3))))
+        (Qabs (Qsub (⟨2, 4 * j + 4⟩ : Q) (⟨2, 4 * k + 4⟩ : Q)))) :=
+    Qabs_add_le _ _
+  have e3 : Qle (add (Qabs (Qsub (a.seq (4 * j + 3)) (a.seq (4 * k + 3))))
+        (Qabs (Qsub (⟨2, 4 * j + 4⟩ : Q) (⟨2, 4 * k + 4⟩ : Q))))
+      (add (add (⟨1, 4 * j + 4⟩ : Q) (⟨1, 4 * k + 4⟩ : Q))
+           (add (⟨2, 4 * j + 4⟩ : Q) (⟨2, 4 * k + 4⟩ : Q))) :=
+    Qadd_le_add hareg hbd
+  exact Qle_trans (Qabs_den_pos (add_den_pos (Qsub_den_pos (a.den_pos _) (a.den_pos _))
+      (Qsub_den_pos hjd hkd))) e1
+    (Qle_trans (add_den_pos (Qabs_den_pos (Qsub_den_pos (a.den_pos _) (a.den_pos _)))
+        (Qabs_den_pos (Qsub_den_pos hjd hkd))) e2 e3)
+
+set_option maxHeartbeats 800000 in
+/-- The reindexed √cₙ partial sequence is regular. -/
+theorem rsqrtRealX_RReg (a : Real) (ha : Rle one a) : RReg (rsqrtRealX a ha) := by
+  refine RReg_of_real_bound (rsqrtRealX a ha)
+    (fun j k => add (⟨3, 8 * (j + 1)⟩ : Q) (⟨3, 8 * (k + 1)⟩ : Q))
+    (fun j k => add_den_pos (by show 0 < 8 * (j + 1); omega) (by show 0 < 8 * (k + 1); omega))
+    (fun j k => Qadd_le_add (by simp only [Qle]; push_cast; omega)
+      (by simp only [Qle]; push_cast; omega)) ?_
+  intro j k
+  refine Rle_trans (Rle_of_Rabs_le (Rsqrt_lipschitz (rsqrtRealSeq_den_pos a j)
+      (rsqrtRealSeq_den_pos a k) (rsqrtRealSeq_ge_zero a ha j) (rsqrtRealSeq_ge_zero a ha k)
+      (rsqrtRealSeq_ge_one a ha j) (rsqrtRealSeq_ge_one a ha k))) ?_
+  refine Rle_ofQ_ofQ _ _ ?_
+  have hstep : Qle (mul (⟨1, 2⟩ : Q) (Qabs (Qsub (rsqrtRealSeq a j) (rsqrtRealSeq a k))))
+      (mul (⟨1, 2⟩ : Q) (add (add (⟨1, 4 * j + 4⟩ : Q) (⟨1, 4 * k + 4⟩ : Q))
+        (add (⟨2, 4 * j + 4⟩ : Q) (⟨2, 4 * k + 4⟩ : Q)))) :=
+    Qmul_le_mul_left (by show (0 : Int) ≤ 1; decide) (rsqrtRealSeq_diff_le a j k)
+  refine Qle_trans (Qmul_den_pos (by decide) (add_den_pos
+      (add_den_pos (by show 0 < 4 * j + 4; omega) (by show 0 < 4 * k + 4; omega))
+      (add_den_pos (by show 0 < 4 * j + 4; omega) (by show 0 < 4 * k + 4; omega)))) hstep (Qeq_le ?_)
+  simp only [Qeq, mul, add]; push_cast; ring_uor
+
+/-- **The constructive square root of a real `a ≥ 1`** — the Bishop limit of the rational √'s of the
+    shifted approximants. The defining identity `(√a)² = a` is the remaining piece (needs limit
+    arithmetic for the squaring step). -/
+def RsqrtReal (a : Real) (ha : Rle one a) : Real := Rlim (rsqrtRealX a ha) (rsqrtRealX_RReg a ha)
+
+/-- **`√a ≥ 0`.** -/
+theorem RsqrtReal_nonneg (a : Real) (ha : Rle one a) : Rnonneg (RsqrtReal a ha) :=
+  Rnonneg_Rlim_seq _ (fun _n => Rsqrt_nonneg _ _ _)
+
 end UOR.Bridge.F1Square.Analysis

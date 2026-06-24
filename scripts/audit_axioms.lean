@@ -3466,3 +3466,11 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rabs_ofQ
 #print axioms Analysis.Rabs_Rmul
 #print axioms Analysis.Rsqrt_lipschitz
+#print axioms Analysis.rsqrtRealSeq
+#print axioms Analysis.rsqrtRealSeq_ge_one
+#print axioms Analysis.rsqrtRealSeq_diff_le
+#print axioms Analysis.rsqrtRealX_RReg
+#print axioms Analysis.RsqrtReal
+#print axioms Analysis.RsqrtReal_nonneg
+#print axioms Analysis.rsqrtRealSeq_den_pos
+#print axioms Analysis.rsqrtRealSeq_ge_zero
