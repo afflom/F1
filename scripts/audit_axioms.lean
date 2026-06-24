@@ -3534,3 +3534,10 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.thetaCoeff_nonneg
 #print axioms Analysis.thetaCoeff_lower
 #print axioms Analysis.thetaCoeff_exp_le
+#print axioms Analysis.Rabs_le_self_of_nonneg
+#print axioms Analysis.Rabs_of_nonneg
+#print axioms Analysis.Rabs_le_of_both
+#print axioms Analysis.thetaTerm_eq_coeff
+#print axioms Analysis.thetaTerm_one_eq
+#print axioms Analysis.thetaTerm_diff_le
+#print axioms Analysis.thetaTerm_lip

@@ -124,4 +124,127 @@ theorem thetaCoeff_exp_le (m : Nat) :
     (ofQ_congr (Qmul_den_pos (by decide) h3Mpos) _ ?_))
   simp only [Qeq, mul]; push_cast; ring_uor
 
+-- ===========================================================================
+-- Absolute-value helpers and the per-term theta Lipschitz bound.
+-- ===========================================================================
+
+/-- `|x| ≤ x` for `x ≥ 0` (factor the common denominator, then a sign case split). -/
+theorem Rabs_le_self_of_nonneg {x : Real} (hx : Rnonneg x) : Rle (Rabs x) x := by
+  intro n
+  have h := hx n
+  show Qle (Qabs (x.seq n)) (add (x.seq n) (⟨2, n + 1⟩ : Q))
+  have hd : (0 : Int) < (↑(x.seq n).den : Int) := by exact_mod_cast (x.den_pos n)
+  have hh : -(1 : Int) * (↑(x.seq n).den) ≤ (x.seq n).num * ((n : Int) + 1) := by
+    have := h; simp only [Qle, neg, Qbound] at this; push_cast at this; omega
+  have hkey : (↑(x.seq n).num.natAbs : Int) * ((n : Int) + 1)
+      ≤ (x.seq n).num * ((n : Int) + 1) + 2 * (↑(x.seq n).den : Int) := by
+    by_cases hp : 0 ≤ (x.seq n).num
+    · rw [Int.natAbs_of_nonneg hp]; omega
+    · rw [Int.ofNat_natAbs_of_nonpos (Int.le_of_lt (Int.not_le.mp hp)), Int.neg_mul]; omega
+  have hmul := Int.mul_le_mul_of_nonneg_left hkey (Int.le_of_lt hd)
+  show (↑(x.seq n).num.natAbs : Int) * (↑(x.seq n).den * ((n : Int) + 1))
+      ≤ ((x.seq n).num * ((n : Int) + 1) + 2 * ↑(x.seq n).den) * ↑(x.seq n).den
+  rw [Int.mul_left_comm (↑(x.seq n).num.natAbs : Int) (↑(x.seq n).den) ((n : Int) + 1),
+    Int.mul_comm ((x.seq n).num * ((n : Int) + 1) + 2 * ↑(x.seq n).den) (↑(x.seq n).den)]
+  exact hmul
+
+/-- `|x| = x` for `x ≥ 0`. -/
+theorem Rabs_of_nonneg {x : Real} (hx : Rnonneg x) : Req (Rabs x) x :=
+  Rle_antisymm (Rabs_le_self_of_nonneg hx) (Rle_Rabs_self x)
+
+/-- `|x| ≤ B` from `x ≤ B` and `−x ≤ B` (the two-sided constructor, sign case split). -/
+theorem Rabs_le_of_both {x B : Real} (h1 : Rle x B) (h2 : Rle (Rneg x) B) : Rle (Rabs x) B := by
+  intro n
+  have a1 := h1 n
+  have a2 := h2 n
+  show Qle (Qabs (x.seq n)) (add (B.seq n) (⟨2, n + 1⟩ : Q))
+  simp only [Qle, Qabs, Rneg, neg] at a1 a2 ⊢
+  by_cases hp : 0 ≤ (x.seq n).num
+  · rw [Int.natAbs_of_nonneg hp]; omega
+  · rw [Int.ofNat_natAbs_of_nonpos (Int.le_of_lt (Int.not_le.mp hp))]; omega
+
+/-- `thetaTerm u m ≈ e^{−aₘ·u}` (re-expressing the exponent via `aₘ = thetaCoeff m`). -/
+theorem thetaTerm_eq_coeff (u : Real) (m : Nat) :
+    Req (thetaTerm u m) (RexpReal (Rneg (Rmul (thetaCoeff m) u))) :=
+  RexpReal_congr (Rneg_congr (thetaArg_eq_coeff u m))
+
+/-- `thetaTerm one m ≈ e^{−aₘ}`. -/
+theorem thetaTerm_one_eq (m : Nat) :
+    Req (thetaTerm one m) (RexpReal (Rneg (thetaCoeff m))) :=
+  Req_trans (thetaTerm_eq_coeff one m) (RexpReal_congr (Rneg_congr (Rmul_one (thetaCoeff m))))
+
+/-- **Per-term directed difference** (order-free in `t`; needs only `s ≥ 1`):
+    `e^{−aₘs} − e^{−aₘt} ≤ (16/(3(m+1)²))·|s−t|`. The `RmaxZero` factorization avoids a case split
+    on `s ≤ t`; the modulus is summable (quadratic) by `thetaCoeff_exp_le`. -/
+theorem thetaTerm_diff_le (m : Nat) (s t : Real) (hs : Rle one s) :
+    Rle (Rsub (thetaTerm s m) (thetaTerm t m))
+      (Rmul (ofQ (⟨16, 3 * ((m + 1) * (m + 1))⟩ : Q)
+          (Nat.mul_pos (by decide) (Nat.mul_pos (Nat.succ_pos m) (Nat.succ_pos m))))
+        (Rabs (Rsub s t))) := by
+  have h3Mpos : 0 < 3 * ((m + 1) * (m + 1)) := Nat.mul_pos (by decide)
+    (Nat.mul_pos (Nat.succ_pos m) (Nat.succ_pos m))
+  -- abbreviations
+  let a : Real := thetaCoeff m
+  let w : Real := Rabs (Rsub s t)
+  have hw_nn : Rnonneg w := Rnonneg_Rabs _
+  have ha_nn : Rnonneg a := thetaCoeff_nonneg m
+  have hts_nn : Rnonneg (thetaTerm s m) := RexpReal_nonneg _
+  -- identity `Tₘ(s) − Tₘ(t) = Tₘ(s)·(1 − e^{−aₘ(t−s)})`
+  have hprod : Req (Rmul (thetaTerm s m) (RexpReal (Rneg (Rmul a (Rsub t s))))) (thetaTerm t m) := by
+    refine Req_trans (Rmul_congr (thetaTerm_eq_coeff s m) (Req_refl _)) ?_
+    refine Req_trans (Req_symm (RexpReal_add (Rneg (Rmul a s)) (Rneg (Rmul a (Rsub t s))))) ?_
+    refine Req_trans (RexpReal_congr ?_) (Req_symm (thetaTerm_eq_coeff t m))
+    refine Req_trans (Req_symm (Rneg_Radd (Rmul a s) (Rmul a (Rsub t s)))) (Rneg_congr ?_)
+    exact Req_trans (Req_symm (Rmul_distrib a s (Rsub t s))) (Rmul_congr (Req_refl a) (Radd_Rsub_self s t))
+  have hid : Req (Rsub (thetaTerm s m) (thetaTerm t m))
+      (Rmul (thetaTerm s m) (Rsub one (RexpReal (Rneg (Rmul a (Rsub t s)))))) := by
+    refine Req_symm (Req_trans (Req_trans (Rmul_distrib (thetaTerm s m) one
+        (Rneg (RexpReal (Rneg (Rmul a (Rsub t s))))))
+      (Radd_congr (Req_refl _) (Rmul_neg_right (thetaTerm s m) _))) ?_)
+    exact Rsub_congr (Rmul_one (thetaTerm s m)) hprod
+  -- `Tₘ(s) ≤ e^{−aₘ}`
+  have hts_le : Rle (thetaTerm s m) (RexpReal (Rneg a)) :=
+    Rle_trans (thetaTerm_antitone hs m) (Rle_of_Req (thetaTerm_one_eq m))
+  -- `max(aₘ(t−s),0) ≤ aₘ·|s−t|`
+  have hmax : Rle (RmaxZero (Rmul a (Rsub t s))) (Rmul a w) := by
+    refine Rle_trans (RmaxZero_le_Rabs _) (Rle_of_Req ?_)
+    refine Req_trans (Rabs_Rmul a (Rsub t s)) (Rmul_congr (Rabs_of_nonneg ha_nn) ?_)
+    exact Req_trans (Req_symm (Rabs_Rneg (Rsub t s))) (Rabs_congr (Rneg_Rsub t s))
+  -- coefficient: `Tₘ(s)·(4·aₘ) ≤ 16/(3(m+1)²)`
+  have hcoeff : Rle (Rmul (thetaTerm s m) (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) a))
+      (ofQ (⟨16, 3 * ((m + 1) * (m + 1))⟩ : Q) h3Mpos) := by
+    refine Rle_trans (Rmul_le_Rmul_right (Rnonneg_Rmul (Rnonneg_ofQ (by decide) (by decide)) ha_nn)
+      hts_le) ?_
+    refine Rle_trans (Rle_of_Req (Req_trans (Rmul_left_comm_loc (RexpReal (Rneg a))
+        (ofQ (⟨4, 1⟩ : Q) (by decide)) a)
+      (Rmul_congr (Req_refl _) (Rmul_comm (RexpReal (Rneg a)) a)))) ?_
+    refine Rle_trans (Rmul_le_Rmul_left (Rnonneg_ofQ (by decide) (by decide)) (thetaCoeff_exp_le m)) ?_
+    refine Rle_of_Req (Req_trans (Rmul_ofQ_ofQ (by decide) h3Mpos)
+      (ofQ_congr (Qmul_den_pos (by decide) h3Mpos) h3Mpos ?_))
+    simp only [Qeq, mul]; push_cast; ring_uor
+  -- assemble
+  refine Rle_trans (Rle_of_Req hid) ?_
+  refine Rle_trans (Rmul_le_Rmul_left hts_nn (RexpReal_one_sub_neg_le_maxZero (Rmul a (Rsub t s)))) ?_
+  refine Rle_trans (Rmul_le_Rmul_left hts_nn (Rmul_le_Rmul_left
+    (Rnonneg_ofQ (by decide) (by decide)) hmax)) ?_
+  -- `Tₘ(s)·(4·(aₘ·w)) = (Tₘ(s)·(4·aₘ))·w ≤ (16/(3(m+1)²))·w`
+  refine Rle_trans (Rle_of_Req ?_) (Rmul_le_Rmul_right hw_nn hcoeff)
+  refine Req_trans (Rmul_congr (Req_refl _) (Req_symm (Rmul_assoc (ofQ (⟨4, 1⟩ : Q) (by decide)) a w)))
+    (Req_symm (Rmul_assoc (thetaTerm s m) (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) a) w))
+
+/-- **The per-term theta Lipschitz bound** `|e^{−aₘs} − e^{−aₘt}| ≤ (16/(3(m+1)²))·|s−t|`
+    (for `s, t ≥ 1`), symmetric form via `Rabs_le_of_both` and the directed bound both ways. -/
+theorem thetaTerm_lip (m : Nat) (s t : Real) (hs : Rle one s) (ht : Rle one t) :
+    Rle (Rabs (Rsub (thetaTerm s m) (thetaTerm t m)))
+      (Rmul (ofQ (⟨16, 3 * ((m + 1) * (m + 1))⟩ : Q)
+          (Nat.mul_pos (by decide) (Nat.mul_pos (Nat.succ_pos m) (Nat.succ_pos m))))
+        (Rabs (Rsub s t))) := by
+  refine Rabs_le_of_both (thetaTerm_diff_le m s t hs) ?_
+  -- `−(Tₘ(s)−Tₘ(t)) = Tₘ(t)−Tₘ(s) ≤ rₘ·|t−s| = rₘ·|s−t|`
+  refine Rle_trans (Rle_of_Req (Rneg_Rsub (thetaTerm s m) (thetaTerm t m))) ?_
+  refine Rle_trans (thetaTerm_diff_le m t s ht) (Rmul_le_Rmul_left
+    (Rnonneg_ofQ (Nat.mul_pos (by decide) (Nat.mul_pos (Nat.succ_pos m) (Nat.succ_pos m)))
+      (by show (0 : Int) ≤ 16; decide)) (Rle_of_Req ?_))
+  exact Req_trans (Req_symm (Rabs_Rneg (Rsub t s))) (Rabs_congr (Rneg_Rsub t s))
+
 end UOR.Bridge.F1Square.Analysis
