@@ -53,4 +53,17 @@ theorem Rmul_self_exp_neg_le_one {X : Real} (hX : Rnonneg X) :
   refine Rle_trans (Rmul_le_Rmul_right (RexpReal_nonneg _) hXle) (Rle_of_Req ?_)
   exact Req_trans (Rmul_comm (RexpReal X) (RexpReal (Rneg X))) (RexpReal_mul_neg X)
 
+/-- **The exp convexity bound** `u ≤ exp(u−1)` for a real `u ≥ 1` — the exp-side dual of the log bound
+    `log q ≤ q−1` (`RartanhBounds.lean`). Directly from `1 + t ≤ exp t` (`RexpReal_ge_one_add_nonneg`) at
+    `t = u−1 ≥ 0`, rewriting `1 + (u−1) = u`. Reusable for exponential growth / order-1 estimates. -/
+theorem Rle_RexpReal_sub_one {u : Real} (hu : Rle one u) :
+    Rle u (RexpReal (Rsub u one)) := by
+  have ht : Rnonneg (Rsub u one) := Rnonneg_Rsub_of_Rle hu
+  have heq : Req (Radd one (Rsub u one)) u :=
+    Req_trans (Radd_comm one (Rsub u one))
+      (Req_trans (Radd_assoc u (Rneg one) one)
+        (Req_trans (Radd_congr (Req_refl u) (Req_trans (Radd_comm (Rneg one) one) (Radd_neg one)))
+          (Radd_zero u)))
+  exact Rle_trans (Rle_of_Req (Req_symm heq)) (RexpReal_ge_one_add_nonneg ht)
+
 end UOR.Bridge.F1Square.Analysis
