@@ -18,6 +18,8 @@ Pure Lean 4 core, no Mathlib, no `sorry`/`native_decide`, choice-free; audited b
 
 import F1Square.Analysis.RealPow
 import F1Square.Analysis.RexpLogRat
+import F1Square.Analysis.ArctanODE
+import F1Square.Analysis.ClampOne
 
 namespace UOR.Bridge.F1Square.Analysis
 
@@ -325,5 +327,101 @@ theorem artSum_tmap_double_le (q : Q) (hqd : 0 < q.den) (hqn : 0 < q.num) (N : N
     refine Qle_trans (Qmul_den_pos (by decide) hτd)
       (Qmul_le_mul_left (by decide) (artSum_le_arg_of_nonpos (tmap q) hτd htneg N))
       (two_tmap_le_sub q hqd hqn)
+
+/-! ### The general-real one-sided log bound `log u ≤ u−1`
+
+The capstone: lifting `Rlog_le_sub_one` from a rational base to an arbitrary constructive real `u`
+(any valid `Rlog` argument, `u ∈ [1/M, M]`). The obstruction — `RlogPos = 2·Rartanh(...)` reindexes and
+`u`'s approximants dip below `1` — is dissolved by (i) the *sign-robust* uniform per-index bound
+`artSum_tmap_double_le` (holds for every approximant, regardless of dipping), and (ii) the
+reindex-tolerant `Rle_of_lin_bound` (a fixed-constant per-index bound establishes the real `≤`). The
+`Rmul (ofQ 2)·` factor is handled by the `Rhalf` route (`Rartanh ≤ (u−1)/2`, then double), avoiding the
+`Rmul` reindex. This is the convexity modulus `RrpowPos` Lipschitz / the general `t^{σ−1}` Mellin
+integrand needs. -/
+
+set_option maxHeartbeats 2000000
+
+theorem Rlog_le_sub_one_real (x : Real) (M : Q) (hMd : 0 < M.den) (hMge : Qle (⟨1, 1⟩ : Q) M)
+    (hxpos : ∀ n, 0 < (x.seq n).num) (hhi : ∀ n, Qle (x.seq n) M)
+    (hlo : ∀ n, Qle (⟨1, 1⟩ : Q) (mul (x.seq n) M)) :
+    Rle (Rlog x M hMd hMge hxpos hhi hlo) (Rsub x one) := by
+  obtain ⟨hMn, hM1, hρ0, hρd, hρlt, hρ1⟩ := Rlog_radius_facts M hMd hMge
+  have hden : ∀ n, 0 < (Rlog_seq x n).den := by
+    intro n
+    refine Qmul_den_pos (Qsub_den_pos (x.den_pos _) Nat.one_pos) (Qinv_den_pos ?_)
+    have := hxpos (Rlog_R n); have h := Int.ofNat_nonneg (x.seq (Rlog_R n)).den
+    show 0 < (x.seq (Rlog_R n)).num * 1 + 1 * ((x.seq (Rlog_R n)).den : Int); omega
+  have hb : ∀ n, Qle (Qabs ((⟨Rlog_seq x, Rlog_regular x hxpos, hden⟩ : Real).seq n))
+      (⟨M.num - (M.den : Int), M.num.toNat + M.den⟩ : Q) := by
+    intro n
+    have hca : 0 < (add (x.seq (Rlog_R n)) ⟨1, 1⟩).num := by
+      have h := Int.ofNat_nonneg (x.seq (Rlog_R n)).den; have := hxpos (Rlog_R n)
+      show 0 < (x.seq (Rlog_R n)).num * 1 + 1 * ((x.seq (Rlog_R n)).den : Int); omega
+    exact Qle_trans (show 0 < (tmap M).den from
+        Qmul_den_pos (Qsub_den_pos hMd Nat.one_pos) (Qinv_den_pos hM1))
+      (tmap_abs_le (x.den_pos _) hMd hca hM1 (hhi (Rlog_R n)) (hlo (Rlog_R n)))
+      (Qeq_le (tmap_M_eq hMd hMn))
+  rw [Rlog_eq_Rmul x M hMd hMge hxpos hhi hlo hden hρ0 hρd hρlt hb]
+  have claim1 : Rle (Rartanh ⟨Rlog_seq x, Rlog_regular x hxpos, hden⟩
+      (⟨M.num - (M.den : Int), M.num.toNat + M.den⟩ : Q) hρ0 hρd hρlt hb) (Rhalf (Rsub x one)) := by
+    refine Rle_of_lin_bound (C := 1) ?_
+    intro n
+    show Qle (artSum (tmap (x.seq (Rlog_R (Rartanh_R (⟨M.num - (M.den : Int), M.num.toNat + M.den⟩ : Q) n))))
+          (Rartanh_R (⟨M.num - (M.den : Int), M.num.toNat + M.den⟩ : Q) n))
+      (add (mul (⟨1, 2⟩ : Q) (add (x.seq (2 * n + 1)) (⟨-1, 1⟩ : Q))) ⟨1, n + 1⟩)
+    have hNge : n + 1 ≤ Rartanh_R (⟨M.num - (M.den : Int), M.num.toNat + M.den⟩ : Q) n :=
+      Rartanh_R_ge _ hρd n
+    generalize hNeq : Rartanh_R (⟨M.num - (M.den : Int), M.num.toNat + M.den⟩ : Q) n = N at hNge ⊢
+    have hKbig : 2 * n + 2 ≤ Rlog_R N + 1 := by
+      have hv : Rlog_R N = 2 * (N + 1) := rfl
+      omega
+    generalize hKeq : Rlog_R N = K at hKbig ⊢
+    have hτd : 0 < (tmap (x.seq K)).den := by
+      rw [tmap_rat_den]
+      refine Nat.mul_pos (x.den_pos _) ?_
+      have h1 := hxpos K; have h2 : (0 : Int) ≤ ((x.seq K).den : Int) := Int.ofNat_nonneg _
+      omega
+    have ha := artSum_tmap_double_le (x.seq K) (x.den_pos K) (hxpos K) N
+    have hreg := x.reg K (2 * n + 1)
+    have heqL : Qeq (mul (⟨1, 2⟩ : Q) (mul (⟨2, 1⟩ : Q) (artSum (tmap (x.seq K)) N)))
+        (artSum (tmap (x.seq K)) N) := by simp only [Qeq, mul]; push_cast; ring_uor
+    have hL : Qle (artSum (tmap (x.seq K)) N) (mul (⟨1, 2⟩ : Q) (Qsub (x.seq K) (⟨1, 1⟩ : Q))) :=
+      Qle_trans (Qmul_den_pos (by decide) (Qmul_den_pos (by decide) (artSum_den_pos hτd N)))
+        (Qeq_le (Qeq_symm heqL)) (Qmul_le_mul_left (by decide) ha)
+    have hsplit : Qeq (mul (⟨1, 2⟩ : Q) (Qsub (x.seq K) (⟨1, 1⟩ : Q)))
+        (add (mul (⟨1, 2⟩ : Q) (add (x.seq (2 * n + 1)) (⟨-1, 1⟩ : Q)))
+             (mul (⟨1, 2⟩ : Q) (Qsub (x.seq K) (x.seq (2 * n + 1))))) := by
+      simp only [Qeq, mul, Qsub, add, neg]; push_cast; ring_uor
+    have hKb : Qle (Qbound K) (Qbound (2 * n + 1)) := by
+      show (1 : Int) * ((2 * n + 1 + 1 : Nat) : Int) ≤ 1 * ((K + 1 : Nat) : Int)
+      push_cast; omega
+    have hfinal : Qle (mul (⟨1, 2⟩ : Q) (add (Qbound K) (Qbound (2 * n + 1)))) (⟨1, n + 1⟩ : Q) := by
+      have hstep : Qle (add (Qbound K) (Qbound (2 * n + 1)))
+          (add (Qbound (2 * n + 1)) (Qbound (2 * n + 1))) := Qadd_le_add hKb (Qle_refl (Qbound (2 * n + 1)))
+      have hmul := Qmul_le_mul_left (show (0:Int) ≤ (⟨1,2⟩:Q).num by decide) hstep
+      have he : Qeq (mul (⟨1, 2⟩ : Q) (add (Qbound (2 * n + 1)) (Qbound (2 * n + 1)))) (⟨1, 2 * n + 1 + 1⟩ : Q) := by
+        show Qeq (mul (⟨1, 2⟩ : Q) (add (⟨1, 2 * n + 1 + 1⟩ : Q) (⟨1, 2 * n + 1 + 1⟩ : Q))) (⟨1, 2 * n + 1 + 1⟩ : Q)
+        simp only [Qeq, mul, add]; push_cast; ring_uor
+      have hconc : Qle (mul (⟨1, 2⟩ : Q) (add (Qbound (2 * n + 1)) (Qbound (2 * n + 1)))) (⟨1, n + 1⟩ : Q) :=
+        Qle_trans (Nat.succ_pos (2 * n + 1)) (Qeq_le he)
+          (by show Qle (⟨1, 2 * n + 1 + 1⟩ : Q) (⟨1, n + 1⟩ : Q); simp only [Qle]; push_cast; omega)
+      exact Qle_trans (Qmul_den_pos (by decide)
+        (add_den_pos (Qbound_den_pos (2 * n + 1)) (Qbound_den_pos (2 * n + 1)))) hmul hconc
+    have hsub : Qle (Qsub (x.seq K) (x.seq (2 * n + 1))) (add (Qbound K) (Qbound (2 * n + 1))) :=
+      Qle_trans (Qabs_den_pos (Qsub_den_pos (x.den_pos K) (x.den_pos (2 * n + 1))))
+        (Qle_self_Qabs (Qsub (x.seq K) (x.seq (2 * n + 1)))) hreg
+    have hmul2 : Qle (mul (⟨1, 2⟩ : Q) (Qsub (x.seq K) (x.seq (2 * n + 1))))
+        (mul (⟨1, 2⟩ : Q) (add (Qbound K) (Qbound (2 * n + 1)))) :=
+      Qmul_le_mul_left (show (0:Int) ≤ (⟨1,2⟩:Q).num by decide) hsub
+    have hhalf : Qle (mul (⟨1, 2⟩ : Q) (Qsub (x.seq K) (x.seq (2 * n + 1)))) (⟨1, n + 1⟩ : Q) :=
+      Qle_trans (Qmul_den_pos (by decide) (add_den_pos (Qbound_den_pos K) (Qbound_den_pos (2 * n + 1))))
+        hmul2 hfinal
+    exact Qle_trans (Qmul_den_pos (by decide) (Qsub_den_pos (x.den_pos K) Nat.one_pos)) hL
+      (Qle_trans (add_den_pos (Qmul_den_pos (by decide) (add_den_pos (x.den_pos (2 * n + 1)) (by decide)))
+          (Qmul_den_pos (by decide) (Qsub_den_pos (x.den_pos K) (x.den_pos (2 * n + 1)))))
+        (Qeq_le hsplit) (Qadd_le_add (Qle_refl _) hhalf))
+  refine Rle_trans (Rmul_le_Rmul_left (Rnonneg_ofQ (by decide) (by decide)) claim1) ?_
+  exact Rle_of_Req (Req_trans (Rmul_two_eq_add (Rhalf (Rsub x one)))
+    (Req_trans (Req_symm (Rhalf_Radd (Rsub x one) (Rsub x one))) (Rhalf_add_self (Rsub x one))))
 
 end UOR.Bridge.F1Square.Analysis
