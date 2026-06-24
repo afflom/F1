@@ -64,4 +64,36 @@ theorem RrpowPos_sub_le (x : Real) (kx : Nat) (hx : Qlt (Qbound kx) (x.seq kx))
     (Rmul_le_Rmul_left (Rnonneg_ofQ (by decide) (by decide)) ?_)
   exact Rle_of_Req (RmaxZero_congr (Req_symm (Rmul_sub_distrib e (RlogPos x kx hx) (RlogPos y ky hy))))
 
+/-- **`max(z,0) ≤ w`** from `z ≤ w` and `0 ≤ w` — the order-free upper bound for `RmaxZero`. Via the
+    sign-free witness `|z| ≤ 2w − z` (`Rabs_le_of_both`, both legs `≤` from `z ≤ w` / `0 ≤ w`), so
+    `z + |z| ≤ 2w` (`Radd_Rsub_cancel`), then halving. Reusable. -/
+theorem RmaxZero_le_of_le_of_nonneg {z w : Real} (hzw : Rle z w) (hw : Rnonneg w) :
+    Rle (RmaxZero z) w := by
+  have hww : Rnonneg (Radd w w) := Rnonneg_Radd hw hw
+  have leg2 : Rle (Rneg z) (Rsub (Radd w w) z) := Rle_self_Radd_left hww
+  have h1 : Rle (Rsub z (Rneg z)) (Radd w w) :=
+    Rle_trans (Rle_of_Req (Radd_congr (Req_refl z) (Rneg_neg z))) (Radd_le_add hzw hzw)
+  have leg1 : Rle z (Rsub (Radd w w) z) :=
+    Rle_trans (Rle_add_of_Rsub_le h1) (Rle_of_Req (Radd_comm (Rneg z) (Radd w w)))
+  have hsum : Rle (Radd z (Rabs z)) (Radd w w) :=
+    Rle_trans (Radd_le_add (Rle_refl z) (Rabs_le_of_both leg1 leg2))
+      (Rle_of_Req (Radd_Rsub_cancel (Radd w w) z))
+  exact Rle_trans (Rhalf_le_Rhalf hsum) (Rle_of_Req (Rhalf_add_self w))
+
+/-- **`RrpowPos` Lipschitz, modulo the log-difference seam** — `xᵉ − yᵉ ≤ 4·(e·D)·xᵉ` whenever the log
+    difference is controlled, `log x − log y ≤ D` (`D ≥ 0`, `e ≥ 0`). Combines `RrpowPos_sub_le` with
+    `RmaxZero_le_of_le_of_nonneg`. The remaining content is the seam `hlog` — the log-Lipschitz bound
+    `RlogPos x − RlogPos y ≤ D` (with `D = (x−y)/y`), a *dischargeable* analytic atom (via `RlogPos_mul`
+    + a `Rdiv`-bounds layer not yet built), here carried as an explicit hypothesis, never an axiom. -/
+theorem RrpowPos_lip_of_log (x : Real) (kx : Nat) (hx : Qlt (Qbound kx) (x.seq kx))
+    (y : Real) (ky : Nat) (hy : Qlt (Qbound ky) (y.seq ky)) (e : Real) (he : Rnonneg e)
+    (D : Real) (hD : Rnonneg D)
+    (hlog : Rle (Rsub (RlogPos x kx hx) (RlogPos y ky hy)) D) :
+    Rle (Rsub (RrpowPos x kx hx e) (RrpowPos y ky hy e))
+        (Rmul (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul e D)) (RrpowPos x kx hx e)) := by
+  refine Rle_trans (RrpowPos_sub_le x kx hx y ky hy e) ?_
+  refine Rmul_le_Rmul_right (RexpReal_nonneg _)
+    (Rmul_le_Rmul_left (Rnonneg_ofQ (by decide) (by decide)) ?_)
+  exact RmaxZero_le_of_le_of_nonneg (Rmul_le_Rmul_left he hlog) (Rnonneg_Rmul he hD)
+
 end UOR.Bridge.F1Square.Analysis

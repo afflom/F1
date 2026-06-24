@@ -3577,3 +3577,5 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.RrpowPos_le_exp_sub_one
 #print axioms Analysis.RexpReal_sub_le
 #print axioms Analysis.RrpowPos_sub_le
+#print axioms Analysis.RmaxZero_le_of_le_of_nonneg
+#print axioms Analysis.RrpowPos_lip_of_log
