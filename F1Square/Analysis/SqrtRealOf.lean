@@ -399,4 +399,30 @@ theorem RsqrtReal_sq (a : Real) (ha : Rle one a) :
         (Qadd_le_add hb1 hb2) hfin)
   exact RTendsTo_gen_unique hWLL hWa
 
+/-- **`√a` is the unique non-negative square root** of `a ≥ 1`: any `y ≥ 0` with `y² = a` is `√a`. -/
+theorem RsqrtReal_unique (a : Real) (ha : Rle one a) {y : Real} (hy : Rnonneg y)
+    (hsq : Req (Rmul y y) a) : Req y (RsqrtReal a ha) := by
+  have h : Req (Rmul y y) (Rmul (RsqrtReal a ha) (RsqrtReal a ha)) :=
+    Req_trans hsq (Req_symm (RsqrtReal_sq a ha))
+  exact Rle_antisymm (Rle_of_Rsq_le hy (RsqrtReal_nonneg a ha) (Rle_of_Req h))
+    (Rle_of_Rsq_le (RsqrtReal_nonneg a ha) hy (Rle_of_Req (Req_symm h)))
+
+/-- `(a·b)·(c·d) ≈ (a·c)·(b·d)` (middle-swap commutativity). -/
+theorem Rmul_mul_mul_comm (a b c d : Real) :
+    Req (Rmul (Rmul a b) (Rmul c d)) (Rmul (Rmul a c) (Rmul b d)) :=
+  Req_trans (Rmul_assoc a b (Rmul c d))
+    (Req_trans (Rmul_congr (Req_refl a) (Req_symm (Rmul_assoc b c d)))
+      (Req_trans (Rmul_congr (Req_refl a) (Rmul_congr (Rmul_comm b c) (Req_refl d)))
+        (Req_trans (Rmul_congr (Req_refl a) (Rmul_assoc c b d))
+          (Req_symm (Rmul_assoc a c (Rmul b d))))))
+
+/-- **`√(a·b) = √a·√b`** for `a, b ≥ 1` (with `a·b ≥ 1`) — multiplicativity of the real √. -/
+theorem RsqrtReal_mul (a b : Real) (ha : Rle one a) (hb : Rle one b) (hab : Rle one (Rmul a b)) :
+    Req (Rmul (RsqrtReal a ha) (RsqrtReal b hb)) (RsqrtReal (Rmul a b) hab) :=
+  RsqrtReal_unique (Rmul a b) hab
+    (Rnonneg_Rmul (RsqrtReal_nonneg a ha) (RsqrtReal_nonneg b hb))
+    (Req_trans (Rmul_mul_mul_comm (RsqrtReal a ha) (RsqrtReal b hb)
+        (RsqrtReal a ha) (RsqrtReal b hb))
+      (Rmul_congr (RsqrtReal_sq a ha) (RsqrtReal_sq b hb)))
+
 end UOR.Bridge.F1Square.Analysis
