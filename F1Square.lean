@@ -165,6 +165,7 @@ import F1Square.Analysis.ComplexMod
 import F1Square.Analysis.ComplexPow
 import F1Square.Analysis.ExpLog
 import F1Square.Analysis.RealPow
+import F1Square.Analysis.RartanhBounds
 import F1Square.Analysis.RAddNF
 import F1Square.Analysis.ComplexZeta
 import F1Square.Analysis.Mangoldt

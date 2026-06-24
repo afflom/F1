@@ -3558,3 +3558,5 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.thetaFn_value_decay2
 #print axioms Analysis.integralTerm_thetaClamp_le2
 #print axioms Analysis.thetaMellin1_le
+#print axioms Analysis.RartanhAtQ_ge
+#print axioms Analysis.RartanhAtQ_le
