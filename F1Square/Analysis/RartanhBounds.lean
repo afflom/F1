@@ -20,6 +20,7 @@ import F1Square.Analysis.RealPow
 import F1Square.Analysis.RexpLogRat
 import F1Square.Analysis.ArctanODE
 import F1Square.Analysis.ClampOne
+import F1Square.Analysis.RlogMulPos
 
 namespace UOR.Bridge.F1Square.Analysis
 
@@ -423,5 +424,19 @@ theorem Rlog_le_sub_one_real (x : Real) (M : Q) (hMd : 0 < M.den) (hMge : Qle (�
   refine Rle_trans (Rmul_le_Rmul_left (Rnonneg_ofQ (by decide) (by decide)) claim1) ?_
   exact Rle_of_Req (Req_trans (Rmul_two_eq_add (Rhalf (Rsub x one)))
     (Req_trans (Req_symm (Rhalf_Radd (Rsub x one) (Rsub x one))) (Rhalf_add_self (Rsub x one))))
+
+/-- **The `RlogPos`-form of the convexity bound** `log x ≤ x − 1` — for `x` presented in `[1,B]` at a
+    small radius (so the auto-radius `RlogPos x k` agrees with the presented-radius `Rlog x B`,
+    `RlogPos_eq_Rlog`), the general-real bound `Rlog_le_sub_one_real` transports to `RlogPos`. This is the
+    form `RrpowPos = exp(y·RlogPos x)` consumes — the substrate for `RrpowPos` upper bounds / Lipschitz. -/
+theorem RlogPos_le_sub_one (x : Real) (k : Nat) (hk : Qlt (Qbound k) (x.seq k))
+    (B : Q) (hBd : 0 < B.den) (hBge : Qle (⟨1, 1⟩ : Q) B)
+    (hxposB : ∀ n, 0 < (x.seq n).num) (hxhiB : ∀ n, Qle (x.seq n) B)
+    (hxloB : ∀ n, Qle (⟨1, 1⟩ : Q) (mul (x.seq n) B))
+    (hρB2 : Qle (⟨1, 2⟩ : Q) (Qsub ⟨1, 1⟩ (mul ⟨B.num - (B.den : Int), B.num.toNat + B.den⟩
+              ⟨B.num - (B.den : Int), B.num.toNat + B.den⟩))) :
+    Rle (RlogPos x k hk) (Rsub x one) :=
+  Rle_trans (Rle_of_Req (RlogPos_eq_Rlog x k hk B hBd hBge hxposB hxhiB hxloB hρB2))
+    (Rlog_le_sub_one_real x B hBd hBge hxposB hxhiB hxloB)
 
 end UOR.Bridge.F1Square.Analysis
