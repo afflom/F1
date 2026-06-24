@@ -3474,3 +3474,5 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.RsqrtReal_nonneg
 #print axioms Analysis.rsqrtRealSeq_den_pos
 #print axioms Analysis.rsqrtRealSeq_ge_zero
+#print axioms Analysis.RTendsTo_gen_unique
+#print axioms Analysis.rsqrtRealSeq_tendsTo

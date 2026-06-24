@@ -180,4 +180,71 @@ def RsqrtReal (a : Real) (ha : Rle one a) : Real := Rlim (rsqrtRealX a ha) (rsqr
 theorem RsqrtReal_nonneg (a : Real) (ha : Rle one a) : Rnonneg (RsqrtReal a ha) :=
   Rnonneg_Rlim_seq _ (fun _n => Rsqrt_nonneg _ _ _)
 
+-- ===========================================================================
+-- Toward `(√a)² = a`: limit-uniqueness at a general rate, and the convergence `ofQ cₙ → a`.
+-- ===========================================================================
+
+/-- **Limit uniqueness at a general (per-axis constant) rate** — if `X k → L` with rate
+    `Cₖ/(k+1)+Cₙ/(n+1)` and `X k → L'` with rate `Cₖ'/(k+1)+Cₙ'/(n+1)`, then `L ≈ L'`. The `RTendsTo`
+    uniqueness argument carries through verbatim for any constants (the Archimedean lemma kills the
+    `k`-tail and the linear-bound criterion the `n`-residual). -/
+theorem RTendsTo_gen_unique {X : Nat → Real} {L L' : Real} {Ck Cn Ck' Cn' : Nat}
+    (hL : ∀ k n, Qle (Qabs (Qsub ((X k).seq n) (L.seq n)))
+      (add (⟨(Ck : Int), k + 1⟩ : Q) (⟨(Cn : Int), n + 1⟩ : Q)))
+    (hL' : ∀ k n, Qle (Qabs (Qsub ((X k).seq n) (L'.seq n)))
+      (add (⟨(Ck' : Int), k + 1⟩ : Q) (⟨(Cn' : Int), n + 1⟩ : Q))) : Req L L' := by
+  apply Req_of_lin_bound (C := Cn + Cn')
+  intro n
+  apply Qarch_gen (C := Ck + Ck')
+    (Qabs_den_pos (Qsub_den_pos (L.den_pos n) (L'.den_pos n))) (Nat.succ_pos n)
+  intro k
+  have htri := Qabs_sub_triangle (a := L.seq n) (b := (X k).seq n) (c := L'.seq n)
+    (L.den_pos n) ((X k).den_pos n) (L'.den_pos n)
+  have hb1 : Qle (Qabs (Qsub (L.seq n) ((X k).seq n)))
+      (add (⟨(Ck : Int), k + 1⟩ : Q) (⟨(Cn : Int), n + 1⟩ : Q)) := by
+    rw [Qabs_Qsub_comm]; exact hL k n
+  have hfin : Qle (add (add (⟨(Ck : Int), k + 1⟩ : Q) (⟨(Cn : Int), n + 1⟩ : Q))
+        (add (⟨(Ck' : Int), k + 1⟩ : Q) (⟨(Cn' : Int), n + 1⟩ : Q)))
+      (add (⟨((Cn + Cn' : Nat) : Int), n + 1⟩ : Q) (⟨((Ck + Ck' : Nat) : Int), k + 1⟩ : Q)) := by
+    apply Qeq_le; simp only [Qeq, add]; push_cast; ring_uor
+  exact Qle_trans
+    (add_den_pos (Qabs_den_pos (Qsub_den_pos (L.den_pos n) ((X k).den_pos n)))
+      (Qabs_den_pos (Qsub_den_pos ((X k).den_pos n) (L'.den_pos n)))) htri
+    (Qle_trans (add_den_pos (add_den_pos (Nat.succ_pos _) (Nat.succ_pos _))
+        (add_den_pos (Nat.succ_pos _) (Nat.succ_pos _)))
+      (Qadd_le_add hb1 (hL' k n)) hfin)
+
+/-- **`ofQ cₙ → a`** — the shifted rational approximants converge to `a` (rate `2/(k+1)+2/(n+1)`,
+    i.e. exactly `RTendsTo`). Triangle through `a_{4k+3}`: the shift contributes `2/(4k+4)`, `a`'s
+    regularity `1/(4k+4)+1/(m+1)`, summing to `3/(4k+4)+1/(m+1) ≤ 2/(k+1)+2/(m+1)`. -/
+theorem rsqrtRealSeq_tendsTo (a : Real) :
+    RTendsTo (fun n => ofQ (rsqrtRealSeq a n) (rsqrtRealSeq_den_pos a n)) a := by
+  intro k m
+  show Qle (Qabs (Qsub (rsqrtRealSeq a k) (a.seq m))) (add (⟨2, k + 1⟩ : Q) (⟨2, m + 1⟩ : Q))
+  have htri := Qabs_sub_triangle (a := rsqrtRealSeq a k) (b := a.seq (4 * k + 3)) (c := a.seq m)
+    (rsqrtRealSeq_den_pos a k) (a.den_pos _) (a.den_pos _)
+  have hshift : Qeq (Qsub (rsqrtRealSeq a k) (a.seq (4 * k + 3))) (⟨2, 4 * k + 4⟩ : Q) := by
+    simp only [rsqrtRealSeq, Qsub, add, neg, Qeq]; push_cast; ring_uor
+  have ha2 : Qeq (Qabs (⟨2, 4 * k + 4⟩ : Q)) (⟨2, 4 * k + 4⟩ : Q) :=
+    Qabs_of_nonneg (by show (0 : Int) ≤ 2; decide)
+  have hc1 : Qle (Qabs (Qsub (rsqrtRealSeq a k) (a.seq (4 * k + 3)))) (⟨2, 4 * k + 4⟩ : Q) :=
+    Qeq_le (Qeq_trans (by show 0 < 4 * k + 4; omega) (Qabs_congr_q hshift) ha2)
+  have hc2 : Qle (Qabs (Qsub (a.seq (4 * k + 3)) (a.seq m)))
+      (add (⟨1, 4 * k + 4⟩ : Q) (⟨1, m + 1⟩ : Q)) := by
+    have h := a.reg (4 * k + 3) m; unfold Qbound at h; exact h
+  have hreg : Qeq (add (⟨2, 4 * k + 4⟩ : Q) (add (⟨1, 4 * k + 4⟩ : Q) (⟨1, m + 1⟩ : Q)))
+      (add (⟨3, 4 * k + 4⟩ : Q) (⟨1, m + 1⟩ : Q)) := by
+    simp only [Qeq, add]; push_cast; ring_uor
+  have htail : Qle (add (⟨3, 4 * k + 4⟩ : Q) (⟨1, m + 1⟩ : Q))
+      (add (⟨2, k + 1⟩ : Q) (⟨2, m + 1⟩ : Q)) :=
+    Qadd_le_add (by simp only [Qle]; push_cast; omega) (by simp only [Qle]; push_cast; omega)
+  exact Qle_trans
+    (add_den_pos (Qabs_den_pos (Qsub_den_pos (rsqrtRealSeq_den_pos a k) (a.den_pos _)))
+      (Qabs_den_pos (Qsub_den_pos (a.den_pos _) (a.den_pos _)))) htri
+    (Qle_trans (add_den_pos (by show 0 < 4 * k + 4; omega)
+        (add_den_pos (by show 0 < 4 * k + 4; omega) (Nat.succ_pos _)))
+      (Qadd_le_add hc1 hc2)
+      (Qle_trans (add_den_pos (by show 0 < 4 * k + 4; omega) (Nat.succ_pos _))
+        (Qeq_le hreg) htail))
+
 end UOR.Bridge.F1Square.Analysis
