@@ -425,4 +425,37 @@ theorem RsqrtReal_mul (a b : Real) (ha : Rle one a) (hb : Rle one b) (hab : Rle 
         (RsqrtReal a ha) (RsqrtReal b hb))
       (Rmul_congr (RsqrtReal_sq a ha) (RsqrtReal_sq b hb)))
 
+-- ===========================================================================
+-- The square root of an arbitrary positive real (scaling `√a = (1/N)·√(N²a)` with `N²a ≥ 1`).
+-- ===========================================================================
+
+/-- **The square root of a positive real `a`** (with `N²·a ≥ 1`, `N ≥ 1`) — `√a = (1/N)·√(N²a)`,
+    extending `RsqrtReal` below `1`. The caller supplies `N` large enough that `N²a ≥ 1`. -/
+def RsqrtRealPos (a : Real) (N : Nat) (hN : 0 < N)
+    (hscale : Rle one (Rmul (ofQ (⟨(N : Int) * (N : Int), 1⟩ : Q) Nat.one_pos) a)) : Real :=
+  Rmul (ofQ (⟨1, N⟩ : Q) hN)
+    (RsqrtReal (Rmul (ofQ (⟨(N : Int) * (N : Int), 1⟩ : Q) Nat.one_pos) a) hscale)
+
+/-- **`√a ≥ 0`** for the positive-real root. -/
+theorem RsqrtRealPos_nonneg (a : Real) (N : Nat) (hN : 0 < N)
+    (hscale : Rle one (Rmul (ofQ (⟨(N : Int) * (N : Int), 1⟩ : Q) Nat.one_pos) a)) :
+    Rnonneg (RsqrtRealPos a N hN hscale) :=
+  Rnonneg_Rmul (Rnonneg_ofQ hN (by show (0 : Int) ≤ 1; decide)) (RsqrtReal_nonneg _ _)
+
+/-- **`(√a)² = a`** for the positive-real root: `(1/N)²·(N²a) = a`. -/
+theorem RsqrtRealPos_sq (a : Real) (N : Nat) (hN : 0 < N)
+    (hscale : Rle one (Rmul (ofQ (⟨(N : Int) * (N : Int), 1⟩ : Q) Nat.one_pos) a)) :
+    Req (Rmul (RsqrtRealPos a N hN hscale) (RsqrtRealPos a N hN hscale)) a := by
+  show Req (Rmul (Rmul (ofQ (⟨1, N⟩ : Q) hN) _) (Rmul (ofQ (⟨1, N⟩ : Q) hN) _)) a
+  refine Req_trans (Rmul_mul_mul_comm (ofQ (⟨1, N⟩ : Q) hN) _ (ofQ (⟨1, N⟩ : Q) hN) _) ?_
+  refine Req_trans (Rmul_congr (Rmul_ofQ_ofQ hN hN)
+    (RsqrtReal_sq (Rmul (ofQ (⟨(N : Int) * (N : Int), 1⟩ : Q) Nat.one_pos) a) hscale)) ?_
+  -- Rmul (ofQ ⟨1, N*N⟩) (Rmul (ofQ ⟨N*N,1⟩) a) ≈ a
+  refine Req_trans (Req_symm (Rmul_assoc _ _ _)) ?_
+  refine Req_trans (Rmul_congr (Rmul_ofQ_ofQ (Nat.mul_pos hN hN) Nat.one_pos) (Req_refl a)) ?_
+  refine Req_trans (Rmul_congr
+    (ofQ_congr (Qmul_den_pos (Nat.mul_pos hN hN) Nat.one_pos) (by decide : 0 < (⟨1, 1⟩ : Q).den)
+      (by simp only [Qeq, mul]; push_cast; ring_uor)) (Req_refl a)) ?_
+  exact Req_trans (Rmul_comm _ a) (Rmul_one a)
+
 end UOR.Bridge.F1Square.Analysis
