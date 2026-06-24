@@ -176,6 +176,7 @@ import F1Square.Li
 import F1Square.Analysis.LiOne
 import F1Square.Analysis.ZetaTwo
 import F1Square.Analysis.GammaOne
+import F1Square.Analysis.RmulLipschitz
 import F1Square.Analysis.LambdaTwo
 import F1Square.Analysis.LiTwo
 import F1Square.Analysis.ComplexInv

@@ -3597,3 +3597,5 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rle_one_Rdiv
 #print axioms Analysis.RlogPos_sub_le_Rdiv
 #print axioms Analysis.RrpowPos_lipschitz
+#print axioms Analysis.Rmul_lip_const_nonneg
+#print axioms Analysis.Rmul_lipschitz
