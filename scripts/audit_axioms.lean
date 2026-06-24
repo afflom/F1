@@ -3563,3 +3563,11 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rlog_le_sub_one
 #print axioms Analysis.Rlog_ge_two_tmap
 #print axioms Analysis.Rle_RexpReal_sub_one
+#print axioms Analysis.Qadd_le_self_of_nonpos
+#print axioms Analysis.qpow_two_mul_nonneg
+#print axioms Analysis.qpow_odd_nonpos
+#print axioms Analysis.artTerm_nonpos
+#print axioms Analysis.artSum_le_arg_of_nonpos
+#print axioms Analysis.two_tmap_le_sub
+#print axioms Analysis.two_tmap_le_sub_mul_W
+#print axioms Analysis.artSum_tmap_double_le

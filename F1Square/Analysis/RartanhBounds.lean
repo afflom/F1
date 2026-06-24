@@ -162,5 +162,141 @@ theorem Rlog_ge_two_tmap (q : Q) (hqd : 0 < q.den) (hqge : Qle (⟨1, 1⟩ : Q) 
     (⟨q.num - (q.den : Int), q.num.toNat + q.den⟩ : Q) hρ0 hρd hρlt hb
   refine Rle_trans ?_ (Rmul_le_Rmul_left (Rnonneg_ofQ (by decide) (by decide)) hge)
   exact Rle_of_Req (Req_symm (Rmul_ofQ_ofQ (by decide) hτd))
+/-! ### Uniform rational per-index bound `2·artSum(tmap q)(N) ≤ q−1` for all `q > 0`
+
+These lift the artanh upper bound to a *uniform* (sign-robust) rational statement: the per-index bound
+holds for every `q > 0`, not only `q ≥ 1`. For `q ≥ 1` it is the geometric route (`artSum_le_geo`);
+for `q < 1` (`tmap q < 0`) the artanh partial sum sits *below* its negative argument
+(`artSum_le_arg_of_nonpos`), and `2·tmap q ≤ q−1` holds for all `q > 0` (`two_tmap_le_sub`, residual
+`(q.num−q.den)²·q.den ≥ 0`). This is the rational core of the GENERAL-REAL `log u ≤ u−1`: a real `u ≥ 1`
+has approximants that dip below `1`, so the per-index bound must hold without the sign hypothesis. -/
+
+/-- `x + y ≤ x` when `y ≤ 0`. -/
+theorem Qadd_le_self_of_nonpos {x y : Q} (hy : y.num ≤ 0) : Qle (add x y) x := by
+  show (x.num * (y.den : Int) + y.num * (x.den : Int)) * (x.den : Int)
+      ≤ x.num * ((x.den * y.den : Nat) : Int)
+  have hd : x.num * ((x.den * y.den : Nat) : Int)
+        - (x.num * (y.den : Int) + y.num * (x.den : Int)) * (x.den : Int)
+      = (-(y.num)) * ((x.den : Int) * (x.den : Int)) := by push_cast; ring_uor
+  have hnn : 0 ≤ (-(y.num)) * ((x.den : Int) * (x.den : Int)) :=
+    Int.mul_nonneg (by omega) (Int.mul_nonneg (Int.ofNat_nonneg _) (Int.ofNat_nonneg _))
+  omega
+
+/-- An even power has non-negative numerator (`qⁱ = (qʲ)²` at `i = 2j`). -/
+theorem qpow_two_mul_nonneg (t : Q) (hd : 0 < t.den) (j : Nat) : 0 ≤ (qpow t (2 * j)).num := by
+  have heq : Qeq (qpow t (2 * j)) (mul (qpow t j) (qpow t j)) := by
+    rw [show 2 * j = j + j from by omega]; exact qpow_add t hd j j
+  have hmul : 0 ≤ (mul (qpow t j) (qpow t j)).num := by
+    show 0 ≤ (qpow t j).num * (qpow t j).num
+    rw [← Int.natAbs_mul_self]; exact Int.ofNat_nonneg _
+  exact num_nonneg_of_Qzero_le (Qle_trans (Qmul_den_pos (qpow_den_pos hd j) (qpow_den_pos hd j))
+    (Qzero_le hmul) (Qeq_le (Qeq_symm heq)))
+
+/-- An odd power of a non-positive rational has non-positive numerator. -/
+theorem qpow_odd_nonpos (t : Q) (hd : 0 < t.den) (ht : t.num ≤ 0) (j : Nat) :
+    (qpow t (2 * j + 1)).num ≤ 0 := by
+  rw [qpow_succ t (2 * j)]
+  show t.num * (qpow t (2 * j)).num ≤ 0
+  have h1 := Int.mul_nonneg (by omega : (0 : Int) ≤ -t.num) (qpow_two_mul_nonneg t hd j)
+  rw [Int.neg_mul] at h1; omega
+
+/-- The artanh term `t^{2j+1}/(2j+1)` is non-positive for `t ≤ 0`. -/
+theorem artTerm_nonpos (t : Q) (hd : 0 < t.den) (ht : t.num ≤ 0) (j : Nat) :
+    (artTerm t j).num ≤ 0 := by
+  show (qpow t (2 * j + 1)).num * 1 ≤ 0
+  have := qpow_odd_nonpos t hd ht j; omega
+
+/-- **`artSum t N ≤ t` for `t ≤ 0`** — the artanh partial sum sits below its (negative) argument,
+    since every term past the first is non-positive. The mirror of `artSum_ge_arg` (`t ≥ 0`). -/
+theorem artSum_le_arg_of_nonpos (t : Q) (hd : 0 < t.den) (ht : t.num ≤ 0) :
+    ∀ N, Qle (artSum t N) t
+  | 0 => Qeq_le (artSum_zero_eq t)
+  | (N + 1) => by
+    show Qle (add (artSum t N) (artTerm t (N + 1))) t
+    exact Qle_trans (artSum_den_pos hd N) (Qadd_le_self_of_nonpos (artTerm_nonpos t hd ht (N + 1)))
+      (artSum_le_arg_of_nonpos t hd ht N)
+
+/-- `2·tmap q ≤ q−1` for all `q > 0` (residual `(q.num−q.den)²·q.den ≥ 0`). -/
+theorem two_tmap_le_sub (q : Q) (hqd : 0 < q.den) (hqn : 0 < q.num) :
+    Qle (mul (⟨2, 1⟩ : Q) (tmap q)) (Qsub q (⟨1, 1⟩ : Q)) := by
+  have hdp : (0 : Int) < (q.den : Int) := by exact_mod_cast hqd
+  have htn : ((q.num + (q.den : Int)).toNat : Int) = q.num + (q.den : Int) := Int.toNat_of_nonneg (by omega)
+  simp only [Qle, mul, Qsub, add, neg]
+  rw [tmap_rat_num, tmap_rat_den]; push_cast [htn]
+  have hsq : (0 : Int) ≤ (q.num - (q.den : Int)) * (q.num - (q.den : Int)) := by
+    rw [← Int.natAbs_mul_self]; exact Int.ofNat_nonneg _
+  have hnn : (0 : Int) ≤ (q.num - (q.den : Int)) * (q.num - (q.den : Int)) * (q.den : Int) :=
+    Int.mul_nonneg hsq (Int.le_of_lt hdp)
+  have hfac : (q.num * 1 + -1 * (q.den : Int)) * (1 * ((q.den : Int) * (q.num + (q.den : Int))))
+      = 2 * ((q.num - (q.den : Int)) * (q.den : Int)) * ((q.den : Int) * 1)
+        + (q.num - (q.den : Int)) * (q.num - (q.den : Int)) * (q.den : Int) := by ring_uor
+  omega
+
+/-- `2·tmap q ≤ (q−1)·(1−tmap q²)` for all `q > 0` (the `W`-cleared form of `two_tmap_le_sub`). -/
+theorem two_tmap_le_sub_mul_W (q : Q) (hqd : 0 < q.den) (hqn : 0 < q.num) :
+    Qle (mul (⟨2, 1⟩ : Q) (tmap q))
+        (mul (Qsub q (⟨1, 1⟩ : Q)) (Qsub (⟨1, 1⟩ : Q) (mul (tmap q) (tmap q)))) := by
+  have hdp : (0 : Int) < (q.den : Int) := by exact_mod_cast hqd
+  have htn : ((q.num + (q.den : Int)).toNat : Int) = q.num + (q.den : Int) := Int.toNat_of_nonneg (by omega)
+  simp only [Qle, mul, Qsub, add, neg]
+  rw [tmap_rat_num, tmap_rat_den]; push_cast [htn]
+  have hsq : (0 : Int) ≤ (q.num - (q.den : Int)) * (q.num - (q.den : Int)) := by
+    rw [← Int.natAbs_mul_self]; exact Int.ofNat_nonneg _
+  have hap : (0 : Int) ≤ q.num + (q.den : Int) := by omega
+  have hnn : (0 : Int) ≤ 2 * ((q.num - (q.den : Int)) * (q.num - (q.den : Int)))
+      * ((q.den : Int) * (q.den : Int) * (q.den : Int) * (q.den : Int)) * (q.num + (q.den : Int)) :=
+    Int.mul_nonneg (Int.mul_nonneg (Int.mul_nonneg (by decide) hsq)
+      (Int.mul_nonneg (Int.mul_nonneg (Int.mul_nonneg (Int.le_of_lt hdp) (Int.le_of_lt hdp))
+        (Int.le_of_lt hdp)) (Int.le_of_lt hdp))) hap
+  have hfac : (q.num * 1 + -1 * (q.den : Int)) *
+        (1 * ((q.den : Int) * (q.num + (q.den : Int)) * ((q.den : Int) * (q.num + (q.den : Int)))) +
+          -((q.num - (q.den : Int)) * (q.den : Int) * ((q.num - (q.den : Int)) * (q.den : Int))) * 1) *
+      (1 * ((q.den : Int) * (q.num + (q.den : Int))))
+      = 2 * ((q.num - (q.den : Int)) * (q.den : Int))
+          * ((q.den : Int) * 1 * (1 * ((q.den : Int) * (q.num + (q.den : Int))
+              * ((q.den : Int) * (q.num + (q.den : Int))))))
+        + 2 * ((q.num - (q.den : Int)) * (q.num - (q.den : Int)))
+          * ((q.den : Int) * (q.den : Int) * (q.den : Int) * (q.den : Int)) * (q.num + (q.den : Int)) := by
+    ring_uor
+  omega
+
+set_option maxHeartbeats 1000000 in
+/-- **The uniform rational per-index bound** `2·artSum(tmap q)(N) ≤ q−1`, for every rational `q > 0`
+    and every depth `N`. The sign-robust core of the general-real `log u ≤ u−1`: `q ≥ 1` via the
+    geometric upper bound (cancel `1−tmap q²`); `q < 1` via `artSum ≤ tmap q ≤ 0` then `2·tmap q ≤ q−1`. -/
+theorem artSum_tmap_double_le (q : Q) (hqd : 0 < q.den) (hqn : 0 < q.num) (N : Nat) :
+    Qle (mul (⟨2, 1⟩ : Q) (artSum (tmap q) N)) (Qsub q (⟨1, 1⟩ : Q)) := by
+  have hdp : (0 : Int) < (q.den : Int) := by exact_mod_cast hqd
+  have htn : ((q.num + (q.den : Int)).toNat : Int) = q.num + (q.den : Int) := Int.toNat_of_nonneg (by omega)
+  have hτd : 0 < (tmap q).den := by rw [tmap_rat_den]; exact Nat.mul_pos hqd (by omega)
+  by_cases hq1 : Qle (⟨1, 1⟩ : Q) q
+  · have hv0 : 0 ≤ (tmap q).num := tmap_num_nonneg hq1
+    have hWnum : (Qsub (⟨1, 1⟩ : Q) (mul (tmap q) (tmap q))).num
+        = 4 * q.num * ((q.den : Int) * (q.den : Int) * (q.den : Int)) := by
+      show (add (⟨1, 1⟩ : Q) (neg (mul (tmap q) (tmap q)))).num = _
+      simp only [add, neg, mul]; rw [tmap_rat_num, tmap_rat_den]; push_cast [htn]; ring_uor
+    have hWn : 0 < (Qsub (⟨1, 1⟩ : Q) (mul (tmap q) (tmap q))).num := by
+      rw [hWnum]; exact Int.mul_pos (Int.mul_pos (by decide) hqn) (Int.mul_pos (Int.mul_pos hdp hdp) hdp)
+    have hWd : 0 < (Qsub (⟨1, 1⟩ : Q) (mul (tmap q) (tmap q))).den :=
+      Qsub_den_pos Nat.one_pos (Qmul_den_pos hτd hτd)
+    refine Qmul_le_cancel_right hWn hWd ?_
+    refine Qle_trans (Qmul_den_pos (by decide) (Qmul_den_pos (artSum_den_pos hτd N) hWd))
+      (Qeq_le (Qmul_assoc (⟨2, 1⟩ : Q) (artSum (tmap q) N)
+        (Qsub (⟨1, 1⟩ : Q) (mul (tmap q) (tmap q))))) ?_
+    refine Qle_trans (Qmul_den_pos (by decide) hτd)
+      (Qmul_le_mul_left (by decide) (artSum_le_geo hv0 hτd (Int.le_of_lt hWn) N)) ?_
+    exact two_tmap_le_sub_mul_W q hqd hqn
+  · have hqlt : Qlt q (⟨1, 1⟩ : Q) := by
+      rcases Qle_or_Qlt (⟨1, 1⟩ : Q) q with h | h
+      · exact absurd h hq1
+      · exact h
+    have htneg : (tmap q).num ≤ 0 := by
+      rw [tmap_rat_num]
+      have hlt : q.num < (q.den : Int) := by have h := hqlt; simp only [Qlt] at h; omega
+      have h1 := Int.mul_nonneg (by omega : (0 : Int) ≤ -(q.num - (q.den : Int))) (Int.ofNat_nonneg q.den)
+      rw [Int.neg_mul] at h1; omega
+    refine Qle_trans (Qmul_den_pos (by decide) hτd)
+      (Qmul_le_mul_left (by decide) (artSum_le_arg_of_nonpos (tmap q) hτd htneg N))
+      (two_tmap_le_sub q hqd hqn)
 
 end UOR.Bridge.F1Square.Analysis
