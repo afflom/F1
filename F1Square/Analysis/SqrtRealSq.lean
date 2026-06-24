@@ -182,4 +182,158 @@ theorem Rsq_mono {a b : Real} (ha : Rnonneg a) (hb : Rnonneg b) (h : Rle a b) :
     Rle (Rmul a a) (Rmul b b) :=
   Rle_trans (Rmul_le_Rmul_left ha h) (Rmul_le_Rmul_right hb h)
 
+-- ===========================================================================
+-- The defining identity (Rsqrt q)² = q, by squeezing both sides into [lo², hi²].
+-- ===========================================================================
+
+/-- `Rsub` is monotone (increasing in the minuend, decreasing in the subtrahend). -/
+theorem Rsub_le_mono {a a' c c' : Real} (ha : Rle a a') (hc : Rle c' c) :
+    Rle (Rsub a c) (Rsub a' c') := Radd_le_add ha (Rle_Rneg hc)
+
+/-- The upper endpoints decrease: `hi_{m+1} ≤ hi_m`. -/
+theorem sqHi_mono (q : Q) (hqd : 0 < q.den) (hq : Qle (⟨0, 1⟩ : Q) q) (m : Nat) :
+    Qle (sqHi q (m + 1)) (sqHi q m) := by
+  obtain ⟨_, _, hle, _⟩ := sqrtBisect_inv q hqd hq m
+  obtain ⟨_, hh⟩ := sqrtBisect_den_pos q hqd m
+  simp only [sqLo, sqHi, sqrtBisect]
+  split
+  · exact Qle_refl _
+  · exact Qavg_le_right hh hle
+
+/-- `hi_n ≤ q+1` (the upper endpoint never exceeds the initial bracket top). -/
+theorem sqHi_le_init (q : Q) (hqd : 0 < q.den) (hq : Qle (⟨0, 1⟩ : Q) q) (n : Nat) :
+    Qle (sqHi q n) (add q (⟨1, 1⟩ : Q)) := by
+  have key : ∀ d, Qle (sqHi q (0 + d)) (sqHi q 0) := by
+    intro d
+    induction d with
+    | zero => exact Qle_refl _
+    | succ d ih => exact Qle_trans (sqrtBisect_den_pos q hqd (0 + d)).2 (sqHi_mono q hqd hq (0 + d)) ih
+  have := key n
+  rwa [Nat.zero_add] at this
+
+/-- `0 ≤ (sqHi q n).num`. -/
+private theorem sqHi_num_nonneg (q : Q) (hqd : 0 < q.den) (hq : Qle (⟨0, 1⟩ : Q) q) (n : Nat) :
+    0 ≤ (sqHi q n).num := by
+  obtain ⟨_, _, hle, hpos⟩ := sqrtBisect_inv q hqd hq n
+  exact qnum_nonneg_of_le (Qle_trans (sqrtBisect_den_pos q hqd n).1 hpos hle)
+
+/-- The squared-width numerator constant `C = 2(q.num+q.den)²` is non-negative. -/
+private theorem sqK_nonneg (q : Q) (hq : Qle (⟨0, 1⟩ : Q) q) :
+    0 ≤ 2 * (q.num + (q.den : Int)) * (q.num + (q.den : Int)) := by
+  have hqn : 0 ≤ q.num := by have := hq; simp only [Qle] at this; simpa using this
+  have ha : 0 ≤ q.num + (q.den : Int) := by have := Int.ofNat_nonneg q.den; omega
+  exact Int.mul_nonneg (Int.mul_nonneg (by decide) ha) ha
+
+/-- **The squared bracket width vanishes**: `hi_k² − lo_k² ≤ C/(k+1)`, `C = 2(q.num+q.den)²`. -/
+theorem sqrt_sq_width_le (q : Q) (hqd : 0 < q.den) (hq : Qle (⟨0, 1⟩ : Q) q) (k : Nat) :
+    Qle (Qsub (mul (sqHi q k) (sqHi q k)) (mul (sqLo q k) (sqLo q k)))
+        (⟨((2 * (q.num + q.den) * (q.num + q.den)).toNat : Int), k + 1⟩ : Q) := by
+  obtain ⟨_, _, hle, _⟩ := sqrtBisect_inv q hqd hq k
+  obtain ⟨hl, hh⟩ := sqrtBisect_den_pos q hqd k
+  have hqn : 0 ≤ q.num := by have := hq; simp only [Qle] at this; simpa using this
+  have ha : 0 ≤ q.num + (q.den : Int) := by have := Int.ofNat_nonneg q.den; omega
+  have hM0 := sqK_nonneg q hq
+  have hwnn : 0 ≤ (Qsub (sqHi q k) (sqLo q k)).num := by
+    have := Qsub_nonneg_of_le hle; simp only [Qle] at this; omega
+  have hsqnn : ∀ a : Int, 0 ≤ a * a := by
+    intro a
+    rcases Int.le_total 0 a with h | h
+    · exact Int.mul_nonneg h h
+    · have e : (-a) * (-a) = a * a := by ring_uor
+      have h2 : 0 ≤ (-a) * (-a) := Int.mul_nonneg (by omega) (by omega)
+      omega
+  have hAn : 0 ≤ (add q (⟨1, 1⟩ : Q)).num := by simp only [add]; push_cast; omega
+  have hAnn : 0 ≤ (mul (⟨2, 1⟩ : Q) (mul (add q (⟨1, 1⟩ : Q)) (add q (⟨1, 1⟩ : Q)))).num :=
+    Int.mul_nonneg (by decide) (hsqnn _)
+  have hc2 : 0 ≤ (add (add q (⟨1, 1⟩ : Q)) (add q (⟨1, 1⟩ : Q))).num :=
+    Int.add_nonneg (Int.mul_nonneg hAn (Int.ofNat_nonneg _))
+      (Int.mul_nonneg hAn (Int.ofNat_nonneg _))
+  have hCeq : ((2 * (q.num + q.den) * (q.num + q.den)).toNat : Int)
+      = 2 * (q.num + (q.den : Int)) * (q.num + (q.den : Int)) := by have := hM0; omega
+  -- denominators for the chain
+  have dW : 0 < (Qsub (sqHi q k) (sqLo q k)).den := Qsub_den_pos hh hl
+  have dHL : 0 < (add (sqHi q k) (sqLo q k)).den := add_den_pos hh hl
+  have d2q : 0 < (add (add q (⟨1, 1⟩ : Q)) (add q (⟨1, 1⟩ : Q))).den :=
+    add_den_pos (add_den_pos hqd (by decide)) (add_den_pos hqd (by decide))
+  have dwid : 0 < (mul (add q (⟨1, 1⟩ : Q)) (⟨1, 2 ^ k⟩ : Q)).den :=
+    Qmul_den_pos (add_den_pos hqd (by decide)) Nat.one_le_two_pow
+  have dsq : 0 < (mul (⟨2, 1⟩ : Q) (mul (add q (⟨1, 1⟩ : Q)) (add q (⟨1, 1⟩ : Q)))).den :=
+    Qmul_den_pos (by decide) (Qmul_den_pos (add_den_pos hqd (by decide)) (add_den_pos hqd (by decide)))
+  -- the identities
+  have hA : Qeq (Qsub (mul (sqHi q k) (sqHi q k)) (mul (sqLo q k) (sqLo q k)))
+      (mul (Qsub (sqHi q k) (sqLo q k)) (add (sqHi q k) (sqLo q k))) := by
+    simp only [Qeq, Qsub, mul, add, neg]; push_cast; ring_uor
+  have hB : Qle (add (sqHi q k) (sqLo q k)) (add (add q (⟨1, 1⟩ : Q)) (add q (⟨1, 1⟩ : Q))) :=
+    Qadd_le_add (sqHi_le_init q hqd hq k)
+      (Qle_trans (sqrtBisect_den_pos q hqd k).2 hle (sqHi_le_init q hqd hq k))
+  have hwidth := sqrtBisect_width q hqd k
+  have hre : Qeq (mul (mul (add q (⟨1, 1⟩ : Q)) (⟨1, 2 ^ k⟩ : Q))
+                  (add (add q (⟨1, 1⟩ : Q)) (add q (⟨1, 1⟩ : Q))))
+      (mul (mul (⟨2, 1⟩ : Q) (mul (add q (⟨1, 1⟩ : Q)) (add q (⟨1, 1⟩ : Q)))) (⟨1, 2 ^ k⟩ : Q)) := by
+    simp only [Qeq, mul, add]; push_cast; ring_uor
+  have h2k : Qle (⟨1, 2 ^ k⟩ : Q) (⟨1, k + 1⟩ : Q) := by
+    have henv : k + 1 ≤ 2 ^ k := Nat.lt_two_pow_self
+    simp only [Qle]; omega
+  have hd2 : (1 : Int) ≤ (q.den : Int) * (q.den : Int) := by
+    have h1 : (1 : Int) ≤ (q.den : Int) := by exact_mod_cast hqd
+    calc (1 : Int) = 1 * 1 := by omega
+      _ ≤ (q.den : Int) * (q.den : Int) := Int.mul_le_mul h1 h1 (by omega) (by omega)
+  have hfin : Qle (mul (mul (⟨2, 1⟩ : Q) (mul (add q (⟨1, 1⟩ : Q)) (add q (⟨1, 1⟩ : Q))))
+                  (⟨1, k + 1⟩ : Q))
+      (⟨((2 * (q.num + q.den) * (q.num + q.den)).toNat : Int), k + 1⟩ : Q) := by
+    refine Qle_congr_left
+      (a := (⟨2 * (q.num + (q.den : Int)) * (q.num + (q.den : Int)),
+              (q.den * q.den) * (k + 1)⟩ : Q))
+      (Nat.mul_pos (Nat.mul_pos hqd hqd) (Nat.succ_pos k))
+      (by simp only [Qeq, mul, add]; push_cast; ring_uor) ?_
+    show (2 * (q.num + (q.den : Int)) * (q.num + (q.den : Int))) * ((k + 1 : Nat) : Int)
+      ≤ ((2 * (q.num + q.den) * (q.num + q.den)).toNat : Int)
+        * (((q.den * q.den) * (k + 1) : Nat) : Int)
+    rw [hCeq]; push_cast
+    have hkstep : ((k : Int) + 1) ≤ ((q.den : Int) * (q.den : Int)) * ((k : Int) + 1) := by
+      have hnn : 0 ≤ ((q.den : Int) * (q.den : Int) - 1) * ((k : Int) + 1) :=
+        Int.mul_nonneg (by omega) (by omega)
+      have he : ((q.den : Int) * (q.den : Int) - 1) * ((k : Int) + 1)
+          = ((q.den : Int) * (q.den : Int)) * ((k : Int) + 1) - ((k : Int) + 1) := by ring_uor
+      omega
+    exact Int.mul_le_mul_of_nonneg_left hkstep hM0
+  -- assemble the chain
+  refine Qle_trans (Qmul_den_pos dW dHL) (Qeq_le hA) ?_
+  refine Qle_trans (Qmul_den_pos dW d2q) (Qmul_le_mul_left hwnn hB) ?_
+  refine Qle_trans (Qmul_den_pos dwid d2q) (Qmul_le_mul_right hc2 (Qeq_le hwidth)) ?_
+  refine Qle_trans (Qmul_den_pos dsq Nat.one_le_two_pow) (Qeq_le hre) ?_
+  exact Qle_trans (Qmul_den_pos dsq (Nat.succ_pos k)) (Qmul_le_mul_left hAnn h2k) hfin
+
+/-- **The defining identity** `(Rsqrt q)² = q`. Both `(Rsqrt q)²` and `q` lie in `[lo_k², hi_k²]`,
+    whose width vanishes (`sqrt_sq_width_le`); the real-level squeeze (`Req_of_Rle_ofQ_all`) closes.
+    The constructive square root is now complete: `√q` exists and `(√q)² = q`. -/
+theorem Rsqrt_sq (q : Q) (hqd : 0 < q.den) (hq : Qle (⟨0, 1⟩ : Q) q) :
+    Req (Rmul (Rsqrt q hqd hq) (Rsqrt q hqd hq)) (ofQ q hqd) := by
+  refine Req_of_Rle_ofQ_all (C := (2 * (q.num + q.den) * (q.num + q.den)).toNat)
+    (fun k => ?_) (fun k => ?_)
+  · have hupper : Rle (Rmul (Rsqrt q hqd hq) (Rsqrt q hqd hq))
+        (ofQ (mul (sqHi q k) (sqHi q k)) (Qmul_den_pos (sqrtBisect_den_pos q hqd k).2
+          (sqrtBisect_den_pos q hqd k).2)) :=
+      Rle_trans (Rsq_mono (Rsqrt_nonneg q hqd hq) (Rnonneg_ofQ _ (sqHi_num_nonneg q hqd hq k))
+          (Rsqrt_le_sqHi q hqd hq k))
+        (Rle_of_Req (Rmul_ofQ_ofQ (sqrtBisect_den_pos q hqd k).2 (sqrtBisect_den_pos q hqd k).2))
+    have hqge : Rle (ofQ (mul (sqLo q k) (sqLo q k)) (Qmul_den_pos (sqrtBisect_den_pos q hqd k).1
+        (sqrtBisect_den_pos q hqd k).1)) (ofQ q hqd) :=
+      Rle_ofQ_ofQ _ hqd (sqrtBisect_inv q hqd hq k).1
+    refine Rle_trans (Rsub_le_mono hupper hqge)
+      (Rle_trans (Rle_of_Req (Rsub_ofQ_ofQ _ _)) (Rle_ofQ_ofQ _ (Nat.succ_pos k) ?_))
+    exact sqrt_sq_width_le q hqd hq k
+  · have hlonn : 0 ≤ (sqLo q k).num := qnum_nonneg_of_le (sqrtBisect_inv q hqd hq k).2.2.2
+    have hlower : Rle (ofQ (mul (sqLo q k) (sqLo q k)) (Qmul_den_pos (sqrtBisect_den_pos q hqd k).1
+        (sqrtBisect_den_pos q hqd k).1)) (Rmul (Rsqrt q hqd hq) (Rsqrt q hqd hq)) :=
+      Rle_trans (Rle_of_Req (Req_symm (Rmul_ofQ_ofQ (sqrtBisect_den_pos q hqd k).1
+        (sqrtBisect_den_pos q hqd k).1)))
+        (Rsq_mono (Rnonneg_ofQ _ hlonn) (Rsqrt_nonneg q hqd hq) (Rsqrt_ge_sqLo q hqd hq k))
+    have hqle : Rle (ofQ q hqd) (ofQ (mul (sqHi q k) (sqHi q k))
+        (Qmul_den_pos (sqrtBisect_den_pos q hqd k).2 (sqrtBisect_den_pos q hqd k).2)) :=
+      Rle_ofQ_ofQ hqd _ (sqrtBisect_inv q hqd hq k).2.1
+    refine Rle_trans (Rsub_le_mono hqle hlower)
+      (Rle_trans (Rle_of_Req (Rsub_ofQ_ofQ _ _)) (Rle_ofQ_ofQ _ (Nat.succ_pos k) ?_))
+    exact sqrt_sq_width_le q hqd hq k
+
 end UOR.Bridge.F1Square.Analysis

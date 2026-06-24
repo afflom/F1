@@ -3443,3 +3443,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.sqLo_mono_le
 #print axioms Analysis.Rsqrt_ge_sqLo
 #print axioms Analysis.Rsq_mono
+#print axioms Analysis.Rsub_le_mono
+#print axioms Analysis.sqHi_mono
+#print axioms Analysis.sqHi_le_init
+#print axioms Analysis.sqrt_sq_width_le
+#print axioms Analysis.Rsqrt_sq
