@@ -3498,3 +3498,12 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.thetaFnPos
 #print axioms Analysis.thetaFnPos_nonneg
 #print axioms Analysis.ThetaModular
+#print axioms Analysis.Rabs_Rhalf
+#print axioms Analysis.Rabs_Rabs_sub_le
+#print axioms Analysis.Rhalf_add_self
+#print axioms Analysis.RmaxZero_lipschitz
+#print axioms Analysis.clampOne
+#print axioms Analysis.clampOne_ge_one
+#print axioms Analysis.clampOne_eq_of_ge
+#print axioms Analysis.clampOne_lipschitz
+#print axioms Analysis.clampOne_congr
