@@ -3529,3 +3529,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rle_RmaxZero_self
 #print axioms Analysis.RmaxZero_le_Rabs
 #print axioms Analysis.RexpReal_one_sub_neg_le_maxZero
+#print axioms Analysis.thetaCoeff
+#print axioms Analysis.thetaArg_eq_coeff
+#print axioms Analysis.thetaCoeff_nonneg
+#print axioms Analysis.thetaCoeff_lower
+#print axioms Analysis.thetaCoeff_exp_le
