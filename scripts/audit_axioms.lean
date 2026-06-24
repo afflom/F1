@@ -3541,3 +3541,9 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.thetaTerm_one_eq
 #print axioms Analysis.thetaTerm_diff_le
 #print axioms Analysis.thetaTerm_lip
+#print axioms Analysis.genSum_Rsub
+#print axioms Analysis.genSum_Rmul_const_right
+#print axioms Analysis.genSum_thetaMod_le
+#print axioms Analysis.genSum_thetaDiff_le
+#print axioms Analysis.thetaFn_diff_le
+#print axioms Analysis.thetaFn_lip
