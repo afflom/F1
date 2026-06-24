@@ -3487,3 +3487,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.RsqrtReal_unique
 #print axioms Analysis.Rmul_mul_mul_comm
 #print axioms Analysis.RsqrtReal_mul
+#print axioms Analysis.ChalfLineIntegral
