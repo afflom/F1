@@ -49,4 +49,19 @@ theorem RrpowPos_le_exp_sub_one (x : Real) (k : Nat) (hk : Qlt (Qbound k) (x.seq
   RexpReal_le_of_Rle (Rmul_le_Rmul_left hy
     (RlogPos_le_sub_one x k hk B hBd hBge hxposB hxhiB hxloB hρB2))
 
+/-- **`RrpowPos` difference reduced to the log difference**: `xᵉ − yᵉ ≤ 4·max(e·(log x − log y),0)·xᵉ`.
+    Apply the directed exp-Lipschitz `RexpReal_sub_le` to `a = e·log x`, `b = e·log y` (`RrpowPos = exp(e·log·)`
+    by definition), then `Rmul_sub_distrib` exposes `e·(log x − log y)`. The structural reduction of
+    `RrpowPos` Lipschitz to log-Lipschitz: the remaining content is the `log x − log y` bound. -/
+theorem RrpowPos_sub_le (x : Real) (kx : Nat) (hx : Qlt (Qbound kx) (x.seq kx))
+    (y : Real) (ky : Nat) (hy : Qlt (Qbound ky) (y.seq ky)) (e : Real) :
+    Rle (Rsub (RrpowPos x kx hx e) (RrpowPos y ky hy e))
+      (Rmul (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide))
+          (RmaxZero (Rmul e (Rsub (RlogPos x kx hx) (RlogPos y ky hy)))))
+        (RrpowPos x kx hx e)) := by
+  refine Rle_trans (RexpReal_sub_le (Rmul e (RlogPos x kx hx)) (Rmul e (RlogPos y ky hy))) ?_
+  refine Rmul_le_Rmul_right (RexpReal_nonneg _)
+    (Rmul_le_Rmul_left (Rnonneg_ofQ (by decide) (by decide)) ?_)
+  exact Rle_of_Req (RmaxZero_congr (Req_symm (Rmul_sub_distrib e (RlogPos x kx hx) (RlogPos y ky hy))))
+
 end UOR.Bridge.F1Square.Analysis
