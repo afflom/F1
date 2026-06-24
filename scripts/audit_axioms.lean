@@ -3574,3 +3574,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rle_of_lin_bound
 #print axioms Analysis.Rlog_le_sub_one_real
 #print axioms Analysis.RlogPos_le_sub_one
+#print axioms Analysis.RrpowPos_le_exp_sub_one
