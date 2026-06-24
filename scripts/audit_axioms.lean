@@ -3491,3 +3491,9 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.RsqrtRealPos
 #print axioms Analysis.RsqrtRealPos_nonneg
 #print axioms Analysis.RsqrtRealPos_sq
+#print axioms Analysis.pi_mul_ge_threeOverD
+#print axioms Analysis.thetaArg_lower_pos
+#print axioms Analysis.thetaTerm_le_pos
+#print axioms Analysis.thetaTerm_RReg_pos
+#print axioms Analysis.thetaFnPos
+#print axioms Analysis.thetaFnPos_nonneg
