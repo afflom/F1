@@ -3517,3 +3517,9 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rlim_le_const
 #print axioms Analysis.thetaTerm_geom
 #print axioms Analysis.thetaFn_decay
+#print axioms Analysis.RnatSucc
+#print axioms Analysis.one_le_RnatSucc
+#print axioms Analysis.Rnonneg_RnatSucc
+#print axioms Analysis.Rmul_le_Rmul_both
+#print axioms Analysis.thetaTerm0_value_le
+#print axioms Analysis.thetaFn_value_decay

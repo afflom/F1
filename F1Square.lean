@@ -114,6 +114,7 @@ import F1Square.Analysis.IntegralLocal
 import F1Square.Analysis.ImproperIntegral
 import F1Square.Analysis.GenSumGeom
 import F1Square.Analysis.ThetaDecay
+import F1Square.Analysis.ThetaValueDecay
 import F1Square.Analysis.ComplexIntegral
 import F1Square.Analysis.SqrtRat
 import F1Square.Analysis.SqrtReal
