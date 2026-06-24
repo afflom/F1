@@ -3603,3 +3603,5 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rinv_le_one
 #print axioms Analysis.Rdiv_sub_one_le_abs
 #print axioms Analysis.Rlog_abs_lipschitz
+#print axioms Analysis.RmaxZero_le_abs
+#print axioms Analysis.RexpReal_abs_lipschitz
