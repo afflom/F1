@@ -42,4 +42,15 @@ theorem RexpReal_one_sub_neg_le_global {z : Real} (hz0 : Rnonneg z) :
         (Req_symm (Rmul_ofQ_ofQ (by decide) (by decide)))
     exact Rle_trans hub hone
 
+/-- **The peak bound** `X·e^{−X} ≤ 1` for every `X ≥ 0` (the maximum of `x·e^{−x}` is `1/e < 1`).
+    Proof: `X ≤ 1 + X ≤ e^X` (`RexpReal_ge_one_add_nonneg`), so `X·e^{−X} ≤ e^X·e^{−X} = 1`. No `π`
+    bound, no rational exponent — pure real, used to bound the theta-term Lipschitz modulus
+    `aₘ·e^{−aₘ}` (with `aₘ = (m+1)²π` a *real*) without an upper bound on `π`. -/
+theorem Rmul_self_exp_neg_le_one {X : Real} (hX : Rnonneg X) :
+    Rle (Rmul X (RexpReal (Rneg X))) one := by
+  have hXle : Rle X (RexpReal X) :=
+    Rle_trans (Rle_self_Radd_left Rnonneg_one) (RexpReal_ge_one_add_nonneg hX)
+  refine Rle_trans (Rmul_le_Rmul_right (RexpReal_nonneg _) hXle) (Rle_of_Req ?_)
+  exact Req_trans (Rmul_comm (RexpReal X) (RexpReal (Rneg X))) (RexpReal_mul_neg X)
+
 end UOR.Bridge.F1Square.Analysis

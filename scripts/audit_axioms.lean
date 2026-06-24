@@ -3525,3 +3525,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.thetaFn_value_decay
 #print axioms Analysis.Rle_or_Rle
 #print axioms Analysis.RexpReal_one_sub_neg_le_global
+#print axioms Analysis.Rmul_self_exp_neg_le_one
