@@ -3512,3 +3512,5 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.genSum_Rmul_const
 #print axioms Analysis.genSum_geom_eq
 #print axioms Analysis.genSum_geom_le
+#print axioms Analysis.thetaArg_succ
+#print axioms Analysis.thetaTerm_ratio
