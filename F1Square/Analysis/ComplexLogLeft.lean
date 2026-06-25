@@ -21,6 +21,11 @@ import F1Square.Analysis.ComplexArgLeft
 
 namespace UOR.Bridge.F1Square.Analysis
 
+/-- **The modulus is negation-invariant** `|−z|² = |z|²` — `(−re)² + (−im)² = re² + im²`, the `Cneg`
+    analogue of `cnormSq_Cconj`. Feeds the `hre` congruence of `ClogLeft_eq_Clog_Cneg_add_pi`. -/
+theorem cnormSq_Cneg (z : Complex) : Req (cnormSq (Cneg z)) (cnormSq z) :=
+  Radd_congr (Rneg_sq z.re) (Rneg_sq z.im)
+
 /-- **The complex logarithm on the left half-plane**: `ClogLeft z = ½·log|z|² + i·CargLeft z`, for
     `Re z < 0` (witness `k` for `Re(−z) = −Re z > 0`) and `|Im z / Re z| ≤ ρ < 1`. The `+π`-shift
     extension of `Clog` to the left half-plane. -/

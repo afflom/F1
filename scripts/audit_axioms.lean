@@ -3055,6 +3055,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.ClogLower_re
 #print axioms Analysis.ClogLower_im
 #print axioms Analysis.ClogLower_eq_conj_ClogUpper
+#print axioms Analysis.cnormSq_Cneg
 #print axioms Analysis.ClogLeft
 #print axioms Analysis.ClogLeft_re
 #print axioms Analysis.ClogLeft_im
