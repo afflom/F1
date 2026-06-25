@@ -3611,3 +3611,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.RlogPos_sub_le_Rdiv_gen
 #print axioms Analysis.Rlog_abs_lipschitz_gen
 #print axioms Analysis.RrpowPos_abs_lipschitz_gen
+#print axioms Analysis.RrpowPos_abs_lipschitz_natB
