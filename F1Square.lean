@@ -225,8 +225,6 @@ import F1Square.Analysis.RadiusGen
 import F1Square.Analysis.TanPiQuarter
 import F1Square.Analysis.ComplexArgUpper
 import F1Square.Analysis.RArctanValue
-import F1Square.Analysis.RArctanRecip
-import F1Square.Analysis.ComplexArgFar
 import F1Square.Analysis.ComplexLogUpper
 import F1Square.Analysis.ComplexArgUpperAdd
 import F1Square.Analysis.ComplexLogUpperAdd
