@@ -3612,3 +3612,14 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rlog_abs_lipschitz_gen
 #print axioms Analysis.RrpowPos_abs_lipschitz_gen
 #print axioms Analysis.RrpowPos_abs_lipschitz_natB
+#print axioms Analysis.Qmax_den_pos
+#print axioms Analysis.Qmax_ge_left
+#print axioms Analysis.Qmax_ge_right
+#print axioms Analysis.Qmax_le
+#print axioms Analysis.Qsub_self_le_Qabs
+#print axioms Analysis.Qmax_const_lip
+#print axioms Analysis.qClampOne_ge1
+#print axioms Analysis.qClampOne_pos
+#print axioms Analysis.qClampOne_le
+#print axioms Analysis.Qmax_eq_right
+#print axioms Analysis.Qmax_eq_left

@@ -175,6 +175,7 @@ import F1Square.Analysis.RpowClamp
 import F1Square.Analysis.RrpowAbsLip
 import F1Square.Analysis.LogDiffBoundGen
 import F1Square.Analysis.RrpowAbsLipNat
+import F1Square.Analysis.RQmaxClamp
 import F1Square.Analysis.RAddNF
 import F1Square.Analysis.ComplexZeta
 import F1Square.Analysis.Mangoldt
