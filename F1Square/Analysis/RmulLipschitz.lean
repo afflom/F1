@@ -148,4 +148,18 @@ theorem lip_q_of_lip_real {f : Real → Real} {Lr : Real} {Lq : Q} (hLqd : 0 < L
     ∀ x y, Rle (Rabs (Rsub (f x) (f y))) (Rmul (ofQ Lq hLqd) (Rabs (Rsub x y))) :=
   fun x y => Rle_trans (hlip x y) (Rmul_le_Rmul_right (Rnonneg_Rabs _) hLrq)
 
+/-- **Sum-Lipschitz with real constants**: `f + g` is `(L_f + L_g)`-Lipschitz when `f` is `L_f`- and `g`
+    is `L_g`-Lipschitz. `|(f+g)x − (f+g)y| = |(f x−f y)+(g x−g y)| ≤ L_f·w + L_g·w = (L_f+L_g)·w`, via
+    the additive regroup `Rsub_Radd_Radd`, the triangle `Rabs_Radd`, and `Rmul_distrib_right`. -/
+theorem Radd_lipschitz_real {f g : Real → Real} {Lf Lg : Real}
+    (hf_lip : ∀ x y, Rle (Rabs (Rsub (f x) (f y))) (Rmul Lf (Rabs (Rsub x y))))
+    (hg_lip : ∀ x y, Rle (Rabs (Rsub (g x) (g y))) (Rmul Lg (Rabs (Rsub x y))))
+    (x y : Real) :
+    Rle (Rabs (Rsub (Radd (f x) (g x)) (Radd (f y) (g y))))
+        (Rmul (Radd Lf Lg) (Rabs (Rsub x y))) :=
+  Rle_trans (Rle_of_Req (Rabs_congr (Rsub_Radd_Radd (f x) (g x) (f y) (g y))))
+    (Rle_trans (Rabs_Radd _ _)
+      (Rle_trans (Radd_le_add (hf_lip x y) (hg_lip x y))
+        (Rle_of_Req (Req_symm (Rmul_distrib_right Lf Lg (Rabs (Rsub x y)))))))
+
 end UOR.Bridge.F1Square.Analysis

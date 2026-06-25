@@ -3643,3 +3643,16 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.integralTerm_gPowTheta_le
 #print axioms Analysis.thetaMellinPow
 #print axioms Analysis.thetaMellinPow_nonneg
+#print axioms Analysis.gPowTheta_le_thetaClamp
+#print axioms Analysis.thetaClamp_le_succ
+#print axioms Analysis.gPowThetaSym
+#print axioms Analysis.gPowThetaSym_nonneg
+#print axioms Analysis.gPowThetaSym_congr
+#print axioms Analysis.gPowThetaSym_swap
+#print axioms Analysis.gPowThetaSym_lip
+#print axioms Analysis.gPowThetaSym_L_le_ofQ
+#print axioms Analysis.integralTerm_gPowThetaSym_le
+#print axioms Analysis.thetaMellinPowSym
+#print axioms Analysis.thetaMellinPowSym_nonneg
+#print axioms Analysis.thetaMellinPowSym_symm
+#print axioms Analysis.Radd_lipschitz_real

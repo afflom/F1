@@ -170,4 +170,160 @@ theorem thetaMellinPow_nonneg (e : Real) (he : Rle e zero) (B : Q) (hB : 0 < B.d
     (heB : Rle (Rabs e) (ofQ B hB)) : Rnonneg (thetaMellinPow e he B hB hBn heB) :=
   improperIntegral1_nonneg _ _ _ _ _ _ _ (gPowTheta_nonneg e)
 
+-- ===========================================================================
+-- The SYMMETRIC two-power Mellin kernel  (t^{e₁}+t^{e₂})·ψ(t)  and its s↔1−s swap
+-- symmetry — the structural core of the completed-ζ functional equation, over the
+-- certified half-line integral.
+-- ===========================================================================
+
+/-- **Pointwise `t^e·ψ(t) ≤ ψ(t)`** for `e ≤ 0` (since `0 ≤ t^e ≤ 1`) — the reusable factor-drop. -/
+theorem gPowTheta_le_thetaClamp (e : Real) (he : Rle e zero) (t : Real) :
+    Rle (gPowTheta e t) (thetaClamp t) := by
+  unfold gPowTheta
+  exact Rle_trans (Rmul_le_Rmul_right (thetaClamp_nonneg t) (gPowClamp_le_one e he t))
+    (Rle_of_Req (Rone_mul _))
+
+/-- **`ψ(max(t,1)) ≤ ψ(m+1)`** when `t ≥ m+1 ≥ 1` — the antitone drop to the interval's left endpoint. -/
+theorem thetaClamp_le_succ (m : Nat) (t : Real) (hp1 : Rle one t) (hpge : Rle (RnatSucc m) t) :
+    Rle (thetaClamp t) (thetaFn (RnatSucc m) (one_le_RnatSucc m)) :=
+  Rle_trans (Rle_of_Req (thetaFn_congr (clampOne_ge_one t) hp1 (clampOne_eq_of_ge hp1)))
+    (thetaFn_antitone (one_le_RnatSucc m) hp1 hpge)
+
+/-- **The symmetric two-power integrand** `gPowThetaSym e₁ e₂ t = t^{e₁}·ψ + t^{e₂}·ψ` (on `[1,∞)`).
+    Under `s ↦ 1−s` the Mellin exponents `e₁ = s/2−1`, `e₂ = (1−s)/2−1` swap, so this kernel is the
+    `s↔1−s`-symmetric part of the completed-ζ integral. -/
+def gPowThetaSym (e1 e2 t : Real) : Real := Radd (gPowTheta e1 t) (gPowTheta e2 t)
+
+/-- `gPowThetaSym e₁ e₂ t ≥ 0`. -/
+theorem gPowThetaSym_nonneg (e1 e2 t : Real) : Rnonneg (gPowThetaSym e1 e2 t) :=
+  Rnonneg_Radd (gPowTheta_nonneg e1 t) (gPowTheta_nonneg e2 t)
+
+/-- `gPowThetaSym e₁ e₂` respects `≈`. -/
+theorem gPowThetaSym_congr (e1 e2 : Real) (he1 : Rle e1 zero) (he2 : Rle e2 zero) {x y : Real}
+    (hxy : Req x y) : Req (gPowThetaSym e1 e2 x) (gPowThetaSym e1 e2 y) :=
+  Radd_congr (gPowTheta_congr e1 he1 hxy) (gPowTheta_congr e2 he2 hxy)
+
+/-- **`gPowThetaSym e₁ e₂ ≈ gPowThetaSym e₂ e₁`** pointwise — addition commutes (the bare swap). -/
+theorem gPowThetaSym_swap (e1 e2 t : Real) : Req (gPowThetaSym e1 e2 t) (gPowThetaSym e2 e1 t) :=
+  Radd_comm (gPowTheta e1 t) (gPowTheta e2 t)
+
+/-- **`gPowThetaSym e₁ e₂` is Lipschitz** with the real constant `C(e₁) + C(e₂)` (sum of the two
+    factor constants), via `Radd_lipschitz_real`. -/
+theorem gPowThetaSym_lip (e1 e2 : Real) (he1 : Rle e1 zero) (he2 : Rle e2 zero) (x y : Real) :
+    Rle (Rabs (Rsub (gPowThetaSym e1 e2 x) (gPowThetaSym e1 e2 y)))
+        (Rmul (Radd
+          (Radd (Rmul (ofQ (⟨1, 1⟩ : Q) (by decide)) (ofQ (⟨32, 3⟩ : Q) (by decide)))
+                (Rmul (ofQ (⟨1, 1⟩ : Q) (by decide))
+                      (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rabs e1))))
+          (Radd (Rmul (ofQ (⟨1, 1⟩ : Q) (by decide)) (ofQ (⟨32, 3⟩ : Q) (by decide)))
+                (Rmul (ofQ (⟨1, 1⟩ : Q) (by decide))
+                      (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rabs e2)))))
+          (Rabs (Rsub x y))) :=
+  Radd_lipschitz_real (gPowTheta_lip e1 he1) (gPowTheta_lip e2 he2) x y
+
+/-- **Rational over-bound on the symmetric constant**: given `|e₁| ≤ ofQ B` and `|e₂| ≤ ofQ B`, the
+    real constant `C(e₁)+C(e₂)` is `≤ ofQ (2·(32/3 + 4·B))`. Symmetric in `e₁, e₂` (depends only on `B`),
+    so both swap-orderings share the schedule. -/
+theorem gPowThetaSym_L_le_ofQ (e1 e2 : Real) (B : Q) (hB : 0 < B.den)
+    (heB1 : Rle (Rabs e1) (ofQ B hB)) (heB2 : Rle (Rabs e2) (ofQ B hB)) :
+    Rle (Radd
+          (Radd (Rmul (ofQ (⟨1, 1⟩ : Q) (by decide)) (ofQ (⟨32, 3⟩ : Q) (by decide)))
+                (Rmul (ofQ (⟨1, 1⟩ : Q) (by decide))
+                      (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rabs e1))))
+          (Radd (Rmul (ofQ (⟨1, 1⟩ : Q) (by decide)) (ofQ (⟨32, 3⟩ : Q) (by decide)))
+                (Rmul (ofQ (⟨1, 1⟩ : Q) (by decide))
+                      (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rabs e2)))))
+        (ofQ (mul (⟨2, 1⟩ : Q) (add (⟨32, 3⟩ : Q) (mul (⟨4, 1⟩ : Q) B)))
+          (Qmul_den_pos (by decide) (add_den_pos (by decide) (Qmul_den_pos (by decide) hB)))) := by
+  refine Rle_trans (Radd_le_add (gPowTheta_L_le_ofQ e1 B hB heB1)
+    (gPowTheta_L_le_ofQ e2 B hB heB2)) ?_
+  refine Rle_trans (Rle_of_Req (Radd_ofQ_ofQ (add_den_pos (by decide) (Qmul_den_pos (by decide) hB))
+    (add_den_pos (by decide) (Qmul_den_pos (by decide) hB)))) ?_
+  exact Rle_of_Req (ofQ_congr (add_den_pos (add_den_pos (by decide) (Qmul_den_pos (by decide) hB))
+      (add_den_pos (by decide) (Qmul_den_pos (by decide) hB)))
+    (Qmul_den_pos (by decide) (add_den_pos (by decide) (Qmul_den_pos (by decide) hB)))
+    (by simp only [Qeq, add, mul]; push_cast; ring_uor))
+
+/-- **Per-interval decay for the symmetric integrand** `∫_{m+1}^{m+2}(t^{e₁}+t^{e₂})ψ ≤ 4/((m+1)m)`
+    (`m ≥ 1`, `K = 4`): on the interval each summand is `≤ ψ(t) ≤ ψ(m+1)`, so the sum is `≤ 2ψ(m+1)`. -/
+theorem integralTerm_gPowThetaSym_le (e1 e2 : Real) (he1 : Rle e1 zero) (he2 : Rle e2 zero) {Lq : Q}
+    (hLqd : 0 < Lq.den) (hLqn : 0 ≤ Lq.num)
+    (hlipq : ∀ x y, Rle (Rabs (Rsub (gPowThetaSym e1 e2 x) (gPowThetaSym e1 e2 y)))
+      (Rmul (ofQ Lq hLqd) (Rabs (Rsub x y))))
+    (m : Nat) (hm : 1 ≤ m) :
+    Rle (integralTerm hLqd hLqn hlipq (fun _ _ h => gPowThetaSym_congr e1 e2 he1 he2 h) m)
+      (ofQ (mul (⟨4, 1⟩ : Q) (⟨1, (m + 1) * m⟩ : Q))
+        (Qmul_den_pos (by decide) (digamma_succ_mul_pos hm))) := by
+  have hub : Rle (integralTerm hLqd hLqn hlipq (fun _ _ h => gPowThetaSym_congr e1 e2 he1 he2 h) m)
+      (riemannIntegralI (f := fun _ => Radd (thetaFn (RnatSucc m) (one_le_RnatSucc m))
+            (thetaFn (RnatSucc m) (one_le_RnatSucc m)))
+        hLqd hLqn (const_lip_any _ hLqd hLqn) (fun _ _ _ => Req_refl _)
+        (⟨(m : Int) + 1, 1⟩ : Q) (⟨1, 1⟩ : Q) Nat.one_pos (by decide) (by decide)) := by
+    refine riemannIntegralI_le_unit hLqd hLqn hlipq (fun _ _ h => gPowThetaSym_congr e1 e2 he1 he2 h)
+      (const_lip_any _ hLqd hLqn) (fun _ _ _ => Req_refl _)
+      (⟨(m : Int) + 1, 1⟩ : Q) (⟨1, 1⟩ : Q) Nat.one_pos (by decide) (by decide) (fun x hx0 hx1 => ?_)
+    have hxnn : Rnonneg x := Rnonneg_of_Rle_zero hx0
+    have hpge : Rle (RnatSucc m) (affineMap (⟨(m : Int) + 1, 1⟩ : Q) (⟨1, 1⟩ : Q) Nat.one_pos
+        (by decide) x) :=
+      Rle_self_Radd_right (Rnonneg_Rmul (Rnonneg_ofQ (by decide) (by decide)) hxnn)
+    have hp1 : Rle one (affineMap (⟨(m : Int) + 1, 1⟩ : Q) (⟨1, 1⟩ : Q) Nat.one_pos (by decide) x) :=
+      Rle_trans (one_le_RnatSucc m) hpge
+    show Rle (gPowThetaSym e1 e2 _) _
+    unfold gPowThetaSym
+    exact Radd_le_add
+      (Rle_trans (gPowTheta_le_thetaClamp e1 he1 _) (thetaClamp_le_succ m _ hp1 hpge))
+      (Rle_trans (gPowTheta_le_thetaClamp e2 he2 _) (thetaClamp_le_succ m _ hp1 hpge))
+  refine Rle_trans hub ?_
+  refine Rle_trans (Rle_of_Req (riemannIntegralI_const_any _ _ _ _ _ _ _ _)) ?_
+  refine Rle_trans (Rle_of_Req (Rmul_comm _ _)) ?_
+  refine Rle_trans (Rle_of_Req (Rmul_one _)) ?_
+  -- `2·ψ(m+1) ≤ 4/((m+1)m)`
+  refine Rle_trans (Radd_le_add (thetaFn_value_decay m hm (one_le_RnatSucc m))
+    (thetaFn_value_decay m hm (one_le_RnatSucc m))) ?_
+  refine Rle_trans (Rle_of_Req (Radd_ofQ_ofQ (Nat.mul_pos (Nat.succ_pos m) hm)
+    (Nat.mul_pos (Nat.succ_pos m) hm))) ?_
+  exact Rle_of_Req (ofQ_congr (add_den_pos (Nat.mul_pos (Nat.succ_pos m) hm)
+      (Nat.mul_pos (Nat.succ_pos m) hm)) (Qmul_den_pos (by decide) (digamma_succ_mul_pos hm))
+    (by simp only [Qeq, add, mul]; push_cast; ring_uor))
+
+/-- **The symmetric theta–Mellin integral** `∫₁^∞ (t^{e₁}+t^{e₂})ψ(t) dt`, for abstract `e₁,e₂ ≤ 0`
+    both with magnitude `≤ ofQ B`. Schedule modulus `2·(32/3+4B)`, decay `K = 4`. -/
+def thetaMellinPowSym (e1 e2 : Real) (he1 : Rle e1 zero) (he2 : Rle e2 zero) (B : Q) (hB : 0 < B.den)
+    (hBn : 0 ≤ B.num) (heB1 : Rle (Rabs e1) (ofQ B hB)) (heB2 : Rle (Rabs e2) (ofQ B hB)) : Real :=
+  improperIntegral1
+    (Qmul_den_pos (by decide) (add_den_pos (by decide) (Qmul_den_pos (by decide) hB)))
+    (by have h1 : (0 : Int) ≤ B.num := hBn
+        have h2 : (0 : Int) ≤ (B.den : Int) := Int.ofNat_nonneg _
+        show 0 ≤ (mul (⟨2, 1⟩ : Q) (add (⟨32, 3⟩ : Q) (mul (⟨4, 1⟩ : Q) B))).num
+        simp only [add, mul]; push_cast; omega)
+    (lip_q_of_lip_real (Qmul_den_pos (by decide) (add_den_pos (by decide) (Qmul_den_pos (by decide) hB)))
+      (gPowThetaSym_L_le_ofQ e1 e2 B hB heB1 heB2) (gPowThetaSym_lip e1 e2 he1 he2))
+    (fun _ _ h => gPowThetaSym_congr e1 e2 he1 he2 h) (by decide : 0 < (⟨4, 1⟩ : Q).den) (by decide)
+    (fun m hm => ⟨Rle_trans
+        (Rle_trans (Rle_Rneg (Rle_zero_of_Rnonneg (Rnonneg_ofQ
+          (Qmul_den_pos (by decide) (digamma_succ_mul_pos hm)) (by show (0 : Int) ≤ 4 * 1; decide))))
+          (Rle_of_Req Rneg_zero))
+        (Rle_zero_of_Rnonneg (riemannIntegralI_nonneg _ _ _ _ (gPowThetaSym_nonneg e1 e2) _ _ _ _ _)),
+      integralTerm_gPowThetaSym_le e1 e2 he1 he2 _ _ _ m hm⟩)
+
+/-- **`∫₁^∞ (t^{e₁}+t^{e₂})ψ ≥ 0`**. -/
+theorem thetaMellinPowSym_nonneg (e1 e2 : Real) (he1 : Rle e1 zero) (he2 : Rle e2 zero) (B : Q)
+    (hB : 0 < B.den) (hBn : 0 ≤ B.num) (heB1 : Rle (Rabs e1) (ofQ B hB))
+    (heB2 : Rle (Rabs e2) (ofQ B hB)) :
+    Rnonneg (thetaMellinPowSym e1 e2 he1 he2 B hB hBn heB1 heB2) :=
+  improperIntegral1_nonneg _ _ _ _ _ _ _ (gPowThetaSym_nonneg e1 e2)
+
+/-- **★ The s↔1−s symmetry of the completed-ζ Mellin kernel, over the certified integral**:
+    `∫₁^∞ (t^{e₁}+t^{e₂})ψ = ∫₁^∞ (t^{e₂}+t^{e₁})ψ`. Both orderings share the schedule (the modulus
+    `2·(32/3+4B)` and decay `K=4` are symmetric in `e₁,e₂`), and the integrands agree pointwise
+    (`gPowThetaSym_swap`), so `improperIntegral1_congr` lifts the swap to the integral. This is the
+    constructive face of `Z(s)=Z(1−s)`'s symmetric integral representation — the part reachable without
+    the Mellin/Poisson identity that still gates the full `CompletedZetaFE`. -/
+theorem thetaMellinPowSym_symm (e1 e2 : Real) (he1 : Rle e1 zero) (he2 : Rle e2 zero) (B : Q)
+    (hB : 0 < B.den) (hBn : 0 ≤ B.num) (heB1 : Rle (Rabs e1) (ofQ B hB))
+    (heB2 : Rle (Rabs e2) (ofQ B hB)) :
+    Req (thetaMellinPowSym e1 e2 he1 he2 B hB hBn heB1 heB2)
+        (thetaMellinPowSym e2 e1 he2 he1 B hB hBn heB2 heB1) :=
+  improperIntegral1_congr _ _ _ _ _ _ _ _ _ _ (fun t => gPowThetaSym_swap e1 e2 t)
+
 end UOR.Bridge.F1Square.Analysis
