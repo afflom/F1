@@ -138,4 +138,56 @@ theorem halfLineIntegral_le {f g : Real → Real} {L K : Q} (hLd : 0 < L.den) (h
   Radd_le_add (riemannIntegral_le hLd hLn hlipf hfcf hlipg hfcg hfg)
     (improperIntegral1_le hLd hLn hlipf hfcf hlipg hfcg hKd hK0 hbf hbg hfg)
 
+/-- **`∫₁^∞ f ≈ ∫₁^∞ g` for `f ≈ g` pointwise** (shared Lipschitz modulus `L` and decay `K`, so both
+    sample the same schedule). The integral respects `≈` of integrands — the capability needed to
+    rewrite an integrand under a pointwise identity (e.g. the theta modular relation) inside the Mellin
+    bridge. Antisymmetry of `improperIntegral1_le` applied both ways. -/
+theorem improperIntegral1_congr {f g : Real → Real} {L K : Q} (hLd : 0 < L.den) (hLn : 0 ≤ L.num)
+    (hlipf : ∀ x y, Rle (Rabs (Rsub (f x) (f y))) (Rmul (ofQ L hLd) (Rabs (Rsub x y))))
+    (hfcf : ∀ x y, Req x y → Req (f x) (f y))
+    (hlipg : ∀ x y, Rle (Rabs (Rsub (g x) (g y))) (Rmul (ofQ L hLd) (Rabs (Rsub x y))))
+    (hfcg : ∀ x y, Req x y → Req (g x) (g y)) (hKd : 0 < K.den) (hK0 : 0 ≤ K.num)
+    (hbf : ∀ m, ∀ hm : 1 ≤ m,
+      Rle (Rneg (ofQ (mul K (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKd (digamma_succ_mul_pos hm))))
+          (integralTerm hLd hLn hlipf hfcf m)
+      ∧ Rle (integralTerm hLd hLn hlipf hfcf m)
+          (ofQ (mul K (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKd (digamma_succ_mul_pos hm))))
+    (hbg : ∀ m, ∀ hm : 1 ≤ m,
+      Rle (Rneg (ofQ (mul K (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKd (digamma_succ_mul_pos hm))))
+          (integralTerm hLd hLn hlipg hfcg m)
+      ∧ Rle (integralTerm hLd hLn hlipg hfcg m)
+          (ofQ (mul K (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKd (digamma_succ_mul_pos hm))))
+    (hfg : ∀ x, Req (f x) (g x)) :
+    Req (improperIntegral1 hLd hLn hlipf hfcf hKd hK0 hbf)
+        (improperIntegral1 hLd hLn hlipg hfcg hKd hK0 hbg) :=
+  Rle_antisymm
+    (improperIntegral1_le hLd hLn hlipf hfcf hlipg hfcg hKd hK0 hbf hbg (fun x => Rle_of_Req (hfg x)))
+    (improperIntegral1_le hLd hLn hlipg hfcg hlipf hfcf hKd hK0 hbg hbf
+      (fun x => Rle_of_Req (Req_symm (hfg x))))
+
+/-- **`∫₀^∞ f ≈ ∫₀^∞ g` for `f ≈ g` pointwise** (shared `L`, `K`) — the integral respects `≈` on the
+    whole Mellin domain. -/
+theorem halfLineIntegral_congr {f g : Real → Real} {L K : Q} (hLd : 0 < L.den) (hLn : 0 ≤ L.num)
+    (hlipf : ∀ x y, Rle (Rabs (Rsub (f x) (f y))) (Rmul (ofQ L hLd) (Rabs (Rsub x y))))
+    (hfcf : ∀ x y, Req x y → Req (f x) (f y))
+    (hlipg : ∀ x y, Rle (Rabs (Rsub (g x) (g y))) (Rmul (ofQ L hLd) (Rabs (Rsub x y))))
+    (hfcg : ∀ x y, Req x y → Req (g x) (g y)) (hKd : 0 < K.den) (hK0 : 0 ≤ K.num)
+    (hbf : ∀ m, ∀ hm : 1 ≤ m,
+      Rle (Rneg (ofQ (mul K (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKd (digamma_succ_mul_pos hm))))
+          (integralTerm hLd hLn hlipf hfcf m)
+      ∧ Rle (integralTerm hLd hLn hlipf hfcf m)
+          (ofQ (mul K (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKd (digamma_succ_mul_pos hm))))
+    (hbg : ∀ m, ∀ hm : 1 ≤ m,
+      Rle (Rneg (ofQ (mul K (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKd (digamma_succ_mul_pos hm))))
+          (integralTerm hLd hLn hlipg hfcg m)
+      ∧ Rle (integralTerm hLd hLn hlipg hfcg m)
+          (ofQ (mul K (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKd (digamma_succ_mul_pos hm))))
+    (hfg : ∀ x, Req (f x) (g x)) :
+    Req (halfLineIntegral hLd hLn hlipf hfcf hKd hK0 hbf)
+        (halfLineIntegral hLd hLn hlipg hfcg hKd hK0 hbg) :=
+  Rle_antisymm
+    (halfLineIntegral_le hLd hLn hlipf hfcf hlipg hfcg hKd hK0 hbf hbg (fun x => Rle_of_Req (hfg x)))
+    (halfLineIntegral_le hLd hLn hlipg hfcg hlipf hfcf hKd hK0 hbg hbf
+      (fun x => Rle_of_Req (Req_symm (hfg x))))
+
 end UOR.Bridge.F1Square.Analysis

@@ -3456,6 +3456,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.halfLineIntegral
 #print axioms Analysis.halfLineIntegral_nonneg
 #print axioms Analysis.halfLineIntegral_le
+#print axioms Analysis.improperIntegral1_congr
+#print axioms Analysis.halfLineIntegral_congr
 #print axioms Analysis.Rle_of_Rsq_le_qpos
 #print axioms Analysis.Rle_of_Rsq_le
 #print axioms Analysis.Rsqrt_unique
