@@ -3332,6 +3332,9 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.CxiPoly_symm
 #print axioms Analysis.Cxi_eq_poly_completed
 #print axioms Analysis.Cxi_functional_equation
+#print axioms Analysis.boundaryTerm
+#print axioms Analysis.boundaryTerm_symm
+#print axioms Analysis.CompletedZetaFE_of_MellinRep
 #print axioms Analysis.oneSub_oneSub
 #print axioms Analysis.oneSub_eq_conj_on_critical
 #print axioms Analysis.CnegHalf_congr
