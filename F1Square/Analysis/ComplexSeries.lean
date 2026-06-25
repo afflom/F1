@@ -109,6 +109,29 @@ theorem CprodN_succ_one {F : Nat → Complex} {N : Nat} (h : Ceq (F N) Cone) :
     Ceq (CprodN F (N + 1)) (CprodN F N) :=
   Ceq_trans (Cmul_congr (Ceq_refl (CprodN F N)) h) (Cmul_one (CprodN F N))
 
+/-- **Four-term product interchange** `(a·b)·(c·d) ≈ (a·c)·(b·d)` — the complex middle-four swap,
+    from `Cmul_assoc`/`Cmul_comm`. The inductive heart of `CprodN_mul` (the multiplicative mirror of
+    `Cadd_add_add_comm`). -/
+private theorem Cmul_mul_mul_comm (a b c d : Complex) :
+    Ceq (Cmul (Cmul a b) (Cmul c d)) (Cmul (Cmul a c) (Cmul b d)) :=
+  Ceq_trans (Cmul_assoc a b (Cmul c d))
+    (Ceq_trans (Cmul_congr (Ceq_refl a) (Ceq_symm (Cmul_assoc b c d)))
+      (Ceq_trans (Cmul_congr (Ceq_refl a) (Cmul_congr (Cmul_comm b c) (Ceq_refl d)))
+        (Ceq_trans (Cmul_congr (Ceq_refl a) (Cmul_assoc c b d))
+          (Ceq_symm (Cmul_assoc a c (Cmul b d))))))
+
+/-- **★ Partial-product multiplicativity** `∏_{k<N} (Fₖ·Gₖ) ≈ (∏_{k<N} Fₖ)·(∏_{k<N} Gₖ)` —
+    the complex finite product distributes over a factorwise product. By induction: the appended
+    factor `Fₙ·Gₙ` and the inductive split regroup via the four-term interchange `Cmul_mul_mul_comm`.
+    The forced algebraic substrate for factoring the Hadamard product `∏(1 − s/ρ)` (item 5) — e.g.
+    splitting a factor `(1 − s/ρ) = a·b` across the product. The multiplicative mirror of `CsumN_add`. -/
+theorem CprodN_mul (F G : Nat → Complex) :
+    ∀ N, Ceq (CprodN (fun n => Cmul (F n) (G n)) N) (Cmul (CprodN F N) (CprodN G N))
+  | 0 => Ceq_symm (Cmul_one Cone)
+  | (N + 1) =>
+      Ceq_trans (Cmul_congr (CprodN_mul F G N) (Ceq_refl (Cmul (F N) (G N))))
+        (Cmul_mul_mul_comm (CprodN F N) (CprodN G N) (F N) (G N))
+
 -- ===========================================================================
 -- (C) The complex series / infinite product as the limit of partials (when regular).
 -- ===========================================================================

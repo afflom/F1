@@ -16,6 +16,14 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **Track 1 (item 5 — product substrate) — finite-product multiplicativity `CprodN_mul`**
+  (`Analysis/ComplexSeries.lean`): `∏_{k<N} (Fₖ·Gₖ) ≈ (∏_{k<N} Fₖ)·(∏_{k<N} Gₖ)` — the complex finite
+  product distributes over a factorwise product, the algebraic substrate for factoring the Hadamard
+  product `∏(1 − s/ρ)` (item 5; e.g. splitting a factor across the product). Proved by induction on `N`
+  over a new four-term product interchange `(a·b)·(c·d) ≈ (a·c)·(b·d)` (`Cmul_mul_mul_comm`, from
+  `Cmul_assoc`/`Cmul_comm`) — the multiplicative mirror of `CsumN_add`'s `Cadd_add_add_comm`. Completes
+  the multiplicative half of the `CprodN` API alongside `CprodN_congr`/`CprodN_succ_one`. Grep-verified
+  novel, axiom-clean.
 - **Track 1 (item 0 — limit/series substrate) — negation closure `Clim_neg` / `CsumN_neg`**
   (`Analysis/ComplexLimit.lean`, `Analysis/ComplexSeries.lean`): `lim (−X) ≈ −lim X` and
   `Σ_{n<N} (−Fₙ) ≈ −(Σ_{n<N} Fₙ)` — the negation half of the complex limit/finite-sum linearity (with
