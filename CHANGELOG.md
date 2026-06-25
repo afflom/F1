@@ -16,6 +16,12 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **Track 1 (item 0 — complex-limit substrate) — zero limit `Clim_zero`**
+  (`Analysis/ComplexLimit.lean`): a regular complex sequence pointwise `≈ 0` has limit `≈ 0` — the
+  complex lift of the real `Rlim_zero` (`RlimProps.lean`, used real-side in the dyadic telescoping
+  convergence proofs), the convergence side of a telescoped complex series of differences vanishing.
+  Componentwise (both `Rlim_zero` halves), the companion of the existing `Clim_congr`. Grep-verified
+  novel. Axiom-clean.
 - **Track 1 (item 0/6 — complex-series substrate) — finite-sum linearity `CsumN_add`**
   (`Analysis/ComplexSeries.lean`): `Σ_{n<N} (Fₙ + Gₙ) ≈ (Σ_{n<N} Fₙ) + (Σ_{n<N} Gₙ)` — additivity of the
   complex partial sum, the forced algebraic substrate for splitting a witness / log-derivative series

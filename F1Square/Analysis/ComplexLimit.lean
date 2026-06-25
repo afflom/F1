@@ -65,4 +65,12 @@ theorem Clim_congr (X Y : Nat → Complex) (hX : CReg X) (hY : CReg Y)
   ⟨Rlim_congr (fun n => (X n).re) (fun n => (Y n).re) hX.1 hY.1 (fun j => (h j).1),
    Rlim_congr (fun n => (X n).im) (fun n => (Y n).im) hX.2 hY.2 (fun j => (h j).2)⟩
 
+/-- **Zero limit**: a regular complex sequence that is pointwise `≈ 0` has limit `≈ 0` (both
+    `Rlim_zero` halves). The complex lift of the real `Rlim_zero` (`RlimProps.lean`), the convergence
+    side of a telescoped complex series of differences vanishing — the companion of `Clim_congr`. -/
+theorem Clim_zero (X : Nat → Complex) (h : CReg X) (hz : ∀ j, Ceq (X j) Czero) :
+    Ceq (Clim X h) Czero :=
+  ⟨Rlim_zero (fun n => (X n).re) h.1 (fun j => (hz j).1),
+   Rlim_zero (fun n => (X n).im) h.2 (fun j => (hz j).2)⟩
+
 end UOR.Bridge.F1Square.Analysis
