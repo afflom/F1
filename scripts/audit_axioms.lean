@@ -3627,3 +3627,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.qClampOne_lipschitz
 #print axioms Analysis.gPowClamp_lipschitz
 #print axioms Analysis.gPowClamp_congr
+#print axioms Analysis.gPowClamp_nonneg
+#print axioms Analysis.gPowClamp_le_one
+#print axioms Analysis.gPowClamp_abs_le_one
+#print axioms Analysis.thetaClamp_abs_le_one
