@@ -73,4 +73,14 @@ theorem Clim_zero (X : Nat → Complex) (h : CReg X) (hz : ∀ j, Ceq (X j) Czer
   ⟨Rlim_zero (fun n => (X n).re) h.1 (fun j => (hz j).1),
    Rlim_zero (fun n => (X n).im) h.2 (fun j => (hz j).2)⟩
 
+/-- **Limit additivity** `lim (X + Y) ≈ lim X + lim Y` over ℂ — linearity of the complex Bishop limit.
+    Componentwise from the real `Rlim_add` (`RlimProps.lean`): `Cadd`'s real/imaginary parts are the
+    `Radd`s of the parts, so each half is one `Rlim_add`. The forced gateway to `Cseries` linearity
+    (splitting a complex series into its two component series, toward the Hadamard `bl` expansion). -/
+theorem Clim_add (X Y : Nat → Complex) (hX : CReg X) (hY : CReg Y)
+    (hXY : CReg (fun n => Cadd (X n) (Y n))) :
+    Ceq (Clim (fun n => Cadd (X n) (Y n)) hXY) (Cadd (Clim X hX) (Clim Y hY)) :=
+  ⟨Rlim_add (fun j => (X j).re) (fun j => (Y j).re) hX.1 hY.1 hXY.1,
+   Rlim_add (fun j => (X j).im) (fun j => (Y j).im) hX.2 hY.2 hXY.2⟩
+
 end UOR.Bridge.F1Square.Analysis

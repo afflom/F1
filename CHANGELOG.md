@@ -16,6 +16,17 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **Track 1 (item 0 — limit substrate) — Bishop-limit additivity `Rlim_add` / `Clim_add`**
+  (`Analysis/RlimProps.lean`, `Analysis/ComplexLimit.lean`): `lim (X + Y) ≈ lim X + lim Y` over ℝ and ℂ —
+  the forced gateway to complex series linearity (`Cseries_add`) for splitting a witness / log-derivative
+  series into its two component series (Hadamard `bl`, item 6). The real `Rlim_add` is the substantive
+  piece: the `RTendsTo` rate would *double* under `Radd` (the known "modulus not closed under `Radd`"
+  obstruction), so the canonical `RTendsTo_add` is false; instead the proof goes through
+  `Req_of_lin_bound` (which absorbs the constant) and the key alignment that **both** diagonals land at the
+  same sequence position `8n+7` — `lim(X+Y)` at `(X (4n+3))_{8n+7}` (the `Radd` index inflation
+  `2·(4n+3)+1`), `(lim X)_{2n+1}` at `(X (8n+7))_{8n+7}` — so the gap is pure meta-regularity `RReg`,
+  giving `5/(8(n+1)) ≤ 2/(n+1)` per component. `Clim_add` is then the clean componentwise lift. Both
+  grep-verified novel, axiom-clean.
 - **Track 1 (item 0 — complex-limit substrate) — zero limit `Clim_zero`**
   (`Analysis/ComplexLimit.lean`): a regular complex sequence pointwise `≈ 0` has limit `≈ 0` — the
   complex lift of the real `Rlim_zero` (`RlimProps.lean`, used real-side in the dyadic telescoping
