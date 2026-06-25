@@ -49,6 +49,30 @@ theorem CsumN_congr {F G : Nat → Complex} (h : ∀ n, Ceq (F n) (G n)) :
   | 0 => Ceq_refl _
   | (n + 1) => Cadd_congr (CsumN_congr h n) (h n)
 
+/-- **Four-term addition interchange** `(a+b)+(c+d) ≈ (a+c)+(b+d)` — the complex middle-four swap,
+    from `Cadd_assoc`/`Cadd_comm`. The inductive heart of `CsumN_add` (regroup the appended summands
+    against the appended partial sums). -/
+private theorem Cadd_add_add_comm (a b c d : Complex) :
+    Ceq (Cadd (Cadd a b) (Cadd c d)) (Cadd (Cadd a c) (Cadd b d)) :=
+  Ceq_trans (Cadd_assoc a b (Cadd c d))
+    (Ceq_trans (Cadd_congr (Ceq_refl a) (Ceq_symm (Cadd_assoc b c d)))
+      (Ceq_trans (Cadd_congr (Ceq_refl a) (Cadd_congr (Cadd_comm b c) (Ceq_refl d)))
+        (Ceq_trans (Cadd_congr (Ceq_refl a) (Cadd_assoc c b d))
+          (Ceq_symm (Cadd_assoc a c (Cadd b d))))))
+
+/-- **★ Partial-sum additivity** `Σ_{n<N} (Fₙ + Gₙ) ≈ (Σ_{n<N} Fₙ) + (Σ_{n<N} Gₙ)` — linearity of
+    the complex finite sum. By induction: the appended summand `Fₙ + Gₙ` and the inductive split
+    regroup via the four-term interchange `Cadd_add_add_comm`. The forced algebraic substrate for
+    splitting a witness/log-derivative series by its two component series (toward the Hadamard `bl`
+    expansion); the complex lift of finite-sum linearity (no real `RsumN_add` is needed — the swap is
+    done directly over `Cadd`). -/
+theorem CsumN_add (F G : Nat → Complex) :
+    ∀ N, Ceq (CsumN (fun n => Cadd (F n) (G n)) N) (Cadd (CsumN F N) (CsumN G N))
+  | 0 => ⟨Req_symm (Radd_zero zero), Req_symm (Radd_zero zero)⟩
+  | (N + 1) =>
+      Ceq_trans (Cadd_congr (CsumN_add F G N) (Ceq_refl (Cadd (F N) (G N))))
+        (Cadd_add_add_comm (CsumN F N) (CsumN G N) (F N) (G N))
+
 -- ===========================================================================
 -- (B) Complex finite products `CprodN F N = ∏_{k<N} F k`.
 -- ===========================================================================

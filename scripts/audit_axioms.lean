@@ -3305,6 +3305,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.CsumN_re
 #print axioms Analysis.CsumN_im
 #print axioms Analysis.CsumN_congr
+#print axioms Analysis.CsumN_add
 #print axioms Analysis.CprodN_congr
 #print axioms Analysis.CprodN_succ_one
 #print axioms Analysis.CsumN_re_fun

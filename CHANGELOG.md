@@ -16,6 +16,13 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **Track 1 (item 0/6 — complex-series substrate) — finite-sum linearity `CsumN_add`**
+  (`Analysis/ComplexSeries.lean`): `Σ_{n<N} (Fₙ + Gₙ) ≈ (Σ_{n<N} Fₙ) + (Σ_{n<N} Gₙ)` — additivity of the
+  complex partial sum, the forced algebraic substrate for splitting a witness / log-derivative series
+  into its two component series (toward the Hadamard `bl` expansion, item 6). Proved by induction on `N`
+  over a new four-term addition interchange `(a+b)+(c+d) ≈ (a+c)+(b+d)` (`Cadd_add_add_comm`, from
+  `Cadd_assoc`/`Cadd_comm`); no real `RsumN_add` is needed — the swap is done directly over `Cadd`.
+  Completes the additive half of the `CsumN` API alongside the existing `CsumN_congr`. Axiom-clean.
 - **Crux frontier (`n = 3`) — tighter γ₁ upper `≤ −0.055`** (`Analysis/GammaOne.lean`, `Rgamma1_le_neg055`):
   the dominant `−6γ₁` contribution to the `Pos Rlambda3` (`λ₃`) certificate, tightened from `−0.0445`
   (`Rgamma1_le_neg445`, artanh depth `T = 2`) to `−0.055` at depth `T = 4` (`gBound200_T4_le_neg055`,
