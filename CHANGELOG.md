@@ -16,6 +16,18 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **Track 1 (item 0 — `arg`-range extension) — the reciprocal-arctan reduction, value level**
+  (`Analysis/RArctanRecip.lean`, `RarctanR_recip_value`): the division-free tangent value identity
+  `s · sin(π/2 − arctan s) = cos(π/2 − arctan s)` for a small real argument `s` (`|s.seq n| ≤ ρ < 1/16`),
+  i.e. the constructive reduction `arctan(1/s) = π/2 − arctan s` that carries the argument
+  `Carg z = arctan(Im z / Re z)` PAST the `|t| < 1/16` value-identity radius (apply with `s = Re z / Im z`
+  small near the imaginary axis, where the ratio `t = Im/Re` blows up). Pure algebra over three existing
+  facts — the complementary-angle formulas `sin(π/2 − x) = cos x` / `cos(π/2 − x) = sin x`
+  (`Rsin_pi_half_sub`/`Rcos_pi_half_sub`, off the Gauss `π/2` anchors) and the small-argument value
+  identity `sin(arctan s) = s·cos(arctan s)` (`RarctanR_value_eq`): with `A = arctan s`,
+  `sin(π/2 − A) = cos A` and `cos(π/2 − A) = sin A = s·cos A`, so `s·sin(π/2 − A) = s·cos A = cos(π/2 − A)`.
+  No `Rinv`, no new range. This is the forced next brick after the four-sector `Clog`-additivity, toward
+  the full-range `Carg`/`log ξ`. Axiom-clean.
 - **Crux frontier (`n = 3`) — tighter γ₁ upper `≤ −0.055`** (`Analysis/GammaOne.lean`, `Rgamma1_le_neg055`):
   the dominant `−6γ₁` contribution to the `Pos Rlambda3` (`λ₃`) certificate, tightened from `−0.0445`
   (`Rgamma1_le_neg445`, artanh depth `T = 2`) to `−0.055` at depth `T = 4` (`gBound200_T4_le_neg055`,
