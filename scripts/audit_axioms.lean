@@ -3623,3 +3623,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.qClampOne_le
 #print axioms Analysis.Qmax_eq_right
 #print axioms Analysis.Qmax_eq_left
+#print axioms Analysis.qClampOne_eq_of_ge

@@ -126,4 +126,29 @@ theorem qClampOne_le {x : Real} {B : Q} (hB1 : Qle (⟨1, 1⟩ : Q) B) (hxB : �
     (n : Nat) : Qle ((qClampOne x).seq n) B :=
   Qmax_le (hxB n) hB1
 
+/-- `|y| ≤ c` from `0 ≤ y.num` and `y ≤ c` (inlined to keep the file a leaf). -/
+private theorem Qabs_le_of_nonneg' {y c : Q} (hy : 0 ≤ y.num) (h : Qle y c) : Qle (Qabs y) c := by
+  show (↑y.num.natAbs : Int) * (c.den : Int) ≤ c.num * (y.den : Int)
+  rw [Int.natAbs_of_nonneg hy]; exact h
+
+/-- **`qClampOne x ≈ x` on `[1, ∞)`** — the clamp is inert where `x ≥ 1`. So the total clamped
+    integrand agrees with the genuine `x^e·ψ` on the integration domain. -/
+theorem qClampOne_eq_of_ge {x : Real} (hx : Rle one x) : Req (qClampOne x) x := by
+  refine Req_of_lin_bound (C := 2) ?_
+  intro n
+  show Qle (Qabs (Qsub (Qmax (x.seq n) (⟨1, 1⟩ : Q)) (x.seq n))) (⟨(2 : Int), n + 1⟩ : Q)
+  have hxn : Qle (⟨1, 1⟩ : Q) (add (x.seq n) (⟨2, n + 1⟩ : Q)) := by
+    have h := hx n; rw [one_seq] at h; exact h
+  by_cases h : Qle (x.seq n) (⟨1, 1⟩ : Q)
+  · rw [Qmax_eq_right h]
+    refine Qabs_le_of_nonneg' ?_ (Qsub_le_of_le_add (x.den_pos n) (Nat.succ_pos n) hxn)
+    have hh := h; simp only [Qle] at hh
+    simp only [Qsub, add, neg]; push_cast at hh ⊢; omega
+  · rw [Qmax_eq_left h]
+    have h0 : (Qsub (x.seq n) (x.seq n)).num = 0 := by simp only [Qsub, add, neg]; ring_uor
+    refine Qabs_le_of_nonneg' (by rw [h0]; exact Int.le_refl 0) ?_
+    show (Qsub (x.seq n) (x.seq n)).num * ((n + 1 : Nat) : Int) ≤ (2 : Int) * ((Qsub (x.seq n) (x.seq n)).den : Int)
+    rw [h0]; simp only [Int.zero_mul]
+    exact Int.mul_nonneg (by omega) (Int.ofNat_nonneg _)
+
 end UOR.Bridge.F1Square.Analysis
