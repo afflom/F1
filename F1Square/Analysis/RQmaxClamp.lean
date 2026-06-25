@@ -18,6 +18,7 @@ Pure Lean 4 core, no Mathlib, no `sorry`/`native_decide`, choice-free; audited b
 import F1Square.Analysis.QOrder
 import F1Square.Analysis.ROrder
 import F1Square.Analysis.Real
+import F1Square.Analysis.RMax
 
 namespace UOR.Bridge.F1Square.Analysis
 
@@ -150,5 +151,18 @@ theorem qClampOne_eq_of_ge {x : Real} (hx : Rle one x) : Req (qClampOne x) x := 
     show (Qsub (x.seq n) (x.seq n)).num * ((n + 1 : Nat) : Int) ≤ (2 : Int) * ((Qsub (x.seq n) (x.seq n)).den : Int)
     rw [h0]; simp only [Int.zero_mul]
     exact Int.mul_nonneg (by omega) (Int.ofNat_nonneg _)
+
+/-- **`qClampOne` is `1`-Lipschitz**: `|qClampOne x − qClampOne y| ≤ |x − y|` — the Real-level lift of
+    `Qmax_const_lip` (per index at the `Rsub` reindex `2n+1`, then absorb the `Rle` slack). Needed for
+    the total integrand's `∀x,y` Lipschitz (composed with the power-Lipschitz). -/
+theorem qClampOne_lipschitz (x y : Real) :
+    Rle (Rabs (Rsub (qClampOne x) (qClampOne y))) (Rabs (Rsub x y)) := by
+  intro n
+  show Qle (Qabs (Qsub (Qmax (x.seq (2 * n + 1)) (⟨1, 1⟩ : Q)) (Qmax (y.seq (2 * n + 1)) (⟨1, 1⟩ : Q))))
+      (add (Qabs (Qsub (x.seq (2 * n + 1)) (y.seq (2 * n + 1)))) (⟨2, n + 1⟩ : Q))
+  exact Qle_trans (Qabs_den_pos (Qsub_den_pos (x.den_pos _) (y.den_pos _)))
+    (Qmax_const_lip (x.seq (2 * n + 1)) (y.seq (2 * n + 1)) (⟨1, 1⟩ : Q)
+      (x.den_pos _) (y.den_pos _) Nat.one_pos)
+    (Qle_self_add (by show (0 : Int) ≤ 2; decide))
 
 end UOR.Bridge.F1Square.Analysis
