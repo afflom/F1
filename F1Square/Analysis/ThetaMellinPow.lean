@@ -18,11 +18,13 @@ import F1Square.Analysis.RmulLipschitz
 namespace UOR.Bridge.F1Square.Analysis
 
 /-- `gPowClamp e t ≥ 0` (it is an `exp`). -/
-theorem gPowClamp_nonneg (e t : Real) : Rnonneg (gPowClamp e t) := RexpReal_nonneg _
+theorem gPowClamp_nonneg (e t : Real) : Rnonneg (gPowClamp e t) := by
+  unfold gPowClamp; exact RexpReal_nonneg _
 
 /-- `gPowClamp e t ≤ 1` for `e ≤ 0` (since `max(t,1) ≥ 1`). -/
-theorem gPowClamp_le_one (e : Real) (he : Rle e zero) (t : Real) : Rle (gPowClamp e t) one :=
-  RrpowPos_le_one_of_nonpos (qClampOne t) 1 (ge1_pos_witness (qClampOne t) (qClampOne_ge1 t 1))
+theorem gPowClamp_le_one (e : Real) (he : Rle e zero) (t : Real) : Rle (gPowClamp e t) one := by
+  unfold gPowClamp
+  exact RrpowPos_le_one_of_nonpos (qClampOne t) 1 (ge1_pos_witness (qClampOne t) (qClampOne_ge1 t 1))
     (Rle_one_of_seq_ge1 (qClampOne_ge1 t)) e he
 
 /-- `|gPowClamp e t| ≤ 1` for `e ≤ 0` — the integral-interface bound (`ofQ 1`-valued, `one = ofQ ⟨1,1⟩`). -/

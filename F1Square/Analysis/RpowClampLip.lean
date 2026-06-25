@@ -23,8 +23,10 @@ import F1Square.Analysis.RlogMulPos
 namespace UOR.Bridge.F1Square.Analysis
 
 /-- **The total clamped power** `gPowClamp e t = max(t,1)^e` — a total `Real → Real` (uniform witness at
-    index 1 from `qClampOne_ge1`), equal to `t^e` on `[1,∞)` (`qClampOne_eq_of_ge`). -/
-def gPowClamp (e : Real) (t : Real) : Real :=
+    index 1 from `qClampOne_ge1`), equal to `t^e` on `[1,∞)` (`qClampOne_eq_of_ge`). Marked `irreducible`
+    so downstream `whnf`/unification does not unfold the `RrpowPos ∘ qClampOne ∘ Qmax` cascade (which
+    blows up when the exponent is a concrete `ofQ q`); proofs that need the `RrpowPos` form `unfold` it. -/
+@[irreducible] def gPowClamp (e : Real) (t : Real) : Real :=
   RrpowPos (qClampOne t) 1 (ge1_pos_witness (qClampOne t) (qClampOne_ge1 t 1)) e
 
 set_option maxHeartbeats 2000000 in
@@ -33,6 +35,7 @@ set_option maxHeartbeats 2000000 in
 theorem gPowClamp_lipschitz (e : Real) (he : Rle e zero) (x y : Real) :
     Rle (Rabs (Rsub (gPowClamp e x) (gPowClamp e y)))
         (Rmul (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rabs e)) (Rabs (Rsub x y))) := by
+  unfold gPowClamp
   have hN1 : 1 ≤ max (xBound x) (xBound y) := Nat.le_trans (xBound_pos x) (Nat.le_max_left _ _)
   have hB1 : Qle (⟨1, 1⟩ : Q) (⟨((max (xBound x) (xBound y) : Nat) : Int), 1⟩ : Q) := by
     have h := hN1; simp only [Qle]; push_cast; omega
