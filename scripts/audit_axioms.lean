@@ -3608,3 +3608,6 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.clampOne_witness
 #print axioms Analysis.RrpowPos_le_one_of_nonpos
 #print axioms Analysis.RrpowPos_abs_lipschitz
+#print axioms Analysis.RlogPos_sub_le_Rdiv_gen
+#print axioms Analysis.Rlog_abs_lipschitz_gen
+#print axioms Analysis.RrpowPos_abs_lipschitz_gen
