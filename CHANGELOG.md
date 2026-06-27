@@ -16,6 +16,12 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **Track 2 (integration) — complex integral congruence `Cintegral_congr` / `ChalfLineIntegral_congr`**
+  (`Analysis/ComplexIntegral.lean`): `∫ z ≈ ∫ z'` when the real/imaginary integrand parts agree pointwise,
+  for the complex line integral `∫_a^{a+w}` and the complex Mellin integral `∫₀^∞` — componentwise from
+  the real `riemannIntegralI_congr`/`halfLineIntegral_congr`. The integrand-congruence the Weil/theta
+  complex-integrand rewrites need; completes the complex integral's `_congr` alongside `_add`/`_neg`.
+  Grep-verified novel, axiom-clean.
 - **Track 2 (integration) — integral negation up the full stack `halfLineIntegral_neg` / `ChalfLineIntegral_neg`**
   (`Analysis/IntervalIntegral.lean`, `Analysis/ImproperIntegral.lean`, `Analysis/ComplexIntegral.lean`):
   `∫(−f) = −∫f` lifted from the base through `riemannIntegralI_neg` (interval, affine + `Rmul_neg_right`)

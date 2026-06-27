@@ -175,4 +175,67 @@ theorem ChalfLineIntegral_neg {gr gi : Real → Real} {Lr Li Kr Ki : Q}
   ⟨halfLineIntegral_neg hLrd hLrn hlipr hfcr hlipnr hfcnr hKrd hKr0 hbr hbnr,
    halfLineIntegral_neg hLid hLin hlipi hfci hlipni hfcni hKid hKi0 hbi hbni⟩
 
+/-- **The complex line integral respects `≈` of the integrand** (componentwise from
+    `riemannIntegralI_congr`) — `∫_a^{a+w} z ≈ ∫_a^{a+w} z'` when the real and imaginary parts agree
+    pointwise. -/
+theorem Cintegral_congr {gr gi gr' gi' : Real → Real} {Lr Li : Q}
+    (hLrd : 0 < Lr.den) (hLrn : 0 ≤ Lr.num)
+    (hlipr : ∀ x y, Rle (Rabs (Rsub (gr x) (gr y))) (Rmul (ofQ Lr hLrd) (Rabs (Rsub x y))))
+    (hfcr : ∀ x y, Req x y → Req (gr x) (gr y))
+    (hlipr' : ∀ x y, Rle (Rabs (Rsub (gr' x) (gr' y))) (Rmul (ofQ Lr hLrd) (Rabs (Rsub x y))))
+    (hfcr' : ∀ x y, Req x y → Req (gr' x) (gr' y))
+    (hLid : 0 < Li.den) (hLin : 0 ≤ Li.num)
+    (hlipi : ∀ x y, Rle (Rabs (Rsub (gi x) (gi y))) (Rmul (ofQ Li hLid) (Rabs (Rsub x y))))
+    (hfci : ∀ x y, Req x y → Req (gi x) (gi y))
+    (hlipi' : ∀ x y, Rle (Rabs (Rsub (gi' x) (gi' y))) (Rmul (ofQ Li hLid) (Rabs (Rsub x y))))
+    (hfci' : ∀ x y, Req x y → Req (gi' x) (gi' y))
+    (a w : Q) (ha : 0 < a.den) (hw : 0 < w.den) (hwn : 0 ≤ w.num)
+    (hr : ∀ x, Req (gr x) (gr' x)) (hi : ∀ x, Req (gi x) (gi' x)) :
+    Ceq (Cintegral hLrd hLrn hlipr hfcr hLid hLin hlipi hfci a w ha hw hwn)
+        (Cintegral hLrd hLrn hlipr' hfcr' hLid hLin hlipi' hfci' a w ha hw hwn) :=
+  ⟨riemannIntegralI_congr hLrd hLrn hlipr hfcr hlipr' hfcr' a w ha hw hwn hr,
+   riemannIntegralI_congr hLid hLin hlipi hfci hlipi' hfci' a w ha hw hwn hi⟩
+
+/-- **The complex Mellin integral respects `≈` of the integrand** (componentwise from
+    `halfLineIntegral_congr`) — the integrand-congruence the Weil/theta complex-integrand rewrites
+    need. -/
+theorem ChalfLineIntegral_congr {gr gi gr' gi' : Real → Real} {Lr Li Kr Ki : Q}
+    (hLrd : 0 < Lr.den) (hLrn : 0 ≤ Lr.num)
+    (hlipr : ∀ x y, Rle (Rabs (Rsub (gr x) (gr y))) (Rmul (ofQ Lr hLrd) (Rabs (Rsub x y))))
+    (hfcr : ∀ x y, Req x y → Req (gr x) (gr y))
+    (hlipr' : ∀ x y, Rle (Rabs (Rsub (gr' x) (gr' y))) (Rmul (ofQ Lr hLrd) (Rabs (Rsub x y))))
+    (hfcr' : ∀ x y, Req x y → Req (gr' x) (gr' y))
+    (hKrd : 0 < Kr.den) (hKr0 : 0 ≤ Kr.num)
+    (hbr : ∀ m, ∀ hm : 1 ≤ m,
+      Rle (Rneg (ofQ (mul Kr (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKrd (digamma_succ_mul_pos hm))))
+          (integralTerm hLrd hLrn hlipr hfcr m)
+      ∧ Rle (integralTerm hLrd hLrn hlipr hfcr m)
+          (ofQ (mul Kr (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKrd (digamma_succ_mul_pos hm))))
+    (hbr' : ∀ m, ∀ hm : 1 ≤ m,
+      Rle (Rneg (ofQ (mul Kr (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKrd (digamma_succ_mul_pos hm))))
+          (integralTerm hLrd hLrn hlipr' hfcr' m)
+      ∧ Rle (integralTerm hLrd hLrn hlipr' hfcr' m)
+          (ofQ (mul Kr (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKrd (digamma_succ_mul_pos hm))))
+    (hLid : 0 < Li.den) (hLin : 0 ≤ Li.num)
+    (hlipi : ∀ x y, Rle (Rabs (Rsub (gi x) (gi y))) (Rmul (ofQ Li hLid) (Rabs (Rsub x y))))
+    (hfci : ∀ x y, Req x y → Req (gi x) (gi y))
+    (hlipi' : ∀ x y, Rle (Rabs (Rsub (gi' x) (gi' y))) (Rmul (ofQ Li hLid) (Rabs (Rsub x y))))
+    (hfci' : ∀ x y, Req x y → Req (gi' x) (gi' y))
+    (hKid : 0 < Ki.den) (hKi0 : 0 ≤ Ki.num)
+    (hbi : ∀ m, ∀ hm : 1 ≤ m,
+      Rle (Rneg (ofQ (mul Ki (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKid (digamma_succ_mul_pos hm))))
+          (integralTerm hLid hLin hlipi hfci m)
+      ∧ Rle (integralTerm hLid hLin hlipi hfci m)
+          (ofQ (mul Ki (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKid (digamma_succ_mul_pos hm))))
+    (hbi' : ∀ m, ∀ hm : 1 ≤ m,
+      Rle (Rneg (ofQ (mul Ki (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKid (digamma_succ_mul_pos hm))))
+          (integralTerm hLid hLin hlipi' hfci' m)
+      ∧ Rle (integralTerm hLid hLin hlipi' hfci' m)
+          (ofQ (mul Ki (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKid (digamma_succ_mul_pos hm))))
+    (hr : ∀ x, Req (gr x) (gr' x)) (hi : ∀ x, Req (gi x) (gi' x)) :
+    Ceq (ChalfLineIntegral hLrd hLrn hlipr hfcr hKrd hKr0 hbr hLid hLin hlipi hfci hKid hKi0 hbi)
+        (ChalfLineIntegral hLrd hLrn hlipr' hfcr' hKrd hKr0 hbr' hLid hLin hlipi' hfci' hKid hKi0 hbi') :=
+  ⟨halfLineIntegral_congr hLrd hLrn hlipr hfcr hlipr' hfcr' hKrd hKr0 hbr hbr' hr,
+   halfLineIntegral_congr hLid hLin hlipi hfci hlipi' hfci' hKid hKi0 hbi hbi' hi⟩
+
 end UOR.Bridge.F1Square.Analysis

@@ -3533,6 +3533,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.ChalfLineIntegral
 #print axioms Analysis.ChalfLineIntegral_add
 #print axioms Analysis.ChalfLineIntegral_neg
+#print axioms Analysis.Cintegral_congr
+#print axioms Analysis.ChalfLineIntegral_congr
 #print axioms Analysis.RsqrtRealPos
 #print axioms Analysis.RsqrtRealPos_nonneg
 #print axioms Analysis.RsqrtRealPos_sq
