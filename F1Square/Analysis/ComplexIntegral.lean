@@ -132,4 +132,47 @@ theorem ChalfLineIntegral_add {gfr ggr gfi ggi : Real → Real} {Lr Li Kr Ki : Q
    halfLineIntegral_add hLid hLin hlipi_f hfci_f hlipi_g hfci_g hlipi_fg hfci_fg
       hKid hKi0 hbi_f hbi_g hbi_fg⟩
 
+/-- **The complex Mellin integral respects negation** `∫₀^∞ (−(gr + i·gi)) = −∫₀^∞ (gr + i·gi)` —
+    completing (with `ChalfLineIntegral_add`) the additive-group linearity of the complex Mellin
+    integral. Componentwise from the real `halfLineIntegral_neg`. -/
+theorem ChalfLineIntegral_neg {gr gi : Real → Real} {Lr Li Kr Ki : Q}
+    (hLrd : 0 < Lr.den) (hLrn : 0 ≤ Lr.num)
+    (hlipr : ∀ x y, Rle (Rabs (Rsub (gr x) (gr y))) (Rmul (ofQ Lr hLrd) (Rabs (Rsub x y))))
+    (hfcr : ∀ x y, Req x y → Req (gr x) (gr y))
+    (hlipnr : ∀ x y, Rle (Rabs (Rsub (Rneg (gr x)) (Rneg (gr y)))) (Rmul (ofQ Lr hLrd) (Rabs (Rsub x y))))
+    (hfcnr : ∀ x y, Req x y → Req (Rneg (gr x)) (Rneg (gr y)))
+    (hKrd : 0 < Kr.den) (hKr0 : 0 ≤ Kr.num)
+    (hbr : ∀ m, ∀ hm : 1 ≤ m,
+      Rle (Rneg (ofQ (mul Kr (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKrd (digamma_succ_mul_pos hm))))
+          (integralTerm hLrd hLrn hlipr hfcr m)
+      ∧ Rle (integralTerm hLrd hLrn hlipr hfcr m)
+          (ofQ (mul Kr (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKrd (digamma_succ_mul_pos hm))))
+    (hbnr : ∀ m, ∀ hm : 1 ≤ m,
+      Rle (Rneg (ofQ (mul Kr (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKrd (digamma_succ_mul_pos hm))))
+          (integralTerm hLrd hLrn hlipnr hfcnr m)
+      ∧ Rle (integralTerm hLrd hLrn hlipnr hfcnr m)
+          (ofQ (mul Kr (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKrd (digamma_succ_mul_pos hm))))
+    (hLid : 0 < Li.den) (hLin : 0 ≤ Li.num)
+    (hlipi : ∀ x y, Rle (Rabs (Rsub (gi x) (gi y))) (Rmul (ofQ Li hLid) (Rabs (Rsub x y))))
+    (hfci : ∀ x y, Req x y → Req (gi x) (gi y))
+    (hlipni : ∀ x y, Rle (Rabs (Rsub (Rneg (gi x)) (Rneg (gi y)))) (Rmul (ofQ Li hLid) (Rabs (Rsub x y))))
+    (hfcni : ∀ x y, Req x y → Req (Rneg (gi x)) (Rneg (gi y)))
+    (hKid : 0 < Ki.den) (hKi0 : 0 ≤ Ki.num)
+    (hbi : ∀ m, ∀ hm : 1 ≤ m,
+      Rle (Rneg (ofQ (mul Ki (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKid (digamma_succ_mul_pos hm))))
+          (integralTerm hLid hLin hlipi hfci m)
+      ∧ Rle (integralTerm hLid hLin hlipi hfci m)
+          (ofQ (mul Ki (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKid (digamma_succ_mul_pos hm))))
+    (hbni : ∀ m, ∀ hm : 1 ≤ m,
+      Rle (Rneg (ofQ (mul Ki (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKid (digamma_succ_mul_pos hm))))
+          (integralTerm hLid hLin hlipni hfcni m)
+      ∧ Rle (integralTerm hLid hLin hlipni hfcni m)
+          (ofQ (mul Ki (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKid (digamma_succ_mul_pos hm)))) :
+    Ceq (ChalfLineIntegral hLrd hLrn hlipnr hfcnr hKrd hKr0 hbnr
+            hLid hLin hlipni hfcni hKid hKi0 hbni)
+        (Cneg (ChalfLineIntegral hLrd hLrn hlipr hfcr hKrd hKr0 hbr
+                  hLid hLin hlipi hfci hKid hKi0 hbi)) :=
+  ⟨halfLineIntegral_neg hLrd hLrn hlipr hfcr hlipnr hfcnr hKrd hKr0 hbr hbnr,
+   halfLineIntegral_neg hLid hLin hlipi hfci hlipni hfcni hKid hKi0 hbi hbni⟩
+
 end UOR.Bridge.F1Square.Analysis

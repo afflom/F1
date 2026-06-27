@@ -281,4 +281,71 @@ theorem halfLineIntegral_add {f g : Real → Real} {L K : Q} (hLd : 0 < L.den) (
       (improperIntegral1 hLd hLn hlipf hfcf hKd hK0 hbf)
       (improperIntegral1 hLd hLn hlipg hfcg hKd hK0 hbg))
 
+/-- **The tail increment respects negation** `integralTerm (−f) m ≈ −integralTerm f m` —
+    `riemannIntegralI_neg` over the unit interval `[m+1, 1]`. -/
+theorem integralTerm_neg {f : Real → Real} {L : Q} (hLd : 0 < L.den) (hLn : 0 ≤ L.num)
+    (hlipf : ∀ x y, Rle (Rabs (Rsub (f x) (f y))) (Rmul (ofQ L hLd) (Rabs (Rsub x y))))
+    (hfcf : ∀ x y, Req x y → Req (f x) (f y))
+    (hlipnf : ∀ x y, Rle (Rabs (Rsub (Rneg (f x)) (Rneg (f y)))) (Rmul (ofQ L hLd) (Rabs (Rsub x y))))
+    (hfcnf : ∀ x y, Req x y → Req (Rneg (f x)) (Rneg (f y))) (m : Nat) :
+    Req (integralTerm hLd hLn hlipnf hfcnf m) (Rneg (integralTerm hLd hLn hlipf hfcf m)) :=
+  riemannIntegralI_neg hLd hLn hlipf hfcf hlipnf hfcnf
+    (⟨(m : Int) + 1, 1⟩ : Q) (⟨1, 1⟩ : Q) Nat.one_pos (by decide) (by decide)
+
+/-- **The improper tail integral respects negation** `∫₁^∞ (−f) = −∫₁^∞ f` — the tail increments negate
+    (`integralTerm_neg`) so the partial sums negate (`genSum_Rneg_of_termwise`), and `Rlim_neg` (with
+    `RReg_Rneg`) carries it through the limit. -/
+theorem improperIntegral1_neg {f : Real → Real} {L K : Q} (hLd : 0 < L.den) (hLn : 0 ≤ L.num)
+    (hlipf : ∀ x y, Rle (Rabs (Rsub (f x) (f y))) (Rmul (ofQ L hLd) (Rabs (Rsub x y))))
+    (hfcf : ∀ x y, Req x y → Req (f x) (f y))
+    (hlipnf : ∀ x y, Rle (Rabs (Rsub (Rneg (f x)) (Rneg (f y)))) (Rmul (ofQ L hLd) (Rabs (Rsub x y))))
+    (hfcnf : ∀ x y, Req x y → Req (Rneg (f x)) (Rneg (f y)))
+    (hKd : 0 < K.den) (hK0 : 0 ≤ K.num)
+    (hbf : ∀ m, ∀ hm : 1 ≤ m,
+      Rle (Rneg (ofQ (mul K (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKd (digamma_succ_mul_pos hm))))
+          (integralTerm hLd hLn hlipf hfcf m)
+      ∧ Rle (integralTerm hLd hLn hlipf hfcf m)
+          (ofQ (mul K (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKd (digamma_succ_mul_pos hm))))
+    (hbnf : ∀ m, ∀ hm : 1 ≤ m,
+      Rle (Rneg (ofQ (mul K (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKd (digamma_succ_mul_pos hm))))
+          (integralTerm hLd hLn hlipnf hfcnf m)
+      ∧ Rle (integralTerm hLd hLn hlipnf hfcnf m)
+          (ofQ (mul K (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKd (digamma_succ_mul_pos hm)))) :
+    Req (improperIntegral1 hLd hLn hlipnf hfcnf hKd hK0 hbnf)
+        (Rneg (improperIntegral1 hLd hLn hlipf hfcf hKd hK0 hbf)) :=
+  Req_trans
+    (Rlim_congr _ _ (genSum_RReg (integralTerm hLd hLn hlipnf hfcnf) hKd hK0 hbnf)
+      (RReg_Rneg _ (genSum_RReg (integralTerm hLd hLn hlipf hfcf) hKd hK0 hbf))
+      (fun j => genSum_Rneg_of_termwise
+        (fun m => integralTerm_neg hLd hLn hlipf hfcf hlipnf hfcnf m) (digammaMidx K j)))
+    (Rlim_neg _ (genSum_RReg (integralTerm hLd hLn hlipf hfcf) hKd hK0 hbf)
+      (RReg_Rneg _ (genSum_RReg (integralTerm hLd hLn hlipf hfcf) hKd hK0 hbf)))
+
+/-- **The half-line integral respects negation** `∫₀^∞ (−f) = −∫₀^∞ f` — completing (with
+    `halfLineIntegral_add`) the additive-group linearity of the Mellin-domain integral.
+    `∫₀^∞ = ∫₀¹ + ∫₁^∞` (`riemannIntegral_neg` + `improperIntegral1_neg`), then `−(a+b) = −a + −b`. -/
+theorem halfLineIntegral_neg {f : Real → Real} {L K : Q} (hLd : 0 < L.den) (hLn : 0 ≤ L.num)
+    (hlipf : ∀ x y, Rle (Rabs (Rsub (f x) (f y))) (Rmul (ofQ L hLd) (Rabs (Rsub x y))))
+    (hfcf : ∀ x y, Req x y → Req (f x) (f y))
+    (hlipnf : ∀ x y, Rle (Rabs (Rsub (Rneg (f x)) (Rneg (f y)))) (Rmul (ofQ L hLd) (Rabs (Rsub x y))))
+    (hfcnf : ∀ x y, Req x y → Req (Rneg (f x)) (Rneg (f y)))
+    (hKd : 0 < K.den) (hK0 : 0 ≤ K.num)
+    (hbf : ∀ m, ∀ hm : 1 ≤ m,
+      Rle (Rneg (ofQ (mul K (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKd (digamma_succ_mul_pos hm))))
+          (integralTerm hLd hLn hlipf hfcf m)
+      ∧ Rle (integralTerm hLd hLn hlipf hfcf m)
+          (ofQ (mul K (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKd (digamma_succ_mul_pos hm))))
+    (hbnf : ∀ m, ∀ hm : 1 ≤ m,
+      Rle (Rneg (ofQ (mul K (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKd (digamma_succ_mul_pos hm))))
+          (integralTerm hLd hLn hlipnf hfcnf m)
+      ∧ Rle (integralTerm hLd hLn hlipnf hfcnf m)
+          (ofQ (mul K (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKd (digamma_succ_mul_pos hm)))) :
+    Req (halfLineIntegral hLd hLn hlipnf hfcnf hKd hK0 hbnf)
+        (Rneg (halfLineIntegral hLd hLn hlipf hfcf hKd hK0 hbf)) :=
+  Req_trans
+    (Radd_congr (riemannIntegral_neg hLd hLn hlipf hfcf hlipnf hfcnf)
+      (improperIntegral1_neg hLd hLn hlipf hfcf hlipnf hfcnf hKd hK0 hbf hbnf))
+    (Req_symm (Rneg_Radd (riemannIntegral hLd hLn hlipf hfcf)
+      (improperIntegral1 hLd hLn hlipf hfcf hKd hK0 hbf)))
+
 end UOR.Bridge.F1Square.Analysis

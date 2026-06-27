@@ -142,4 +142,22 @@ theorem riemannIntegralI_congr {f g : Real → Real} {L : Q} (hLd : 0 < L.den) (
     (riemannIntegralI_le hLd hLn hlipg hfcg hlipf hfcf (fun x => Rle_of_Req (Req_symm (hfg x)))
       a w ha hw hwn)
 
+/-- **The interval integral respects negation** `∫ₐ^{a+w} (−f) = −∫ₐ^{a+w} f` — `riemannIntegral_neg`
+    on the affine-rescaled integrand, then `Rmul_neg_right` through the width factor. -/
+theorem riemannIntegralI_neg {f : Real → Real} {L : Q} (hLd : 0 < L.den) (hLn : 0 ≤ L.num)
+    (hlipf : ∀ x y, Rle (Rabs (Rsub (f x) (f y))) (Rmul (ofQ L hLd) (Rabs (Rsub x y))))
+    (hfcf : ∀ x y, Req x y → Req (f x) (f y))
+    (hlipnf : ∀ x y, Rle (Rabs (Rsub (Rneg (f x)) (Rneg (f y)))) (Rmul (ofQ L hLd) (Rabs (Rsub x y))))
+    (hfcnf : ∀ x y, Req x y → Req (Rneg (f x)) (Rneg (f y)))
+    (a w : Q) (ha : 0 < a.den) (hw : 0 < w.den) (hwn : 0 ≤ w.num) :
+    Req (riemannIntegralI hLd hLn hlipnf hfcnf a w ha hw hwn)
+        (Rneg (riemannIntegralI hLd hLn hlipf hfcf a w ha hw hwn)) :=
+  Req_trans (Rmul_congr (Req_refl (ofQ w hw))
+    (riemannIntegral_neg (Qmul_den_pos hLd hw) (Int.mul_nonneg hLn hwn)
+      (affine_lip hLd hLn hlipf a w ha hw hwn)
+      (fun x y h => hfcf _ _ (affineMap_congr a w ha hw h))
+      (affine_lip hLd hLn hlipnf a w ha hw hwn)
+      (fun x y h => hfcnf _ _ (affineMap_congr a w ha hw h))))
+    (Rmul_neg_right _ _)
+
 end UOR.Bridge.F1Square.Analysis

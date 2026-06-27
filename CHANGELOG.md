@@ -16,6 +16,14 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **Track 2 (integration) — integral negation up the full stack `halfLineIntegral_neg` / `ChalfLineIntegral_neg`**
+  (`Analysis/IntervalIntegral.lean`, `Analysis/ImproperIntegral.lean`, `Analysis/ComplexIntegral.lean`):
+  `∫(−f) = −∫f` lifted from the base through `riemannIntegralI_neg` (interval, affine + `Rmul_neg_right`)
+  → `integralTerm_neg` → `improperIntegral1_neg` (`∫₁^∞`, `genSum_Rneg_of_termwise` + `Rlim_neg` via the
+  now-public `RReg_Rneg`) → `halfLineIntegral_neg` (`∫₀^∞`) → `ChalfLineIntegral_neg` (complex Mellin,
+  componentwise). **With the `_add` chain this completes the full additive-GROUP linearity of the entire
+  integral stack** (real + complex Mellin: `∫(f−g)=∫f−∫g`), the substrate the signed Weil functional
+  `poles − primes − arch` needs. Grep-verified novel, axiom-clean.
 - **Track 2 (integration) — integral negation `riemannIntegral_neg` (base)** (`Analysis/RiemannSum.lean`,
   `Analysis/DyadicIntegral.lean`): `∫₀¹ (−f) = −∫₀¹ f`, the `−1`-scalar case completing (with
   `riemannIntegral_add`) the additive-GROUP linearity of the base integral (`∫(f−g)=∫f−∫g`, for the

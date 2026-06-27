@@ -366,7 +366,7 @@ private theorem Rsub_Rneg_Rneg_loc (x y : Real) : Req (Rsub (Rneg x) (Rneg y)) (
   apply Req_of_seq_Qeq; intro n; simp only [Qeq, Rsub, Radd, Rneg, neg, add]; push_cast; ring_uor
 
 /-- Regularity is preserved under pointwise negation (modulus-safe; local copy). -/
-private theorem RReg_neg_loc (X : Nat → Real) (h : RReg X) : RReg (fun j => Rneg (X j)) := by
+theorem RReg_Rneg (X : Nat → Real) (h : RReg X) : RReg (fun j => Rneg (X j)) := by
   intro j k n
   have he : Qeq (Qsub ((X k).seq n) ((X j).seq n))
       (Qsub ((Rneg (X j)).seq n) ((Rneg (X k)).seq n)) := by
@@ -405,7 +405,7 @@ theorem riemannIntegral_neg {f : Real → Real} {L : Q} (hLd : 0 < L.den) (hLn :
       (Rneg (genSum (dyadicTerm f) (digammaMidx L j))) := fun j =>
     genSum_Rneg_of_termwise hdT (digammaMidx L j)
   have hSf := dyadicSum_RReg hLd hLn hlipf hfcf
-  have hNegSf := RReg_neg_loc _ hSf
+  have hNegSf := RReg_Rneg _ hSf
   refine Req_trans (Radd_congr (hdR 0)
     (Req_trans (Rlim_congr _ _ (dyadicSum_RReg hLd hLn hlipnf hfcnf) hNegSf hgS)
       (Rlim_neg _ hSf hNegSf))) ?_
