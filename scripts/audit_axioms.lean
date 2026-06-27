@@ -526,6 +526,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rlim_zero
 #print axioms Analysis.Rlim_add
 #print axioms Analysis.Rlim_add_of_approx
+#print axioms Analysis.Rlim_ofQ_mul
 #print axioms Analysis.genSum_const_zero
 #print axioms Analysis.CdigammaTerm_one_eq_zero
 #print axioms Analysis.CDigammaCore_one_eq_zero

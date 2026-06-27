@@ -16,6 +16,15 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **Track 1 (limit substrate) — scalar-multiple limit `Rlim_ofQ_mul`** (`Analysis/RlimProps.lean`):
+  `lim (q·X) = q·lim X` for a constant `q : ℚ` — the scalar half of limit linearity, and the genuinely
+  hard one. `Rmul`'s reindex `Ridx q y n = 2·RmulK(q,y)·(n+1)−1` is magnitude-dependent (varies across
+  the meta-sequence), so `Rlim_add`'s clean `8n+7` alignment does not port. The UOR insight that makes it
+  tractable: **`q` is a CONSTANT**, so its sequence is invariant and the `Qabs_mul_diff` cross term
+  vanishes, leaving only `|q|·|X-difference|`; and `RmulK ≥ 1` forces every reindex `≥ 8(n+1)`, so each
+  regularity term is `≤ const/(n+1)` *regardless* of the (varying) magnitude bound. `Req_of_lin_bound`
+  absorbs the `|q|` constant (`C = |q.num|`). The substrate for the scalar half of integral linearity
+  (`∫(q·f) = q·∫f`). Grep-verified novel, axiom-clean.
 - **Track 2 (integration) — complex integral congruence `Cintegral_congr` / `ChalfLineIntegral_congr`**
   (`Analysis/ComplexIntegral.lean`): `∫ z ≈ ∫ z'` when the real/imaginary integrand parts agree pointwise,
   for the complex line integral `∫_a^{a+w}` and the complex Mellin integral `∫₀^∞` — componentwise from
