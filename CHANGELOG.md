@@ -16,6 +16,14 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **Track 2 (integration) — half-line/Mellin integral linearity `halfLineIntegral_add`** (additive part)
+  (`Analysis/IntervalIntegral.lean`, `Analysis/ImproperIntegral.lean`): `∫₀^∞ (f+g) = ∫₀^∞ f + ∫₀^∞ g`,
+  the substrate the Weil/theta Mellin integrals live on (Track-2 step 2), lifted up the integral stack
+  from `riemannIntegral_add`: `riemannIntegralI_add` (interval `[a,a+w]`, via the affine rescaling +
+  `Rmul_distrib`) → `integralTerm_add` (the unit tail increment) → `improperIntegral1_add`
+  (`∫₁^∞`, the tail increments add ⟹ partials add via `genSum_Radd_of_termwise`, then
+  `Rlim_add_of_approx` joins the limits) → `halfLineIntegral_add` (`∫₀^∞ = ∫₀¹ + ∫₁^∞`, `Radd_swap`).
+  All at a shared Lipschitz constant `L` so the dyadic reindexes align. Grep-verified novel, axiom-clean.
 - **Track 2 (integration) — Riemann-integral linearity `riemannIntegral_add`** (`Analysis/DyadicIntegral.lean`):
   `∫₀¹ (f+g) = ∫₀¹ f + ∫₀¹ g` — the additive half of linearity for the certified Bishop-limit integral,
   and the first genuine consumer of `Rlim_add_of_approx` (validating the limit-additivity layer end to

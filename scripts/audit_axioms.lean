@@ -3443,6 +3443,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.riemannIntegralI_const
 #print axioms Analysis.riemannIntegralI_nonneg
 #print axioms Analysis.riemannIntegralI_le
+#print axioms Analysis.riemannIntegralI_add
 #print axioms Analysis.const_lip0
 #print axioms Analysis.Cintegral_const
 #print axioms Analysis.Qle_of_not_le
@@ -3484,6 +3485,9 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.halfLineIntegral_le
 #print axioms Analysis.improperIntegral1_congr
 #print axioms Analysis.halfLineIntegral_congr
+#print axioms Analysis.integralTerm_add
+#print axioms Analysis.improperIntegral1_add
+#print axioms Analysis.halfLineIntegral_add
 #print axioms Analysis.Rle_of_Rsq_le_qpos
 #print axioms Analysis.Rle_of_Rsq_le
 #print axioms Analysis.Rsqrt_unique

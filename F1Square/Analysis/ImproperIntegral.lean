@@ -190,4 +190,95 @@ theorem halfLineIntegral_congr {f g : Real → Real} {L K : Q} (hLd : 0 < L.den)
     (halfLineIntegral_le hLd hLn hlipg hfcg hlipf hfcf hKd hK0 hbg hbf
       (fun x => Rle_of_Req (Req_symm (hfg x))))
 
+/-- **The tail increment is additive** `integralTerm (f+g) m ≈ integralTerm f m + integralTerm g m` —
+    `riemannIntegralI_add` over the unit interval `[m+1, 1]`. -/
+theorem integralTerm_add {f g : Real → Real} {L : Q} (hLd : 0 < L.den) (hLn : 0 ≤ L.num)
+    (hlipf : ∀ x y, Rle (Rabs (Rsub (f x) (f y))) (Rmul (ofQ L hLd) (Rabs (Rsub x y))))
+    (hfcf : ∀ x y, Req x y → Req (f x) (f y))
+    (hlipg : ∀ x y, Rle (Rabs (Rsub (g x) (g y))) (Rmul (ofQ L hLd) (Rabs (Rsub x y))))
+    (hfcg : ∀ x y, Req x y → Req (g x) (g y))
+    (hlipfg : ∀ x y, Rle (Rabs (Rsub (Radd (f x) (g x)) (Radd (f y) (g y))))
+        (Rmul (ofQ L hLd) (Rabs (Rsub x y))))
+    (hfcfg : ∀ x y, Req x y → Req (Radd (f x) (g x)) (Radd (f y) (g y))) (m : Nat) :
+    Req (integralTerm hLd hLn hlipfg hfcfg m)
+        (Radd (integralTerm hLd hLn hlipf hfcf m) (integralTerm hLd hLn hlipg hfcg m)) :=
+  riemannIntegralI_add hLd hLn hlipf hfcf hlipg hfcg hlipfg hfcfg
+    (⟨(m : Int) + 1, 1⟩ : Q) (⟨1, 1⟩ : Q) Nat.one_pos (by decide) (by decide)
+
+/-- **The improper tail integral is additive** `∫₁^∞ (f+g) = ∫₁^∞ f + ∫₁^∞ g` — the tail increments add
+    (`integralTerm_add`) so the partial sums add (`genSum_Radd_of_termwise`), and the GIVEN convergence
+    of the `(f+g)` tail lets `Rlim_add_of_approx` join the limits. -/
+theorem improperIntegral1_add {f g : Real → Real} {L K : Q} (hLd : 0 < L.den) (hLn : 0 ≤ L.num)
+    (hlipf : ∀ x y, Rle (Rabs (Rsub (f x) (f y))) (Rmul (ofQ L hLd) (Rabs (Rsub x y))))
+    (hfcf : ∀ x y, Req x y → Req (f x) (f y))
+    (hlipg : ∀ x y, Rle (Rabs (Rsub (g x) (g y))) (Rmul (ofQ L hLd) (Rabs (Rsub x y))))
+    (hfcg : ∀ x y, Req x y → Req (g x) (g y))
+    (hlipfg : ∀ x y, Rle (Rabs (Rsub (Radd (f x) (g x)) (Radd (f y) (g y))))
+        (Rmul (ofQ L hLd) (Rabs (Rsub x y))))
+    (hfcfg : ∀ x y, Req x y → Req (Radd (f x) (g x)) (Radd (f y) (g y)))
+    (hKd : 0 < K.den) (hK0 : 0 ≤ K.num)
+    (hbf : ∀ m, ∀ hm : 1 ≤ m,
+      Rle (Rneg (ofQ (mul K (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKd (digamma_succ_mul_pos hm))))
+          (integralTerm hLd hLn hlipf hfcf m)
+      ∧ Rle (integralTerm hLd hLn hlipf hfcf m)
+          (ofQ (mul K (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKd (digamma_succ_mul_pos hm))))
+    (hbg : ∀ m, ∀ hm : 1 ≤ m,
+      Rle (Rneg (ofQ (mul K (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKd (digamma_succ_mul_pos hm))))
+          (integralTerm hLd hLn hlipg hfcg m)
+      ∧ Rle (integralTerm hLd hLn hlipg hfcg m)
+          (ofQ (mul K (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKd (digamma_succ_mul_pos hm))))
+    (hbfg : ∀ m, ∀ hm : 1 ≤ m,
+      Rle (Rneg (ofQ (mul K (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKd (digamma_succ_mul_pos hm))))
+          (integralTerm hLd hLn hlipfg hfcfg m)
+      ∧ Rle (integralTerm hLd hLn hlipfg hfcfg m)
+          (ofQ (mul K (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKd (digamma_succ_mul_pos hm)))) :
+    Req (improperIntegral1 hLd hLn hlipfg hfcfg hKd hK0 hbfg)
+        (Radd (improperIntegral1 hLd hLn hlipf hfcf hKd hK0 hbf)
+              (improperIntegral1 hLd hLn hlipg hfcg hKd hK0 hbg)) :=
+  Rlim_add_of_approx _ _ _
+    (genSum_RReg (integralTerm hLd hLn hlipf hfcf) hKd hK0 hbf)
+    (genSum_RReg (integralTerm hLd hLn hlipg hfcg) hKd hK0 hbg)
+    (genSum_RReg (integralTerm hLd hLn hlipfg hfcfg) hKd hK0 hbfg)
+    (fun j => genSum_Radd_of_termwise
+      (fun m => integralTerm_add hLd hLn hlipf hfcf hlipg hfcg hlipfg hfcfg m) (digammaMidx K j))
+
+/-- **The half-line integral is additive** `∫₀^∞ (f+g) = ∫₀^∞ f + ∫₀^∞ g` — the additive half of
+    linearity for the constructive Mellin-domain integral (the substrate the Weil/theta integrals live
+    on). `∫₀^∞ = ∫₀¹ + ∫₁^∞` (`riemannIntegral_add` + `improperIntegral1_add`), reassociated by
+    `Radd_swap`. -/
+theorem halfLineIntegral_add {f g : Real → Real} {L K : Q} (hLd : 0 < L.den) (hLn : 0 ≤ L.num)
+    (hlipf : ∀ x y, Rle (Rabs (Rsub (f x) (f y))) (Rmul (ofQ L hLd) (Rabs (Rsub x y))))
+    (hfcf : ∀ x y, Req x y → Req (f x) (f y))
+    (hlipg : ∀ x y, Rle (Rabs (Rsub (g x) (g y))) (Rmul (ofQ L hLd) (Rabs (Rsub x y))))
+    (hfcg : ∀ x y, Req x y → Req (g x) (g y))
+    (hlipfg : ∀ x y, Rle (Rabs (Rsub (Radd (f x) (g x)) (Radd (f y) (g y))))
+        (Rmul (ofQ L hLd) (Rabs (Rsub x y))))
+    (hfcfg : ∀ x y, Req x y → Req (Radd (f x) (g x)) (Radd (f y) (g y)))
+    (hKd : 0 < K.den) (hK0 : 0 ≤ K.num)
+    (hbf : ∀ m, ∀ hm : 1 ≤ m,
+      Rle (Rneg (ofQ (mul K (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKd (digamma_succ_mul_pos hm))))
+          (integralTerm hLd hLn hlipf hfcf m)
+      ∧ Rle (integralTerm hLd hLn hlipf hfcf m)
+          (ofQ (mul K (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKd (digamma_succ_mul_pos hm))))
+    (hbg : ∀ m, ∀ hm : 1 ≤ m,
+      Rle (Rneg (ofQ (mul K (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKd (digamma_succ_mul_pos hm))))
+          (integralTerm hLd hLn hlipg hfcg m)
+      ∧ Rle (integralTerm hLd hLn hlipg hfcg m)
+          (ofQ (mul K (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKd (digamma_succ_mul_pos hm))))
+    (hbfg : ∀ m, ∀ hm : 1 ≤ m,
+      Rle (Rneg (ofQ (mul K (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKd (digamma_succ_mul_pos hm))))
+          (integralTerm hLd hLn hlipfg hfcfg m)
+      ∧ Rle (integralTerm hLd hLn hlipfg hfcfg m)
+          (ofQ (mul K (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKd (digamma_succ_mul_pos hm)))) :
+    Req (halfLineIntegral hLd hLn hlipfg hfcfg hKd hK0 hbfg)
+        (Radd (halfLineIntegral hLd hLn hlipf hfcf hKd hK0 hbf)
+              (halfLineIntegral hLd hLn hlipg hfcg hKd hK0 hbg)) :=
+  Req_trans
+    (Radd_congr (riemannIntegral_add hLd hLn hlipf hfcf hlipg hfcg hlipfg hfcfg)
+      (improperIntegral1_add hLd hLn hlipf hfcf hlipg hfcg hlipfg hfcfg hKd hK0 hbf hbg hbfg))
+    (Radd_swap (riemannIntegral hLd hLn hlipf hfcf)
+      (riemannIntegral hLd hLn hlipg hfcg)
+      (improperIntegral1 hLd hLn hlipf hfcf hKd hK0 hbf)
+      (improperIntegral1 hLd hLn hlipg hfcg hKd hK0 hbg))
+
 end UOR.Bridge.F1Square.Analysis

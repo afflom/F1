@@ -102,4 +102,29 @@ theorem riemannIntegralI_le {f g : Real → Real} {L : Q} (hLd : 0 < L.den) (hLn
   Rmul_le_Rmul_left (Rnonneg_ofQ hw hwn)
     (riemannIntegral_le _ _ _ _ _ _ (fun x => hfg (affineMap a w ha hw x)))
 
+/-- **The interval integral is additive in the integrand** `∫ₐ^{a+w} (f+g) = ∫ₐ^{a+w} f + ∫ₐ^{a+w} g`
+    — `riemannIntegral_add` on the affine-rescaled integrands (shared Lipschitz constant `L`), then
+    `Rmul_distrib` through the width factor. -/
+theorem riemannIntegralI_add {f g : Real → Real} {L : Q} (hLd : 0 < L.den) (hLn : 0 ≤ L.num)
+    (hlipf : ∀ x y, Rle (Rabs (Rsub (f x) (f y))) (Rmul (ofQ L hLd) (Rabs (Rsub x y))))
+    (hfcf : ∀ x y, Req x y → Req (f x) (f y))
+    (hlipg : ∀ x y, Rle (Rabs (Rsub (g x) (g y))) (Rmul (ofQ L hLd) (Rabs (Rsub x y))))
+    (hfcg : ∀ x y, Req x y → Req (g x) (g y))
+    (hlipfg : ∀ x y, Rle (Rabs (Rsub (Radd (f x) (g x)) (Radd (f y) (g y))))
+        (Rmul (ofQ L hLd) (Rabs (Rsub x y))))
+    (hfcfg : ∀ x y, Req x y → Req (Radd (f x) (g x)) (Radd (f y) (g y)))
+    (a w : Q) (ha : 0 < a.den) (hw : 0 < w.den) (hwn : 0 ≤ w.num) :
+    Req (riemannIntegralI hLd hLn hlipfg hfcfg a w ha hw hwn)
+        (Radd (riemannIntegralI hLd hLn hlipf hfcf a w ha hw hwn)
+              (riemannIntegralI hLd hLn hlipg hfcg a w ha hw hwn)) := by
+  refine Req_trans (Rmul_congr (Req_refl (ofQ w hw))
+    (riemannIntegral_add (Qmul_den_pos hLd hw) (Int.mul_nonneg hLn hwn)
+      (affine_lip hLd hLn hlipf a w ha hw hwn)
+      (fun x y h => hfcf _ _ (affineMap_congr a w ha hw h))
+      (affine_lip hLd hLn hlipg a w ha hw hwn)
+      (fun x y h => hfcg _ _ (affineMap_congr a w ha hw h))
+      (affine_lip hLd hLn hlipfg a w ha hw hwn)
+      (fun x y h => hfcfg _ _ (affineMap_congr a w ha hw h)))) ?_
+  exact Rmul_distrib (ofQ w hw) _ _
+
 end UOR.Bridge.F1Square.Analysis
