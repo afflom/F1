@@ -16,6 +16,12 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **Track 2 (integration) — complex Mellin integral linearity `ChalfLineIntegral_add`** (additive part)
+  (`Analysis/ComplexIntegral.lean`): `∫₀^∞ ((gfr+ggr) + i(gfi+ggi)) = ∫₀^∞(gfr+i·gfi) + ∫₀^∞(ggr+i·ggi)`
+  — the additive half of linearity for the constructive **complex** Mellin integral, the object the
+  windowed Weil pairing and the Mellin transform of the theta relation (item 3) inhabit. Componentwise
+  from the real `halfLineIntegral_add` (real and imaginary parts, each at its own shared Lipschitz
+  constant `Lr`/`Li` and decay rate `Kr`/`Ki`). Grep-verified novel, axiom-clean.
 - **Track 2 (integration) — half-line/Mellin integral linearity `halfLineIntegral_add`** (additive part)
   (`Analysis/IntervalIntegral.lean`, `Analysis/ImproperIntegral.lean`): `∫₀^∞ (f+g) = ∫₀^∞ f + ∫₀^∞ g`,
   the substrate the Weil/theta Mellin integrals live on (Track-2 step 2), lifted up the integral stack

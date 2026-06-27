@@ -66,4 +66,70 @@ def ChalfLineIntegral {gr gi : Real → Real} {Lr Li Kr Ki : Q}
   ⟨halfLineIntegral hLrd hLrn hlipr hfcr hKrd hKr0 hbr,
    halfLineIntegral hLid hLin hlipi hfci hKid hKi0 hbi⟩
 
+/-- **The complex half-line integral is additive in the integrand**
+    `∫₀^∞ ((gfr+ggr) + i·(gfi+ggi)) = ∫₀^∞ (gfr + i·gfi) + ∫₀^∞ (ggr + i·ggi)` — the additive half of
+    linearity for the constructive complex Mellin integral, the object the Weil pairing and the
+    Mellin transform of the theta relation inhabit. Componentwise from the real `halfLineIntegral_add`
+    (real and imaginary parts, each at its own shared Lipschitz constant `Lr`/`Li` and decay rate
+    `Kr`/`Ki`). -/
+theorem ChalfLineIntegral_add {gfr ggr gfi ggi : Real → Real} {Lr Li Kr Ki : Q}
+    (hLrd : 0 < Lr.den) (hLrn : 0 ≤ Lr.num)
+    (hlipr_f : ∀ x y, Rle (Rabs (Rsub (gfr x) (gfr y))) (Rmul (ofQ Lr hLrd) (Rabs (Rsub x y))))
+    (hfcr_f : ∀ x y, Req x y → Req (gfr x) (gfr y))
+    (hlipr_g : ∀ x y, Rle (Rabs (Rsub (ggr x) (ggr y))) (Rmul (ofQ Lr hLrd) (Rabs (Rsub x y))))
+    (hfcr_g : ∀ x y, Req x y → Req (ggr x) (ggr y))
+    (hlipr_fg : ∀ x y, Rle (Rabs (Rsub (Radd (gfr x) (ggr x)) (Radd (gfr y) (ggr y))))
+        (Rmul (ofQ Lr hLrd) (Rabs (Rsub x y))))
+    (hfcr_fg : ∀ x y, Req x y → Req (Radd (gfr x) (ggr x)) (Radd (gfr y) (ggr y)))
+    (hKrd : 0 < Kr.den) (hKr0 : 0 ≤ Kr.num)
+    (hbr_f : ∀ m, ∀ hm : 1 ≤ m,
+      Rle (Rneg (ofQ (mul Kr (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKrd (digamma_succ_mul_pos hm))))
+          (integralTerm hLrd hLrn hlipr_f hfcr_f m)
+      ∧ Rle (integralTerm hLrd hLrn hlipr_f hfcr_f m)
+          (ofQ (mul Kr (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKrd (digamma_succ_mul_pos hm))))
+    (hbr_g : ∀ m, ∀ hm : 1 ≤ m,
+      Rle (Rneg (ofQ (mul Kr (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKrd (digamma_succ_mul_pos hm))))
+          (integralTerm hLrd hLrn hlipr_g hfcr_g m)
+      ∧ Rle (integralTerm hLrd hLrn hlipr_g hfcr_g m)
+          (ofQ (mul Kr (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKrd (digamma_succ_mul_pos hm))))
+    (hbr_fg : ∀ m, ∀ hm : 1 ≤ m,
+      Rle (Rneg (ofQ (mul Kr (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKrd (digamma_succ_mul_pos hm))))
+          (integralTerm hLrd hLrn hlipr_fg hfcr_fg m)
+      ∧ Rle (integralTerm hLrd hLrn hlipr_fg hfcr_fg m)
+          (ofQ (mul Kr (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKrd (digamma_succ_mul_pos hm))))
+    (hLid : 0 < Li.den) (hLin : 0 ≤ Li.num)
+    (hlipi_f : ∀ x y, Rle (Rabs (Rsub (gfi x) (gfi y))) (Rmul (ofQ Li hLid) (Rabs (Rsub x y))))
+    (hfci_f : ∀ x y, Req x y → Req (gfi x) (gfi y))
+    (hlipi_g : ∀ x y, Rle (Rabs (Rsub (ggi x) (ggi y))) (Rmul (ofQ Li hLid) (Rabs (Rsub x y))))
+    (hfci_g : ∀ x y, Req x y → Req (ggi x) (ggi y))
+    (hlipi_fg : ∀ x y, Rle (Rabs (Rsub (Radd (gfi x) (ggi x)) (Radd (gfi y) (ggi y))))
+        (Rmul (ofQ Li hLid) (Rabs (Rsub x y))))
+    (hfci_fg : ∀ x y, Req x y → Req (Radd (gfi x) (ggi x)) (Radd (gfi y) (ggi y)))
+    (hKid : 0 < Ki.den) (hKi0 : 0 ≤ Ki.num)
+    (hbi_f : ∀ m, ∀ hm : 1 ≤ m,
+      Rle (Rneg (ofQ (mul Ki (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKid (digamma_succ_mul_pos hm))))
+          (integralTerm hLid hLin hlipi_f hfci_f m)
+      ∧ Rle (integralTerm hLid hLin hlipi_f hfci_f m)
+          (ofQ (mul Ki (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKid (digamma_succ_mul_pos hm))))
+    (hbi_g : ∀ m, ∀ hm : 1 ≤ m,
+      Rle (Rneg (ofQ (mul Ki (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKid (digamma_succ_mul_pos hm))))
+          (integralTerm hLid hLin hlipi_g hfci_g m)
+      ∧ Rle (integralTerm hLid hLin hlipi_g hfci_g m)
+          (ofQ (mul Ki (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKid (digamma_succ_mul_pos hm))))
+    (hbi_fg : ∀ m, ∀ hm : 1 ≤ m,
+      Rle (Rneg (ofQ (mul Ki (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKid (digamma_succ_mul_pos hm))))
+          (integralTerm hLid hLin hlipi_fg hfci_fg m)
+      ∧ Rle (integralTerm hLid hLin hlipi_fg hfci_fg m)
+          (ofQ (mul Ki (⟨1, (m + 1) * m⟩ : Q)) (Qmul_den_pos hKid (digamma_succ_mul_pos hm)))) :
+    Ceq (ChalfLineIntegral hLrd hLrn hlipr_fg hfcr_fg hKrd hKr0 hbr_fg
+            hLid hLin hlipi_fg hfci_fg hKid hKi0 hbi_fg)
+        (Cadd (ChalfLineIntegral hLrd hLrn hlipr_f hfcr_f hKrd hKr0 hbr_f
+                  hLid hLin hlipi_f hfci_f hKid hKi0 hbi_f)
+              (ChalfLineIntegral hLrd hLrn hlipr_g hfcr_g hKrd hKr0 hbr_g
+                  hLid hLin hlipi_g hfci_g hKid hKi0 hbi_g)) :=
+  ⟨halfLineIntegral_add hLrd hLrn hlipr_f hfcr_f hlipr_g hfcr_g hlipr_fg hfcr_fg
+      hKrd hKr0 hbr_f hbr_g hbr_fg,
+   halfLineIntegral_add hLid hLin hlipi_f hfci_f hlipi_g hfci_g hlipi_fg hfci_fg
+      hKid hKi0 hbi_f hbi_g hbi_fg⟩
+
 end UOR.Bridge.F1Square.Analysis
