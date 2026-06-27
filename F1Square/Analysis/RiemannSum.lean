@@ -93,6 +93,22 @@ theorem riemannSum_add (f g : Real → Real) (N : Nat) :
         (fun i => g (ofQ (⟨(i : Int), N + 1⟩ : Q) (Nat.succ_pos N))) (N + 1)))
     (Rmul_distrib _ _ _)
 
+/-- **Finite sums respect negation**: `Σ(−F) = −ΣF`. -/
+theorem RsumN_Rneg (F : Nat → Real) : ∀ N,
+    Req (RsumN (fun i => Rneg (F i)) N) (Rneg (RsumN F N))
+  | 0 => Req_of_seq_Qeq (fun _ => Qeq_refl _)
+  | (N + 1) =>
+      Req_trans (Radd_congr (RsumN_Rneg F N) (Req_refl (Rneg (F N))))
+        (Req_symm (Rneg_Radd (RsumN F N) (F N)))
+
+/-- **The Riemann sum respects negation in the integrand**: `∫₀¹ (−f) = −∫₀¹ f`. -/
+theorem riemannSum_neg (f : Real → Real) (N : Nat) :
+    Req (riemannSum (fun x => Rneg (f x)) N) (Rneg (riemannSum f N)) :=
+  Req_trans
+    (Rmul_congr (Req_refl _)
+      (RsumN_Rneg (fun i => f (ofQ (⟨(i : Int), N + 1⟩ : Q) (Nat.succ_pos N))) (N + 1)))
+    (Rmul_neg_right _ _)
+
 /-- **Finite sums subtract**: `Σ(F−G) = ΣF − ΣG`. -/
 theorem RsumN_Rsub (F G : Nat → Real) : ∀ N,
     Req (RsumN (fun i => Rsub (F i) (G i)) N) (Rsub (RsumN F N) (RsumN G N))

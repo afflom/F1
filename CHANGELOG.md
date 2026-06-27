@@ -16,6 +16,13 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **Track 2 (integration) — integral negation `riemannIntegral_neg` (base)** (`Analysis/RiemannSum.lean`,
+  `Analysis/DyadicIntegral.lean`): `∫₀¹ (−f) = −∫₀¹ f`, the `−1`-scalar case completing (with
+  `riemannIntegral_add`) the additive-GROUP linearity of the base integral (`∫(f−g)=∫f−∫g`, for the
+  signed Weil functional). The dyadic sums negate at every finite level — new primitives `RsumN_Rneg`
+  (`Σ(−F)=−ΣF`), `riemannSum_neg`, `genSum_Rneg_of_termwise` — and `Rlim_neg` (with `RReg_neg`, inlined
+  locally) carries it through the limit; `dyadicTerm` negation via `Rsub_Rneg_Rneg`. Modulus-safe
+  (negation doesn't inflate the index). Grep-verified novel, axiom-clean.
 - **Track 2 (integration) — base-integral congruence `riemannIntegral_congr` / `riemannIntegralI_congr`**
   (`Analysis/DyadicIntegral.lean`, `Analysis/IntervalIntegral.lean`): `∫f ≈ ∫g` for `f ≈ g` pointwise on
   `[0,1]` and `[a,a+w]` — the integral respects `≈` of the integrand, completing the `_congr` family

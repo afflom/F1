@@ -3404,6 +3404,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.riemannSum_le
 #print axioms Analysis.riemannSum_nonneg
 #print axioms Analysis.riemannSum_add
+#print axioms Analysis.RsumN_Rneg
+#print axioms Analysis.riemannSum_neg
 #print axioms Analysis.RsumN_split2
 #print axioms Analysis.RsumN_Rsub
 #print axioms Analysis.dyadic_even_point
@@ -3434,6 +3436,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rlim_le_seq
 #print axioms Analysis.riemannIntegral_le
 #print axioms Analysis.riemannIntegral_congr
+#print axioms Analysis.genSum_Rneg_of_termwise
+#print axioms Analysis.riemannIntegral_neg
 #print axioms Analysis.genSum_Radd_of_termwise
 #print axioms Analysis.riemannIntegral_add
 #print axioms Analysis.riemannIntegral_const_gen

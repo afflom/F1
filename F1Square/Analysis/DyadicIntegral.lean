@@ -361,4 +361,55 @@ theorem riemannIntegral_congr {f g : Real → Real} {L : Q} (hLd : 0 < L.den) (h
     (riemannIntegral_le hLd hLn hlipf hfcf hlipg hfcg (fun x => Rle_of_Req (hfg x)))
     (riemannIntegral_le hLd hLn hlipg hfcg hlipf hfcf (fun x => Rle_of_Req (Req_symm (hfg x))))
 
+/-- `(−x) − (−y) ≈ −(x − y)` (local copy; the general lemma lives in a higher file). -/
+private theorem Rsub_Rneg_Rneg_loc (x y : Real) : Req (Rsub (Rneg x) (Rneg y)) (Rneg (Rsub x y)) := by
+  apply Req_of_seq_Qeq; intro n; simp only [Qeq, Rsub, Radd, Rneg, neg, add]; push_cast; ring_uor
+
+/-- Regularity is preserved under pointwise negation (modulus-safe; local copy). -/
+private theorem RReg_neg_loc (X : Nat → Real) (h : RReg X) : RReg (fun j => Rneg (X j)) := by
+  intro j k n
+  have he : Qeq (Qsub ((X k).seq n) ((X j).seq n))
+      (Qsub ((Rneg (X j)).seq n) ((Rneg (X k)).seq n)) := by
+    show Qeq (Qsub ((X k).seq n) ((X j).seq n)) (Qsub (neg ((X j).seq n)) (neg ((X k).seq n)))
+    simp only [Qeq, Qsub, add, neg]; push_cast; ring_uor
+  refine Qle_congr_left (Qabs_den_pos (Qsub_den_pos ((X k).den_pos n) ((X j).den_pos n)))
+    (Qabs_Qeq he) ?_
+  rw [Qabs_Qsub_comm]
+  exact h j k n
+
+/-- **`genSum` respects a termwise negation**: if `Tₖ ≈ −Uₖ` then `Σ_{k<M} Tₖ ≈ −Σ_{k<M} Uₖ`. -/
+theorem genSum_Rneg_of_termwise {T U : Nat → Real} (h : ∀ k, Req (T k) (Rneg (U k))) :
+    ∀ M, Req (genSum T M) (Rneg (genSum U M))
+  | 0 => Req_of_seq_Qeq (fun _ => Qeq_refl _)
+  | (M + 1) =>
+      Req_trans (Radd_congr (genSum_Rneg_of_termwise h M) (h M))
+        (Req_symm (Rneg_Radd (genSum U M) (U M)))
+
+/-- **The certified integral respects negation** `∫₀¹ (−f) = −∫₀¹ f` — the `−1`-scalar case of
+    linearity (with `riemannIntegral_add`, the additive-group structure: `∫(f−g) = ∫f − ∫g`). The
+    dyadic sums negate at every finite level (`riemannSum_neg` ⟹ `dyadicR` ⟹ `dyadicTerm` via
+    `Rsub_Rneg_Rneg` ⟹ `genSum` via `genSum_Rneg_of_termwise`), and `Rlim_neg` (with `RReg_neg`)
+    carries it through the limit. -/
+theorem riemannIntegral_neg {f : Real → Real} {L : Q} (hLd : 0 < L.den) (hLn : 0 ≤ L.num)
+    (hlipf : ∀ x y, Rle (Rabs (Rsub (f x) (f y))) (Rmul (ofQ L hLd) (Rabs (Rsub x y))))
+    (hfcf : ∀ x y, Req x y → Req (f x) (f y))
+    (hlipnf : ∀ x y, Rle (Rabs (Rsub (Rneg (f x)) (Rneg (f y)))) (Rmul (ofQ L hLd) (Rabs (Rsub x y))))
+    (hfcnf : ∀ x y, Req x y → Req (Rneg (f x)) (Rneg (f y))) :
+    Req (riemannIntegral hLd hLn hlipnf hfcnf) (Rneg (riemannIntegral hLd hLn hlipf hfcf)) := by
+  have hdR : ∀ m, Req (dyadicR (fun x => Rneg (f x)) m) (Rneg (dyadicR f m)) :=
+    fun m => riemannSum_neg f (2 ^ m - 1)
+  have hdT : ∀ k, Req (dyadicTerm (fun x => Rneg (f x)) k) (Rneg (dyadicTerm f k)) := fun k =>
+    Req_trans (Rsub_congr (hdR (k + 1)) (hdR k))
+      (Rsub_Rneg_Rneg_loc (dyadicR f (k + 1)) (dyadicR f k))
+  have hgS : ∀ j, Req (genSum (dyadicTerm (fun x => Rneg (f x))) (digammaMidx L j))
+      (Rneg (genSum (dyadicTerm f) (digammaMidx L j))) := fun j =>
+    genSum_Rneg_of_termwise hdT (digammaMidx L j)
+  have hSf := dyadicSum_RReg hLd hLn hlipf hfcf
+  have hNegSf := RReg_neg_loc _ hSf
+  refine Req_trans (Radd_congr (hdR 0)
+    (Req_trans (Rlim_congr _ _ (dyadicSum_RReg hLd hLn hlipnf hfcnf) hNegSf hgS)
+      (Rlim_neg _ hSf hNegSf))) ?_
+  exact Req_symm (Rneg_Radd (dyadicR f 0)
+    (Rlim (fun j => genSum (dyadicTerm f) (digammaMidx L j)) hSf))
+
 end UOR.Bridge.F1Square.Analysis
