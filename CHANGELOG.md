@@ -16,17 +16,21 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
-- **Track 1 (item 6) — the `bl` arithmetic bridge `witnessSum_eq_genuineArith`** (new
-  `Analysis/MomentEta.lean`): the constructive moment-expansion face of `λₙ` (`witnessSum_moment_order`,
-  `ComplexBinomial.lean`) meets the constructive arithmetic `η`-face (`genuineArithSeq`, `GenuineLi.lean`),
-  modulo exactly one classical input per order. Both carry the *same* binomial weighting `C(n,·)`, so under
-  the per-order seam `Re(M_k) = C(n,k)·η_{k−1}` — the **explicit formula at order `k`** (the moments
-  `Σ_ρ ρ^{−k}` are the `−ζ′/ζ` Taylor coefficients), entered as an explicit audit-visible hypothesis,
-  never an axiom — the two faces are *equal*: `Σ_w (1 − Re(wⁿ)) = −Σ_{j=1}^{n} C(n,j)·η_{j−1}` (clean
-  induction `moment_re_eq_arithTail`, the `(CsumN …).re`/`arithTail` recursions matched term-by-term). This
-  is the faithful, RH-independent relocation Track 1 targets: `bl` shrinks from a monolithic limit to one
-  identity per moment order, joining the constructed zero-sum and `η` sides. Crux fields `none`; RH open.
-  Axiom-clean, no-smuggling audited, grep-novel.
+- **Track 1 (item 6) — a structural shape-match `witnessSum_eq_genuineArith`** (new
+  `Analysis/MomentEta.lean`): the constructive moment-expansion form of a finite witness sum
+  (`witnessSum_moment_order`, `ComplexBinomial.lean`) and the constructive arithmetic `η`-form
+  (`genuineArithSeq`, `GenuineLi.lean`) carry the *same* binomial-weighted shape (`−Σ_k` of
+  `C(n,k)`-weighted terms), so they are equal term-by-term under one per-order coefficient hypothesis
+  `Re(M_k) = C(n,k)·η_{k−1}` (`seam`, an explicit audit-visible hypothesis, never an axiom, never
+  discharged): `Σ_w (1 − Re(wⁿ)) = −Σ_{j=1}^{n} C(n,j)·η_{j−1}` (clean induction `moment_re_eq_arithTail`,
+  matching the `(CsumN …).re`/`arithTail` recursions). **Honesty scope:** this is a shape-level identity
+  between two constructed representations, **not** a discharge or relocation of `bl`. `genuineArithSeq` is
+  only the *arithmetic* piece of `λₙ` (`λₙ = genuineArithSeq + genuineArchSeq`; `λ₁^{arith} = γ ≈ 0.577`
+  vs the full `λ₁ ≈ 0.023`), while the genuine Bombieri–Lagarias zero-sum limit equals the *full* `λₙ`; and
+  the true explicit formula relates the zero moments to the `−ζ′/ζ` data **plus** the archimedean place,
+  which the per-order `seam` omits. So the `seam` is not asserted for the genuine zeros, and `bl` is not
+  shrunk — closing it constructively (explicit formula + archimedean term + Hadamard convergence) remains
+  the open Track-1 work. Crux fields `none`; RH open. Axiom-clean, no-smuggling audited, grep-novel.
 
 - **Track 1 (item 6) — `λₙ` decomposed by reciprocal-moment order** (`Analysis/ComplexBinomial.lean`,
   `witnessSum_moment_order`, `momentListPoly_swap`, `momentList`): the Fubini interchange of the sum over
