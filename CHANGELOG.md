@@ -16,6 +16,16 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **Track 1 (item 6) — the per-zero witness term in reciprocal-moment form** (`Analysis/ComplexBinomial.lean`,
+  `witnessTerm_moment` / `Cnpow_one_sub_momentPoly`, `reciprocalMomentPoly`): the forced consumer of the
+  complex binomial. For `w = 1 − u` the per-zero Li witness term `1 − Re(wⁿ)` equals `−Re(Σ_{k=1}^{n}
+  C(n,k)·(−u)ᵏ)` — the binomial expansion of `wⁿ` with the leading `1` cancelling the outer `1` (front-split
+  via `CsumN_shift` + `binTermC_zero`), leaving exactly the negated reciprocal-moment polynomial. With
+  `u = 1/ρ` this is the per-zero summand of `witnessSum` (`RHWitness.lean`) written over the explicit-formula
+  moments `(1/ρ)ᵏ`; summing over the zeros and interchanging the two finite sums gives `λₙ` as
+  `Σ_{k=1}^{n} (−1)^{k+1} C(n,k)·M_k` with `M_k = Σ_ρ Re(ρ^{−k})` the order-`k` reciprocal moment — isolating
+  the single classical seam `M_k = η`-data. Axiom-clean, grep-novel.
+
 - **Track 1 (item 6, pure algebra) — the binomial theorem over the constructive `Complex` API**
   `(1 + b)ⁿ ≈ Σ_{k=0}^{n} C(n,k)·bᵏ` (`Cnpow_one_add_eq`, new `Analysis/ComplexBinomial.lean`), and its
   Cayley-factor consequence `Cnpow_one_sub_eq`: `w = 1 − u ⟹ wⁿ ≈ Σ_k C(n,k)·(−u)ᵏ`. For the

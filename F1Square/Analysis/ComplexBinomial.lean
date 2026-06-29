@@ -176,4 +176,55 @@ theorem Cnpow_one_sub_eq {w u : Complex} (h : Ceq w (Cadd Cone (Cneg u))) (n : N
     Ceq (Cnpow w n) (CsumN (binTermC (Cneg u) n) (n + 1)) :=
   Ceq_trans (Cnpow_congr_loc h n) (Cnpow_one_add_eq (Cneg u) n)
 
+-- ===========================================================================
+-- (D) The witness term in reciprocal-moment form (the per-zero shape of `bl`).
+-- ===========================================================================
+
+/-- The **reciprocal-moment polynomial** `Σ_{k=1}^{n} C(n,k)·(−u)ᵏ` of a single zero (the binomial
+    expansion with the constant `k = 0` term dropped). For `u = 1/ρ` this is `Σ_{k=1}^{n} C(n,k)·(−1/ρ)ᵏ`,
+    whose negative is the per-zero Li contribution `1 − (1 − 1/ρ)ⁿ`. -/
+def reciprocalMomentPoly (u : Complex) (n : Nat) : Complex :=
+  CsumN (fun k => binTermC (Cneg u) n (k + 1)) n
+
+/-- `−(a + b) ≈ (−a) + (−b)` (componentwise; local). -/
+private theorem Cneg_Cadd_loc (a b : Complex) : Ceq (Cneg (Cadd a b)) (Cadd (Cneg a) (Cneg b)) :=
+  ⟨Rneg_Radd a.re b.re, Rneg_Radd a.im b.im⟩
+
+/-- The constant binomial term `C(n,0)·b⁰ ≈ 1`. -/
+private theorem binTermC_zero (b : Complex) (n : Nat) : Ceq (binTermC b n 0) Cone := by
+  show Ceq (Cnsmul (choose n 0) (Cnpow b 0)) Cone
+  rw [choose_zero_right]
+  exact Cnsmul_one (Cnpow b 0)
+
+/-- **THE PER-ZERO WITNESS TERM IN RECIPROCAL MOMENTS** (complex form): for `w = 1 − u`,
+    `1 − wⁿ ≈ −Σ_{k=1}^{n} C(n,k)·(−u)ᵏ`. The binomial expansion of `wⁿ` with the leading `1` cancelling
+    the outer `1`, leaving exactly the negated reciprocal-moment polynomial. With `u = 1/ρ` this is the
+    per-zero Li contribution `1 − (1 − 1/ρ)ⁿ` written over the explicit-formula moments `(1/ρ)ᵏ`. -/
+theorem Cnpow_one_sub_momentPoly {w u : Complex} (h : Ceq w (Cadd Cone (Cneg u))) (n : Nat) :
+    Ceq (Cadd Cone (Cneg (Cnpow w n))) (Cneg (reciprocalMomentPoly u n)) := by
+  -- `wⁿ ≈ 1 + P` where `P = reciprocalMomentPoly u n` (front-split the binomial sum)
+  have hsplit : Ceq (Cnpow w n) (Cadd Cone (reciprocalMomentPoly u n)) :=
+    Ceq_trans (Cnpow_one_sub_eq h n)
+      (Ceq_trans (Ceq_symm (CsumN_shift (binTermC (Cneg u) n) n))
+        (Cadd_congr (binTermC_zero (Cneg u) n) (Ceq_refl (reciprocalMomentPoly u n))))
+  -- `1 + (−(1 + P)) ≈ (1 + (−1)) + (−P) ≈ 0 + (−P) ≈ −P`
+  refine Ceq_trans (Cadd_congr (Ceq_refl Cone) (Cneg_congr hsplit)) ?_
+  refine Ceq_trans (Cadd_congr (Ceq_refl Cone)
+    (Cneg_Cadd_loc Cone (reciprocalMomentPoly u n))) ?_
+  refine Ceq_trans (Ceq_symm (Cadd_assoc Cone (Cneg Cone)
+    (Cneg (reciprocalMomentPoly u n)))) ?_
+  exact Ceq_trans (Cadd_congr (Cadd_neg Cone)
+    (Ceq_refl (Cneg (reciprocalMomentPoly u n))))
+    (czero_cadd (Cneg (reciprocalMomentPoly u n)))
+
+/-- **THE WITNESS TERM IN RECIPROCAL MOMENTS** (real `RHWitness` form): for `w = 1 − u`, the per-zero
+    Li witness term `1 − Re(wⁿ)` equals `−Re(Σ_{k=1}^{n} C(n,k)·(−u)ᵏ)` — the real part of the negated
+    reciprocal-moment polynomial. This is the per-zero summand of `witnessSum` (`RHWitness.lean`) written
+    over the explicit-formula moments `(1/ρ)ᵏ`; summing over the zeros and interchanging the two finite
+    sums gives `λₙ` as `Σ_{k=1}^{n} (−1)^{k+1} C(n,k)·M_k` with `M_k = Σ_ρ Re(ρ^{−k})` the order-`k`
+    reciprocal moment — leaving the single classical seam `M_k = η`-data. -/
+theorem witnessTerm_moment {w u : Complex} (h : Ceq w (Cadd Cone (Cneg u))) (n : Nat) :
+    Req (Rsub one (Cnpow w n).re) (Rneg (reciprocalMomentPoly u n).re) :=
+  (Cnpow_one_sub_momentPoly h n).1
+
 end UOR.Bridge.F1Square.Analysis
