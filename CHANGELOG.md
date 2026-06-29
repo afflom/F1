@@ -16,6 +16,14 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **Track 1 (item 6) — moment-side closure `momentListPoly_append` / `momentListPoly_snoc`**
+  (`Analysis/ComplexBinomial.lean`): the summed reciprocal-moment polynomial is additive over
+  concatenation of the zero list (`momentListPoly (l₁++l₂) n = momentListPoly l₁ n + momentListPoly l₂ n`,
+  pure `Cadd_assoc` fold), with the `snoc` increment. The moment-side analogues of the proven
+  `witnessSum_append`/`_snoc`: splitting the zero enumeration (the incremental `bl` partial sums
+  `List.range M`, or the conjugate-pair grouping `{ρ, 1−ρ, ρ̄, 1−ρ̄}`) splits the moment sum. Pure algebra,
+  axiom-clean, grep-novel.
+
 - **Track 1 (item 6) — a structural shape-match `witnessSum_eq_genuineArith`** (new
   `Analysis/MomentEta.lean`): the constructive moment-expansion form of a finite witness sum
   (`witnessSum_moment_order`, `ComplexBinomial.lean`) and the constructive arithmetic `η`-form

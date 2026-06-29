@@ -294,4 +294,32 @@ theorem witnessSum_moment_order (n : Nat) (us : List Complex) :
   Req_trans (witnessSum_eq_neg_momentList n us)
     (Rneg_congr (momentListPoly_swap n us).1)
 
+-- ===========================================================================
+-- (F) Moment-side closure: additivity over the zero list (incremental enumeration,
+--     conjugate-pair grouping). The moment analogue of `witnessSum_append`.
+-- ===========================================================================
+
+/-- **The summed moment polynomial is additive over concatenation of the zero list**:
+    `momentListPoly (l₁ ++ l₂) n = momentListPoly l₁ n + momentListPoly l₂ n` (pure `Cadd_assoc` fold).
+    The moment-side analogue of `witnessSum_append`: splitting the zero enumeration (the incremental `bl`
+    partial sums `List.range M`, or the conjugate-pair grouping `{ρ, 1−ρ, ρ̄, 1−ρ̄}`) splits the moment sum. -/
+theorem momentListPoly_append (n : Nat) : ∀ (l₁ l₂ : List Complex),
+    Ceq (momentListPoly (l₁ ++ l₂) n) (Cadd (momentListPoly l₁ n) (momentListPoly l₂ n))
+  | [], l₂ => Ceq_symm (czero_cadd (momentListPoly l₂ n))
+  | (u :: rest), l₂ =>
+      Ceq_trans
+        (Cadd_congr (Ceq_refl (reciprocalMomentPoly u n)) (momentListPoly_append n rest l₂))
+        (Ceq_symm (Cadd_assoc (reciprocalMomentPoly u n)
+          (momentListPoly rest n) (momentListPoly l₂ n)))
+
+/-- **The summed moment polynomial's increment** (`snoc` form): appending one more zero `u` adds exactly
+    its reciprocal-moment polynomial — `momentListPoly (l ++ [u]) n = momentListPoly l n + reciprocalMomentPoly u n`.
+    The moment-side analogue of `witnessSum_snoc`: the shape of the `bl` partial sums as the zero
+    enumeration `List.range M` grows by one. -/
+theorem momentListPoly_snoc (n : Nat) (l : List Complex) (u : Complex) :
+    Ceq (momentListPoly (l ++ [u]) n)
+        (Cadd (momentListPoly l n) (reciprocalMomentPoly u n)) :=
+  Ceq_trans (momentListPoly_append n l [u])
+    (Cadd_congr (Ceq_refl (momentListPoly l n)) (cadd_zero (reciprocalMomentPoly u n)))
+
 end UOR.Bridge.F1Square.Analysis

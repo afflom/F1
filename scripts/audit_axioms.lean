@@ -2474,6 +2474,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.witnessSum_eq_neg_momentList
 #print axioms Analysis.momentListPoly_swap
 #print axioms Analysis.witnessSum_moment_order
+#print axioms Analysis.momentListPoly_append
+#print axioms Analysis.momentListPoly_snoc
 #print axioms Analysis.moment_re_eq_arithTail
 #print axioms Analysis.witnessSum_eq_genuineArith
 #print axioms Analysis.onLine_is_unit_modulus
