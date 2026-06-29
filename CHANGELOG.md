@@ -16,6 +16,16 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **Track 2 (integration) — scalar linearity `riemannIntegral_smul` (`∫(q·f)=q·∫f`)** via
+  `Rlim_ofQ_mul_of_approx` (`Analysis/RlimProps.lean`, `Analysis/RiemannSum.lean`,
+  `Analysis/DyadicIntegral.lean`): the scalar half of integral linearity — with `_add`/`_neg`, the
+  full **linear-functional** structure of the certified integral (`∫(α·f + β·g) = α·∫f + β·∫g` for
+  rational `α,β`). `Rlim_ofQ_mul` is generalized to `Rlim_ofQ_mul_of_approx` (`W ≈ q·X` pointwise, `W`'s
+  regularity given — one `happ`-triangle over the core, exactly the `Rlim_add → Rlim_add_of_approx`
+  move, since `RReg(q·X)` is not derivable when `|q|>1`). The finite chain: new `RsumN_Rmul_const`,
+  `riemannSum_smul`, `genSum_Rmul_of_termwise`, `Rmul_Rsub_distrib_loc` — dyadic sums scale at every
+  level — then `Rlim_ofQ_mul_of_approx` + `Rmul_distrib` carry the scalar through the limit (shared
+  Lipschitz `L`, so the reindexes align). Grep-verified novel, axiom-clean.
 - **Track 1 (limit substrate) — scalar-multiple limit `Rlim_ofQ_mul`** (`Analysis/RlimProps.lean`):
   `lim (q·X) = q·lim X` for a constant `q : ℚ` — the scalar half of limit linearity, and the genuinely
   hard one. `Rmul`'s reindex `Ridx q y n = 2·RmulK(q,y)·(n+1)−1` is magnitude-dependent (varies across

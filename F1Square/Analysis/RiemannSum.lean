@@ -109,6 +109,27 @@ theorem riemannSum_neg (f : Real → Real) (N : Nat) :
       (RsumN_Rneg (fun i => f (ofQ (⟨(i : Int), N + 1⟩ : Q) (Nat.succ_pos N))) (N + 1)))
     (Rmul_neg_right _ _)
 
+/-- **Finite sums respect a constant scalar**: `Σ(c·F) = c·ΣF`. -/
+theorem RsumN_Rmul_const (c : Real) (F : Nat → Real) : ∀ N,
+    Req (RsumN (fun i => Rmul c (F i)) N) (Rmul c (RsumN F N))
+  | 0 => Req_symm (Rmul_zero c)
+  | (N + 1) =>
+      Req_trans (Radd_congr (RsumN_Rmul_const c F N) (Req_refl (Rmul c (F N))))
+        (Req_symm (Rmul_distrib c (RsumN F N) (F N)))
+
+/-- `x·(y·z) ≈ y·(x·z)` (left-commute; local). -/
+private theorem Rmul_lc (x y z : Real) : Req (Rmul x (Rmul y z)) (Rmul y (Rmul x z)) :=
+  Req_trans (Req_symm (Rmul_assoc x y z))
+    (Req_trans (Rmul_congr (Rmul_comm x y) (Req_refl z)) (Rmul_assoc y x z))
+
+/-- **The Riemann sum respects a constant scalar in the integrand**: `∫₀¹ (c·f) = c·∫₀¹ f`. -/
+theorem riemannSum_smul (c : Real) (f : Real → Real) (N : Nat) :
+    Req (riemannSum (fun x => Rmul c (f x)) N) (Rmul c (riemannSum f N)) :=
+  Req_trans
+    (Rmul_congr (Req_refl _)
+      (RsumN_Rmul_const c (fun i => f (ofQ (⟨(i : Int), N + 1⟩ : Q) (Nat.succ_pos N))) (N + 1)))
+    (Rmul_lc _ c _)
+
 /-- **Finite sums subtract**: `Σ(F−G) = ΣF − ΣG`. -/
 theorem RsumN_Rsub (F G : Nat → Real) : ∀ N,
     Req (RsumN (fun i => Rsub (F i) (G i)) N) (Rsub (RsumN F N) (RsumN G N))

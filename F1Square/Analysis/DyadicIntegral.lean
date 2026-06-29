@@ -412,4 +412,47 @@ theorem riemannIntegral_neg {f : Real → Real} {L : Q} (hLd : 0 < L.den) (hLn :
   exact Req_symm (Rneg_Radd (dyadicR f 0)
     (Rlim (fun j => genSum (dyadicTerm f) (digammaMidx L j)) hSf))
 
+/-- **`genSum` respects a termwise constant scalar**: if `Tₖ ≈ c·Uₖ` then `Σ Tₖ ≈ c·Σ Uₖ`. -/
+theorem genSum_Rmul_of_termwise {c : Real} {T U : Nat → Real} (h : ∀ k, Req (T k) (Rmul c (U k))) :
+    ∀ M, Req (genSum T M) (Rmul c (genSum U M))
+  | 0 => Req_symm (Rmul_zero c)
+  | (M + 1) =>
+      Req_trans (Radd_congr (genSum_Rmul_of_termwise h M) (h M))
+        (Req_symm (Rmul_distrib c (genSum U M) (U M)))
+
+/-- `c·(a − b) ≈ c·a − c·b` (left scalar distributes over subtraction; local). -/
+private theorem Rmul_Rsub_distrib_loc (c a b : Real) :
+    Req (Rmul c (Rsub a b)) (Rsub (Rmul c a) (Rmul c b)) :=
+  Req_trans (Rmul_distrib c a (Rneg b)) (Radd_congr (Req_refl _) (Rmul_neg_right c b))
+
+/-- **The certified integral respects a constant scalar** `∫₀¹ (q·f) = q·∫₀¹ f` for `q : ℚ` — the
+    scalar half of integral linearity (with `riemannIntegral_add`/`_neg`, the full linear-functional
+    structure). The three pieces share the Lipschitz constant `L` (caller picks `L ≥ |q|·L_f`, so
+    `q·f` is `L`-Lipschitz). Dyadic sums scale at every finite level (`riemannSum_smul` ⟹ `dyadicR` ⟹
+    `dyadicTerm` via `Rmul_Rsub_distrib_loc` ⟹ `genSum` via `genSum_Rmul_of_termwise`), and the hard
+    `Rlim_ofQ_mul_of_approx` carries the scalar through the limit. -/
+theorem riemannIntegral_smul {f : Real → Real} {L : Q} (q : Q) (hq : 0 < q.den)
+    (hLd : 0 < L.den) (hLn : 0 ≤ L.num)
+    (hlipf : ∀ x y, Rle (Rabs (Rsub (f x) (f y))) (Rmul (ofQ L hLd) (Rabs (Rsub x y))))
+    (hfcf : ∀ x y, Req x y → Req (f x) (f y))
+    (hlipqf : ∀ x y, Rle (Rabs (Rsub (Rmul (ofQ q hq) (f x)) (Rmul (ofQ q hq) (f y))))
+        (Rmul (ofQ L hLd) (Rabs (Rsub x y))))
+    (hfcqf : ∀ x y, Req x y → Req (Rmul (ofQ q hq) (f x)) (Rmul (ofQ q hq) (f y))) :
+    Req (riemannIntegral hLd hLn hlipqf hfcqf)
+        (Rmul (ofQ q hq) (riemannIntegral hLd hLn hlipf hfcf)) := by
+  have hdR : ∀ m, Req (dyadicR (fun x => Rmul (ofQ q hq) (f x)) m)
+      (Rmul (ofQ q hq) (dyadicR f m)) := fun m => riemannSum_smul (ofQ q hq) f (2 ^ m - 1)
+  have hdT : ∀ k, Req (dyadicTerm (fun x => Rmul (ofQ q hq) (f x)) k)
+      (Rmul (ofQ q hq) (dyadicTerm f k)) := fun k =>
+    Req_trans (Rsub_congr (hdR (k + 1)) (hdR k))
+      (Req_symm (Rmul_Rsub_distrib_loc (ofQ q hq) (dyadicR f (k + 1)) (dyadicR f k)))
+  have hgS : ∀ j, Req (genSum (dyadicTerm (fun x => Rmul (ofQ q hq) (f x))) (digammaMidx L j))
+      (Rmul (ofQ q hq) (genSum (dyadicTerm f) (digammaMidx L j))) := fun j =>
+    genSum_Rmul_of_termwise hdT (digammaMidx L j)
+  have hSf := dyadicSum_RReg hLd hLn hlipf hfcf
+  refine Req_trans (Radd_congr (hdR 0)
+    (Rlim_ofQ_mul_of_approx q hq _ _ hSf (dyadicSum_RReg hLd hLn hlipqf hfcqf) hgS)) ?_
+  exact Req_symm (Rmul_distrib (ofQ q hq) (dyadicR f 0)
+    (Rlim (fun j => genSum (dyadicTerm f) (digammaMidx L j)) hSf))
+
 end UOR.Bridge.F1Square.Analysis

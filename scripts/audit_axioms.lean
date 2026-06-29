@@ -527,6 +527,7 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rlim_add
 #print axioms Analysis.Rlim_add_of_approx
 #print axioms Analysis.Rlim_ofQ_mul
+#print axioms Analysis.Rlim_ofQ_mul_of_approx
 #print axioms Analysis.genSum_const_zero
 #print axioms Analysis.CdigammaTerm_one_eq_zero
 #print axioms Analysis.CDigammaCore_one_eq_zero
@@ -3407,6 +3408,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.riemannSum_add
 #print axioms Analysis.RsumN_Rneg
 #print axioms Analysis.riemannSum_neg
+#print axioms Analysis.RsumN_Rmul_const
+#print axioms Analysis.riemannSum_smul
 #print axioms Analysis.RsumN_split2
 #print axioms Analysis.RsumN_Rsub
 #print axioms Analysis.dyadic_even_point
@@ -3439,6 +3442,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.riemannIntegral_congr
 #print axioms Analysis.genSum_Rneg_of_termwise
 #print axioms Analysis.riemannIntegral_neg
+#print axioms Analysis.genSum_Rmul_of_termwise
+#print axioms Analysis.riemannIntegral_smul
 #print axioms Analysis.RReg_Rneg
 #print axioms Analysis.genSum_Radd_of_termwise
 #print axioms Analysis.riemannIntegral_add
