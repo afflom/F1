@@ -16,6 +16,17 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **Track 1 (item 6) — `λₙ` decomposed by reciprocal-moment order** (`Analysis/ComplexBinomial.lean`,
+  `witnessSum_moment_order`, `momentListPoly_swap`, `momentList`): the Fubini interchange of the sum over
+  zeros with the sum over orders. `momentListPoly_swap` swaps `Σ_{u∈us} Σ_{k=1}^{n} C(n,k)·(−u)ᵏ ≈
+  Σ_{k=1}^{n} Σ_{u∈us} C(n,k)·(−u)ᵏ` (list induction, `CsumN_add` regrouping). Combined with
+  `witnessSum_eq_neg_momentList`, `witnessSum_moment_order` gives `λₙ`'s zero-sum (`bl`) as
+  `Σ_w (1 − Re(wⁿ)) = −Σ_{k=1}^{n} Re(M_k)` with `M_k = Σ_{u∈us} C(n,k)·(−u)ᵏ` the order-`k` reciprocal
+  moment — `λₙ`'s explicit decomposition into the per-order moments `Σ_ρ ρ^{−k}`. This is the structural
+  endpoint of the constructive moment expansion: the sole remaining classical input is the per-order
+  identity of each `M_k` with the `−ζ′/ζ` Taylor data (the single labelled `bl` seam), reduced from a
+  monolithic limit to one clean identity per order. Axiom-clean, grep-novel.
+
 - **Track 1 (item 6) — the witness sum in reciprocal-moment form** (`Analysis/ComplexBinomial.lean`,
   `witnessSum_eq_neg_momentList`, `momentListPoly`): the per-zero `witnessTerm_moment` summed over the
   zero list. Over the Cayley factors `w = 1 − u` of a moment list `us = {1/ρ}`, the Li witness sum

@@ -2472,6 +2472,8 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Cnpow_one_sub_momentPoly
 #print axioms Analysis.witnessTerm_moment
 #print axioms Analysis.witnessSum_eq_neg_momentList
+#print axioms Analysis.momentListPoly_swap
+#print axioms Analysis.witnessSum_moment_order
 #print axioms Analysis.onLine_is_unit_modulus
 #print axioms Analysis.rh_witness
 #print axioms Analysis.rh_witness_onLine

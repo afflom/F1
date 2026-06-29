@@ -250,4 +250,44 @@ theorem witnessSum_eq_neg_momentList (n : Nat) : ∀ (us : List Complex),
           (witnessSum_eq_neg_momentList n rest))
         (Req_symm (Rneg_Radd (reciprocalMomentPoly u n).re (momentListPoly rest n).re))
 
+-- ===========================================================================
+-- (E) The order-`k` interchange: `λₙ = Σ_k (−1)^{k+1} C(n,k)·M_k`.
+-- ===========================================================================
+
+/-- A finite sum of zeros is zero. -/
+private theorem CsumN_zero : ∀ N, Ceq (CsumN (fun _ => Czero) N) Czero
+  | 0 => Ceq_refl Czero
+  | (N + 1) => Ceq_trans (Cadd_congr (CsumN_zero N) (Ceq_refl Czero)) (cadd_zero Czero)
+
+/-- The **order-`k` reciprocal moment** over the zero list `us = {1/ρ}`: `Σ_{u∈us} C(n,k+1)·(−u)^{k+1}`
+    (`= C(n,k+1)·Σ_ρ (−1/ρ)^{k+1}`, the `(k+1)`-st moment scaled by its binomial coefficient). -/
+def momentList : List Complex → Nat → Nat → Complex
+  | [], _, _ => Czero
+  | (u :: rest), n, k => Cadd (binTermC (Cneg u) n (k + 1)) (momentList rest n k)
+
+/-- **THE ORDER INTERCHANGE** `Σ_{u∈us} Σ_{k=1}^{n} C(n,k)·(−u)ᵏ ≈ Σ_{k=1}^{n} Σ_{u∈us} C(n,k)·(−u)ᵏ`
+    — Fubini for the list-sum over zeros against the finite sum over orders, by induction on the list
+    (`CsumN_add` regrouping each appended zero's moment polynomial against the running order sums). -/
+theorem momentListPoly_swap (n : Nat) : ∀ (us : List Complex),
+    Ceq (momentListPoly us n) (CsumN (fun k => momentList us n k) n)
+  | [] => Ceq_symm (CsumN_zero n)
+  | (u :: rest) =>
+      Ceq_trans
+        (Cadd_congr (Ceq_refl (reciprocalMomentPoly u n)) (momentListPoly_swap n rest))
+        (Ceq_symm (CsumN_add (fun k => binTermC (Cneg u) n (k + 1))
+          (fun k => momentList rest n k) n))
+
+/-- **`λₙ` AS A SUM OVER REPROCIPAL-MOMENT ORDERS** — the witness sum (`bl` zero-sum form of `λₙ`) over
+    the Cayley factors `w = 1 − u` equals `−Σ_{k=1}^{n} Re(M_k)` where `M_k = Σ_{u∈us} C(n,k)·(−u)ᵏ` is the
+    order-`k` reciprocal moment (`momentList`). Combining `witnessSum_eq_neg_momentList` with the order
+    interchange `momentListPoly_swap`: `Σ_w (1 − Re(wⁿ)) = −Re(Σ_{k=1}^{n} M_k)`. This is `λₙ`'s explicit
+    decomposition into the per-order reciprocal moments `Σ_ρ ρ^{−k}` — the structural endpoint of the
+    constructive moment expansion; the sole remaining classical input is the per-order identity of each
+    `M_k` with the `−ζ′/ζ` Taylor data (`η`-polynomial), the single labelled `bl` seam. -/
+theorem witnessSum_moment_order (n : Nat) (us : List Complex) :
+    Req (witnessSum (us.map (fun u => Cadd Cone (Cneg u))) n)
+        (Rneg (CsumN (fun k => momentList us n k) n).re) :=
+  Req_trans (witnessSum_eq_neg_momentList n us)
+    (Rneg_congr (momentListPoly_swap n us).1)
+
 end UOR.Bridge.F1Square.Analysis
