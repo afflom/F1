@@ -227,4 +227,27 @@ theorem witnessTerm_moment {w u : Complex} (h : Ceq w (Cadd Cone (Cneg u))) (n :
     Req (Rsub one (Cnpow w n).re) (Rneg (reciprocalMomentPoly u n).re) :=
   (Cnpow_one_sub_momentPoly h n).1
 
+/-- The **summed reciprocal-moment polynomial** over a zero list of moments `us = {1/ρ}`:
+    `Σ_{u∈us} Σ_{k=1}^{n} C(n,k)·(−u)ᵏ`. Its negated real part is the Li witness sum (`witnessSum`). -/
+def momentListPoly : List Complex → Nat → Complex
+  | [], _ => Czero
+  | (u :: rest), n => Cadd (reciprocalMomentPoly u n) (momentListPoly rest n)
+
+/-- **THE WITNESS SUM IN RECIPROCAL-MOMENT FORM**: over the Cayley factors `w = 1 − u` of a list of
+    moments `us = {1/ρ}`, the Li witness sum `Σ_w (1 − Re(wⁿ))` equals `−Re(Σ_{u∈us} Σ_{k=1}^{n}
+    C(n,k)·(−u)ᵏ)`. The per-zero `witnessTerm_moment` summed over the list (`Rneg_Radd` regrouping the
+    negated head against the negated tail). This is `λₙ`'s zero-sum (`bl`) written entirely over the
+    explicit-formula reciprocal moments `(1/ρ)ᵏ`: with the order-`k` moment `M_k = Σ_ρ Re(ρ^{−k})` factored
+    out (the finite-sum interchange), `λₙ = Σ_{k=1}^{n} (−1)^{k+1} C(n,k)·M_k`, and the sole remaining
+    classical seam is the per-order moment identity `M_k = η`-data (the `−ζ′/ζ` Taylor coefficients). -/
+theorem witnessSum_eq_neg_momentList (n : Nat) : ∀ (us : List Complex),
+    Req (witnessSum (us.map (fun u => Cadd Cone (Cneg u))) n)
+        (Rneg (momentListPoly us n).re)
+  | [] => Req_symm Rneg_zero
+  | (u :: rest) =>
+      Req_trans
+        (Radd_congr (witnessTerm_moment (Ceq_refl (Cadd Cone (Cneg u))) n)
+          (witnessSum_eq_neg_momentList n rest))
+        (Req_symm (Rneg_Radd (reciprocalMomentPoly u n).re (momentListPoly rest n).re))
+
 end UOR.Bridge.F1Square.Analysis

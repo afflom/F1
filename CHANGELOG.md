@@ -16,6 +16,15 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **Track 1 (item 6) — the witness sum in reciprocal-moment form** (`Analysis/ComplexBinomial.lean`,
+  `witnessSum_eq_neg_momentList`, `momentListPoly`): the per-zero `witnessTerm_moment` summed over the
+  zero list. Over the Cayley factors `w = 1 − u` of a moment list `us = {1/ρ}`, the Li witness sum
+  `Σ_w (1 − Re(wⁿ))` equals `−Re(Σ_{u∈us} Σ_{k=1}^{n} C(n,k)·(−u)ᵏ)` — `λₙ`'s zero-sum (`bl`) written
+  entirely over the explicit-formula reciprocal moments `(1/ρ)ᵏ`. With the order-`k` moment
+  `M_k = Σ_ρ Re(ρ^{−k})` factored out, `λₙ = Σ_{k=1}^{n} (−1)^{k+1} C(n,k)·M_k`, leaving the sole classical
+  seam as the per-order identity `M_k = η`-data (`−ζ′/ζ` Taylor coefficients). Clean list induction
+  (`Rneg_Radd` regrouping), axiom-clean, grep-novel.
+
 - **Track 1 (item 6) — the per-zero witness term in reciprocal-moment form** (`Analysis/ComplexBinomial.lean`,
   `witnessTerm_moment` / `Cnpow_one_sub_momentPoly`, `reciprocalMomentPoly`): the forced consumer of the
   complex binomial. For `w = 1 − u` the per-zero Li witness term `1 − Re(wⁿ)` equals `−Re(Σ_{k=1}^{n}
