@@ -102,6 +102,7 @@ import F1Square.Analysis.ComplexXiConjFull
 import F1Square.Analysis.ComplexXiFE
 import F1Square.Analysis.ComplexXiHadamard
 import F1Square.Analysis.ComplexBinomial
+import F1Square.Analysis.MomentEta
 import F1Square.Analysis.ExpRealMono
 import F1Square.Analysis.ThetaFunction
 import F1Square.Analysis.ThetaFunctionPos

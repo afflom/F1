@@ -16,6 +16,18 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **Track 1 (item 6) — the `bl` arithmetic bridge `witnessSum_eq_genuineArith`** (new
+  `Analysis/MomentEta.lean`): the constructive moment-expansion face of `λₙ` (`witnessSum_moment_order`,
+  `ComplexBinomial.lean`) meets the constructive arithmetic `η`-face (`genuineArithSeq`, `GenuineLi.lean`),
+  modulo exactly one classical input per order. Both carry the *same* binomial weighting `C(n,·)`, so under
+  the per-order seam `Re(M_k) = C(n,k)·η_{k−1}` — the **explicit formula at order `k`** (the moments
+  `Σ_ρ ρ^{−k}` are the `−ζ′/ζ` Taylor coefficients), entered as an explicit audit-visible hypothesis,
+  never an axiom — the two faces are *equal*: `Σ_w (1 − Re(wⁿ)) = −Σ_{j=1}^{n} C(n,j)·η_{j−1}` (clean
+  induction `moment_re_eq_arithTail`, the `(CsumN …).re`/`arithTail` recursions matched term-by-term). This
+  is the faithful, RH-independent relocation Track 1 targets: `bl` shrinks from a monolithic limit to one
+  identity per moment order, joining the constructed zero-sum and `η` sides. Crux fields `none`; RH open.
+  Axiom-clean, no-smuggling audited, grep-novel.
+
 - **Track 1 (item 6) — `λₙ` decomposed by reciprocal-moment order** (`Analysis/ComplexBinomial.lean`,
   `witnessSum_moment_order`, `momentListPoly_swap`, `momentList`): the Fubini interchange of the sum over
   zeros with the sum over orders. `momentListPoly_swap` swaps `Σ_{u∈us} Σ_{k=1}^{n} C(n,k)·(−u)ᵏ ≈
