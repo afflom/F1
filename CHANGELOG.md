@@ -16,6 +16,18 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **Track 1 (item 6) — the moment expansion lands on the genuine Cayley object** (new
+  `Analysis/MomentCayley.lean`, `liRatio_witnessTerm_moment` / `liRatio_npow_moment` /
+  `liRatio_eq_one_sub_inv`): the abstract binomial moment machinery (`ComplexBinomial.lean`, for any
+  `w = 1 − u`) is instantiated at the *actual* Bombieri–Lagarias Cayley factor `liRatio ρ = 1 − 1/ρ`
+  (`CayleyMap.lean`), with `u = 1/ρ = Cinv ρ`. `liRatio_eq_one_sub_inv` puts `liRatio ρ` in the exact
+  `1 + (−u)` form (via `hadFactor_one_eq_liRatio` + `1·(1/ρ) ≈ 1/ρ`); then the per-zero witness term on
+  the real object follows directly: `1 − Re((1 − 1/ρ)ⁿ) = −Re(Σ_{k=1}^{n} C(n,k)(−1/ρ)ᵏ)` — the per-zero
+  summand of `RHWitness.witnessSum` over the explicit-formula reciprocal moments `(1/ρ)ᵏ`. Closes the
+  loop: the whole moment-expansion arc is now consumed by the genuine Cayley/Li object behind `bl`, not an
+  abstract `w`. The remaining classical content (`Σ_ρ ρ^{−k}` as the `ζ`-data with its archimedean place)
+  is unchanged; crux `none`. Axiom-clean, grep-novel.
+
 - **Track 1 (item 6) — the two Li-term linearizations agree `reciprocalMomentPoly_eq_neg_u_cgeomSum`**
   (`Analysis/ComplexBinomial.lean`): the binomial reciprocal-moment polynomial equals `−u` times the
   geometric sum of `LiLinearize.lean`. For `w = 1 − u` (so `u = 1/ρ`), both `reciprocalMomentPoly u n`
