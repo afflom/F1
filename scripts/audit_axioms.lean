@@ -1816,7 +1816,6 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rsub_telescope
 #print axioms Analysis.geoFrom_den_pos
 #print axioms Analysis.czetaExp_tail
-#print axioms Analysis.geoFrom_den_pos
 #print axioms Analysis.geoFrom_telescope
 #print axioms Analysis.geoFrom_le
 #print axioms Analysis.seq_diff_le
@@ -2646,15 +2645,6 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rgamma2_ge_hSeq
 
 -- v0.20.0 stage F: γ₂≥−0.02 bracket — (C4) telescoping tail + (C5) limit + the certified bracket.
-#print axioms Analysis.cube_dom_nat
-#print axioms Analysis.hBA_qle
-#print axioms Analysis.hAB_qle
-#print axioms Analysis.sStep_lower_tele
-#print axioms Analysis.hSeq_tele
-#print axioms Analysis.Rsub_sub_self
-#print axioms Analysis.hSeq_lower_const
-#print axioms Analysis.hSeq_le_g2Seq
-#print axioms Analysis.Rgamma2_ge_hSeq
 #print axioms Analysis.Rsub_ofQ_ofQ
 #print axioms Analysis.gBound2_den_pos
 #print axioms Analysis.hSeq_ge_gBound2
@@ -3276,7 +3266,6 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.nat_succ_le_two_pow
 #print axioms Analysis.Radd_sub_self_cancel
 #print axioms Analysis.Rsub_add_swap
-#print axioms Analysis.Rsub_nonpos_of_le
 #print axioms Analysis.Rle_sub_zero
 #print axioms Analysis.sq_le_sq
 #print axioms Analysis.sq_le_4_exp
@@ -3321,7 +3310,6 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.Rlambda4_pos
 #print axioms Analysis.Radd5_ofQ_le
 #print axioms Analysis.Rlambda4_S_le
-#print axioms Analysis.Rlambda4_pos
 #print axioms Analysis.m4xu_den_pos
 #print axioms Analysis.half_m4xu_den_pos
 #print axioms Analysis.ilq4_den_pos

@@ -94,8 +94,8 @@ and a tagged GitHub release triggers a DOI. The remaining, account-gated steps f
 
 1. Confirm the `repository-code` URL in `CITATION.cff` matches the published GitHub repo.
 2. Enable the repository in the Zenodo ↔ GitHub integration.
-3. Tag and publish the current release: `git tag -a v0.21.0 -m "v0.21.0" && git push --tags`, then
-   create the GitHub release for that tag (substitute the version being released).
+3. Tag and publish the current release: `git tag -a vX.Y.Z -m "vX.Y.Z" && git push --tags` (with the
+   version being released), then create the GitHub release for that tag.
 4. After Zenodo mints the DOI, add a `doi:` field (the concept DOI) to `CITATION.cff` in a follow-up
    commit — exactly the pattern UOR-Framework follows.
 
