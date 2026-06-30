@@ -219,6 +219,7 @@ import F1Square.Analysis.Voros
 import F1Square.Analysis.GammaTwo
 import F1Square.Analysis.GammaThree
 import F1Square.Analysis.GammaFour
+import F1Square.Analysis.GammaFourBracket
 import F1Square.Analysis.ZeroGeometry
 import F1Square.Analysis.LambdaThree
 import F1Square.Analysis.LambdaThreePos

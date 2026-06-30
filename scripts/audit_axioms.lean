@@ -3805,3 +3805,9 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.g4_pair_le
 #print axioms Analysis.g4_pair_ge
 #print axioms Analysis.g4SeqDyadic_RReg
+
+-- γ₄ bracket foundations (Analysis/GammaFourBracket.lean): quartic cap + accelerated sequence.
+#print axioms Analysis.quart_prod_split
+#print axioms Analysis.quart_le_256_exp
+#print axioms Analysis.logQuart_le_self256
+#print axioms Analysis.hSeq4_step_eq
