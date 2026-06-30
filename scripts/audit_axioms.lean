@@ -3242,6 +3242,27 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.corr_weaken50
 #print axioms Analysis.gamma3_decide
 #print axioms Analysis.Rgamma3_le
+
+-- v0.22.0 crux frontier: γ₃ LOWER bracket (Analysis/GammaThreeLower.lean) — completes −1/20 ≤ γ₃ ≤ 1/8.
+#print axioms Analysis.lnCubeSumLo_den_pos
+#print axioms Analysis.lnCubeSum_ge
+#print axioms Analysis.logQuartic_le
+#print axioms Analysis.halfCubeOver_le
+#print axioms Analysis.dquart_self_le
+#print axioms Analysis.b3C2_ge
+#print axioms Analysis.b2R2_ge
+#print axioms Analysis.bR1_ge
+#print axioms Analysis.R0_ge
+#print axioms Analysis.sStep3_lower_clean
+#print axioms Analysis.sStep3_lower_tele
+#print axioms Analysis.hSeq3_tele_lo
+#print axioms Analysis.hSeq3_lower_const
+#print axioms Analysis.hSeq3_le_g3Seq
+#print axioms Analysis.Rgamma3_ge_hSeq3
+#print axioms Analysis.gBound3lo_den_pos
+#print axioms Analysis.hSeq3_ge_gBound3lo
+#print axioms Analysis.gamma3_lo_decide
+#print axioms Analysis.Rgamma3_ge_neg005
 #print axioms Analysis.WStep_le_Dsq_gen
 #print axioms Analysis.delta_ge_2over
 #print axioms Analysis.sum_2delta_le

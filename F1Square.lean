@@ -257,6 +257,7 @@ import F1Square.Analysis.PsiLine
 import F1Square.Analysis.GammaTwoBracket
 import F1Square.Analysis.GammaThreeBracket
 import F1Square.Analysis.GammaTwoUpper
+import F1Square.Analysis.GammaThreeLower
 import F1Square.Analysis.LambdaFourPos
 import F1Square.Analysis.GammaOneBracket
 import F1Square.Analysis.GammaZeroBracket

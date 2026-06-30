@@ -16,6 +16,22 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **Stieltjes brackets — the γ₃ LOWER bracket `γ₃ ≥ −1/20`, completing the two-sided `−1/20 ≤ γ₃ ≤ 1/8`**
+  (new `Analysis/GammaThreeLower.lean`, `Rgamma3_ge_neg005`): the companion of `GammaThreeBracket`'s
+  `Rgamma3_le` (`γ₃ ≤ 1/8`), filling the documented gap (`γ₃` had an upper bracket but "no lower bracket
+  yet"). Same discrete Euler–Maclaurin construction as the other brackets — the accelerated sequence
+  `hSeq3 j = g₃(j) − ½·(ln(j+1))³/(j+1)` whose per-step trapezoidal residual `sStep3` is now bounded
+  *below* (`sStep3 ≥ −6/(p(p+1))`, `sStep3_lower_tele`) by mirroring the four-part decomposition
+  `decompForm3 = b³C2 + b²R2 + b·R1 + R0` downward: `b³C2 ≥ 0`, `b²R2 ≥ −3/(p(p+1))` (via the square-cap
+  `(ln p)² ≤ 4p`), `b·R1 ≥ −2/(p(p+1))`, `R0 ≥ −1/(p(p+1))` (via the new quartic self-bound `d⁴ ≤ 1/p⁴`).
+  Telescoped to `γ₃ ≥ hSeq3(N) − 6/(N+1)` (`Rgamma3_ge_hSeq3`), then certified at `N = 199` with the
+  LOWER-direction rational evaluators — the new cubed-log sum lower bound `lnCubeSumLo`/`lnCubeSum_ge`
+  (`logLowBound` cubed, round-down) against the `logBound`-upper corrections `logQuartic_le`/
+  `halfCubeOver_le` — collapsed to the single `gBound3lo` and one big-integer kernel `decide`
+  (`gamma3_lo_decide`). This is the `γ₃` prerequisite for the future `λ₅` rung (the `η₄` Taylor data needs
+  a two-sided `γ₃`). Axiom-clean (`{propext, Quot.sound}`), choice-free, no-smuggling audited; the crux
+  fields stay `none`, RH open.
+
 - **Track 1 (item 0) — the LARGE-argument end of the arctangent range extension** (new
   `Analysis/RArctanExt.lean`, `RarctanExt` / `RarctanExt_value_eq` / `RarctanR_add_RarctanExt`): the
   constructive `arctan` at large argument `|t| ≥ 16`, via the complementary-angle reduction
