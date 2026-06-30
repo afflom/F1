@@ -16,6 +16,16 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **`quartic_binom` — the degree-4 binomial identity over the constructive reals** (`Analysis/GammaFourBracket.lean`,
+  `(b+d)⁴ ≈ b⁴ + 4·b³d + 6·b²d² + 4·bd³ + d⁴`): the first reusable algebra brick of the `decompForm4`
+  trapezoidal decomposition that the `γ₄` numeric bracket rests on (the sole remaining `n = 5` gate
+  toward `Pos λ₅`). Built as a one-degree-up mirror of `cube_binom` — `cube_binom·(b+d)`, eight monomials
+  normalized to canonical coefficient-first form via `Rmul_swap_last`/`Rmul_comm`/`Rmul_assoc`, collected
+  through the `RsumL` append/permute machinery (a kernel-verified 8-element `List.Perm`), and merged with
+  `three_plus_one`/`three_plus_three`/`one_plus_three`. Elaborates in ~1 s at the default heartbeat budget
+  (the degree-4 explicit congruence is fast *when structurally exact*: any single mismatch triggers a
+  `whnf` blow-up, since the `Real` ops are reducible structure defs — the diagnostic lesson of this brick).
+  Axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free, no-smuggling audited.
 - **The fifth Li coefficient `λ₅` as a closed-form constructive object** (new `Analysis/LambdaFive.lean`
   + `Square/CruxFrontierN5.lean`, `Rlambda5`, `coupling_n5_iff_pos_lambda5`): the next rung of the
   genuine λ-ladder, the FIRST to carry `γ₄` (`Rgamma4`). The new η-anchor is **`η₄ = −γ⁵ − 5γ³γ₁ − 5γγ₁²

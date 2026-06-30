@@ -3811,3 +3811,4 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.quart_le_256_exp
 #print axioms Analysis.logQuart_le_self256
 #print axioms Analysis.hSeq4_step_eq
+#print axioms Analysis.quartic_binom
