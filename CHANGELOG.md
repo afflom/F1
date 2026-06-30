@@ -16,6 +16,15 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **`W4_expand` — the quintic-factor expansion `W₄(b+δ, b)`** (`Analysis/GammaFourBracket.lean`,
+  `a⁴+a³b+a²b²+ab³+b⁴ ≈ 5b⁴ + 10b³δ + 10b²δ² + 5bδ³ + δ⁴`, `δ = a−b`): the second `decompForm4` algebra
+  brick — the `(a−b)·W₄` factor of the quintic difference `a⁵−b⁵` (`quintic_diff_identity`), with `a = b+δ`
+  substituted. Built by the clean factoring `W₄ = a⁴ + (a³+a²b+ab²+b³)·b`, reusing `quartic_binom` for `a⁴`
+  and the degree-3 `W_expand` for the inner cubic factor, then an aligned 5-term + 4-term collection
+  (`W4_collect`) — flatten to one 9-element `RsumL`, a kernel-verified `List.Perm` to bring like terms
+  adjacent, merge (new `one_plus_four`/`four_plus_one`/`four_plus_six`/`six_plus_four` coefficient lemmas,
+  `Radd_eq_RsumL4`/`RsumL5` flatteners), reassociate to the left-nested target. Axiom-clean
+  (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free, no-smuggling audited.
 - **`quartic_binom` — the degree-4 binomial identity over the constructive reals** (`Analysis/GammaFourBracket.lean`,
   `(b+d)⁴ ≈ b⁴ + 4·b³d + 6·b²d² + 4·bd³ + d⁴`): the first reusable algebra brick of the `decompForm4`
   trapezoidal decomposition that the `γ₄` numeric bracket rests on (the sole remaining `n = 5` gate

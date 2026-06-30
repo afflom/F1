@@ -292,4 +292,362 @@ theorem quartic_binom (b d : Real) :
   refine Req_trans (Req_symm (Radd_assoc (Rmul (Rmul (Rmul b b) b) b) (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d)) (Radd (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d)) (Radd (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b d) d) d)) (Rmul (Rmul (Rmul d d) d) d))))) ?_
   refine Req_trans (Req_symm (Radd_assoc (Radd (Rmul (Rmul (Rmul b b) b) b) (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d))) (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d)) (Radd (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b d) d) d)) (Rmul (Rmul (Rmul d d) d) d)))) ?_
   exact Req_symm (Radd_assoc (Radd (Radd (Rmul (Rmul (Rmul b b) b) b) (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d))) (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d))) (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b d) d) d)) (Rmul (Rmul (Rmul d d) d) d))
+
+-- ===========================================================================
+-- Coefficient-merge helpers for the degree-4 collection (`W4_expand`): the binomial coefficients
+-- `1+4=5`, `4+1=5`, `4+6=10`, `6+4=10`.  Same pattern as `four_merge`/`three_plus_one`
+-- (`GammaThreeBracket`): rewrite `x → 1·x`, factor `Rmul_distrib_right`, collapse the rational sum.
+-- ===========================================================================
+
+/-- `x + 4·x ≈ 5·x` (coefficient merge `1 + 4 = 5`). -/
+theorem one_plus_four (x : Real) :
+    Req (Radd x (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) x)) (Rmul (ofQ (⟨5, 1⟩ : Q) (by decide)) x) := by
+  have h5 : Req (Radd one (ofQ (⟨4, 1⟩ : Q) (by decide))) (ofQ (⟨5, 1⟩ : Q) (by decide)) := by
+    apply Req_of_seq_Qeq; intro n; simp only [Radd, one, ofQ, add, Qeq]; push_cast
+  have hx1 : Req x (Rmul one x) := Req_symm (Req_trans (Rmul_comm one x) (Rmul_one x))
+  refine Req_trans (Radd_congr hx1 (Req_refl _)) ?_
+  exact Req_trans (Req_symm (Rmul_distrib_right one (ofQ (⟨4, 1⟩ : Q) (by decide)) x))
+    (Rmul_congr h5 (Req_refl x))
+
+/-- `4·x + x ≈ 5·x` (coefficient merge `4 + 1 = 5`). -/
+theorem four_plus_one (x : Real) :
+    Req (Radd (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) x) x) (Rmul (ofQ (⟨5, 1⟩ : Q) (by decide)) x) := by
+  have h5 : Req (Radd (ofQ (⟨4, 1⟩ : Q) (by decide)) one) (ofQ (⟨5, 1⟩ : Q) (by decide)) := by
+    apply Req_of_seq_Qeq; intro n; simp only [Radd, one, ofQ, add, Qeq]; push_cast
+  have hx1 : Req x (Rmul one x) := Req_symm (Req_trans (Rmul_comm one x) (Rmul_one x))
+  refine Req_trans (Radd_congr (Req_refl _) hx1) ?_
+  exact Req_trans (Req_symm (Rmul_distrib_right (ofQ (⟨4, 1⟩ : Q) (by decide)) one x))
+    (Rmul_congr h5 (Req_refl x))
+
+/-- `4·x + 6·x ≈ 10·x` (coefficient merge `4 + 6 = 10`). -/
+theorem four_plus_six (x : Real) :
+    Req (Radd (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) x) (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) x))
+        (Rmul (ofQ (⟨10, 1⟩ : Q) (by decide)) x) := by
+  have h10 : Req (Radd (ofQ (⟨4, 1⟩ : Q) (by decide)) (ofQ (⟨6, 1⟩ : Q) (by decide)))
+      (ofQ (⟨10, 1⟩ : Q) (by decide)) := by
+    apply Req_of_seq_Qeq; intro n; simp only [Radd, ofQ, add, Qeq]; push_cast
+  exact Req_trans (Req_symm (Rmul_distrib_right (ofQ (⟨4, 1⟩ : Q) (by decide))
+    (ofQ (⟨6, 1⟩ : Q) (by decide)) x)) (Rmul_congr h10 (Req_refl x))
+
+/-- `6·x + 4·x ≈ 10·x` (coefficient merge `6 + 4 = 10`). -/
+theorem six_plus_four (x : Real) :
+    Req (Radd (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) x) (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) x))
+        (Rmul (ofQ (⟨10, 1⟩ : Q) (by decide)) x) := by
+  have h10 : Req (Radd (ofQ (⟨6, 1⟩ : Q) (by decide)) (ofQ (⟨4, 1⟩ : Q) (by decide)))
+      (ofQ (⟨10, 1⟩ : Q) (by decide)) := by
+    apply Req_of_seq_Qeq; intro n; simp only [Radd, ofQ, add, Qeq]; push_cast
+  exact Req_trans (Req_symm (Rmul_distrib_right (ofQ (⟨6, 1⟩ : Q) (by decide))
+    (ofQ (⟨4, 1⟩ : Q) (by decide)) x)) (Rmul_congr h10 (Req_refl x))
+
+/-- Left-nested degree-4 sum flattening: `(((x+y)+z)+w) ≈ RsumL [x,y,z,w]`. -/
+theorem Radd_eq_RsumL4 (x y z w : Real) :
+    Req (Radd (Radd (Radd x y) z) w) (RsumL [x, y, z, w]) :=
+  Req_trans (Radd_congr (Radd_eq_RsumL3 x y z) (RsumL_singleton w))
+    (Req_symm (RsumL_append [x, y, z] [w]))
+
+/-- Left-nested degree-5 sum flattening: `((((x+y)+z)+w)+v) ≈ RsumL [x,y,z,w,v]`. -/
+theorem Radd_eq_RsumL5 (x y z w v : Real) :
+    Req (Radd (Radd (Radd (Radd x y) z) w) v) (RsumL [x, y, z, w, v]) :=
+  Req_trans (Radd_congr (Radd_eq_RsumL4 x y z w) (RsumL_singleton v))
+    (Req_symm (RsumL_append [x, y, z, w] [v]))
+
+/-- **The degree-4 aligned-polynomial adder.**  Adds the `a⁴` expansion (5 coeff-monomials)
+    to the `W₃·b` expansion (4 coeff-monomials, same degree order) and merges the binomial
+    coefficients (`1+4=5`, `4+6=10`, `6+4=10`, `4+1=5`) — the degree-4 analogue of `W_collect`. -/
+theorem W4_collect (b d : Real) :
+    Req (Radd
+          (Radd (Radd (Radd (Radd
+                    (Rmul (Rmul (Rmul b b) b) b)
+                    (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d)))
+                  (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d)))
+                (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b d) d) d)))
+              (Rmul (Rmul (Rmul d d) d) d))
+          (Radd (Radd (Radd
+                    (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) b))
+                    (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d)))
+                  (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d)))
+                (Rmul (Rmul (Rmul b d) d) d)))
+        (Radd (Radd (Radd (Radd
+                  (Rmul (ofQ (⟨5, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) b))
+                  (Rmul (ofQ (⟨10, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d)))
+                (Rmul (ofQ (⟨10, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d)))
+              (Rmul (ofQ (⟨5, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b d) d) d)))
+            (Rmul (Rmul (Rmul d d) d) d)) := by
+  refine Req_trans (Radd_congr
+    (Radd_eq_RsumL5 (Rmul (Rmul (Rmul b b) b) b)
+      (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d))
+      (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d))
+      (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b d) d) d))
+      (Rmul (Rmul (Rmul d d) d) d))
+    (Radd_eq_RsumL4
+      (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) b))
+      (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d))
+      (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d))
+      (Rmul (Rmul (Rmul b d) d) d))) ?_
+  refine Req_trans (Req_symm (RsumL_append
+    [Rmul (Rmul (Rmul b b) b) b,
+     Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d),
+     Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d),
+     Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b d) d) d),
+     Rmul (Rmul (Rmul d d) d) d]
+    [Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) b),
+     Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d),
+     Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d),
+     Rmul (Rmul (Rmul b d) d) d])) ?_
+  -- perm [B4,4B3d,6B2d2,4Bd3,D4,4B4,6B3d,4B2d2,Bd3] -> [B4,4B4,4B3d,6B3d,6B2d2,4B2d2,4Bd3,Bd3,D4]
+  -- bubble 4B4 left (across D4,4Bd3,6B2d2,4B3d): 4 swaps
+  have s1a := List.Perm.cons (Rmul (Rmul (Rmul b b) b) b)
+    (List.Perm.cons (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d))
+      (List.Perm.cons (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d))
+        (List.Perm.cons (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b d) d) d))
+          (List.Perm.swap (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) b))
+            (Rmul (Rmul (Rmul d d) d) d)
+            [Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d),
+             Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d),
+             Rmul (Rmul (Rmul b d) d) d]))))
+  have s1b := List.Perm.cons (Rmul (Rmul (Rmul b b) b) b)
+    (List.Perm.cons (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d))
+      (List.Perm.cons (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d))
+        (List.Perm.swap (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) b))
+          (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b d) d) d))
+          [Rmul (Rmul (Rmul d d) d) d,
+           Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d),
+           Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d),
+           Rmul (Rmul (Rmul b d) d) d])))
+  have s1c := List.Perm.cons (Rmul (Rmul (Rmul b b) b) b)
+    (List.Perm.cons (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d))
+      (List.Perm.swap (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) b))
+        (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d))
+        [Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b d) d) d),
+         Rmul (Rmul (Rmul d d) d) d,
+         Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d),
+         Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d),
+         Rmul (Rmul (Rmul b d) d) d]))
+  have s1d := List.Perm.cons (Rmul (Rmul (Rmul b b) b) b)
+    (List.Perm.swap (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) b))
+      (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d))
+      [Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d),
+       Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b d) d) d),
+       Rmul (Rmul (Rmul d d) d) d,
+       Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d),
+       Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d),
+       Rmul (Rmul (Rmul b d) d) d])
+  -- now [B4,4B4,4B3d,6B2d2,4Bd3,D4,6B3d,4B2d2,Bd3]; bubble 6B3d left to pos3 (across D4,4Bd3,6B2d2): 3 swaps
+  have s2a := List.Perm.cons (Rmul (Rmul (Rmul b b) b) b)
+    (List.Perm.cons (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) b))
+      (List.Perm.cons (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d))
+        (List.Perm.cons (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d))
+          (List.Perm.cons (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b d) d) d))
+            (List.Perm.swap (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d))
+              (Rmul (Rmul (Rmul d d) d) d)
+              [Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d),
+               Rmul (Rmul (Rmul b d) d) d])))))
+  have s2b := List.Perm.cons (Rmul (Rmul (Rmul b b) b) b)
+    (List.Perm.cons (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) b))
+      (List.Perm.cons (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d))
+        (List.Perm.cons (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d))
+          (List.Perm.swap (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d))
+            (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b d) d) d))
+            [Rmul (Rmul (Rmul d d) d) d,
+             Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d),
+             Rmul (Rmul (Rmul b d) d) d]))))
+  have s2c := List.Perm.cons (Rmul (Rmul (Rmul b b) b) b)
+    (List.Perm.cons (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) b))
+      (List.Perm.cons (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d))
+        (List.Perm.swap (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d))
+          (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d))
+          [Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b d) d) d),
+           Rmul (Rmul (Rmul d d) d) d,
+           Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d),
+           Rmul (Rmul (Rmul b d) d) d])))
+  -- now [B4,4B4,4B3d,6B3d,6B2d2,4Bd3,D4,4B2d2,Bd3]; bubble 4B2d2 left to pos5 (across D4,4Bd3): 2 swaps
+  have s3a := List.Perm.cons (Rmul (Rmul (Rmul b b) b) b)
+    (List.Perm.cons (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) b))
+      (List.Perm.cons (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d))
+        (List.Perm.cons (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d))
+          (List.Perm.cons (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d))
+            (List.Perm.cons (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b d) d) d))
+              (List.Perm.swap (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d))
+                (Rmul (Rmul (Rmul d d) d) d)
+                [Rmul (Rmul (Rmul b d) d) d]))))))
+  have s3b := List.Perm.cons (Rmul (Rmul (Rmul b b) b) b)
+    (List.Perm.cons (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) b))
+      (List.Perm.cons (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d))
+        (List.Perm.cons (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d))
+          (List.Perm.cons (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d))
+            (List.Perm.swap (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d))
+              (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b d) d) d))
+              [Rmul (Rmul (Rmul d d) d) d,
+               Rmul (Rmul (Rmul b d) d) d])))))
+  -- now [B4,4B4,4B3d,6B3d,6B2d2,4B2d2,4Bd3,D4,Bd3]; bubble Bd3 left to pos7 (across D4): 1 swap
+  have s4a := List.Perm.cons (Rmul (Rmul (Rmul b b) b) b)
+    (List.Perm.cons (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) b))
+      (List.Perm.cons (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d))
+        (List.Perm.cons (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d))
+          (List.Perm.cons (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d))
+            (List.Perm.cons (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d))
+              (List.Perm.cons (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b d) d) d))
+                (List.Perm.swap (Rmul (Rmul (Rmul b d) d) d)
+                  (Rmul (Rmul (Rmul d d) d) d) [])))))))
+  refine Req_trans (RsumL_perm
+    (((((((((s1a.trans s1b).trans s1c).trans s1d).trans s2a).trans s2b).trans s2c).trans s3a).trans s3b).trans s4a)) ?_
+  -- now RsumL [B4,4B4,4B3d,6B3d,6B2d2,4B2d2,4Bd3,Bd3,D4]; merge pairs
+  -- merge B4 + 4B4 = 5B4 (outermost, no Radd_congr)
+  refine Req_trans (Req_symm (Radd_assoc (Rmul (Rmul (Rmul b b) b) b)
+    (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) b))
+    (Radd (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d))
+      (Radd (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d))
+        (Radd (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d))
+          (Radd (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d))
+            (Radd (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b d) d) d))
+              (Radd (Rmul (Rmul (Rmul b d) d) d)
+                (Radd (Rmul (Rmul (Rmul d d) d) d) zero))))))))) ?_
+  refine Req_trans (Radd_congr (one_plus_four (Rmul (Rmul (Rmul b b) b) b)) (Req_refl _)) ?_
+  -- merge 4B3d + 6B3d = 10B3d (depth 1)
+  refine Req_trans (Radd_congr (Req_refl _)
+    (Req_symm (Radd_assoc (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d))
+      (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d))
+      (Radd (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d))
+        (Radd (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d))
+          (Radd (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b d) d) d))
+            (Radd (Rmul (Rmul (Rmul b d) d) d)
+              (Radd (Rmul (Rmul (Rmul d d) d) d) zero)))))))) ?_
+  refine Req_trans (Radd_congr (Req_refl _)
+    (Radd_congr (four_plus_six (Rmul (Rmul (Rmul b b) b) d)) (Req_refl _))) ?_
+  -- merge 6B2d2 + 4B2d2 = 10B2d2 (depth 2)
+  refine Req_trans (Radd_congr (Req_refl _) (Radd_congr (Req_refl _)
+    (Req_symm (Radd_assoc (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d))
+      (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d))
+      (Radd (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b d) d) d))
+        (Radd (Rmul (Rmul (Rmul b d) d) d)
+          (Radd (Rmul (Rmul (Rmul d d) d) d) zero))))))) ?_
+  refine Req_trans (Radd_congr (Req_refl _) (Radd_congr (Req_refl _)
+    (Radd_congr (six_plus_four (Rmul (Rmul (Rmul b b) d) d)) (Req_refl _)))) ?_
+  -- merge 4Bd3 + Bd3 = 5Bd3 (depth 3)
+  refine Req_trans (Radd_congr (Req_refl _) (Radd_congr (Req_refl _) (Radd_congr (Req_refl _)
+    (Req_symm (Radd_assoc (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b d) d) d))
+      (Rmul (Rmul (Rmul b d) d) d)
+      (Radd (Rmul (Rmul (Rmul d d) d) d) zero)))))) ?_
+  refine Req_trans (Radd_congr (Req_refl _) (Radd_congr (Req_refl _) (Radd_congr (Req_refl _)
+    (Radd_congr (four_plus_one (Rmul (Rmul (Rmul b d) d) d)) (Req_refl _))))) ?_
+  -- strip trailing zero on D4 (depth 4)
+  refine Req_trans (Radd_congr (Req_refl _) (Radd_congr (Req_refl _) (Radd_congr (Req_refl _)
+    (Radd_congr (Req_refl _) (Radd_zero (Rmul (Rmul (Rmul d d) d) d)))))) ?_
+  -- right-nested -> left-nested target (4 top-level reassocs)
+  refine Req_trans (Req_symm (Radd_assoc (Rmul (ofQ (⟨5, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) b))
+    (Rmul (ofQ (⟨10, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d))
+    (Radd (Rmul (ofQ (⟨10, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d))
+      (Radd (Rmul (ofQ (⟨5, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b d) d) d))
+        (Rmul (Rmul (Rmul d d) d) d))))) ?_
+  refine Req_trans (Req_symm (Radd_assoc
+    (Radd (Rmul (ofQ (⟨5, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) b))
+      (Rmul (ofQ (⟨10, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d)))
+    (Rmul (ofQ (⟨10, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d))
+    (Radd (Rmul (ofQ (⟨5, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b d) d) d))
+      (Rmul (Rmul (Rmul d d) d) d)))) ?_
+  exact Req_symm (Radd_assoc
+    (Radd (Radd (Rmul (ofQ (⟨5, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) b))
+        (Rmul (ofQ (⟨10, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) d)))
+      (Rmul (ofQ (⟨10, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) d) d)))
+    (Rmul (ofQ (⟨5, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b d) d) d))
+    (Rmul (Rmul (Rmul d d) d) d))
+
+/-- **W₄-expansion** `W₄ = a⁴ + a³b + a²b² + ab³ + b⁴ ≈ 5b⁴ + 10b³δ + 10b²δ² + 5bδ³ + δ⁴`
+    (`δ = a − b`), the degree-4 analogue of `W_expand`, for the `partC` of the `γ₄` bracket.
+    Factor `·b` out of the last four terms to expose `W₃·b` (via `W_expand`); add `a⁴` (via
+    `quartic_binom`); flatten, group like terms, and merge the coefficients (`1+4=5`, `4+6=10`,
+    `6+4=10`, `4+1=5`). -/
+theorem W4_expand (a b : Real) :
+    Req (Radd (Radd (Radd (Radd (Rmul (Rmul (Rmul a a) a) a) (Rmul (Rmul (Rmul a a) a) b))
+            (Rmul (Rmul (Rmul a a) b) b)) (Rmul (Rmul (Rmul a b) b) b))
+          (Rmul (Rmul (Rmul b b) b) b))
+        (Radd (Radd (Radd (Radd
+                  (Rmul (ofQ (⟨5, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) b))
+                  (Rmul (ofQ (⟨10, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) (Rsub a b))))
+              (Rmul (ofQ (⟨10, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) (Rsub a b)) (Rsub a b))))
+            (Rmul (ofQ (⟨5, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b (Rsub a b)) (Rsub a b)) (Rsub a b))))
+          (Rmul (Rmul (Rmul (Rsub a b) (Rsub a b)) (Rsub a b)) (Rsub a b))) := by
+  have ha := sub_add_cancel_real a b
+  -- a⁴ ≈ b⁴ + 4b³δ + 6b²δ² + 4bδ³ + δ⁴
+  have ha4 : Req (Rmul (Rmul (Rmul a a) a) a)
+      (Radd (Radd (Radd (Radd
+                (Rmul (Rmul (Rmul b b) b) b)
+                (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) (Rsub a b))))
+              (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) (Rsub a b)) (Rsub a b))))
+            (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b (Rsub a b)) (Rsub a b)) (Rsub a b))))
+          (Rmul (Rmul (Rmul (Rsub a b) (Rsub a b)) (Rsub a b)) (Rsub a b))) :=
+    Req_trans (Rmul_congr (Rmul_congr (Rmul_congr ha ha) ha) ha) (quartic_binom b (Rsub a b))
+  -- S2 = (((a³b + a²b²) + ab³) + b⁴) ≈ ((a³+a²b)+ab²)+b³)·b  (factor `·b` out)
+  have hfac : Req (Radd (Radd (Radd (Rmul (Rmul (Rmul a a) a) b) (Rmul (Rmul (Rmul a a) b) b))
+            (Rmul (Rmul (Rmul a b) b) b)) (Rmul (Rmul (Rmul b b) b) b))
+      (Rmul (Radd (Radd (Radd (Rmul (Rmul a a) a) (Rmul (Rmul a a) b)) (Rmul (Rmul a b) b))
+            (Rmul (Rmul b b) b)) b) := by
+    refine Req_trans (Radd_congr (Radd_congr
+        (Req_symm (Rmul_distrib_right (Rmul (Rmul a a) a) (Rmul (Rmul a a) b) b)) (Req_refl _))
+        (Req_refl _)) ?_
+    refine Req_trans (Radd_congr
+        (Req_symm (Rmul_distrib_right (Radd (Rmul (Rmul a a) a) (Rmul (Rmul a a) b)) (Rmul (Rmul a b) b) b))
+        (Req_refl _)) ?_
+    exact Req_symm (Rmul_distrib_right
+      (Radd (Radd (Rmul (Rmul a a) a) (Rmul (Rmul a a) b)) (Rmul (Rmul a b) b)) (Rmul (Rmul b b) b) b)
+  -- inner W₃ ≈ 4b³ + 6b²δ + 4bδ² + δ³  (via W_expand)
+  -- then distribute ·b and normalize → 4b⁴ + 6b³δ + 4b²δ² + bδ³
+  have hbd2b : Req (Rmul (Rmul (Rmul b (Rsub a b)) (Rsub a b)) b)
+      (Rmul (Rmul (Rmul b b) (Rsub a b)) (Rsub a b)) :=
+    Req_trans (Rmul_swap_last (Rmul b (Rsub a b)) (Rsub a b) b)
+      (Rmul_congr (Rmul_swap_last b (Rsub a b) b) (Req_refl (Rsub a b)))
+  have hd3b : Req (Rmul (Rmul (Rmul (Rsub a b) (Rsub a b)) (Rsub a b)) b)
+      (Rmul (Rmul (Rmul b (Rsub a b)) (Rsub a b)) (Rsub a b)) :=
+    Req_trans (Rmul_swap_last (Rmul (Rsub a b) (Rsub a b)) (Rsub a b) b)
+      (Rmul_congr (Req_trans (Rmul_swap_last (Rsub a b) (Rsub a b) b)
+          (Rmul_congr (Rmul_comm (Rsub a b) b) (Req_refl (Rsub a b))))
+        (Req_refl (Rsub a b)))
+  have hS2 : Req (Radd (Radd (Radd (Rmul (Rmul (Rmul a a) a) b) (Rmul (Rmul (Rmul a a) b) b))
+            (Rmul (Rmul (Rmul a b) b) b)) (Rmul (Rmul (Rmul b b) b) b))
+      (Radd (Radd (Radd
+                (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) b))
+                (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) b) (Rsub a b))))
+              (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul (Rmul b b) (Rsub a b)) (Rsub a b))))
+            (Rmul (Rmul (Rmul b (Rsub a b)) (Rsub a b)) (Rsub a b))) := by
+    refine Req_trans hfac ?_
+    refine Req_trans (Rmul_congr (W_expand a b) (Req_refl b)) ?_
+    -- distribute ·b over the 4-term W₃ output
+    refine Req_trans (Rmul_distrib_right
+      (Radd (Radd (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul b b) b))
+              (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul b b) (Rsub a b))))
+            (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul b (Rsub a b)) (Rsub a b))))
+      (Rmul (Rmul (Rsub a b) (Rsub a b)) (Rsub a b)) b) ?_
+    refine Req_trans (Radd_congr (Rmul_distrib_right
+      (Radd (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul b b) b))
+            (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul b b) (Rsub a b))))
+      (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul b (Rsub a b)) (Rsub a b))) b) (Req_refl _)) ?_
+    refine Req_trans (Radd_congr (Radd_congr (Rmul_distrib_right
+      (Rmul (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul b b) b))
+      (Rmul (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul b b) (Rsub a b))) b) (Req_refl _))
+      (Req_refl _)) ?_
+    -- normalize the four monomials
+    refine Radd_congr (Radd_congr (Radd_congr ?_ ?_) ?_) hd3b
+    · -- (4·b³)·b → 4·b⁴
+      exact Rmul_assoc (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul b b) b) b
+    · -- (6·b²δ)·b → 6·b³δ
+      exact Req_trans (Rmul_assoc (ofQ (⟨6, 1⟩ : Q) (by decide)) (Rmul (Rmul b b) (Rsub a b)) b)
+        (Rmul_congr (Req_refl _) (Rmul_swap_last (Rmul b b) (Rsub a b) b))
+    · -- (4·bδ²)·b → 4·b²δ²
+      exact Req_trans (Rmul_assoc (ofQ (⟨4, 1⟩ : Q) (by decide)) (Rmul (Rmul b (Rsub a b)) (Rsub a b)) b)
+        (Rmul_congr (Req_refl _) hbd2b)
+  -- regroup W₄ = a⁴ + (((a³b+a²b²)+ab³)+b⁴) = a⁴ + S2
+  refine Req_trans (Radd_congr (Radd_congr
+      (Radd_assoc (Rmul (Rmul (Rmul a a) a) a) (Rmul (Rmul (Rmul a a) a) b)
+        (Rmul (Rmul (Rmul a a) b) b)) (Req_refl (Rmul (Rmul (Rmul a b) b) b)))
+      (Req_refl (Rmul (Rmul (Rmul b b) b) b))) ?_
+  refine Req_trans (Radd_congr
+      (Radd_assoc (Rmul (Rmul (Rmul a a) a) a)
+        (Radd (Rmul (Rmul (Rmul a a) a) b) (Rmul (Rmul (Rmul a a) b) b))
+        (Rmul (Rmul (Rmul a b) b) b)) (Req_refl (Rmul (Rmul (Rmul b b) b) b))) ?_
+  refine Req_trans (Radd_assoc (Rmul (Rmul (Rmul a a) a) a)
+      (Radd (Radd (Rmul (Rmul (Rmul a a) a) b) (Rmul (Rmul (Rmul a a) b) b))
+        (Rmul (Rmul (Rmul a b) b) b)) (Rmul (Rmul (Rmul b b) b) b)) ?_
+  -- now: a⁴ + S2; collect via the aligned-polynomial adder `W4_collect`
+  exact Req_trans (Radd_congr ha4 hS2) (W4_collect b (Rsub a b))
+
 end UOR.Bridge.F1Square.Analysis

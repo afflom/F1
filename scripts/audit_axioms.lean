@@ -3812,3 +3812,11 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.logQuart_le_self256
 #print axioms Analysis.hSeq4_step_eq
 #print axioms Analysis.quartic_binom
+#print axioms Analysis.one_plus_four
+#print axioms Analysis.four_plus_one
+#print axioms Analysis.four_plus_six
+#print axioms Analysis.six_plus_four
+#print axioms Analysis.Radd_eq_RsumL4
+#print axioms Analysis.Radd_eq_RsumL5
+#print axioms Analysis.W4_collect
+#print axioms Analysis.W4_expand
