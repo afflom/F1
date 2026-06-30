@@ -16,6 +16,23 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **The fourth Stieltjes constant `γ₄` as a genuine constructive real** (new `Analysis/GammaFour.lean`,
+  `Rgamma4 := Rlim g4SeqDyadic g4SeqDyadic_RReg`, `γ₄ ≈ +0.00722`): the arithmetic-side prerequisite for the
+  `n = 5` coupling rung (`λ₅`), built as the full degree-5 mirror of `GammaThree`'s `γ₃`. The
+  EM-accelerated defining sequence `g₄(j) = Σ_{k≤j+1}(ln k)⁴/k − (1/5)(ln(j+1))⁵`, whose per-step
+  trapezoidal residual `e₄` is summable-enveloped `e₄ ∈ [−a⁴/(p(p+1)), 4a³/(p(p+1))]` (`a = ln(p+1)`),
+  then dyadic-block-telescoped to a Bishop-regular sequence (`g4SeqDyadic_RReg`, reindex `M(j)=2j+22`)
+  whose limit is `γ₄`. New degree-5 algebra: the **quintic factoring** `a⁵−b⁵ = (a−b)(a⁴+a³b+a²b²+ab³+b⁴)`
+  (`quintic_diff_identity`, via the reusable `Rmul_swap_outer`/`Rmul_swap_last` monomial-reassociation
+  helpers), the `W₄ ∈ [5b⁴, 5a⁴]` envelopes, and the degree-3/degree-4 discrete-antiderivative domination
+  chains (`Q_U(m)=8m³+72m²+264m+408`, `Q_L(m)=2m⁴+24m³+132m²+408m+598`, each verified by `ring_uor` to
+  satisfy `2Q_U(m)−Q_U(m+1)=8(m+2)³` / `2Q_L(m)−Q_L(m+1)=2(m+2)⁴`). The cubic/quartic infrastructure
+  (`logCube`, `logQuartic`, `quartic_diff_identity`, `W3_le_4a3`, `Csum`, the block caps) is reused from
+  `GammaThree`. With `γ`, `γ₁`, `γ₂`, `γ₃` (bracketed) and `ζ(5)`, this is the last unbuilt Stieltjes
+  constant for the `η₄` Taylor data behind `λ₅`. Axiom-clean (`{propext, Quot.sound}`), choice-free,
+  no-smuggling audited; the crux fields stay `none`, RH open. The two-sided `γ₄` bracket + the `λ₅` rung
+  are the remaining `n = 5` steps.
+
 - **ζ-value brackets — `ζ(5) ∈ [1.036, 1.052]`** (`Analysis/ZetaTwo.lean`, `zeta5_lower`/`zeta5_upper`):
   the next ζ-constituent for the future `n = 5` coupling rung, mirroring the `ζ(4)` block (partial-sum
   lower `zetaSum_five_70_ge` and decreasing-upper `zetaU_five_70_le`, each one rational `decide` at
