@@ -16,6 +16,19 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **Track 1 (item 0) — the arctangent argument-range extension past the value-identity radius** (new
+  `Analysis/RArctanExt.lean`, `RarctanExt` / `RarctanExt_value_eq` / `RarctanR_add_RarctanExt`): the
+  constructive `arctan` for `|t| ≥ 1`, via the complementary-angle reduction `arctan(1/s) = π/2 − arctan s`.
+  `RarctanR s` (`RArctan.lean`) is defined only for `|s| ≤ ρ < 1/16`, so its reciprocal `1/s` lies outside
+  the radius; `arctanExt s := π/2 − arctan s` supplies that value through the complementary angle —
+  sidestepping the `1 − s·(1/s) = 0` singularity that blocks the tangent-addition route. The defining value
+  identity `RarctanExt_value_eq` (`tan(arctanExt s) = 1/s`: if `T·s = 1` then `sin(arctanExt s) =
+  T·cos(arctanExt s)`) composes the real-argument value identity `RarctanR_value_eq` (`tan(arctan s) = s`,
+  `RArctanValue.lean`) with the complementary-tangent formula `Rsin_cos_pi_half_sub_tan_real`
+  (`TanPiQuarter.lean`); and `RarctanR_add_RarctanExt` proves the classical reflection identity
+  `arctan(s) + arctan(1/s) = π/2`. This is the named remaining item-0 brick — the `tan∘arctan = id`
+  substrate `Carg`/`Clog` need to leave the principal sector toward `log ξ`. Axiom-clean, grep-novel.
+
 - **Track 1 (item 6) — the Hadamard/`bl` witness sum in reciprocal-moment-order form**
   (`Analysis/MomentCayley.lean`, `hadamard_witnessSum_moment`): the item-6 object, assembled on the
   *genuine* zeros. For a `HadamardXi` enumeration of the nontrivial zeros, the `bl` witness sum over its
