@@ -16,6 +16,18 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **`Rgamma4_ge_neg02` — the certified `γ₄` LOWER bracket `γ₄ ≥ −1/5`** (new `Analysis/GammaFourLower.lean`):
+  the numeric heart of the `n = 5` gate, completing the `decompForm4` ladder. The one-degree-up mirror of
+  `GammaThreeLower`: rational partial-sum lower bound `lnQuartSumLo` (Σ(ln k)⁴/k), the `logBound⁵`/`logBound⁴`
+  upper bounds for the subtracted `(1/5)(ln N)⁵` and `½(ln N)⁴/N` corrections, the five per-step LOWER
+  part-bounds against `decompForm4` (`b4C2_ge ≥ 0`, `b3R3_ge ≥ −27/D`, `b2R2_ge4 ≥ −16/D`, `bR1_ge4 ≥ −2/D`,
+  `R0_ge4 ≥ −1/D`, `D = p(p+1)`; via the polynomial-log caps `(ln p)²≤4p`/`(ln p)³≤27p`), telescoped to
+  `sStep4 ≥ −46/(p(p+1))` and `γ₄ ≥ hSeq4(N) − 46/(N+1)` (`Rgamma4_ge_hSeq4`, via `Rgamma4 = Rlim g4SeqDyadic`),
+  collapsed to the rational `gBound4lo` and closed by one big-integer kernel `decide` at `N = 245`. The target
+  is the LOOSE `−1/5` (not `−1/20`): `γ₄` enters `λ₅` only through the small favourable `−(5/24)γ₄` term, so
+  `−1/5` is amply sufficient for `Pos λ₅` while keeping the `decide` inside the default kernel stack (the tight
+  `−1/20` would force N ≳ 830, past the C-stack ceiling). Axiom-clean (`{propext, Quot.sound}`), no
+  `sorry`/`native_decide`, choice-free, no-smuggling audited; crux fields `none`, RH open.
 - **`sStep4_decomp` — the trapezoidal residual identity `sStep4 ≈ decompForm4`** (`Analysis/GammaFourBracket.lean`,
   the keystone of the `decompForm4` machinery): `decompForm4_eq_RsumL` / `lhsForm4_eq_RsumL` each expand to the
   same 11 canonical signed `RprodL` monomials (`b⁴C2`→3, `b³R3`→2, `b²R2`→2, `bR1`→2, `R0`→2), matched by

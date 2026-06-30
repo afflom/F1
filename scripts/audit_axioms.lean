@@ -3271,6 +3271,30 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.hSeq3_ge_gBound3lo
 #print axioms Analysis.gamma3_lo_decide
 #print axioms Analysis.Rgamma3_ge_neg005
+-- v0.22.0 crux frontier: γ₄ LOWER bracket (Analysis/GammaFourLower.lean) — `γ₄ ≥ −1/5`
+-- (`Rgamma4_ge_neg02`), the LOOSE lower bracket sufficient for `Pos λ₅` (`γ₄` enters λ₅ only via the
+--  small favourable `−(5/24)γ₄` term).  The loose `−1/5` target keeps the final big-integer `decide`
+--  at `N = 245`, inside the default kernel stack (the tight `−1/20` would need N ≳ 830 + `--tstack`).
+#print axioms Analysis.lnQuartSumLo_den_pos
+#print axioms Analysis.lnQuartSum_ge
+#print axioms Analysis.logQuintic_le
+#print axioms Analysis.halfQuartOver_le
+#print axioms Analysis.dquint_self_le
+#print axioms Analysis.b4C2_ge
+#print axioms Analysis.b3R3_ge
+#print axioms Analysis.b2R2_ge4
+#print axioms Analysis.bR1_ge4
+#print axioms Analysis.R0_ge4
+#print axioms Analysis.sStep4_lower_clean
+#print axioms Analysis.sStep4_lower_tele
+#print axioms Analysis.hSeq4_tele_lo
+#print axioms Analysis.hSeq4_lower_const
+#print axioms Analysis.hSeq4_le_g4Seq
+#print axioms Analysis.Rgamma4_ge_hSeq4
+#print axioms Analysis.gBound4lo_den_pos
+#print axioms Analysis.hSeq4_ge_gBound4lo
+#print axioms Analysis.gamma4_lo_decide
+#print axioms Analysis.Rgamma4_ge_neg02
 #print axioms Analysis.WStep_le_Dsq_gen
 #print axioms Analysis.delta_ge_2over
 #print axioms Analysis.sum_2delta_le
