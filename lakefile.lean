@@ -14,6 +14,10 @@ package f1square where
   leanOptions := #[
     ⟨`autoImplicit, false⟩
   ]
+  -- Raise the kernel evaluator's thread stack so the tightened n=5 constant-precision brackets
+  -- (large-N `decide` certificates: γ₂/γ₃ uppers, etc.) reduce without a C-stack overflow.
+  -- This is a stack-size flag only — the proofs stay fully kernel-checked (NOT `native_decide`).
+  moreLeanArgs := #["--tstack=16000000"]
 
 require uor from git
   "https://github.com/UOR-Foundation/UOR-Framework" @ "v0.5.2"
