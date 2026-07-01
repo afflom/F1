@@ -16,6 +16,18 @@ axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, choice-free; 
 passes; the crux fields stay `none` (RH open throughout — every classical input is an explicit,
 audit-visible hypothesis, never an axiom).
 
+- **n=5 constant-precision brackets** (new `Analysis/LambdaFivePrecision.lean`, STEP 1 of the `Pos λ₅`
+  closure): the tightened Stieltjes/ζ brackets the n=5 margin needs — `γ₃ ≤ 1/40` (`Rgamma3_le_1_40`),
+  `γ₂ ≤ −3/1000` (`Rgamma2_le_neg0003`), `γ₂ ≥ −14/1000` (`Rgamma2_ge_neg0014`), `γ₁ ≤ −69/1000`
+  (`Rgamma1_le_neg069`), `ζ(3) ≤ 1.205` (`zeta3_le_1205`) — each a one-degree-up-precision mirror of the
+  existing bracket theorem at larger `N` and higher log-cap depth `T` (γ₃: T=21,N=650,j=500; γ₂/γ₁:
+  T=12,N=600/256,j=400), with the large-N `decide` accumulators reduced under the lakefile `--tstack`
+  and the correction-weakening lemmas (`corr_weaken500` etc.) handling the `2^1014`-scale middle terms
+  via a raised `exponentiation.threshold`. WHY: the `Pos λ₅` margin (−0.652 with the n≤4 brackets) is
+  dominated by `η₃`'s `choose 5 4 = ×5` amplification of the loose `γ₃ ≤ 1/8` — so n=5 needs these
+  tighter constants (not `γ₄`, whose bracket contributes only ±0.04). With them the margin turns
+  positive (+0.083). Axiom-clean (`{propext, Quot.sound}`), no `sorry`/`native_decide`, no-smuggling
+  audited; crux fields `none`, RH open.
 - **`Rgamma4_ge_neg02` — the certified `γ₄` LOWER bracket `γ₄ ≥ −1/5`** (new `Analysis/GammaFourLower.lean`):
   the numeric heart of the `n = 5` gate, completing the `decompForm4` ladder. The one-degree-up mirror of
   `GammaThreeLower`: rational partial-sum lower bound `lnQuartSumLo` (Σ(ln k)⁴/k), the `logBound⁵`/`logBound⁴`

@@ -3295,6 +3295,21 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.hSeq4_ge_gBound4lo
 #print axioms Analysis.gamma4_lo_decide
 #print axioms Analysis.Rgamma4_ge_neg02
+-- n=5 constant-precision brackets (Analysis/LambdaFivePrecision.lean) — tightened γ₁/γ₂/γ₃ + ζ(3)
+-- for the `Pos λ₅` margin (large-N `decide`, via the lakefile `--tstack`).
+#print axioms Analysis.corr_weaken500
+#print axioms Analysis.gamma3_40_decide
+#print axioms Analysis.Rgamma3_le_1_40
+#print axioms Analysis.corr2_weaken400
+#print axioms Analysis.gamma2_up_neg0003_decide
+#print axioms Analysis.Rgamma2_le_neg0003
+#print axioms Analysis.gamma2_ge_neg0014_decide
+#print axioms Analysis.Rgamma2_ge_neg0014
+#print axioms Analysis.corr1_weaken400
+#print axioms Analysis.gamma1_up_neg069_decide
+#print axioms Analysis.Rgamma1_le_neg069
+#print axioms Analysis.zetaU_three_500_le
+#print axioms Analysis.zeta3_le_1205
 #print axioms Analysis.WStep_le_Dsq_gen
 #print axioms Analysis.delta_ge_2over
 #print axioms Analysis.sum_2delta_le
