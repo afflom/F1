@@ -3850,6 +3850,17 @@ open UOR.Bridge.F1Square
 #print axioms Analysis.quart_le_256_exp
 #print axioms Analysis.logQuart_le_self256
 #print axioms Analysis.hSeq4_step_eq
+
+-- ZeroOscillation (Analysis/ZeroOscillation.lean)
+#print axioms Analysis.re_oneSub_lt_half
+#print axioms Analysis.zero_left_of_line_dominates
+#print axioms Analysis.zero_right_of_line_forces_left_growth
+#print axioms Analysis.Rmul_two_c
+#print axioms Analysis.eventual_pos_from_main_remainder
+#print axioms Analysis.eventual_neg_from_main_remainder
+#print axioms Analysis.omega_abs_from_signed_pos
+#print axioms Analysis.omega_abs_from_signed_neg
+
 #print axioms Analysis.quartic_binom
 #print axioms Analysis.one_plus_four
 #print axioms Analysis.four_plus_one

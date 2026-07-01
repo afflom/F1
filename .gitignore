@@ -13,3 +13,7 @@ lake-packages/
 # Editor / OS
 .DS_Store
 *.swp
+
+# Old code directory
+formal-math-lean/
+

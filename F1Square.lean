@@ -256,6 +256,7 @@ import F1Square.Analysis.LiLinearize
 import F1Square.Analysis.Reflection
 import F1Square.Analysis.OffLineGrowth
 import F1Square.Analysis.RiemannZero
+import F1Square.Analysis.ZeroOscillation
 import F1Square.Analysis.RiemannSiegel
 import F1Square.Analysis.PsiLine
 import F1Square.Analysis.GammaTwoBracket
